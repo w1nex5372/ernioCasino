@@ -16,6 +16,7 @@ import json
 from pathlib import Path
 import hashlib
 import hmac
+import aiohttp
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
