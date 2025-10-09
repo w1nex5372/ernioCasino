@@ -170,32 +170,49 @@ async def start_game_round(room: GameRoom):
     # Wait for dramatic effect
     await asyncio.sleep(3)
     
-    # Select winner
+    # Select winner using weighted random selection
     winner = select_winner(room.players)
     room.winner = winner
     room.status = "finished"
     room.finished_at = datetime.now(timezone.utc)
     
-    # Update winner's balance in database
-    try:
-        user_doc = await db.users.find_one({"id": winner.user_id})
-        if user_doc:
-            new_balance = user_doc.get('token_balance', 0) + room.prize_pool
-            await db.users.update_one(
-                {"id": winner.user_id},
-                {"$set": {"token_balance": new_balance}}
-            )
-    except Exception as e:
-        logging.error(f"Failed to update winner balance: {e}")
+    # Get the prize link for this room type
+    prize_link = PRIZE_LINKS[room.room_type]
+    room.prize_link = prize_link
     
-    # Notify all clients of the winner
+    # Store the winner's prize link in database for later retrieval
+    try:
+        await db.winner_prizes.insert_one({
+            "user_id": winner.user_id,
+            "username": winner.username,
+            "room_type": room.room_type,
+            "prize_link": prize_link,
+            "bet_amount": winner.bet_amount,
+            "total_pool": room.prize_pool,
+            "round_number": room.round_number,
+            "won_at": room.finished_at.isoformat()
+        })
+        logging.info(f"Prize link stored for winner {winner.username}: {prize_link}")
+    except Exception as e:
+        logging.error(f"Failed to store winner prize: {e}")
+    
+    # Notify all clients of the winner (but don't broadcast the prize link)
     await sio.emit('game_finished', {
         'room_id': room.id,
         'room_type': room.room_type,
         'winner': winner.dict(),
         'prize_pool': room.prize_pool,
-        'round_number': room.round_number
+        'round_number': room.round_number,
+        'has_prize': True  # Indicate that there's a prize but don't show the link
     })
+    
+    # Send prize link privately to the winner
+    await sio.emit('prize_won', {
+        'prize_link': prize_link,
+        'room_type': room.room_type,
+        'bet_amount': winner.bet_amount,
+        'total_pool': room.prize_pool
+    }, room=winner.user_id)  # Send only to winner
     
     # Save completed game to database
     try:
