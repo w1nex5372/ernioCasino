@@ -25,6 +25,17 @@ from solders.pubkey import Pubkey as SoldersPubkey
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# Get environment variables
+MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+DB_NAME = os.environ.get('DB_NAME', 'casino_db')
+CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,https://cryptobets-1.preview.emergentagent.com').split(',')
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_TELEGRAM_BOT_TOKEN_HERE')
+
+# Solana Configuration for devnet (test environment as requested)
+SOLANA_RPC_URL = os.environ.get('SOLANA_RPC_URL', 'https://api.devnet.solana.com')
+CASINO_WALLET_PRIVATE_KEY = os.environ.get('CASINO_WALLET_PRIVATE_KEY', '')
+CASINO_WALLET_ADDRESS = 'YourWalletAddressHere12345678901234567890123456789'  # This will be set from env or generated
+
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
