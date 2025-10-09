@@ -432,6 +432,8 @@ async def get_active_rooms():
 @api_router.post("/join-room")
 async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks):
     """Join a room with a bet"""
+    logging.info(f"Join room request: {request.dict()}")
+    
     # Find room of the requested type
     target_room = None
     for room in active_rooms.values():
@@ -440,6 +442,7 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
             break
     
     if not target_room:
+        logging.error(f"No available room of type {request.room_type}")
         raise HTTPException(status_code=404, detail="No available room of this type")
     
     # Validate bet amount
