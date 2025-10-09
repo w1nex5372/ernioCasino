@@ -476,8 +476,21 @@ class WebSocketRoomSyncTester:
 
 async def main():
     tester = WebSocketRoomSyncTester()
-    success = await tester.run_all_tests()
-    return 0 if success else 1
+    try:
+        success = await tester.run_all_tests()
+        return 0 if success else 1
+    except Exception as e:
+        print(f"❌ Test execution failed: {e}")
+        return 1
+    finally:
+        # Ensure cleanup
+        try:
+            if tester.sio1.connected:
+                await tester.sio1.disconnect()
+            if tester.sio2.connected:
+                await tester.sio2.disconnect()
+        except:
+            pass
 
 if __name__ == "__main__":
     import sys
