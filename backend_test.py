@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 class SolanaCasinoAPITester:
-    def __init__(self, base_url="https://crypto-gamble.preview.emergentagent.com"):
+    def __init__(self, base_url="https://cryptobets-1.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.test_user = None
