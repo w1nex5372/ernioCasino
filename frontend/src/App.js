@@ -163,6 +163,9 @@ function App() {
       try {
         console.log('Checking for Telegram Web App...');
         
+        // Add a small delay to ensure Telegram script is loaded
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         // Check if Telegram Web App is available
         if (window.Telegram && window.Telegram.WebApp) {
           const webApp = window.Telegram.WebApp;
@@ -191,6 +194,8 @@ function App() {
             // Send auth data to backend
             const response = await axios.post(`${API}/auth/telegram`, {
               telegram_auth_data: authData
+            }, {
+              timeout: 10000 // 10 second timeout
             });
 
             console.log('Auth response:', response.data);
@@ -216,7 +221,13 @@ function App() {
         return false;
       } catch (error) {
         console.error('Auto auth failed:', error);
-        toast.error('Authentication failed: ' + (error.response?.data?.detail || error.message));
+        if (error.response) {
+          toast.error('Server error: ' + (error.response?.data?.detail || error.message));
+        } else if (error.code === 'ECONNABORTED') {
+          toast.error('Connection timeout - please try again');
+        } else {
+          toast.error('Authentication failed: ' + error.message);
+        }
         return false;
       }
     };
