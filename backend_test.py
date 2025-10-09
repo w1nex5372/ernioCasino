@@ -141,7 +141,7 @@ class SolanaCasinoAPITester:
                 rooms = data.get('rooms', [])
                 details = f"Found {len(rooms)} rooms: "
                 for room in rooms:
-                    details += f"{room['room_type']}({room['players_count']}/10) "
+                    details += f"{room['room_type']}({room['players_count']}/2) "
             else:
                 details = f"Status: {response.status_code}, Response: {response.text}"
             
