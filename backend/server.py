@@ -913,13 +913,19 @@ logger = logging.getLogger(__name__)
 async def startup_event():
     """Initialize the application"""
     initialize_rooms()
-    logger.info("Casino application started")
-
+    
+    # Start Solana payment monitoring
+    await payment_monitor.start_monitoring()
+    
+    logging.info("🎰 Casino Battle Royale API started!")
+    logging.info(f"🏠 Active rooms: {len(active_rooms)}")
+    logging.info(f"💳 Solana monitoring: {'Enabled' if CASINO_WALLET_ADDRESS != 'YourWalletAddressHere12345678901234567890123456789' else 'Disabled (set CASINO_WALLET_ADDRESS)'}")
+    
 @app.on_event("shutdown")
 async def shutdown_event():
-    """Clean up resources"""
-    client.close()
-    logger.info("Casino application shutdown")
+    """Cleanup on application shutdown"""
+    payment_monitor.monitoring = False
+    logging.info("🛑 Casino Battle Royale API shutting down")
 
 # Export the socket app for uvicorn
 app = socket_app
