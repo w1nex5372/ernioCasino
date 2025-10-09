@@ -136,6 +136,11 @@ function App() {
       loadRooms();
     });
 
+    newSocket.on('rooms_updated', (data) => {
+      // Update rooms instantly without API call
+      setRooms(data.rooms);
+    });
+
     return () => {
       newSocket.close();
     };
