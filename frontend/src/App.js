@@ -20,6 +20,13 @@ const API = `${BACKEND_URL}/api`;
 // ** EDIT THIS LINE TO ADD YOUR SOLANA WALLET ADDRESS **
 const CASINO_WALLET_ADDRESS = "YOUR_SOLANA_WALLET_ADDRESS_HERE";
 
+// ** EDIT THESE LINES TO ADD YOUR PRIZE LINKS **
+const PRIZE_LINKS = {
+  bronze: "https://your-prize-link-1.com",  // Prize link for Bronze room
+  silver: "https://your-prize-link-2.com",  // Prize link for Silver room  
+  gold: "https://your-prize-link-3.com"     // Prize link for Gold room
+};
+
 const ROOM_CONFIGS = {
   bronze: { 
     name: 'Bronze Room', 
