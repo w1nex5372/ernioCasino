@@ -520,7 +520,7 @@ function App() {
             </div>
             <CardTitle className="text-2xl text-white">Casino Battle Royale</CardTitle>
             <CardDescription className="text-slate-300">
-              Connect your Telegram account to access the ultimate betting arena
+              Connect your Telegram account to battle 1v1 for prizes
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
