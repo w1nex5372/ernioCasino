@@ -597,8 +597,14 @@ function App() {
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Crown className="w-6 h-6 md:w-8 md:h-8 text-yellow-400" />
-              <h1 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+              <Crown 
+                className="w-6 h-6 md:w-8 md:h-8 text-yellow-400 cursor-pointer hover:text-yellow-300 transition-colors" 
+                onClick={() => setActiveTab('rooms')}
+              />
+              <h1 
+                className="text-lg md:text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent cursor-pointer"
+                onClick={() => setActiveTab('rooms')}
+              >
                 {isMobile ? 'Casino' : 'Casino Battle Royale'}
               </h1>
             </div>
