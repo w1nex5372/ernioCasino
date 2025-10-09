@@ -849,7 +849,9 @@ function App() {
                   const config = ROOM_CONFIGS[roomType];
                   
                   return (
-                    <Card key={roomType} className="bg-slate-800/90 border-slate-700 overflow-hidden hover:border-yellow-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-yellow-500/10">
+                    <Card key={roomType} className={`bg-slate-800/90 border-slate-700 overflow-hidden hover:border-yellow-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-yellow-500/10 ${
+                      isMobile ? 'max-w-full w-full' : ''
+                    }`}>
                       <CardHeader className={`bg-gradient-to-br ${config.gradient} text-white relative overflow-hidden`}>
                         <div className="absolute inset-0 bg-black/10"></div>
                         <div className="relative z-10">
