@@ -63,6 +63,7 @@ function App() {
   const [solAmount, setSolAmount] = useState('');
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [betAmount, setBetAmount] = useState('');
+  const [activeTab, setActiveTab] = useState('rooms');
 
   useEffect(() => {
     // Initialize Socket.IO connection
