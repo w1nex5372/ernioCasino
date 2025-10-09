@@ -973,7 +973,7 @@ function App() {
       {/* Mobile Bottom Navigation */}
       {isMobile && (
         <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700 z-50">
-          <div className="grid grid-cols-4 h-16">
+          <div className="grid grid-cols-5 h-16">
             <button
               onClick={() => setActiveTab('rooms')}
               className={`flex flex-col items-center justify-center transition-all duration-200 ${
@@ -982,7 +982,7 @@ function App() {
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Users className="w-5 h-5 mb-1" />
+              <Users className="w-4 h-4 mb-1" />
               <span className="text-xs">Rooms</span>
             </button>
             
@@ -994,7 +994,7 @@ function App() {
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Trophy className="w-5 h-5 mb-1" />
+              <Trophy className="w-4 h-4 mb-1" />
               <span className="text-xs">Leaders</span>
             </button>
             
@@ -1006,8 +1006,25 @@ function App() {
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Timer className="w-5 h-5 mb-1" />
+              <Timer className="w-4 h-4 mb-1" />
               <span className="text-xs">History</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('prizes')}
+              className={`flex flex-col items-center justify-center transition-all duration-200 ${
+                activeTab === 'prizes' 
+                  ? 'text-purple-400 bg-purple-400/10' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Trophy className="w-4 h-4 mb-1" />
+              <span className="text-xs">Prizes</span>
+              {userPrizes.length > 0 && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-xs text-white font-bold">{userPrizes.length}</span>
+                </div>
+              )}
             </button>
             
             <button
@@ -1018,7 +1035,7 @@ function App() {
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Coins className="w-5 h-5 mb-1" />
+              <Coins className="w-4 h-4 mb-1" />
               <span className="text-xs">Tokens</span>
             </button>
           </div>
