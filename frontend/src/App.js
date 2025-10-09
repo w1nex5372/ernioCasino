@@ -1133,7 +1133,77 @@ function App() {
         </main>
       </div>
 
-      {/* Unified sidebar navigation replaces mobile bottom nav */}
+      {/* Mobile Bottom Navigation */}
+      {isMobile && (
+        <nav className="fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur-sm border-t border-slate-700 z-50">
+          <div className="flex justify-around items-center py-2">
+            <button
+              onClick={() => setActiveTab('rooms')}
+              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 ${
+                activeTab === 'rooms' 
+                  ? 'text-yellow-400 bg-yellow-400/10' 
+                  : 'text-slate-400 active:bg-slate-700/50'
+              }`}
+            >
+              <Users className="w-6 h-6 mb-1" />
+              <span className="text-xs font-medium">Rooms</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('tokens')}
+              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 ${
+                activeTab === 'tokens' 
+                  ? 'text-green-400 bg-green-400/10' 
+                  : 'text-slate-400 active:bg-slate-700/50'
+              }`}
+            >
+              <Coins className="w-6 h-6 mb-1" />
+              <span className="text-xs font-medium">Tokens</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('prizes')}
+              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 relative ${
+                activeTab === 'prizes' 
+                  ? 'text-purple-400 bg-purple-400/10' 
+                  : 'text-slate-400 active:bg-slate-700/50'
+              }`}
+            >
+              <Trophy className="w-6 h-6 mb-1" />
+              <span className="text-xs font-medium">Prizes</span>
+              {userPrizes.length > 0 && (
+                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {userPrizes.length}
+                </div>
+              )}
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('leaderboard')}
+              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 ${
+                activeTab === 'leaderboard' 
+                  ? 'text-yellow-400 bg-yellow-400/10' 
+                  : 'text-slate-400 active:bg-slate-700/50'
+              }`}
+            >
+              <Crown className="w-6 h-6 mb-1" />
+              <span className="text-xs font-medium">Leaders</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 ${
+                activeTab === 'history' 
+                  ? 'text-blue-400 bg-blue-400/10' 
+                  : 'text-slate-400 active:bg-slate-700/50'
+              }`}
+            >
+              <Timer className="w-6 h-6 mb-1" />
+              <span className="text-xs font-medium">History</span>
+            </button>
+          </div>
+        </nav>
+      )}
 
       <Toaster richColors position={isMobile ? "top-center" : "top-right"} />
     </div>
