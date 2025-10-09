@@ -179,6 +179,16 @@ function App() {
     }
   };
 
+  const loadUserPrizes = async () => {
+    if (!user) return;
+    try {
+      const response = await axios.get(`${API}/user/${user.id}/prizes`);
+      setUserPrizes(response.data.prizes);
+    } catch (error) {
+      console.error('Failed to load user prizes:', error);
+    }
+  };
+
   const createUser = async (e) => {
     e.preventDefault();
     if (!username.trim()) {
