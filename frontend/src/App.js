@@ -416,6 +416,7 @@ function App() {
 
   // Telegram Web App authentication
   const authenticateWithTelegram = async () => {
+    setIsLoading(true);
     try {
       // Check if running inside Telegram Web App
       if (window.Telegram && window.Telegram.WebApp) {
