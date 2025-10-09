@@ -125,6 +125,46 @@ class JoinRoomRequest(BaseModel):
 # In-memory storage for active rooms (in production, use Redis)
 active_rooms: Dict[str, GameRoom] = {}
 
+# Telegram authentication functions
+def verify_telegram_auth(auth_data: dict, bot_token: str) -> bool:
+    """Verify Telegram authentication data"""
+    if not auth_data or 'hash' not in auth_data:
+        return False
+    
+    # Extract hash and remove it from data
+    received_hash = auth_data.pop('hash')
+    
+    # Create data check string
+    data_check_string = '\n'.join([f"{k}={v}" for k, v in sorted(auth_data.items()) if k != 'hash'])
+    
+    # Create secret key
+    secret_key = hashlib.sha256(bot_token.encode()).digest()
+    
+    # Calculate expected hash
+    expected_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+    
+    return hmac.compare_digest(expected_hash, received_hash)
+
+def is_telegram_user_legitimate(telegram_data: TelegramAuthData) -> bool:
+    """Additional security checks for Telegram user legitimacy"""
+    
+    # Check if auth is recent (within 24 hours)
+    current_time = datetime.now(timezone.utc).timestamp()
+    if current_time - telegram_data.auth_date > 86400:  # 24 hours
+        return False
+    
+    # Check if user has reasonable data
+    if not telegram_data.first_name or len(telegram_data.first_name.strip()) == 0:
+        return False
+    
+    # Check for suspicious patterns (optional additional checks)
+    if telegram_data.telegram_username:
+        # Very basic check - could be enhanced
+        if len(telegram_data.telegram_username) < 3:
+            return False
+    
+    return True
+
 # Socket.IO events
 @sio.event
 async def connect(sid, environ):
