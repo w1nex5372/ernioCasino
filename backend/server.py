@@ -33,7 +33,7 @@ TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_TELEGRAM_BOT_TOK
 # Solana Configuration for devnet (test environment as requested)
 SOLANA_RPC_URL = os.environ.get('SOLANA_RPC_URL', 'https://api.devnet.solana.com')
 CASINO_WALLET_PRIVATE_KEY = os.environ.get('CASINO_WALLET_PRIVATE_KEY', '')
-CASINO_WALLET_ADDRESS = 'YourWalletAddressHere12345678901234567890123456789'  # This will be set from env or generated
+CASINO_WALLET_ADDRESS = os.environ.get('CASINO_WALLET_ADDRESS', 'YourWalletAddressHere12345678901234567890123456789')
 
 # MongoDB connection
 client = AsyncIOMotorClient(MONGO_URL)
