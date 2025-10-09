@@ -77,15 +77,22 @@ function App() {
   const [userPrizes, setUserPrizes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check if mobile
+  // Check if mobile (portrait orientation specifically)
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      // Consider it mobile if width < 768px OR if in portrait mode on small screen
+      setIsMobile(width < 768 || (width < 1024 && height > width));
     };
     
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener('orientationchange', checkMobile);
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('orientationchange', checkMobile);
+    };
   }, []);
 
   useEffect(() => {
