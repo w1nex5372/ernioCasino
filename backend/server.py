@@ -318,11 +318,51 @@ def initialize_rooms():
 async def root():
     return {"message": "Solana Casino Battle Royale API"}
 
-@api_router.post("/users", response_model=User)
-async def create_user(user_data: UserCreate):
-    user = User(**user_data.dict())
+@api_router.post("/auth/telegram", response_model=User)
+async def telegram_auth(user_data: UserCreate):
+    """Authenticate user with Telegram data"""
+    telegram_data = user_data.telegram_auth_data
+    
+    # Verify Telegram authentication
+    auth_dict = telegram_data.dict()
+    if not verify_telegram_auth(auth_dict.copy(), TELEGRAM_BOT_TOKEN):
+        raise HTTPException(status_code=401, detail="Invalid Telegram authentication")
+    
+    # Check if user is legitimate
+    if not is_telegram_user_legitimate(telegram_data):
+        raise HTTPException(status_code=403, detail="Telegram user verification failed")
+    
+    # Check if user already exists
+    existing_user = await db.users.find_one({"telegram_id": telegram_data.id})
+    
+    if existing_user:
+        # Update last login time
+        await db.users.update_one(
+            {"telegram_id": telegram_data.id},
+            {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        # Convert back from stored format
+        if isinstance(existing_user['created_at'], str):
+            existing_user['created_at'] = datetime.fromisoformat(existing_user['created_at'])
+        if isinstance(existing_user['last_login'], str):
+            existing_user['last_login'] = datetime.fromisoformat(existing_user['last_login'])
+            
+        return User(**existing_user)
+    
+    # Create new user
+    user = User(
+        telegram_id=telegram_data.id,
+        first_name=telegram_data.first_name,
+        last_name=telegram_data.last_name,
+        telegram_username=telegram_data.username,
+        photo_url=telegram_data.photo_url,
+        is_verified=True
+    )
+    
     user_dict = user.dict()
     user_dict['created_at'] = user_dict['created_at'].isoformat()
+    user_dict['last_login'] = user_dict['last_login'].isoformat()
     
     await db.users.insert_one(user_dict)
     return user
