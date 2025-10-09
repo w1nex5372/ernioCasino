@@ -763,10 +763,12 @@ function App() {
               </div>
             </div>
           )}
+          </div>
         </nav>
+        )}
 
         {/* Main Content */}
-        <main className="flex-1 p-3 md:p-6">
+        <main className={`flex-1 ${isMobile ? 'pb-20' : 'p-6'} p-3 md:p-6`}>
           <div className="space-y-6">
 
             {/* Quick Buy Tokens Card - Always Visible */}
