@@ -398,7 +398,8 @@ function App() {
           <div className="space-y-6">
 
             {/* Battle Rooms */}
-            <TabsContent value="rooms" className="space-y-8">
+            {activeTab === 'rooms' && (
+              <div className="space-y-8">
               <div className="text-center py-6">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full mb-4">
                   <Users className="w-8 h-8 text-slate-900" />
