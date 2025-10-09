@@ -359,7 +359,7 @@ function App() {
       return;
     }
 
-    if (CASINO_WALLET_ADDRESS === "YOUR_SOLANA_WALLET_ADDRESS_HERE") {
+    if (casinoWalletAddress === "YOUR_SOLANA_WALLET_ADDRESS_HERE") {
       toast.error('Casino wallet not configured. Using demo mode.');
       
       // Demo mode - instant credit
