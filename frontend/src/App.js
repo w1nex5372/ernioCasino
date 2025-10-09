@@ -222,12 +222,31 @@ function App() {
     };
 
     // Try auto-authentication
-    setTimeout(async () => {
-      const success = await autoAuthenticateFromTelegram();
-      if (!success) {
-        setIsLoading(false); // Show manual auth if auto fails
+    const tryAuthentication = async () => {
+      try {
+        const success = await autoAuthenticateFromTelegram();
+        if (!success) {
+          setIsLoading(false); // Show manual auth if auto fails
+        }
+      } catch (error) {
+        console.error('Authentication error:', error);
+        setIsLoading(false);
       }
-    }, 1000);
+    };
+
+    // Try authentication after a short delay
+    const authTimeout = setTimeout(tryAuthentication, 1000);
+    
+    // Fallback timeout to prevent infinite loading
+    const fallbackTimeout = setTimeout(() => {
+      console.log('Authentication timeout, showing manual login');
+      setIsLoading(false);
+    }, 5000);
+
+    return () => {
+      clearTimeout(authTimeout);
+      clearTimeout(fallbackTimeout);
+    };
   }, []);
 
   const loadRooms = async () => {
