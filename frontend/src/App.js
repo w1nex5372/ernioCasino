@@ -393,21 +393,39 @@ function App() {
                 const config = ROOM_CONFIGS[roomType];
                 
                 return (
-                  <Card key={roomType} className="bg-slate-800/90 border-slate-700 overflow-hidden">
-                    <CardHeader className={`bg-gradient-to-r ${config.gradient} text-white`}>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="flex items-center gap-2">
-                            <span className="text-2xl">{config.icon}</span>
-                            {config.name}
-                          </CardTitle>
-                          <CardDescription className="text-white/80">
-                            {config.min} - {config.max} tokens
-                          </CardDescription>
+                  <Card key={roomType} className="bg-slate-800/90 border-slate-700 overflow-hidden hover:border-yellow-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-yellow-500/10">
+                    <CardHeader className={`bg-gradient-to-br ${config.gradient} text-white relative overflow-hidden`}>
+                      <div className="absolute inset-0 bg-black/10"></div>
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                              <span className="text-2xl">{config.icon}</span>
+                            </div>
+                            <div>
+                              <CardTitle className="text-xl font-bold">
+                                {config.name}
+                              </CardTitle>
+                              <CardDescription className="text-white/90 font-medium">
+                                {config.min} - {config.max} tokens
+                              </CardDescription>
+                            </div>
+                          </div>
+                          <Badge variant="secondary" className="bg-white/25 text-white font-semibold px-3 py-1 backdrop-blur-sm">
+                            Round #{room.round_number || 1}
+                          </Badge>
                         </div>
-                        <Badge variant="secondary" className="bg-white/20 text-white">
-                          Round #{room.round_number || 1}
-                        </Badge>
+                        
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                          <div className="bg-white/15 rounded-lg p-3 backdrop-blur-sm">
+                            <div className="text-white/80 text-xs uppercase tracking-wide font-medium">Players</div>
+                            <div className="text-white font-bold text-lg">{room.players_count}/10</div>
+                          </div>
+                          <div className="bg-white/15 rounded-lg p-3 backdrop-blur-sm">
+                            <div className="text-white/80 text-xs uppercase tracking-wide font-medium">Prize Pool</div>
+                            <div className="text-white font-bold text-lg">{room.prize_pool}</div>
+                          </div>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent className="p-6">
