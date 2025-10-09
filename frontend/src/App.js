@@ -624,58 +624,73 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-x-hidden">
-      {/* Mobile Header */}
+      {/* Header */}
       <header className="bg-slate-900/90 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
         <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Crown 
-                className="w-6 h-6 md:w-8 md:h-8 text-yellow-400 cursor-pointer hover:text-yellow-300 transition-colors" 
-                onClick={() => setActiveTab('rooms')}
-              />
-              <h1 
-                className="text-lg md:text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent cursor-pointer"
-                onClick={() => setActiveTab('rooms')}
-              >
-                {isMobile ? 'Casino' : 'Casino Battle Royale'}
-              </h1>
-            </div>
-            
-            <div className="flex items-center gap-2 md:gap-6">
-              {/* Prominent Buy Tokens Button */}
-              <Button
-                onClick={() => setActiveTab('tokens')}
-                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2"
-              >
-                <Coins className="w-4 h-4 mr-2" />
-                Buy Tokens
-              </Button>
-
+          {isMobile ? (
+            /* Mobile Header - Simplified */
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Wallet className="w-4 h-4 text-slate-400" />
-                <span className="text-slate-300">{user.first_name}{user.last_name ? ` ${user.last_name}` : ''}</span>
+                <Crown className="w-6 h-6 text-yellow-400" />
+                <h1 className="text-lg font-bold text-white">Casino</h1>
               </div>
-              <div className="flex items-center gap-1">
-                <Coins className="w-4 h-4 text-yellow-400" />
-                <span className="text-sm md:text-lg font-bold text-yellow-400">{user.token_balance || 0}</span>
-                <span className="text-slate-400">tokens</span>
-              </div>
-              {userPrizes.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <Trophy className="w-4 h-4 text-green-400" />
-                  <span className="text-sm text-green-400">{userPrizes.length} prizes</span>
+              <div className="flex items-center gap-2">
+                <div className="text-right">
+                  <div className="text-xs text-slate-400">Balance</div>
+                  <div className="text-sm font-bold text-yellow-400">{user.token_balance || 0}</div>
                 </div>
-              )}
-              <div className="flex items-center gap-1">
                 <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
-                {!isMobile && (
+              </div>
+            </div>
+          ) : (
+            /* Desktop Header - Full */
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Crown 
+                  className="w-8 h-8 text-yellow-400 cursor-pointer hover:text-yellow-300 transition-colors" 
+                  onClick={() => setActiveTab('rooms')}
+                />
+                <h1 
+                  className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent cursor-pointer"
+                  onClick={() => setActiveTab('rooms')}
+                >
+                  Casino Battle Royale
+                </h1>
+              </div>
+              
+              <div className="flex items-center gap-6">
+                <Button
+                  onClick={() => setActiveTab('tokens')}
+                  className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2"
+                >
+                  <Coins className="w-4 h-4 mr-2" />
+                  Buy Tokens
+                </Button>
+
+                <div className="flex items-center gap-2">
+                  <Wallet className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-300">{user.first_name}{user.last_name ? ` ${user.last_name}` : ''}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Coins className="w-4 h-4 text-yellow-400" />
+                  <span className="text-lg font-bold text-yellow-400">{user.token_balance || 0}</span>
+                  <span className="text-slate-400">tokens</span>
+                </div>
+                {userPrizes.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Trophy className="w-4 h-4 text-green-400" />
+                    <span className="text-sm text-green-400">{userPrizes.length} prizes</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1">
+                  <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
                   <span className={`text-xs ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
                     {isConnected ? 'Connected' : 'Disconnected'}
                   </span>
-                )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </header>
 
