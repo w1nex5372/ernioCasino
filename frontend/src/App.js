@@ -386,8 +386,8 @@ function App() {
                   <span className="text-yellow-400 font-medium">Higher bets = Better winning odds!</span>
                 </p>
               </div>
-            
-            <div className="grid md:grid-cols-3 gap-6">
+              
+              <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-8 max-w-7xl mx-auto">
               {['bronze', 'silver', 'gold'].map((roomType) => {
                 const room = rooms.find(r => r.room_type === roomType) || { players_count: 0, prize_pool: 0 };
                 const config = ROOM_CONFIGS[roomType];
