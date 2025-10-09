@@ -556,31 +556,6 @@ function App() {
         <main className={`flex-1 p-3 md:p-6 ${isMobile ? 'min-h-screen' : ''}`}>
           <div className="space-y-6">
 
-            {/* Install App Prompt */}
-            {!showInstallPrompt && (
-              <Card className="bg-gradient-to-r from-green-600/20 to-blue-600/20 border-green-500/30">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                        <span className="text-xl">📱</span>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-white">Install Casino App</h3>
-                        <p className="text-sm text-slate-300">Get the full app experience on your device</p>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={handleInstallClick}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      Install Now
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             {/* Battle Rooms */}
             {activeTab === 'rooms' && (
               <div className="space-y-8">
