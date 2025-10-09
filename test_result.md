@@ -101,3 +101,80 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "User wants to see winner selection functionality after 2 players join a room, with Telegram messages sent to winners and a 'Claim Prize' button that directs to configurable websites. Using devnet (test environment) for Solana integration."
+
+backend:
+  - task: "Telegram Prize Notification System"
+    implemented: true
+    working: false  # needs testing
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Added Telegram bot messaging functions (send_telegram_message, send_prize_notification) to automatically send prize notifications to winners with claim buttons"
+        - working: false
+          agent: "main"
+          comment: "Integrated Telegram notification into start_game_round function to send messages after winner selection"
+        - working: false
+          agent: "main"
+          comment: "Added aiohttp dependency for Telegram API calls"
+
+  - task: "Winner Selection and Game Round Logic"
+    implemented: true
+    working: false  # needs testing
+    file: "backend/server.py" 
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Winner selection logic already exists with weighted probability system (higher bettors have better odds)"
+        - working: false
+          agent: "main"
+          comment: "Game starts automatically when 2 players join a room, selects winner after 3 second delay"
+        - working: false
+          agent: "main"  
+          comment: "Prize links are stored in database and sent privately to winners via WebSocket"
+
+frontend:
+  - task: "Claim Prize Button UI"
+    implemented: true
+    working: false  # needs testing  
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Frontend already has 'My Prizes' tab with 'Claim Prize' buttons that open prize links in new tabs"
+        - working: false
+          agent: "main"
+          comment: "Prize data loads from /api/user/{user_id}/prizes endpoint and displays in organized cards"
+        - working: false
+          agent: "main"
+          comment: "Real-time prize updates via WebSocket when user wins"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Telegram Prize Notification System"
+    - "Winner Selection and Game Round Logic"  
+    - "Claim Prize Button UI"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: "Implemented Telegram prize notifications and verified frontend prize claiming is already functional. Ready for backend testing to verify 2-player game flow, winner selection, Telegram messaging, and database operations."
