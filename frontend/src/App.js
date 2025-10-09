@@ -429,25 +429,31 @@ function App() {
                       </div>
                     </CardHeader>
                     <CardContent className="p-6">
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-300">Players:</span>
-                          <span className="font-bold text-yellow-400">{room.players_count}/10</span>
+                      <div className="space-y-6">
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400 font-medium">Battle Progress</span>
+                            <span className="font-bold text-yellow-400">{room.players_count}/10 Players</span>
+                          </div>
+                          
+                          <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
+                            <div 
+                              className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-3 rounded-full transition-all duration-500 ease-out relative"
+                              style={{ width: `${(room.players_count / 10) * 100}%` }}
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/20"></div>
+                            </div>
+                          </div>
+                          
+                          <div className="text-center text-xs text-slate-500">
+                            {room.players_count === 10 ? '🔥 Battle in Progress!' : 
+                             room.players_count >= 7 ? '⚡ Almost Full!' :
+                             room.players_count >= 4 ? '🎯 Halfway There!' :
+                             '🚀 Join the Battle!'}
+                          </div>
                         </div>
                         
-                        <div className="w-full bg-slate-600 rounded-full h-2">
-                          <div 
-                            className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${(room.players_count / 10) * 100}%` }}
-                          />
-                        </div>
-                        
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-300">Prize Pool:</span>
-                          <span className="font-bold text-green-400">{room.prize_pool} tokens</span>
-                        </div>
-                        
-                        <Separator className="bg-slate-600" />
+                        <Separator className="bg-slate-700" />
                         
                         {selectedRoom === roomType ? (
                           <div className="space-y-3">
