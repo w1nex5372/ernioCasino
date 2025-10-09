@@ -63,7 +63,11 @@ function App() {
 
   useEffect(() => {
     // Initialize Socket.IO connection
-    const newSocket = io(BACKEND_URL);
+    const newSocket = io(BACKEND_URL, {
+      transports: ['websocket', 'polling'],
+      timeout: 20000,
+      forceNew: true
+    });
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
