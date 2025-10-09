@@ -203,6 +203,86 @@ function App() {
     }
   };
 
+  // Monitor Solana wallet balance
+  const monitorWalletBalance = async (expectedAmount) => {
+    if (!CASINO_WALLET_ADDRESS || CASINO_WALLET_ADDRESS === "YOUR_SOLANA_WALLET_ADDRESS_HERE") {
+      toast.error('Casino wallet address not configured');
+      return;
+    }
+
+    setWalletMonitoring(true);
+    const startTime = Date.now();
+    const timeout = 300000; // 5 minutes
+
+    const checkBalance = async () => {
+      try {
+        // Using Solana Web3.js to check balance
+        const response = await fetch(`https://api.devnet.solana.com`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'getBalance',
+            params: [CASINO_WALLET_ADDRESS]
+          })
+        });
+
+        const data = await response.json();
+        if (data.result) {
+          const currentBalance = data.result.value / 1000000000; // Convert lamports to SOL
+          
+          if (lastKnownBalance === 0) {
+            setLastKnownBalance(currentBalance);
+            return;
+          }
+
+          const increase = currentBalance - lastKnownBalance;
+          
+          if (increase >= expectedAmount - 0.001) { // Allow small precision differences
+            setWalletMonitoring(false);
+            setLastKnownBalance(currentBalance);
+            
+            // Automatically credit tokens
+            const tokenAmount = Math.floor(expectedAmount * 1000);
+            try {
+              const response = await axios.post(`${API}/purchase-tokens`, {
+                user_id: user.id,
+                sol_amount: expectedAmount,
+                token_amount: tokenAmount
+              });
+
+              if (response.data.success) {
+                setUser(prev => ({
+                  ...prev,
+                  token_balance: prev.token_balance + tokenAmount
+                }));
+                toast.success(`🎉 Received ${tokenAmount} tokens automatically!`);
+              }
+            } catch (error) {
+              console.error('Failed to credit tokens:', error);
+              toast.error('Payment detected but failed to credit tokens. Contact support.');
+            }
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Balance check failed:', error);
+      }
+
+      // Continue monitoring if timeout not reached
+      if (Date.now() - startTime < timeout) {
+        setTimeout(checkBalance, 10000); // Check every 10 seconds
+      } else {
+        setWalletMonitoring(false);
+        toast.error('Payment monitoring timeout. Please contact support if you sent SOL.');
+      }
+    };
+
+    // Get initial balance
+    checkBalance();
+  };
+
   const joinRoom = async (roomType) => {
     if (!betAmount || parseInt(betAmount) <= 0) {
       toast.error('Please enter a valid bet amount');
