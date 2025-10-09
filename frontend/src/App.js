@@ -205,6 +205,10 @@ function App() {
       setUsername('');
       setWalletAddress('');
       toast.success('Welcome to the casino!');
+      // Load user prizes after user creation
+      setTimeout(() => {
+        loadUserPrizes();
+      }, 500);
     } catch (error) {
       console.error('Failed to create user:', error);
       toast.error('Failed to create user');
