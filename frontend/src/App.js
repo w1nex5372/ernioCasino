@@ -1040,10 +1040,12 @@ function App() {
                 </CardHeader>
                 <CardContent>
                   {/* Casino Wallet Address */}
-                  <div className="p-6 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-lg border border-green-500/30">
-                    <h3 className="text-xl font-semibold text-white mb-4 text-center">Casino Wallet Address</h3>
-                    <div className="bg-slate-800 p-4 rounded-lg border border-slate-600">
-                      <code className="text-green-400 font-mono text-lg break-all block text-center">
+                  <div className={`${isMobile ? 'p-4' : 'p-6'} bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-lg border border-green-500/30`}>
+                    <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold text-white mb-4 text-center`}>
+                      {isMobile ? 'Wallet Address' : 'Casino Wallet Address'}
+                    </h3>
+                    <div className={`bg-slate-800 ${isMobile ? 'p-3' : 'p-4'} rounded-lg border border-slate-600`}>
+                      <code className={`text-green-400 font-mono ${isMobile ? 'text-sm' : 'text-lg'} break-all block text-center`}>
                         {CASINO_WALLET_ADDRESS}
                       </code>
                     </div>
@@ -1051,16 +1053,23 @@ function App() {
                       <Button
                         onClick={() => {
                           navigator.clipboard.writeText(CASINO_WALLET_ADDRESS);
-                          toast.success('Wallet address copied to clipboard!');
+                          toast.success('Wallet address copied!');
                         }}
-                        className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2"
+                        className={`bg-green-600 hover:bg-green-700 text-white font-semibold ${isMobile ? 'px-4 py-3 w-full' : 'px-6 py-2'}`}
                       >
-                        📋 Copy Address
+                        📋 {isMobile ? 'Copy Address' : 'Copy Address'}
                       </Button>
                     </div>
-                    <p className="text-center text-slate-300 text-sm mt-4">
-                      💰 Current Balance: <span className="text-yellow-400 font-bold">{user.token_balance || 0} tokens</span>
+                    <p className={`text-center text-slate-300 ${isMobile ? 'text-sm' : 'text-sm'} mt-4`}>
+                      💰 Balance: <span className="text-yellow-400 font-bold">{user.token_balance || 0} tokens</span>
                     </p>
+                    {isMobile && (
+                      <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                        <p className="text-xs text-blue-300 text-center">
+                          📝 Send SOL to this address, then tokens will be added to your account
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
