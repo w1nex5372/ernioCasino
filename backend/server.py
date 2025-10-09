@@ -127,20 +127,26 @@ def calculate_win_probability(player_bet: int, total_pool: int) -> float:
     return min(base_prob + bet_bonus, 0.95)  # Cap at 95%
 
 def select_winner(players: List[RoomPlayer]) -> RoomPlayer:
-    """Select winner using weighted random selection"""
+    """Select winner using weighted random selection - bigger bets have better odds"""
     if not players:
         raise ValueError("No players to select from")
     
+    # Create weighted selection based on bet amounts
+    # Each player's chance = their bet amount / total pool
     total_pool = sum(p.bet_amount for p in players)
     
-    # Create weighted list
-    weighted_players = []
-    for player in players:
-        # Higher bets get more entries in the lottery
-        weight = max(1, int(player.bet_amount / 50))  # Minimum 1, scale by bet size
-        weighted_players.extend([player] * weight)
+    # Generate a random number between 0 and total_pool
+    random_point = random.uniform(0, total_pool)
     
-    return random.choice(weighted_players)
+    # Find the winner by walking through cumulative bet amounts
+    cumulative = 0
+    for player in players:
+        cumulative += player.bet_amount
+        if random_point <= cumulative:
+            return player
+    
+    # Fallback (should never reach here)
+    return players[-1]
 
 async def start_game_round(room: GameRoom):
     """Start a game round when room is full"""
