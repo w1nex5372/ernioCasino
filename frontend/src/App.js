@@ -183,10 +183,16 @@ function App() {
 
             console.log('Auth response:', response.data);
             setUser(response.data);
+            setIsLoading(false); // Important: Stop loading state
             toast.success(`Welcome, ${user.first_name}!`);
             
             // Expand the Web App to full height
             webApp.expand();
+            
+            // Load user data
+            setTimeout(() => {
+              loadUserPrizes();
+            }, 500);
             
             return true;
           } else {
