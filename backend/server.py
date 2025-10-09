@@ -380,9 +380,9 @@ class PaymentMonitor:
                     "$inc": {"token_balance": tokens_to_credit},
                     "$push": {
                         "payment_history": {
-                            "transaction_id": signature,
-                            "sol_amount": sol_amount,
-                            "tokens_credited": tokens_to_credit,
+                            "transaction_id": str(signature),
+                            "sol_amount": float(sol_amount),
+                            "tokens_credited": int(tokens_to_credit),
                             "timestamp": datetime.now(timezone.utc).isoformat(),
                             "status": "completed"
                         }
