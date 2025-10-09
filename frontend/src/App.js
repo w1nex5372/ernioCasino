@@ -390,6 +390,10 @@ function App() {
   }, [user]);
 
   const joinRoom = async (roomType) => {
+    console.log('Attempting to join room:', roomType);
+    console.log('Current user:', user);
+    console.log('Bet amount:', betAmount);
+
     if (!betAmount || parseInt(betAmount) <= 0) {
       toast.error('Please enter a valid bet amount');
       return;
@@ -398,27 +402,40 @@ function App() {
     const bet = parseInt(betAmount);
     const config = ROOM_CONFIGS[roomType];
 
+    console.log('Bet validation:', { bet, min: config.min, max: config.max, userBalance: user.token_balance });
+
     if (bet < config.min || bet > config.max) {
       toast.error(`Bet must be between ${config.min} and ${config.max} tokens`);
       return;
     }
 
-    if (bet > user.token_balance) {
-      toast.error('Insufficient token balance');
+    if (bet > (user.token_balance || 0)) {
+      toast.error('Insufficient token balance - Buy tokens first!');
+      return;
+    }
+
+    if (!user.id) {
+      toast.error('User not properly authenticated');
       return;
     }
 
     try {
-      const response = await axios.post(`${API}/join-room`, {
+      const joinData = {
         room_type: roomType,
         user_id: user.id,
         bet_amount: bet
-      });
+      };
+
+      console.log('Sending join room request:', joinData);
+
+      const response = await axios.post(`${API}/join-room`, joinData);
+
+      console.log('Join room response:', response.data);
 
       if (response.data.success) {
         setUser(prev => ({
           ...prev,
-          token_balance: prev.token_balance - bet
+          token_balance: (prev.token_balance || 0) - bet
         }));
         setBetAmount('');
         setSelectedRoom(null);
@@ -430,8 +447,18 @@ function App() {
         loadRooms();
       }
     } catch (error) {
-      console.error('Failed to join room:', error);
-      toast.error(error.response?.data?.detail || 'Failed to join room');
+      console.error('Failed to join room - Full error:', error);
+      console.error('Error response:', error.response);
+      
+      let errorMessage = 'Failed to join room';
+      
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(`Join failed: ${errorMessage}`);
     }
   };
 
