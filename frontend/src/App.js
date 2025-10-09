@@ -559,11 +559,11 @@ function App() {
                   ))}
                 </div>
               </CardContent>
-            </Card>
-          </TabsContent>
+              </Card>
+            )}
 
-          {/* Game History */}
-          <TabsContent value="history">
+            {/* Game History */}
+            {activeTab === 'history' && (
             <Card className="bg-slate-800/90 border-slate-700">
               <CardHeader>
                 <CardTitle className="text-slate-100">Recent Battle Results</CardTitle>
