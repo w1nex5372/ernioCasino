@@ -297,6 +297,7 @@ async def broadcast_room_updates():
         
     except Exception as e:
         logging.error(f"Error broadcasting room updates: {e}")
+
 async def start_game_round(room: GameRoom):
     """Start a game round when room is full"""
     if len(room.players) != 2:
