@@ -805,7 +805,7 @@ function App() {
                           <div className="grid grid-cols-2 gap-4 mt-4">
                             <div className="bg-white/15 rounded-lg p-3 backdrop-blur-sm">
                               <div className="text-white/80 text-xs uppercase tracking-wide font-medium">Players</div>
-                              <div className="text-white font-bold text-lg">{room.players_count}/10</div>
+                              <div className="text-white font-bold text-lg">{room.players_count}/2</div>
                             </div>
                             <div className="bg-white/15 rounded-lg p-3 backdrop-blur-sm">
                               <div className="text-white/80 text-xs uppercase tracking-wide font-medium">Prize Pool</div>
