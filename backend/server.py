@@ -18,8 +18,7 @@ import hashlib
 import hmac
 import aiohttp
 from solana.rpc.async_api import AsyncClient
-from solana.publickey import PublicKey
-from solders.pubkey import Pubkey as SoldersPubkey
+from solders.pubkey import Pubkey
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
