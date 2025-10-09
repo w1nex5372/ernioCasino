@@ -583,6 +583,9 @@ function App() {
     );
   }
 
+  // Debug log to see user state
+  console.log('Current user state:', user);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-x-hidden">
       {/* Mobile Header */}
