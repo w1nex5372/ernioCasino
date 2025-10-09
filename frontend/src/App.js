@@ -812,7 +812,6 @@ function App() {
           </div>
         </main>
       </div>
-      </div>
       <Toaster richColors position="top-right" />
     </>
   );
