@@ -321,6 +321,26 @@ async def start_game_round(room: GameRoom):
     except Exception as e:
         logging.error(f"Failed to store winner prize: {e}")
     
+    # Send Telegram notification to winner
+    try:
+        # Get winner's Telegram ID from database
+        winner_user = await db.users.find_one({"id": winner.user_id})
+        if winner_user and winner_user.get('telegram_id'):
+            telegram_success = await send_prize_notification(
+                telegram_id=winner_user['telegram_id'],
+                username=winner.username,
+                room_type=room.room_type,
+                prize_link=prize_link
+            )
+            if telegram_success:
+                logging.info(f"Telegram prize notification sent to {winner.username}")
+            else:
+                logging.warning(f"Failed to send Telegram notification to {winner.username}")
+        else:
+            logging.warning(f"No Telegram ID found for winner {winner.username}")
+    except Exception as e:
+        logging.error(f"Error sending Telegram notification: {e}")
+    
     # Notify all clients of the winner (but don't broadcast the prize link)
     await sio.emit('game_finished', {
         'room_id': room.id,
