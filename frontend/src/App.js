@@ -67,6 +67,8 @@ function App() {
   const [walletMonitoring, setWalletMonitoring] = useState(false);
   const [lastKnownBalance, setLastKnownBalance] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
 
   // Check if mobile
   useEffect(() => {
