@@ -383,6 +383,62 @@ function App() {
     }
   };
 
+  // Telegram Web App authentication
+  const authenticateWithTelegram = async () => {
+    try {
+      // Check if running inside Telegram Web App
+      if (window.Telegram && window.Telegram.WebApp) {
+        const webApp = window.Telegram.WebApp;
+        webApp.ready();
+        
+        const initData = webApp.initData;
+        if (!initData) {
+          toast.error('Please open this app through Telegram');
+          return;
+        }
+
+        // Parse init data
+        const urlParams = new URLSearchParams(initData);
+        const userParam = urlParams.get('user');
+        
+        if (!userParam) {
+          toast.error('No user data found');
+          return;
+        }
+
+        const userData = JSON.parse(userParam);
+        
+        // Send auth data to backend
+        const response = await axios.post(`${API}/auth/telegram`, {
+          telegram_auth_data: {
+            id: userData.id,
+            first_name: userData.first_name,
+            last_name: userData.last_name,
+            username: userData.username,
+            photo_url: userData.photo_url,
+            auth_date: Math.floor(Date.now() / 1000),
+            hash: urlParams.get('hash')
+          }
+        });
+
+        setUser(response.data);
+        toast.success(`Welcome, ${userData.first_name}!`);
+        
+        // Load user prizes after authentication
+        setTimeout(() => {
+          loadUserPrizes();
+        }, 500);
+
+      } else {
+        // Fallback for non-Telegram environment
+        toast.error('This app must be opened through Telegram');
+      }
+    } catch (error) {
+      console.error('Telegram auth failed:', error);
+      toast.error(error.response?.data?.detail || 'Authentication failed');
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
@@ -393,15 +449,29 @@ function App() {
             </div>
             <CardTitle className="text-2xl text-white">Casino Battle Royale</CardTitle>
             <CardDescription className="text-slate-300">
-              Join the ultimate betting arena where 10 players compete for the prize pool
+              Connect your Telegram account to access the ultimate betting arena
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            {/* Quick Buy Tokens Section */}
-            <div className="mb-6 p-4 bg-green-600/20 rounded-lg border border-green-500/30">
-              <h3 className="text-lg font-bold text-green-400 mb-2">💰 Quick Buy Tokens</h3>
-              <p className="text-sm text-green-200 mb-3">Send SOL to start playing immediately!</p>
+          <CardContent className="space-y-6">
+            {/* Telegram Connection Info */}
+            <div className="text-center p-6 bg-blue-600/20 rounded-lg border border-blue-500/30">
+              <div className="w-16 h-16 mx-auto mb-4 bg-blue-500 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.469 2.353-2.5 10.473-2.5 10.473-.168.684-.618.854-1.000.534l-2.774-2.049-1.338 1.287c-.15.15-.275.275-.563.275l.193-2.807 5.247-4.744c.227-.203-.054-.315-.35-.112l-6.5 4.087-2.8-.892c-.61-.19-.617-.61.128-.903l11.002-4.237c.508-.175.954.113.782.917z"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-blue-300 mb-2">Telegram Required</h3>
+              <p className="text-blue-200 text-sm mb-4">
+                This casino runs as a Telegram mini app for security and verification
+              </p>
+            </div>
+
+            {/* Token Purchase Info */}
+            <div className="p-4 bg-green-600/20 rounded-lg border border-green-500/30">
+              <h4 className="text-lg font-bold text-green-400 mb-2">💰 Buy Casino Tokens</h4>
+              <p className="text-sm text-green-200 mb-3">Send SOL to get tokens for betting</p>
               <div className="bg-green-900/50 p-3 rounded-lg">
+                <div className="text-xs text-green-300 mb-2">Casino Wallet Address:</div>
                 <div className="flex items-center justify-between">
                   <code className="text-green-400 font-mono text-xs break-all">
                     {CASINO_WALLET_ADDRESS}
@@ -414,7 +484,7 @@ function App() {
                     size="sm"
                     className="bg-green-600 hover:bg-green-700 ml-2"
                   >
-                    Copy Address
+                    Copy
                   </Button>
                 </div>
                 <div className="mt-2 text-xs text-green-300">
@@ -422,38 +492,23 @@ function App() {
                 </div>
               </div>
             </div>
-            
-            <form onSubmit={createUser} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Username
-                </label>
-                <Input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username"
-                  className="bg-slate-700 border-slate-600 text-white"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Solana Wallet Address (Optional)
-                </label>
-                <Input
-                  type="text"
-                  value={walletAddress}
-                  onChange={(e) => setWalletAddress(e.target.value)}
-                  placeholder="Your Solana wallet address"
-                  className="bg-slate-700 border-slate-600 text-white"
-                />
-              </div>
-              <Button type="submit" className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700">
-                <Play className="w-4 h-4 mr-2" />
-                Enter Casino
-              </Button>
-            </form>
+
+            {/* Connection Button */}
+            <Button 
+              onClick={authenticateWithTelegram}
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 text-lg"
+            >
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.469 2.353-2.5 10.473-2.5 10.473-.168.684-.618.854-1.000.534l-2.774-2.049-1.338 1.287c-.15.15-.275.275-.563.275l.193-2.807 5.247-4.744c.227-.203-.054-.315-.35-.112l-6.5 4.087-2.8-.892c-.61-.19-.617-.61.128-.903l11.002-4.237c.508-.175.954.113.782.917z"/>
+              </svg>
+              Connect Telegram Account
+            </Button>
+
+            <div className="text-center">
+              <p className="text-xs text-slate-500">
+                🔒 Secure • ✅ Verified • 🎰 Fair Play
+              </p>
+            </div>
           </CardContent>
         </Card>
         <Toaster richColors position="top-right" />
