@@ -531,7 +531,7 @@ async def get_leaderboard():
     pipeline = [
         {"$sort": {"token_balance": -1}},
         {"$limit": 10},
-        {"$project": {"_id": 0, "username": 1, "token_balance": 1}}
+        {"$project": {"_id": 0, "first_name": 1, "token_balance": 1}}
     ]
     
     leaderboard = await db.users.aggregate(pipeline).to_list(10)
