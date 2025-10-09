@@ -75,6 +75,7 @@ function App() {
   const [lastKnownBalance, setLastKnownBalance] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [userPrizes, setUserPrizes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Check if mobile
   useEffect(() => {
