@@ -151,16 +151,17 @@ class SolanaCasinoAPITester:
             self.log_test("Get Rooms", False, str(e))
             return False, []
 
-    def test_join_room(self, room_type="bronze", bet_amount=200):
+    def test_join_room(self, user_number=1, room_type="bronze", bet_amount=200):
         """Test joining a room"""
-        if not self.test_user:
-            self.log_test("Join Room", False, "No test user available")
+        test_user = self.test_user1 if user_number == 1 else self.test_user2
+        if not test_user:
+            self.log_test(f"Join Room User {user_number}", False, "No test user available")
             return False
         
         try:
             join_data = {
                 "room_type": room_type,
-                "user_id": self.test_user['id'],
+                "user_id": test_user['id'],
                 "bet_amount": bet_amount
             }
             
@@ -169,17 +170,17 @@ class SolanaCasinoAPITester:
             
             if success:
                 result = response.json()
-                details = f"Joined {room_type} room, position {result['position']}/10, players needed: {result['players_needed']}"
+                details = f"User {user_number} joined {room_type} room, position {result['position']}/2, players needed: {result['players_needed']}"
                 # Update local user balance
-                self.test_user['token_balance'] -= bet_amount
+                test_user['token_balance'] -= bet_amount
             else:
                 details = f"Status: {response.status_code}, Response: {response.text}"
             
-            self.log_test(f"Join Room ({room_type})", success, details)
-            return success
+            self.log_test(f"Join Room User {user_number} ({room_type})", success, details)
+            return success, result if success else None
         except Exception as e:
-            self.log_test(f"Join Room ({room_type})", False, str(e))
-            return False
+            self.log_test(f"Join Room User {user_number} ({room_type})", False, str(e))
+            return False, None
 
     def test_leaderboard(self):
         """Test leaderboard endpoint"""
