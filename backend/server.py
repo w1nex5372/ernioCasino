@@ -646,22 +646,6 @@ async def check_if_winner(user_id: str):
 # Include the router
 app.include_router(api_router)
 
-# Add middleware for Telegram Web App compatibility
-from fastapi import Request, Response
-from fastapi.middleware.base import BaseHTTPMiddleware
-
-class TelegramWebAppMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        response = await call_next(request)
-        
-        # Add headers for Telegram Web App compatibility
-        response.headers["X-Frame-Options"] = "ALLOWALL"
-        response.headers["Content-Security-Policy"] = "frame-ancestors *"
-        
-        return response
-
-app.add_middleware(TelegramWebAppMiddleware)
-
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
