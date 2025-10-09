@@ -618,74 +618,18 @@ function App() {
     );
   }
 
+  // No manual login - app only works through Telegram Web App
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-slate-800/90 border-slate-700">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center">
-              <Crown className="w-8 h-8 text-slate-900" />
-            </div>
-            <CardTitle className="text-2xl text-white">Casino Battle Royale</CardTitle>
-            <CardDescription className="text-slate-300">
-              Connect your Telegram account to battle 1v1 for prizes
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Telegram Connection Info */}
-            <div className="text-center p-6 bg-blue-600/20 rounded-lg border border-blue-500/30">
-              <div className="w-16 h-16 mx-auto mb-4 bg-blue-500 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.469 2.353-2.5 10.473-2.5 10.473-.168.684-.618.854-1.000.534l-2.774-2.049-1.338 1.287c-.15.15-.275.275-.563.275l.193-2.807 5.247-4.744c.227-.203-.054-.315-.35-.112l-6.5 4.087-2.8-.892c-.61-.19-.617-.61.128-.903l11.002-4.237c.508-.175.954.113.782.917z"/>
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-blue-300 mb-2">Telegram Required</h3>
-              <p className="text-blue-200 text-sm mb-4">
-                This casino runs as a Telegram mini app for security and verification
-              </p>
-            </div>
-
-            {/* Token Purchase Info */}
-            <div className="p-4 bg-green-600/20 rounded-lg border border-green-500/30">
-              <h4 className="text-lg font-bold text-green-400 mb-2">💰 Buy Casino Tokens</h4>
-              <p className="text-sm text-green-200 mb-3">Send SOL to get tokens for betting</p>
-              <div className="bg-green-900/50 p-3 rounded-lg">
-                <div className="text-xs text-green-300 mb-2">Casino Wallet Address:</div>
-                <div className="flex items-center justify-between">
-                  <code className="text-green-400 font-mono text-xs break-all">
-                    {CASINO_WALLET_ADDRESS}
-                  </code>
-                  <Button
-                    onClick={() => {
-                      navigator.clipboard.writeText(CASINO_WALLET_ADDRESS);
-                      toast.success('Wallet address copied!');
-                    }}
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-700 ml-2"
-                  >
-                    Copy
-                  </Button>
-                </div>
-                <div className="mt-2 text-xs text-green-300">
-                  Rate: 1 SOL = 1,000 casino tokens
-                </div>
-              </div>
-            </div>
-
-            {/* Connection Button */}
-            <Button 
-              onClick={authenticateWithTelegram}
-              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 text-lg"
-            >
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0C5.374 0 0 5.373 0 12s5.374 12 12 12 12-5.373 12-12S18.626 0 12 0zm5.568 8.16c-.469 2.353-2.5 10.473-2.5 10.473-.168.684-.618.854-1.000.534l-2.774-2.049-1.338 1.287c-.15.15-.275.275-.563.275l.193-2.807 5.247-4.744c.227-.203-.054-.315-.35-.112l-6.5 4.087-2.8-.892c-.61-.19-.617-.61.128-.903l11.002-4.237c.508-.175.954.113.782.917z"/>
-              </svg>
-              Connect Telegram Account
-            </Button>
-
-            <div className="text-center">
-              <p className="text-xs text-slate-500">
-                🔒 Secure • ✅ Verified • 🎰 Fair Play
+          <CardContent className="p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
+            <h3 className="text-xl font-bold text-white mb-2">Loading Casino...</h3>
+            <p className="text-slate-400">Connecting to Telegram Web App</p>
+            <div className="mt-6 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-xs text-blue-300">
+                💡 This casino works only as a Telegram Web App. Please open through Telegram.
               </p>
             </div>
           </CardContent>
