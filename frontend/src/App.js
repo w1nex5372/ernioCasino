@@ -765,7 +765,7 @@ function App() {
           )}
           </div>
         </nav>
-        )}
+        }
 
         {/* Main Content */}
         <main className={`flex-1 ${isMobile ? 'pb-20' : 'p-6'} p-3 md:p-6`}>
