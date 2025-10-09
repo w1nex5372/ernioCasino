@@ -145,10 +145,54 @@ function App() {
     loadGameHistory();
     loadLeaderboard();
     
-    // Load user prizes if user exists
-    if (user) {
-      loadUserPrizes();
-    }
+    // Auto-authenticate if opened from Telegram
+    const autoAuthenticateFromTelegram = async () => {
+      try {
+        // Check if Telegram Web App is available
+        if (window.Telegram && window.Telegram.WebApp) {
+          const webApp = window.Telegram.WebApp;
+          webApp.ready();
+          
+          const initData = webApp.initData;
+          const user = webApp.initDataUnsafe?.user;
+          
+          if (user && user.id) {
+            console.log('Telegram user found:', user);
+            
+            // Create auth data
+            const authData = {
+              id: user.id,
+              first_name: user.first_name,
+              last_name: user.last_name || null,
+              username: user.username || null,
+              photo_url: user.photo_url || null,
+              auth_date: Math.floor(Date.now() / 1000),
+              hash: webApp.initDataUnsafe?.hash || 'telegram_auto'
+            };
+
+            // Send auth data to backend
+            const response = await axios.post(`${API}/auth/telegram`, {
+              telegram_auth_data: authData
+            });
+
+            setUser(response.data);
+            toast.success(`Welcome, ${user.first_name}!`);
+            
+            // Expand the Web App to full height
+            webApp.expand();
+            
+            return true;
+          }
+        }
+        return false;
+      } catch (error) {
+        console.error('Auto auth failed:', error);
+        return false;
+      }
+    };
+
+    // Try auto-authentication
+    setTimeout(autoAuthenticateFromTelegram, 1000);
   }, []);
 
   const loadRooms = async () => {
