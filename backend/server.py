@@ -244,6 +244,194 @@ async def send_prize_notification(telegram_id: int, username: str, room_type: st
         logging.error(f"Error sending prize notification: {e}")
         return False
 
+# Solana Payment Monitoring System
+class PaymentMonitor:
+    def __init__(self):
+        self.client = AsyncClient(SOLANA_RPC_URL)
+        self.last_checked_signature = None
+        self.monitoring = False
+        
+    async def start_monitoring(self):
+        """Start monitoring Solana payments"""
+        if self.monitoring:
+            return
+            
+        self.monitoring = True
+        logging.info(f"🚀 Starting Solana payment monitoring on devnet: {CASINO_WALLET_ADDRESS}")
+        
+        # Run monitoring in background
+        asyncio.create_task(self._monitor_payments())
+    
+    async def _monitor_payments(self):
+        """Monitor casino wallet for incoming payments"""
+        try:
+            while self.monitoring:
+                await self._check_for_payments()
+                await asyncio.sleep(10)  # Check every 10 seconds
+                
+        except Exception as e:
+            logging.error(f"Payment monitoring error: {e}")
+            # Restart monitoring after error
+            await asyncio.sleep(30)
+            if self.monitoring:
+                asyncio.create_task(self._monitor_payments())
+    
+    async def _check_for_payments(self):
+        """Check for new payments to casino wallet"""
+        try:
+            if not CASINO_WALLET_ADDRESS or CASINO_WALLET_ADDRESS == 'YourWalletAddressHere12345678901234567890123456789':
+                return
+                
+            # Get wallet public key
+            wallet_pubkey = PublicKey(CASINO_WALLET_ADDRESS)
+            
+            # Get recent transactions
+            response = await self.client.get_signatures_for_address(
+                wallet_pubkey, 
+                limit=10,
+                before=self.last_checked_signature if self.last_checked_signature else None
+            )
+            
+            if response.value:
+                signatures = response.value
+                
+                # Process new transactions (most recent first)
+                for sig_info in reversed(signatures):
+                    if self.last_checked_signature and sig_info.signature == self.last_checked_signature:
+                        break
+                        
+                    await self._process_transaction(sig_info.signature)
+                
+                # Update last checked signature
+                if signatures:
+                    self.last_checked_signature = signatures[0].signature
+                    
+        except Exception as e:
+            logging.error(f"Error checking payments: {e}")
+    
+    async def _process_transaction(self, signature: str):
+        """Process a single transaction for payment detection"""
+        try:
+            # Get transaction details
+            tx = await self.client.get_transaction(signature)
+            if not tx.value or not tx.value.transaction:
+                return
+                
+            transaction = tx.value.transaction
+            meta = tx.value.transaction.meta
+            
+            if not meta or meta.err:
+                return  # Skip failed transactions
+            
+            # Check if this is an incoming SOL transfer
+            pre_balances = meta.pre_balances
+            post_balances = meta.post_balances
+            
+            # Find casino wallet in account keys
+            account_keys = transaction.transaction.message.account_keys
+            casino_wallet_index = None
+            
+            for i, key in enumerate(account_keys):
+                if str(key) == CASINO_WALLET_ADDRESS:
+                    casino_wallet_index = i
+                    break
+            
+            if casino_wallet_index is None:
+                return
+            
+            # Calculate SOL received (in lamports)
+            if len(post_balances) > casino_wallet_index and len(pre_balances) > casino_wallet_index:
+                balance_change = post_balances[casino_wallet_index] - pre_balances[casino_wallet_index]
+                
+                if balance_change > 0:  # Received SOL
+                    sol_amount = balance_change / 1_000_000_000  # Convert lamports to SOL
+                    
+                    logging.info(f"💰 Received {sol_amount} SOL in transaction {signature}")
+                    
+                    # Try to identify the sender and credit tokens
+                    await self._credit_tokens_for_payment(signature, sol_amount, transaction)
+                    
+        except Exception as e:
+            logging.error(f"Error processing transaction {signature}: {e}")
+    
+    async def _credit_tokens_for_payment(self, signature: str, sol_amount: float, transaction):
+        """Credit tokens to user account for SOL payment"""
+        try:
+            # Calculate tokens to credit (1 SOL = 1000 tokens)
+            tokens_to_credit = int(sol_amount * 1000)
+            
+            if tokens_to_credit <= 0:
+                return
+            
+            # For demo purposes, credit to the most recent user if we can't identify sender
+            # In production, you'd implement sender identification logic
+            recent_user = await db.users.find_one(
+                {}, 
+                sort=[("last_login", -1)]
+            )
+            
+            if not recent_user:
+                logging.warning(f"No user found to credit {tokens_to_credit} tokens for {sol_amount} SOL")
+                return
+            
+            # Credit tokens to user
+            result = await db.users.update_one(
+                {"telegram_id": recent_user["telegram_id"]},
+                {
+                    "$inc": {"token_balance": tokens_to_credit},
+                    "$push": {
+                        "payment_history": {
+                            "transaction_id": signature,
+                            "sol_amount": sol_amount,
+                            "tokens_credited": tokens_to_credit,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                            "status": "completed"
+                        }
+                    }
+                }
+            )
+            
+            if result.modified_count > 0:
+                logging.info(f"✅ Credited {tokens_to_credit} tokens to user {recent_user['first_name']} for {sol_amount} SOL")
+                
+                # Send notification to user
+                if recent_user.get('telegram_id'):
+                    await self._send_payment_confirmation(
+                        recent_user['telegram_id'],
+                        recent_user['first_name'],
+                        sol_amount,
+                        tokens_to_credit
+                    )
+                
+                # Broadcast token update to frontend
+                await sio.emit('token_balance_updated', {
+                    'user_id': recent_user['id'],
+                    'new_balance': recent_user.get('token_balance', 0) + tokens_to_credit,
+                    'tokens_added': tokens_to_credit,
+                    'sol_received': sol_amount
+                })
+                
+        except Exception as e:
+            logging.error(f"Error crediting tokens for payment: {e}")
+    
+    async def _send_payment_confirmation(self, telegram_id: int, username: str, sol_amount: float, tokens_credited: int):
+        """Send payment confirmation to user via Telegram"""
+        try:
+            message = f"💰 <b>Payment Confirmed!</b>\n\n"
+            message += f"Hello {username}!\n\n"
+            message += f"✅ Received: <b>{sol_amount} SOL</b>\n"
+            message += f"🎰 Credited: <b>{tokens_credited:,} Casino Tokens</b>\n\n"
+            message += f"Your tokens are ready for battle! Good luck! 🎯"
+            
+            await send_telegram_message(telegram_id, message)
+            logging.info(f"📨 Payment confirmation sent to {username}")
+            
+        except Exception as e:
+            logging.error(f"Error sending payment confirmation: {e}")
+
+# Initialize payment monitor
+payment_monitor = PaymentMonitor()
+
 # Socket.IO events
 @sio.event
 async def connect(sid, environ):
