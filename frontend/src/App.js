@@ -526,53 +526,12 @@ function App() {
             </Card>
           </TabsContent>
 
-          {/* Token Purchase */}
-          <TabsContent value="tokens">
-            <Card className="bg-slate-800/90 border-slate-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-green-400">
-                  <Coins className="w-5 h-5" />
-                  Purchase Casino Tokens
-                </CardTitle>
-                <CardDescription className="text-slate-400">
-                  Exchange SOL for casino tokens. Rate: 1 SOL = 1,000 tokens
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={purchaseTokens} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      SOL Amount
-                    </label>
-                    <Input
-                      type="number"
-                      step="0.001"
-                      value={solAmount}
-                      onChange={(e) => setSolAmount(e.target.value)}
-                      placeholder="Enter SOL amount"
-                      className="bg-slate-700 border-slate-600 text-white"
-                    />
-                  </div>
-                  {solAmount && (
-                    <div className="p-3 bg-slate-700/50 rounded-lg">
-                      <div className="text-sm text-slate-300">
-                        You will receive: <span className="font-bold text-yellow-400">
-                          {Math.floor(parseFloat(solAmount || 0) * 1000)} tokens
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                    disabled={!solAmount || parseFloat(solAmount) <= 0}
-                  >
-                    Purchase Tokens
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                        <div className="w-full bg-slate-600 rounded-full h-2">
+                          <div 
+                            className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${(room.players_count / 10) * 100}%` }}
+                          />
+                        </div>
         </Tabs>
       </div>
       <Toaster richColors position="top-right" />
