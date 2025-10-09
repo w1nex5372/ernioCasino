@@ -223,6 +223,108 @@ class SolanaCasinoAPITester:
             self.log_test("Game History", False, str(e))
             return False
 
+    def test_user_prizes(self, user_number=1):
+        """Test getting user prizes"""
+        test_user = self.test_user1 if user_number == 1 else self.test_user2
+        if not test_user:
+            self.log_test(f"User Prizes User {user_number}", False, "No test user available")
+            return False
+        
+        try:
+            response = requests.get(f"{self.api_url}/user/{test_user['id']}/prizes")
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                prizes = data.get('prizes', [])
+                details = f"User {user_number} has {len(prizes)} prizes"
+                if prizes:
+                    latest_prize = prizes[0]
+                    details += f", Latest: {latest_prize.get('room_type', 'unknown')} room prize"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test(f"User Prizes User {user_number}", success, details)
+            return success, prizes if success else []
+        except Exception as e:
+            self.log_test(f"User Prizes User {user_number}", False, str(e))
+            return False, []
+
+    def test_check_winner(self, user_number=1):
+        """Test checking if user is a winner"""
+        test_user = self.test_user1 if user_number == 1 else self.test_user2
+        if not test_user:
+            self.log_test(f"Check Winner User {user_number}", False, "No test user available")
+            return False
+        
+        try:
+            response = requests.get(f"{self.api_url}/check-winner/{test_user['id']}")
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                recent_prizes = data.get('recent_prizes', [])
+                details = f"User {user_number} has {len(recent_prizes)} recent prizes"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test(f"Check Winner User {user_number}", success, details)
+            return success
+        except Exception as e:
+            self.log_test(f"Check Winner User {user_number}", False, str(e))
+            return False
+
+    def test_two_player_game_flow(self):
+        """Test complete 2-player game flow with winner selection"""
+        if not self.test_user1 or not self.test_user2:
+            self.log_test("2-Player Game Flow", False, "Need both test users")
+            return False
+        
+        try:
+            print("\n🎮 Testing 2-Player Game Flow...")
+            
+            # Both users join the same Bronze room
+            bet_amount = 300  # Within Bronze range (150-450)
+            
+            # User 1 joins first
+            success1, result1 = self.test_join_room(1, "bronze", bet_amount)
+            if not success1:
+                self.log_test("2-Player Game Flow", False, "User 1 failed to join room")
+                return False
+            
+            # User 2 joins second (should trigger game start)
+            success2, result2 = self.test_join_room(2, "bronze", bet_amount)
+            if not success2:
+                self.log_test("2-Player Game Flow", False, "User 2 failed to join room")
+                return False
+            
+            # Wait for game to complete (3 seconds + processing time)
+            print("⏳ Waiting for game to complete...")
+            time.sleep(5)
+            
+            # Check if either user has won prizes
+            success_prizes1, prizes1 = self.test_user_prizes(1)
+            success_prizes2, prizes2 = self.test_user_prizes(2)
+            
+            if not success_prizes1 or not success_prizes2:
+                self.log_test("2-Player Game Flow", False, "Failed to check prizes")
+                return False
+            
+            # One user should have a new prize
+            total_new_prizes = len(prizes1) + len(prizes2)
+            if total_new_prizes >= 1:
+                winner_num = 1 if len(prizes1) > 0 else 2
+                details = f"Game completed successfully! User {winner_num} won the prize. Total prizes found: {total_new_prizes}"
+                self.log_test("2-Player Game Flow", True, details)
+                return True
+            else:
+                self.log_test("2-Player Game Flow", False, "No winner found after game completion")
+                return False
+                
+        except Exception as e:
+            self.log_test("2-Player Game Flow", False, str(e))
+            return False
+
     def test_invalid_endpoints(self):
         """Test error handling for invalid requests"""
         tests = [
