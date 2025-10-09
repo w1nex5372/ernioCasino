@@ -903,6 +903,69 @@ function App() {
               </Card>
             )}
 
+            {/* My Prizes */}
+            {activeTab === 'prizes' && (
+              <Card className="bg-slate-800/90 border-slate-700">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-purple-400">
+                    <Trophy className="w-5 h-5" />
+                    My Prizes
+                  </CardTitle>
+                  <CardDescription className="text-slate-400">
+                    Your won prizes from battle royale games
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {userPrizes.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Trophy className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-slate-400 mb-2">No Prizes Yet</h3>
+                      <p className="text-slate-500">
+                        Win battle royale games to earn prizes! Join a room and compete with other players.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {userPrizes.map((prize, index) => (
+                        <div key={index} className="p-4 bg-slate-700/30 rounded-lg border border-slate-600">
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                                prize.room_type === 'gold' ? 'bg-yellow-500' :
+                                prize.room_type === 'silver' ? 'bg-slate-400' : 'bg-amber-600'
+                              }`}>
+                                <span className="text-2xl">
+                                  {prize.room_type === 'gold' ? '🥇' :
+                                   prize.room_type === 'silver' ? '🥈' : '🥉'}
+                                </span>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-white">
+                                  {ROOM_CONFIGS[prize.room_type].name} Winner
+                                </h4>
+                                <p className="text-sm text-slate-400">
+                                  Round #{prize.round_number} • {prize.prize_pool} tokens won
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  {new Date(prize.won_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              onClick={() => window.open(prize.prize_link, '_blank')}
+                              className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+                            >
+                              Claim Prize
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
           </div>
         </main>
       </div>
