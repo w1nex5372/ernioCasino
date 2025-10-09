@@ -498,7 +498,7 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         "success": True,
         "room_id": target_room.id,
         "position": len(target_room.players),
-        "players_needed": 10 - len(target_room.players)
+        "players_needed": 2 - len(target_room.players)
     }
 
 @api_router.get("/room/{room_id}")
