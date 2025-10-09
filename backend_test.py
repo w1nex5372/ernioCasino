@@ -194,7 +194,7 @@ class SolanaCasinoAPITester:
                 details = f"Leaderboard has {len(leaderboard)} players"
                 if leaderboard:
                     top_player = leaderboard[0]
-                    details += f", Top: {top_player['username']} ({top_player['token_balance']} tokens)"
+                    details += f", Top: {top_player['first_name']} ({top_player['token_balance']} tokens)"
             else:
                 details = f"Status: {response.status_code}, Response: {response.text}"
             
