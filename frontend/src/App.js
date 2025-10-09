@@ -606,12 +606,10 @@ function App() {
                 Buy Tokens
               </Button>
 
-              {!isMobile && (
-                <div className="flex items-center gap-2">
-                  <Wallet className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-300">{user.first_name}{user.last_name ? ` ${user.last_name}` : ''}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <Wallet className="w-4 h-4 text-slate-400" />
+                <span className="text-slate-300">{user.first_name}{user.last_name ? ` ${user.last_name}` : ''}</span>
+              </div>
               <div className="flex items-center gap-1">
                 <Coins className="w-4 h-4 text-yellow-400" />
                 <span className="text-sm md:text-lg font-bold text-yellow-400">{user.token_balance}</span>
