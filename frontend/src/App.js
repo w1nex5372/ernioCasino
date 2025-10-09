@@ -715,8 +715,9 @@ function App() {
                       <Coins className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-white">Buy Casino Tokens</h3>
+                      <h3 className="text-xl font-bold text-white">Welcome, {user.first_name}!</h3>
                       <p className="text-green-200">Send SOL to get tokens for betting • Rate: 1 SOL = 1,000 tokens</p>
+                      <p className="text-yellow-400 font-semibold">Your Balance: {user.token_balance || 0} tokens</p>
                     </div>
                   </div>
                   <Button
