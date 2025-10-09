@@ -273,6 +273,30 @@ def select_winner(players: List[RoomPlayer]) -> RoomPlayer:
     # Fallback (should never reach here)
     return players[-1]
 
+async def broadcast_room_updates():
+    """Broadcast current room states to all connected clients"""
+    try:
+        room_data = []
+        for room in active_rooms.values():
+            room_info = {
+                'id': room.id,
+                'room_type': room.room_type,
+                'players': [p.dict() for p in room.players],
+                'status': room.status,
+                'prize_pool': room.prize_pool,
+                'round_number': room.round_number,
+                'players_count': len(room.players),
+                'max_players': 2
+            }
+            room_data.append(room_info)
+        
+        await sio.emit('rooms_updated', {
+            'rooms': room_data,
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        })
+        
+    except Exception as e:
+        logging.error(f"Error broadcasting room updates: {e}")
 async def start_game_round(room: GameRoom):
     """Start a game round when room is full"""
     if len(room.players) != 2:
