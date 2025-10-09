@@ -334,7 +334,7 @@ function App() {
           </Button>
         </div>
 
-        <Tabs defaultValue="rooms" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 bg-slate-800">
             <TabsTrigger value="rooms" className="data-[state=active]:bg-yellow-600">
               <Users className="w-4 h-4 mr-2" />
