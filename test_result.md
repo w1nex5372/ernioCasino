@@ -147,6 +147,42 @@ backend:
           agent: "testing"
           comment: "TESTED: Complete 2-player game flow working perfectly. Winner selection uses weighted probability, game starts automatically when 2 players join, winner selected after 3 seconds. Prize data stored in winner_prizes collection, completed game stored in completed_games collection. WebSocket events (game_starting, game_finished, prize_won) all working correctly."
 
+  - task: "User Authentication and Token Management"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "TESTED: Telegram authentication working correctly. Users created with proper telegram_id storage. Token purchase system working (1 SOL = 1000 tokens). User balance management working correctly during betting."
+
+  - task: "Prize API Endpoints"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "TESTED: Prize endpoints working correctly. GET /api/user/{user_id}/prizes returns user's prize history. GET /api/check-winner/{user_id} returns recent prizes. Prize data properly stored with room_type, prize_link, bet_amount, and timestamp."
+
+  - task: "Room Management and Game History"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "TESTED: Room system working correctly. GET /api/rooms shows active rooms with player counts. Room cleanup and new room creation after game completion working. Game history endpoint returning completed games correctly."
+
 frontend:
   - task: "Claim Prize Button UI"
     implemented: true
