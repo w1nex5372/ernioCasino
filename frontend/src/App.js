@@ -630,7 +630,9 @@ function App() {
   console.log('Current user state:', user);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-x-hidden">
+    <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white ${
+      isMobile ? 'overflow-x-hidden max-w-full' : 'overflow-x-hidden'
+    }`}>
       {/* Header */}
       <header className="bg-slate-900/90 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
         <div className="px-4 py-3">
