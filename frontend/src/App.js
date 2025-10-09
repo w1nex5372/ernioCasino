@@ -818,24 +818,23 @@ function App() {
                         <div className={`space-y-${isMobile ? '4' : '6'}`}>
                           <div className="space-y-3">
                             <div className="flex justify-between items-center">
-                              <span className={`text-slate-400 font-medium ${isMobile ? 'text-sm' : ''}`}>Battle Progress</span>
-                              <span className={`font-bold text-yellow-400 ${isMobile ? 'text-sm' : ''}`}>{room.players_count}/10 Players</span>
+                              <span className={`text-slate-400 font-medium ${isMobile ? 'text-sm' : ''}`}>Battle Status</span>
+                              <span className={`font-bold text-yellow-400 ${isMobile ? 'text-sm' : ''}`}>{room.players_count}/2 Players</span>
                             </div>
                             
                             <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
                               <div 
                                 className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-3 rounded-full transition-all duration-500 ease-out relative"
-                                style={{ width: `${(room.players_count / 10) * 100}%` }}
+                                style={{ width: `${(room.players_count / 2) * 100}%` }}
                               >
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/20"></div>
                               </div>
                             </div>
                             
                             <div className="text-center text-xs text-slate-500">
-                              {room.players_count === 10 ? '🔥 Battle in Progress!' : 
-                               room.players_count >= 7 ? '⚡ Almost Full!' :
-                               room.players_count >= 4 ? '🎯 Halfway There!' :
-                               '🚀 Join the Battle!'}
+                              {room.players_count === 2 ? '🔥 Battle Starting!' : 
+                               room.players_count === 1 ? '⏳ Waiting for opponent...' :
+                               '🎯 Join the Battle!'}
                             </div>
                           </div>
                           
