@@ -394,10 +394,12 @@ function App() {
                           <span className="font-bold text-yellow-400">{room.players_count}/10</span>
                         </div>
                         
-                        <Progress 
-                          value={(room.players_count / 10) * 100} 
-                          className="h-2"
-                        />
+                        <div className="w-full bg-slate-600 rounded-full h-2">
+                          <div 
+                            className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${(room.players_count / 10) * 100}%` }}
+                          />
+                        </div>
                         
                         <div className="flex justify-between items-center">
                           <span className="text-slate-300">Prize Pool:</span>
