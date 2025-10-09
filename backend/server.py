@@ -72,6 +72,11 @@ class RoomPlayer(BaseModel):
     bet_amount: int
     joined_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class GameResult(BaseModel):
+    winner: RoomPlayer
+    prize_link: str
+    total_bet_amount: int
+
 class GameRoom(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -80,6 +85,7 @@ class GameRoom(BaseModel):
     status: str = "waiting"  # waiting, playing, finished
     prize_pool: int = Field(default=0)
     winner: Optional[RoomPlayer] = None
+    prize_link: Optional[str] = None
     round_number: int = Field(default=1)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     started_at: Optional[datetime] = None
