@@ -1029,111 +1029,35 @@ function App() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-green-400">
                     <Coins className="w-5 h-5" />
-                    Purchase Casino Tokens
+                    Buy Casino Tokens
                   </CardTitle>
                   <CardDescription className="text-slate-400">
-                    Send SOL to our wallet address below to receive casino tokens at rate: 1 SOL = 1,000 tokens
+                    Send SOL to the wallet address below to receive casino tokens (Rate: 1 SOL = 1,000 tokens)
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  
+                <CardContent>
                   {/* Casino Wallet Address */}
-                  <div className="p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-                    <h3 className="text-lg font-semibold text-white mb-2">Casino Wallet Address</h3>
-                    <div className="flex items-center justify-between bg-slate-800 p-3 rounded-lg">
-                      <code className="text-green-400 font-mono text-sm break-all">
+                  <div className="p-6 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-lg border border-green-500/30">
+                    <h3 className="text-xl font-semibold text-white mb-4 text-center">Casino Wallet Address</h3>
+                    <div className="bg-slate-800 p-4 rounded-lg border border-slate-600">
+                      <code className="text-green-400 font-mono text-lg break-all block text-center">
                         {CASINO_WALLET_ADDRESS}
                       </code>
+                    </div>
+                    <div className="flex justify-center mt-4">
                       <Button
                         onClick={() => {
                           navigator.clipboard.writeText(CASINO_WALLET_ADDRESS);
-                          toast.success('Wallet address copied!');
+                          toast.success('Wallet address copied to clipboard!');
                         }}
-                        size="sm"
-                        variant="outline"
-                        className="ml-2 border-slate-600 text-slate-300 hover:bg-slate-700"
+                        className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2"
                       >
-                        Copy
+                        📋 Copy Address
                       </Button>
                     </div>
-                    <p className="text-xs text-slate-400 mt-2">
-                      Send your SOL to this address, then use the form below to claim your tokens
+                    <p className="text-center text-slate-300 text-sm mt-4">
+                      💰 Current Balance: <span className="text-yellow-400 font-bold">{user.token_balance || 0} tokens</span>
                     </p>
-                  </div>
-
-                  {/* Token Claim Form */}
-                  <div className="p-4 bg-slate-700/30 rounded-lg border border-slate-600">
-                    <h3 className="text-lg font-semibold text-white mb-3">
-                      {walletMonitoring ? 'Monitoring Payment...' : 'Send SOL & Get Tokens'}
-                    </h3>
-                    
-                    {walletMonitoring ? (
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-center p-6">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400"></div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-yellow-400 font-medium">Monitoring wallet for payment...</div>
-                          <div className="text-slate-400 text-sm mt-1">
-                            Waiting for {solAmount} SOL payment to arrive
-                          </div>
-                          <div className="text-xs text-slate-500 mt-2">
-                            This may take a few moments. Do not refresh the page.
-                          </div>
-                        </div>
-                        <Button 
-                          onClick={() => setWalletMonitoring(false)}
-                          variant="outline"
-                          className="w-full border-slate-600 text-slate-300 hover:bg-slate-700"
-                        >
-                          Cancel Monitoring
-                        </Button>
-                      </div>
-                    ) : (
-                      <form onSubmit={purchaseTokens} className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-2">
-                            SOL Amount to Send
-                          </label>
-                          <Input
-                            type="number"
-                            step="0.001"
-                            value={solAmount}
-                            onChange={(e) => setSolAmount(e.target.value)}
-                            placeholder="Enter SOL amount (e.g., 0.5)"
-                            className="bg-slate-700 border-slate-600 text-white"
-                          />
-                        </div>
-                        {solAmount && (
-                          <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                            <div className="text-sm text-green-300">
-                              You will receive: <span className="font-bold text-green-400">
-                                {Math.floor(parseFloat(solAmount || 0) * 1000)} casino tokens
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        <Button 
-                          type="submit" 
-                          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                          disabled={!solAmount || parseFloat(solAmount) <= 0}
-                        >
-                          <Coins className="w-4 h-4 mr-2" />
-                          Start Monitoring ({solAmount ? Math.floor(parseFloat(solAmount) * 1000) : 0} tokens)
-                        </Button>
-                      </form>
-                    )}
-                  </div>
-
-                  {/* Instructions */}
-                  <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                    <h4 className="font-semibold text-blue-400 mb-2">📝 How to Purchase Tokens:</h4>
-                    <ol className="text-sm text-slate-300 space-y-1 list-decimal list-inside">
-                      <li>Copy the casino wallet address above</li>
-                      <li>Send SOL from your wallet to this address</li>
-                      <li>Enter the amount you sent in the form</li>
-                      <li>Click "Start Monitoring" to automatically receive your tokens</li>
-                    </ol>
                   </div>
                 </CardContent>
               </Card>
