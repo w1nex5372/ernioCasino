@@ -562,12 +562,12 @@ function App() {
                           </div>
                         </div>
                       </CardHeader>
-                      <CardContent className="p-6">
-                        <div className="space-y-6">
+                      <CardContent className={`${isMobile ? 'p-4' : 'p-6'}`}>
+                        <div className={`space-y-${isMobile ? '4' : '6'}`}>
                           <div className="space-y-3">
                             <div className="flex justify-between items-center">
-                              <span className="text-slate-400 font-medium">Battle Progress</span>
-                              <span className="font-bold text-yellow-400">{room.players_count}/10 Players</span>
+                              <span className={`text-slate-400 font-medium ${isMobile ? 'text-sm' : ''}`}>Battle Progress</span>
+                              <span className={`font-bold text-yellow-400 ${isMobile ? 'text-sm' : ''}`}>{room.players_count}/10 Players</span>
                             </div>
                             
                             <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
@@ -595,15 +595,15 @@ function App() {
                                 type="number"
                                 value={betAmount}
                                 onChange={(e) => setBetAmount(e.target.value)}
-                                placeholder={`Bet amount (${config.min}-${config.max})`}
-                                className="bg-slate-700 border-slate-600 text-white"
+                                placeholder={`Bet ${config.min}-${config.max}`}
+                                className={`bg-slate-700 border-slate-600 text-white ${isMobile ? 'h-12 text-lg' : ''}`}
                                 min={config.min}
                                 max={config.max}
                               />
-                              <div className="flex gap-2">
+                              <div className={`flex gap-2 ${isMobile ? 'flex-col' : ''}`}>
                                 <Button 
                                   onClick={() => joinRoom(roomType)}
-                                  className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                                  className={`flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 ${isMobile ? 'h-12 text-lg' : ''}`}
                                   disabled={room.players_count >= 10}
                                 >
                                   Join Battle
@@ -611,7 +611,7 @@ function App() {
                                 <Button 
                                   onClick={() => setSelectedRoom(null)}
                                   variant="outline"
-                                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                                  className={`border-slate-600 text-slate-300 hover:bg-slate-700 ${isMobile ? 'h-12' : ''}`}
                                 >
                                   Cancel
                                 </Button>
@@ -620,7 +620,7 @@ function App() {
                           ) : (
                             <Button 
                               onClick={() => setSelectedRoom(roomType)}
-                              className={`w-full bg-gradient-to-r ${config.gradient} hover:opacity-90`}
+                              className={`w-full bg-gradient-to-r ${config.gradient} hover:opacity-90 ${isMobile ? 'h-12 text-lg font-semibold' : ''}`}
                               disabled={room.players_count >= 10 || room.status !== 'waiting'}
                             >
                               {room.players_count >= 10 ? 'Room Full' : 
