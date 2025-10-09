@@ -470,6 +470,21 @@ function App() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-slate-800/90 border-slate-700">
+          <CardContent className="p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
+            <h3 className="text-xl font-bold text-white mb-2">Connecting to Telegram...</h3>
+            <p className="text-slate-400">Authenticating your account</p>
+          </CardContent>
+        </Card>
+        <Toaster richColors position="top-right" />
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
