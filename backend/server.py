@@ -51,6 +51,9 @@ PRIZE_LINKS = {
     RoomType.GOLD: "https://your-prize-link-3.com"     # Prize link for Gold room
 }
 
+# ** EDIT THIS LINE TO ADD YOUR TELEGRAM BOT TOKEN **
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_TELEGRAM_BOT_TOKEN_HERE')
+
 ROOM_SETTINGS = {
     RoomType.BRONZE: {"min_bet": 150, "max_bet": 450, "name": "Bronze Room"},
     RoomType.SILVER: {"min_bet": 500, "max_bet": 1500, "name": "Silver Room"},
