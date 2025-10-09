@@ -216,7 +216,7 @@ def select_winner(players: List[RoomPlayer]) -> RoomPlayer:
 
 async def start_game_round(room: GameRoom):
     """Start a game round when room is full"""
-    if len(room.players) != 10:
+    if len(room.players) != 2:
         return
     
     room.status = "playing"
