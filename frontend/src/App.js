@@ -179,28 +179,36 @@ function App() {
       return;
     }
 
-    const tokenAmount = Math.floor(parseFloat(solAmount) * 1000);
+    if (CASINO_WALLET_ADDRESS === "YOUR_SOLANA_WALLET_ADDRESS_HERE") {
+      toast.error('Casino wallet not configured. Using demo mode.');
+      
+      // Demo mode - instant credit
+      const tokenAmount = Math.floor(parseFloat(solAmount) * 1000);
+      try {
+        const response = await axios.post(`${API}/purchase-tokens`, {
+          user_id: user.id,
+          sol_amount: parseFloat(solAmount),
+          token_amount: tokenAmount
+        });
 
-    try {
-      const response = await axios.post(`${API}/purchase-tokens`, {
-        user_id: user.id,
-        sol_amount: parseFloat(solAmount),
-        token_amount: tokenAmount
-      });
-
-      if (response.data.success) {
-        setUser(prev => ({
-          ...prev,
-          token_balance: prev.token_balance + tokenAmount
-        }));
-        setSolAmount('');
-        setShowTokenPurchase(false);
-        toast.success(`Purchased ${tokenAmount} tokens!`);
+        if (response.data.success) {
+          setUser(prev => ({
+            ...prev,
+            token_balance: prev.token_balance + tokenAmount
+          }));
+          setSolAmount('');
+          toast.success(`Demo: Received ${tokenAmount} tokens!`);
+        }
+      } catch (error) {
+        console.error('Failed to purchase tokens:', error);
+        toast.error(error.response?.data?.detail || 'Failed to purchase tokens');
       }
-    } catch (error) {
-      console.error('Failed to purchase tokens:', error);
-      toast.error(error.response?.data?.detail || 'Failed to purchase tokens');
+      return;
     }
+
+    // Start monitoring wallet for the expected amount
+    toast.info(`Monitoring wallet for ${solAmount} SOL payment...`);
+    monitorWalletBalance(parseFloat(solAmount));
   };
 
   // Monitor Solana wallet balance
