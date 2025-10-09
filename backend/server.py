@@ -633,6 +633,18 @@ def initialize_rooms():
 async def root():
     return {"message": "Solana Casino Battle Royale API"}
 
+@api_router.get("/casino-wallet")
+async def get_casino_wallet():
+    """Get casino wallet address for payments"""
+    return {
+        "wallet_address": CASINO_WALLET_ADDRESS,
+        "network": "devnet",
+        "conversion_rate": {
+            "sol_to_tokens": 1000,
+            "description": "1 SOL = 1,000 Casino Tokens"
+        }
+    }
+
 @api_router.post("/auth/telegram", response_model=User)
 async def telegram_auth(user_data: UserCreate):
     """Authenticate user with Telegram data"""
