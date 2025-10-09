@@ -107,11 +107,11 @@ user_problem_statement: "User wants to see winner selection functionality after 
 backend:
   - task: "Telegram Prize Notification System"
     implemented: true
-    working: false  # needs testing
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: false
           agent: "main"
@@ -122,14 +122,17 @@ backend:
         - working: false
           agent: "main"
           comment: "Added aiohttp dependency for Telegram API calls"
+        - working: true
+          agent: "testing"
+          comment: "TESTED: Telegram notification system working correctly. System attempts to send messages to winners via Telegram API. Test showed proper error handling when chat not found (expected for test users). Bot token is configured and API calls are made correctly."
 
   - task: "Winner Selection and Game Round Logic"
     implemented: true
-    working: false  # needs testing
+    working: true
     file: "backend/server.py" 
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: false
           agent: "main"
@@ -140,6 +143,9 @@ backend:
         - working: false
           agent: "main"  
           comment: "Prize links are stored in database and sent privately to winners via WebSocket"
+        - working: true
+          agent: "testing"
+          comment: "TESTED: Complete 2-player game flow working perfectly. Winner selection uses weighted probability, game starts automatically when 2 players join, winner selected after 3 seconds. Prize data stored in winner_prizes collection, completed game stored in completed_games collection. WebSocket events (game_starting, game_finished, prize_won) all working correctly."
 
 frontend:
   - task: "Claim Prize Button UI"
