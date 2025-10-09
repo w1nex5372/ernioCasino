@@ -495,11 +495,11 @@ function App() {
                         )}
                       </div>
                     </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </TabsContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </TabsContent>
 
           {/* Leaderboard */}
           <TabsContent value="leaderboard">
