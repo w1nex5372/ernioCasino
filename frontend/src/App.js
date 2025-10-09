@@ -193,7 +193,12 @@ function App() {
     };
 
     // Try auto-authentication
-    setTimeout(autoAuthenticateFromTelegram, 1000);
+    setTimeout(async () => {
+      const success = await autoAuthenticateFromTelegram();
+      if (!success) {
+        setIsLoading(false); // Show manual auth if auto fails
+      }
+    }, 1000);
   }, []);
 
   const loadRooms = async () => {
