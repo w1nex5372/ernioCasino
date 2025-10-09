@@ -147,6 +147,20 @@ function App() {
           });
       });
     }
+
+    // Listen for PWA install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallPrompt(true);
+    });
+
+    // Check if app is already installed
+    window.addEventListener('appinstalled', () => {
+      setShowInstallPrompt(false);
+      setDeferredPrompt(null);
+      toast.success('App installed successfully!');
+    });
   }, []);
 
   const loadRooms = async () => {
