@@ -429,6 +429,24 @@ async def get_game_history(limit: int = 20):
     
     return {"games": games}
 
+@api_router.get("/user/{user_id}/prizes")
+async def get_user_prizes(user_id: str):
+    """Get all prize links won by a specific user"""
+    prizes = await db.winner_prizes.find(
+        {"user_id": user_id}, {"_id": 0}
+    ).sort("won_at", -1).to_list(100)
+    
+    return {"prizes": prizes}
+
+@api_router.get("/check-winner/{user_id}")
+async def check_if_winner(user_id: str):
+    """Check if user has any unclaimed prizes"""
+    recent_prizes = await db.winner_prizes.find(
+        {"user_id": user_id}, {"_id": 0}
+    ).sort("won_at", -1).limit(5).to_list(5)
+    
+    return {"recent_prizes": recent_prizes}
+
 # Include the router
 app.include_router(api_router)
 
