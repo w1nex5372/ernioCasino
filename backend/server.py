@@ -481,7 +481,7 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
     # Add player to room
     player = RoomPlayer(
         user_id=request.user_id,
-        username=user_doc['username'],
+        username=user_doc.get('first_name', 'Player'),
         bet_amount=request.bet_amount
     )
     target_room.players.append(player)
