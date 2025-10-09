@@ -454,6 +454,7 @@ function App() {
         });
 
         setUser(response.data);
+        setIsLoading(false);
         toast.success(`Welcome, ${userData.first_name}!`);
         
         // Load user prizes after authentication
