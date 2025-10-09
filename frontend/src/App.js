@@ -322,7 +322,11 @@ function App() {
           </div>
 
           <Button 
-            onClick={() => setShowTokenPurchase(true)}
+            onClick={() => {
+              // Navigate to Buy Tokens tab
+              const tokensTab = document.querySelector('[value="tokens"]');
+              if (tokensTab) tokensTab.click();
+            }}
             className="bg-green-600 hover:bg-green-700"
           >
             <Coins className="w-4 h-4 mr-2" />
