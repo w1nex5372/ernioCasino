@@ -1076,7 +1076,7 @@ function App() {
                     </h3>
                     <div className={`bg-slate-800 ${isMobile ? 'p-3' : 'p-4'} rounded-lg border border-slate-600`}>
                       <code className={`text-green-400 font-mono ${isMobile ? 'text-sm' : 'text-lg'} break-all block text-center`}>
-                        {CASINO_WALLET_ADDRESS}
+                        {casinoWalletAddress}
                       </code>
                     </div>
                     <div className="flex justify-center mt-4">
