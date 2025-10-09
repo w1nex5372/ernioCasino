@@ -297,42 +297,103 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <div className="container mx-auto p-4">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Crown className="w-8 h-8 text-yellow-400" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-              Casino Battle Royale
-            </h1>
+      {/* Header */}
+      <header className="bg-slate-900/50 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Crown className="w-8 h-8 text-yellow-400" />
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+                Casino Battle Royale
+              </h1>
+            </div>
+            
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-4 h-4 text-slate-400" />
+                <span className="text-slate-300">{user.username}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Coins className="w-4 h-4 text-yellow-400" />
+                <span className="text-lg font-bold text-yellow-400">{user.token_balance}</span>
+                <span className="text-slate-400">tokens</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
+                <span className={`text-xs ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
+                  {isConnected ? 'Connected' : 'Disconnected'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex">
+        {/* Sidebar Navigation */}
+        <nav className="w-64 bg-slate-800/50 backdrop-blur-sm border-r border-slate-700 min-h-screen p-4">
+          <div className="space-y-2">
+            <button
+              onClick={() => setActiveTab('rooms')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                activeTab === 'rooms' 
+                  ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              Battle Rooms
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('leaderboard')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                activeTab === 'leaderboard' 
+                  ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+              }`}
+            >
+              <Trophy className="w-5 h-5" />
+              Leaderboard
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                activeTab === 'history' 
+                  ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+              }`}
+            >
+              <Timer className="w-5 h-5" />
+              History
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('tokens')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                activeTab === 'tokens' 
+                  ? 'bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white bg-green-600/20'
+              }`}
+            >
+              <Coins className="w-5 h-5" />
+              Buy Tokens
+            </button>
           </div>
           
-          <div className="flex items-center justify-center gap-6 mb-4">
-            <div className="flex items-center gap-2">
-              <Wallet className="w-5 h-5 text-slate-400" />
-              <span className="text-slate-300">{user.username}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Coins className="w-5 h-5 text-yellow-400" />
-              <span className="text-xl font-bold text-yellow-400">{user.token_balance}</span>
-              <span className="text-slate-400">tokens</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
-              <span className={`text-sm ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
-                {isConnected ? 'Connected' : 'Disconnected'}
-              </span>
+          {/* Quick Stats */}
+          <div className="mt-8 space-y-4">
+            <div className="bg-slate-700/50 rounded-lg p-4">
+              <div className="text-xs text-slate-400 uppercase tracking-wide mb-1">Your Balance</div>
+              <div className="text-2xl font-bold text-yellow-400">{user.token_balance}</div>
+              <div className="text-xs text-slate-500">Casino Tokens</div>
             </div>
           </div>
+        </nav>
 
-          <Button 
-            onClick={() => setActiveTab('tokens')}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            <Coins className="w-4 h-4 mr-2" />
-            Buy Tokens
-          </Button>
-        </div>
+        {/* Main Content */}
+        <main className="flex-1 p-6">
 
         <div className="mb-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
