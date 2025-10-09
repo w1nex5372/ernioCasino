@@ -66,7 +66,7 @@ PRIZE_LINKS = {
 }
 
 # ** EDIT THIS LINE TO ADD YOUR TELEGRAM BOT TOKEN **
-TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_TELEGRAM_BOT_TOKEN_HERE')
+# (Now configured above in environment variables section)
 
 ROOM_SETTINGS = {
     RoomType.BRONZE: {"min_bet": 150, "max_bet": 450, "name": "Bronze Room"},
