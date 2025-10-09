@@ -1082,7 +1082,7 @@ function App() {
                     <div className="flex justify-center mt-4">
                       <Button
                         onClick={() => {
-                          navigator.clipboard.writeText(CASINO_WALLET_ADDRESS);
+                          navigator.clipboard.writeText(casinoWalletAddress);
                           toast.success('Wallet address copied!');
                         }}
                         className={`bg-green-600 hover:bg-green-700 text-white font-semibold ${isMobile ? 'px-4 py-3 w-full' : 'px-6 py-2'}`}
