@@ -422,7 +422,7 @@ function App() {
         }));
         setBetAmount('');
         setSelectedRoom(null);
-        toast.success(`Joined ${config.name}! Position ${response.data.position}/10`);
+        toast.success(`Joined ${config.name}! Position ${response.data.position}/2`);
         loadRooms();
       }
     } catch (error) {
