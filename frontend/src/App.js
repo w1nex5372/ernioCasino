@@ -397,6 +397,32 @@ function App() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Quick Buy Tokens Section */}
+            <div className="mb-6 p-4 bg-green-600/20 rounded-lg border border-green-500/30">
+              <h3 className="text-lg font-bold text-green-400 mb-2">💰 Quick Buy Tokens</h3>
+              <p className="text-sm text-green-200 mb-3">Send SOL to start playing immediately!</p>
+              <div className="bg-green-900/50 p-3 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <code className="text-green-400 font-mono text-xs break-all">
+                    {CASINO_WALLET_ADDRESS}
+                  </code>
+                  <Button
+                    onClick={() => {
+                      navigator.clipboard.writeText(CASINO_WALLET_ADDRESS);
+                      toast.success('Wallet address copied!');
+                    }}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 ml-2"
+                  >
+                    Copy Address
+                  </Button>
+                </div>
+                <div className="mt-2 text-xs text-green-300">
+                  Rate: 1 SOL = 1,000 casino tokens
+                </div>
+              </div>
+            </div>
+            
             <form onSubmit={createUser} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
