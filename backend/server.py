@@ -173,6 +173,64 @@ def is_telegram_user_legitimate(telegram_data: TelegramAuthData) -> bool:
     
     return True
 
+# Telegram bot messaging functions
+async def send_telegram_message(telegram_id: int, message: str, reply_markup: Optional[Dict] = None) -> bool:
+    """Send a message to a Telegram user via bot API"""
+    try:
+        if TELEGRAM_BOT_TOKEN == 'YOUR_TELEGRAM_BOT_TOKEN_HERE':
+            logging.warning("Telegram bot token not configured, skipping message send")
+            return False
+            
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        
+        payload = {
+            "chat_id": telegram_id,
+            "text": message,
+            "parse_mode": "HTML"
+        }
+        
+        if reply_markup:
+            payload["reply_markup"] = reply_markup
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload) as response:
+                if response.status == 200:
+                    logging.info(f"Message sent successfully to Telegram user {telegram_id}")
+                    return True
+                else:
+                    error_text = await response.text()
+                    logging.error(f"Failed to send Telegram message: {response.status} - {error_text}")
+                    return False
+                    
+    except Exception as e:
+        logging.error(f"Error sending Telegram message: {e}")
+        return False
+
+async def send_prize_notification(telegram_id: int, username: str, room_type: str, prize_link: str) -> bool:
+    """Send prize notification with claim button to Telegram user"""
+    try:
+        # Format the message
+        message = f"🎉 <b>Congratulations {username}!</b>\n\n"
+        message += f"You won the {room_type.title()} Room battle!\n\n"
+        message += "🏆 <b>You have a prize waiting!</b>\n"
+        message += "Click the button below to claim your prize:"
+        
+        # Create inline keyboard with claim button
+        reply_markup = {
+            "inline_keyboard": [[
+                {
+                    "text": "🎁 Claim Your Prize",
+                    "url": prize_link
+                }
+            ]]
+        }
+        
+        return await send_telegram_message(telegram_id, message, reply_markup)
+        
+    except Exception as e:
+        logging.error(f"Error sending prize notification: {e}")
+        return False
+
 # Socket.IO events
 @sio.event
 async def connect(sid, environ):
