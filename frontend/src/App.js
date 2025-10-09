@@ -732,39 +732,66 @@ function App() {
 
                 {/* Token Claim Form */}
                 <div className="p-4 bg-slate-700/30 rounded-lg border border-slate-600">
-                  <h3 className="text-lg font-semibold text-white mb-3">Claim Your Tokens</h3>
-                  <form onSubmit={purchaseTokens} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">
-                        SOL Amount Sent
-                      </label>
-                      <Input
-                        type="number"
-                        step="0.001"
-                        value={solAmount}
-                        onChange={(e) => setSolAmount(e.target.value)}
-                        placeholder="Enter SOL amount you sent"
-                        className="bg-slate-700 border-slate-600 text-white"
-                      />
-                    </div>
-                    {solAmount && (
-                      <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                        <div className="text-sm text-green-300">
-                          You will receive: <span className="font-bold text-green-400">
-                            {Math.floor(parseFloat(solAmount || 0) * 1000)} casino tokens
-                          </span>
+                  <h3 className="text-lg font-semibold text-white mb-3">
+                    {walletMonitoring ? 'Monitoring Payment...' : 'Send SOL & Get Tokens'}
+                  </h3>
+                  
+                  {walletMonitoring ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-center p-6">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400"></div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-yellow-400 font-medium">Monitoring wallet for payment...</div>
+                        <div className="text-slate-400 text-sm mt-1">
+                          Waiting for {solAmount} SOL payment to arrive
+                        </div>
+                        <div className="text-xs text-slate-500 mt-2">
+                          This may take a few moments. Do not refresh the page.
                         </div>
                       </div>
-                    )}
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                      disabled={!solAmount || parseFloat(solAmount) <= 0}
-                    >
-                      <Coins className="w-4 h-4 mr-2" />
-                      Claim {solAmount ? Math.floor(parseFloat(solAmount) * 1000) : 0} Tokens
-                    </Button>
-                  </form>
+                      <Button 
+                        onClick={() => setWalletMonitoring(false)}
+                        variant="outline"
+                        className="w-full border-slate-600 text-slate-300 hover:bg-slate-700"
+                      >
+                        Cancel Monitoring
+                      </Button>
+                    </div>
+                  ) : (
+                    <form onSubmit={purchaseTokens} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                          SOL Amount to Send
+                        </label>
+                        <Input
+                          type="number"
+                          step="0.001"
+                          value={solAmount}
+                          onChange={(e) => setSolAmount(e.target.value)}
+                          placeholder="Enter SOL amount (e.g., 0.5)"
+                          className="bg-slate-700 border-slate-600 text-white"
+                        />
+                      </div>
+                      {solAmount && (
+                        <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                          <div className="text-sm text-green-300">
+                            You will receive: <span className="font-bold text-green-400">
+                              {Math.floor(parseFloat(solAmount || 0) * 1000)} casino tokens
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                        disabled={!solAmount || parseFloat(solAmount) <= 0}
+                      >
+                        <Coins className="w-4 h-4 mr-2" />
+                        Start Monitoring ({solAmount ? Math.floor(parseFloat(solAmount) * 1000) : 0} tokens)
+                      </Button>
+                    </form>
+                  )}
                 </div>
 
                 {/* Instructions */}
