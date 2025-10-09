@@ -945,7 +945,7 @@ function App() {
                           `}>
                             #{index + 1}
                           </Badge>
-                          <span className="font-medium text-white">{player.username}</span>
+                          <span className="font-medium text-white">{player.first_name}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Coins className="w-4 h-4 text-yellow-400" />
