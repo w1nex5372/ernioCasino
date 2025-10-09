@@ -456,7 +456,10 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
     # Check if user exists and has enough tokens
     user_doc = await db.users.find_one({"id": request.user_id})
     if not user_doc:
+        logging.error(f"User not found: {request.user_id}")
         raise HTTPException(status_code=404, detail="User not found")
+    
+    logging.info(f"User balance: {user_doc.get('token_balance', 0)}, Bet amount: {request.bet_amount}")
     
     if user_doc.get('token_balance', 0) < request.bet_amount:
         raise HTTPException(status_code=400, detail="Insufficient token balance")
