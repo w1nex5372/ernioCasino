@@ -39,27 +39,40 @@ class SolanaCasinoAPITester:
             self.log_test("API Root", False, str(e))
             return False
 
-    def test_create_user(self):
-        """Test user creation"""
+    def test_telegram_auth(self, user_number=1):
+        """Test Telegram authentication"""
         try:
+            # Create mock Telegram auth data
+            telegram_id = 123456789 + user_number
             user_data = {
-                "username": f"test_user_{datetime.now().strftime('%H%M%S')}",
-                "wallet_address": "mock_wallet_address_123"
+                "telegram_auth_data": {
+                    "id": telegram_id,
+                    "first_name": f"TestUser{user_number}",
+                    "last_name": "Casino",
+                    "username": f"testuser{user_number}",
+                    "photo_url": "https://example.com/photo.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"  # Using auto hash for testing
+                }
             }
             
-            response = requests.post(f"{self.api_url}/users", json=user_data)
+            response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
             success = response.status_code == 200
             
             if success:
-                self.test_user = response.json()
-                details = f"Created user: {self.test_user['username']}, ID: {self.test_user['id']}, Balance: {self.test_user['token_balance']}"
+                user = response.json()
+                if user_number == 1:
+                    self.test_user1 = user
+                else:
+                    self.test_user2 = user
+                details = f"Created user: {user['first_name']}, ID: {user['id']}, Balance: {user['token_balance']}, Telegram ID: {user['telegram_id']}"
             else:
                 details = f"Status: {response.status_code}, Response: {response.text}"
             
-            self.log_test("Create User", success, details)
+            self.log_test(f"Telegram Auth User {user_number}", success, details)
             return success
         except Exception as e:
-            self.log_test("Create User", False, str(e))
+            self.log_test(f"Telegram Auth User {user_number}", False, str(e))
             return False
 
     def test_get_user(self):
