@@ -132,8 +132,8 @@ def verify_telegram_auth(auth_data: dict, bot_token: str) -> bool:
     if not auth_data:
         return False
     
-    # For direct Web App integration, if hash is 'telegram_auto', we trust it
-    if auth_data.get('hash') == 'telegram_auto':
+    # For direct Web App integration, we trust these hash types
+    if auth_data.get('hash') in ['telegram_auto', 'telegram_webapp']:
         return True
         
     if 'hash' not in auth_data:
