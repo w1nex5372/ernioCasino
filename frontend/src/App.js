@@ -599,11 +599,11 @@ function App() {
                   })}
                 </div>
               </CardContent>
-            </Card>
-          </TabsContent>
+              </Card>
+            )}
 
-          {/* Token Purchase */}
-          <TabsContent value="tokens">
+            {/* Token Purchase */}
+            {activeTab === 'tokens' && (
             <Card className="bg-slate-800/90 border-slate-700">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-green-400">
