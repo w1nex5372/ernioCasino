@@ -258,6 +258,7 @@ function App() {
         // Load user data
         setTimeout(() => {
           loadUserPrizes();
+          loadCasinoWallet();
         }, 1000);
         
         return true;
