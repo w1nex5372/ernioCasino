@@ -855,7 +855,7 @@ function App() {
                                 <Button 
                                   onClick={() => joinRoom(roomType)}
                                   className={`flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 ${isMobile ? 'h-12 text-lg' : ''}`}
-                                  disabled={room.players_count >= 10}
+                                  disabled={room.players_count >= 2}
                                 >
                                   Join Battle
                                 </Button>
