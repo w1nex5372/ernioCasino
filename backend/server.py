@@ -416,6 +416,9 @@ async def start_game_round(room: GameRoom):
         'room_type': new_room.room_type,
         'round_number': new_room.round_number
     })
+    
+    # Broadcast updated room states
+    await broadcast_room_updates()
 
 # Initialize rooms
 def initialize_rooms():
