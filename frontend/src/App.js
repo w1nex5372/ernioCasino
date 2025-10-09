@@ -317,6 +317,19 @@ function App() {
     }
   };
 
+  const loadCasinoWallet = async () => {
+    try {
+      const response = await axios.get(`${API}/casino-wallet`);
+      setCasinoWalletAddress(response.data.wallet_address);
+      console.log('💳 Casino wallet loaded:', response.data.wallet_address);
+      console.log('🔄 Conversion rate:', response.data.conversion_rate);
+    } catch (error) {
+      console.error('Failed to load casino wallet:', error);
+      setCasinoWalletAddress('Error loading wallet');
+      toast.error('Failed to load casino wallet address');
+    }
+  };
+
   const loadGameHistory = async () => {
     try {
       const response = await axios.get(`${API}/game-history?limit=10`);
