@@ -464,10 +464,12 @@ function App() {
 
       } else {
         // Fallback for non-Telegram environment
+        setIsLoading(false);
         toast.error('This app must be opened through Telegram');
       }
     } catch (error) {
       console.error('Telegram auth failed:', error);
+      setIsLoading(false);
       toast.error(error.response?.data?.detail || 'Authentication failed');
     }
   };
