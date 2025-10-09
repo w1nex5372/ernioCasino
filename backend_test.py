@@ -98,16 +98,17 @@ class SolanaCasinoAPITester:
             self.log_test(f"Get User {user_number}", False, str(e))
             return False
 
-    def test_purchase_tokens(self):
+    def test_purchase_tokens(self, user_number=1):
         """Test token purchase functionality"""
-        if not self.test_user:
-            self.log_test("Purchase Tokens", False, "No test user available")
+        test_user = self.test_user1 if user_number == 1 else self.test_user2
+        if not test_user:
+            self.log_test(f"Purchase Tokens User {user_number}", False, "No test user available")
             return False
         
         try:
             # Test purchasing 1 SOL worth of tokens (should be 1000 tokens)
             purchase_data = {
-                "user_id": self.test_user['id'],
+                "user_id": test_user['id'],
                 "sol_amount": 1.0,
                 "token_amount": 1000
             }
@@ -119,14 +120,14 @@ class SolanaCasinoAPITester:
                 result = response.json()
                 details = f"Purchased {result['tokens_added']} tokens successfully"
                 # Update local user balance for subsequent tests
-                self.test_user['token_balance'] += result['tokens_added']
+                test_user['token_balance'] += result['tokens_added']
             else:
                 details = f"Status: {response.status_code}, Response: {response.text}"
             
-            self.log_test("Purchase Tokens", success, details)
+            self.log_test(f"Purchase Tokens User {user_number}", success, details)
             return success
         except Exception as e:
-            self.log_test("Purchase Tokens", False, str(e))
+            self.log_test(f"Purchase Tokens User {user_number}", False, str(e))
             return False
 
     def test_get_rooms(self):
