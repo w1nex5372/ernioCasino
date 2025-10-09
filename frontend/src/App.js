@@ -148,6 +148,14 @@ function App() {
       setRooms(data.rooms);
     });
 
+    newSocket.on('token_balance_updated', (data) => {
+      // Auto-update user token balance when payment is detected
+      if (user && data.user_id === user.id) {
+        setUser({...user, token_balance: data.new_balance});
+        toast.success(`🎉 Payment confirmed! +${data.tokens_added} tokens (${data.sol_received} SOL)`);
+      }
+    });
+
     return () => {
       newSocket.close();
     };
