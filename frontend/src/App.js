@@ -458,7 +458,18 @@ function App() {
               </h1>
             </div>
             
-            <div className="flex items-center gap-2 md:gap-6">
+            <div className="flex items-center gap-1 md:gap-6">
+              {/* Install Button */}
+              {showInstallPrompt && (
+                <Button
+                  onClick={handleInstallClick}
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700 text-xs px-2 py-1"
+                >
+                  📱 Install
+                </Button>
+              )}
+              
               {!isMobile && (
                 <div className="flex items-center gap-2">
                   <Wallet className="w-4 h-4 text-slate-400" />
