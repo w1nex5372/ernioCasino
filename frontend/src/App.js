@@ -395,42 +395,7 @@ function App() {
         {/* Main Content */}
         <main className="flex-1 p-6">
 
-        <div className="mb-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-            <TabsList className="grid w-full grid-cols-4 bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-xl p-2 h-14">
-              <TabsTrigger 
-                value="rooms" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-yellow-600 data-[state=active]:text-slate-900 data-[state=active]:font-semibold transition-all duration-200 rounded-lg flex items-center gap-2 text-slate-300 hover:text-white"
-              >
-                <Users className="w-4 h-4" />
-                <span className="hidden sm:inline">Battle Rooms</span>
-                <span className="sm:hidden">Rooms</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="leaderboard" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-yellow-600 data-[state=active]:text-slate-900 data-[state=active]:font-semibold transition-all duration-200 rounded-lg flex items-center gap-2 text-slate-300 hover:text-white"
-              >
-                <Trophy className="w-4 h-4" />
-                <span className="hidden sm:inline">Leaderboard</span>
-                <span className="sm:hidden">Leaders</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="history" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-yellow-600 data-[state=active]:text-slate-900 data-[state=active]:font-semibold transition-all duration-200 rounded-lg flex items-center gap-2 text-slate-300 hover:text-white"
-              >
-                <Timer className="w-4 h-4" />
-                <span className="hidden sm:inline">History</span>
-                <span className="sm:hidden">History</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="tokens" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-yellow-600 data-[state=active]:text-slate-900 data-[state=active]:font-semibold transition-all duration-200 rounded-lg flex items-center gap-2 text-slate-300 hover:text-white"
-              >
-                <Zap className="w-4 h-4" />
-                <span className="hidden sm:inline">Buy Tokens</span>
-                <span className="sm:hidden">Tokens</span>
-              </TabsTrigger>
-            </TabsList>
+          <div className="space-y-6">
 
             {/* Battle Rooms */}
             <TabsContent value="rooms" className="space-y-8">
