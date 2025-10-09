@@ -393,7 +393,7 @@ function App() {
 
   // Monitor Solana wallet balance
   const monitorWalletBalance = async (expectedAmount) => {
-    if (!CASINO_WALLET_ADDRESS || CASINO_WALLET_ADDRESS === "YOUR_SOLANA_WALLET_ADDRESS_HERE") {
+    if (!casinoWalletAddress || casinoWalletAddress === "YOUR_SOLANA_WALLET_ADDRESS_HERE") {
       toast.error('Casino wallet address not configured');
       return;
     }
