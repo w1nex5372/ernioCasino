@@ -64,6 +64,8 @@ function App() {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [betAmount, setBetAmount] = useState('');
   const [activeTab, setActiveTab] = useState('rooms');
+  const [walletMonitoring, setWalletMonitoring] = useState(false);
+  const [lastKnownBalance, setLastKnownBalance] = useState(0);
 
   useEffect(() => {
     // Initialize Socket.IO connection
