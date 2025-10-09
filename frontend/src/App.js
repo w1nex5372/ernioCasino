@@ -117,14 +117,18 @@ function App() {
     });
 
     newSocket.on('game_finished', (data) => {
-      toast.success(`🎉 ${data.winner.username} won ${data.prize_pool} tokens in ${ROOM_CONFIGS[data.room_type].name}!`);
-      if (user && data.winner.user_id === user.id) {
-        // Update user balance if they won
-        setUser(prev => ({ ...prev, token_balance: prev.token_balance + data.prize_pool }));
-      }
+      toast.success(`🎉 ${data.winner.username} won the ${ROOM_CONFIGS[data.room_type].name} prize!`);
       loadRooms();
       loadGameHistory();
       loadLeaderboard();
+    });
+
+    newSocket.on('prize_won', (data) => {
+      if (user) {
+        toast.success(`🏆 Congratulations! You won a prize! Check your prizes tab.`);
+        // Show prize modal or redirect to prize link
+        window.open(data.prize_link, '_blank');
+      }
     });
 
     newSocket.on('new_room_available', (data) => {
