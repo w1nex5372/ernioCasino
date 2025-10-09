@@ -386,426 +386,425 @@ function App() {
   }
 
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-        {/* Header */}
-        <header className="bg-slate-900/50 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Crown className="w-8 h-8 text-yellow-400" />
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-                  Casino Battle Royale
-                </h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+      {/* Header */}
+      <header className="bg-slate-900/50 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Crown className="w-8 h-8 text-yellow-400" />
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+                Casino Battle Royale
+              </h1>
+            </div>
+            
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-4 h-4 text-slate-400" />
+                <span className="text-slate-300">{user.username}</span>
               </div>
-              
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <Wallet className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-300">{user.username}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Coins className="w-4 h-4 text-yellow-400" />
-                  <span className="text-lg font-bold text-yellow-400">{user.token_balance}</span>
-                  <span className="text-slate-400">tokens</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
-                  <span className={`text-xs ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
-                    {isConnected ? 'Connected' : 'Disconnected'}
-                  </span>
-                </div>
+              <div className="flex items-center gap-2">
+                <Coins className="w-4 h-4 text-yellow-400" />
+                <span className="text-lg font-bold text-yellow-400">{user.token_balance}</span>
+                <span className="text-slate-400">tokens</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
+                <span className={`text-xs ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
+                  {isConnected ? 'Connected' : 'Disconnected'}
+                </span>
               </div>
             </div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <div className="flex">
-          {/* Sidebar Navigation */}
-          <nav className="w-64 bg-slate-800/50 backdrop-blur-sm border-r border-slate-700 min-h-screen p-4">
-            <div className="space-y-2">
-              <button
-                onClick={() => setActiveTab('rooms')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === 'rooms' 
-                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
-                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                }`}
-              >
-                <Users className="w-5 h-5" />
-                Battle Rooms
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('leaderboard')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === 'leaderboard' 
-                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
-                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                }`}
-              >
-                <Trophy className="w-5 h-5" />
-                Leaderboard
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('history')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === 'history' 
-                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
-                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                }`}
-              >
-                <Timer className="w-5 h-5" />
-                History
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('tokens')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === 'tokens' 
-                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold' 
-                    : 'text-slate-300 hover:bg-slate-700 hover:text-white bg-green-600/20'
-                }`}
-              >
-                <Coins className="w-5 h-5" />
-                Buy Tokens
-              </button>
-            </div>
+      <div className="flex">
+        {/* Sidebar Navigation */}
+        <nav className="w-64 bg-slate-800/50 backdrop-blur-sm border-r border-slate-700 min-h-screen p-4">
+          <div className="space-y-2">
+            <button
+              onClick={() => setActiveTab('rooms')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                activeTab === 'rooms' 
+                  ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              Battle Rooms
+            </button>
             
-            {/* Quick Stats */}
-            <div className="mt-8 space-y-4">
-              <div className="bg-slate-700/50 rounded-lg p-4">
-                <div className="text-xs text-slate-400 uppercase tracking-wide mb-1">Your Balance</div>
-                <div className="text-2xl font-bold text-yellow-400">{user.token_balance}</div>
-                <div className="text-xs text-slate-500">Casino Tokens</div>
-              </div>
+            <button
+              onClick={() => setActiveTab('leaderboard')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                activeTab === 'leaderboard' 
+                  ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+              }`}
+            >
+              <Trophy className="w-5 h-5" />
+              Leaderboard
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                activeTab === 'history' 
+                  ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+              }`}
+            >
+              <Timer className="w-5 h-5" />
+              History
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('tokens')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                activeTab === 'tokens' 
+                  ? 'bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white bg-green-600/20'
+              }`}
+            >
+              <Coins className="w-5 h-5" />
+              Buy Tokens
+            </button>
+          </div>
+          
+          {/* Quick Stats */}
+          <div className="mt-8 space-y-4">
+            <div className="bg-slate-700/50 rounded-lg p-4">
+              <div className="text-xs text-slate-400 uppercase tracking-wide mb-1">Your Balance</div>
+              <div className="text-2xl font-bold text-yellow-400">{user.token_balance}</div>
+              <div className="text-xs text-slate-500">Casino Tokens</div>
             </div>
-          </nav>
+          </div>
+        </nav>
 
-          {/* Main Content */}
-          <main className="flex-1 p-6">
-
+        {/* Main Content */}
+        <main className="flex-1 p-6">
           <div className="space-y-6">
 
             {/* Battle Rooms */}
             {activeTab === 'rooms' && (
               <div className="space-y-8">
-              <div className="text-center py-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full mb-4">
-                  <Users className="w-8 h-8 text-slate-900" />
+                <div className="text-center py-6">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full mb-4">
+                    <Users className="w-8 h-8 text-slate-900" />
+                  </div>
+                  <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+                    Choose Your Battle Arena
+                  </h2>
+                  <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+                    Join one of our three exclusive rooms where 10 players compete for the ultimate prize pool. 
+                    <br />
+                    <span className="text-yellow-400 font-medium">Higher bets = Better winning odds!</span>
+                  </p>
                 </div>
-                <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-                  Choose Your Battle Arena
-                </h2>
-                <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-                  Join one of our three exclusive rooms where 10 players compete for the ultimate prize pool. 
-                  <br />
-                  <span className="text-yellow-400 font-medium">Higher bets = Better winning odds!</span>
-                </p>
-              </div>
-              
-              <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-8 max-w-7xl mx-auto">
-              {['bronze', 'silver', 'gold'].map((roomType) => {
-                const room = rooms.find(r => r.room_type === roomType) || { players_count: 0, prize_pool: 0 };
-                const config = ROOM_CONFIGS[roomType];
                 
-                return (
-                  <Card key={roomType} className="bg-slate-800/90 border-slate-700 overflow-hidden hover:border-yellow-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-yellow-500/10">
-                    <CardHeader className={`bg-gradient-to-br ${config.gradient} text-white relative overflow-hidden`}>
-                      <div className="absolute inset-0 bg-black/10"></div>
-                      <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                              <span className="text-2xl">{config.icon}</span>
+                <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-8 max-w-7xl mx-auto">
+                {['bronze', 'silver', 'gold'].map((roomType) => {
+                  const room = rooms.find(r => r.room_type === roomType) || { players_count: 0, prize_pool: 0 };
+                  const config = ROOM_CONFIGS[roomType];
+                  
+                  return (
+                    <Card key={roomType} className="bg-slate-800/90 border-slate-700 overflow-hidden hover:border-yellow-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-yellow-500/10">
+                      <CardHeader className={`bg-gradient-to-br ${config.gradient} text-white relative overflow-hidden`}>
+                        <div className="absolute inset-0 bg-black/10"></div>
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                                <span className="text-2xl">{config.icon}</span>
+                              </div>
+                              <div>
+                                <CardTitle className="text-xl font-bold">
+                                  {config.name}
+                                </CardTitle>
+                                <CardDescription className="text-white/90 font-medium">
+                                  {config.min} - {config.max} tokens
+                                </CardDescription>
+                              </div>
                             </div>
-                            <div>
-                              <CardTitle className="text-xl font-bold">
-                                {config.name}
-                              </CardTitle>
-                              <CardDescription className="text-white/90 font-medium">
-                                {config.min} - {config.max} tokens
-                              </CardDescription>
-                            </div>
-                          </div>
-                          <Badge variant="secondary" className="bg-white/25 text-white font-semibold px-3 py-1 backdrop-blur-sm">
-                            Round #{room.round_number || 1}
-                          </Badge>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4 mt-4">
-                          <div className="bg-white/15 rounded-lg p-3 backdrop-blur-sm">
-                            <div className="text-white/80 text-xs uppercase tracking-wide font-medium">Players</div>
-                            <div className="text-white font-bold text-lg">{room.players_count}/10</div>
-                          </div>
-                          <div className="bg-white/15 rounded-lg p-3 backdrop-blur-sm">
-                            <div className="text-white/80 text-xs uppercase tracking-wide font-medium">Prize Pool</div>
-                            <div className="text-white font-bold text-lg">{room.prize_pool}</div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <div className="space-y-6">
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <span className="text-slate-400 font-medium">Battle Progress</span>
-                            <span className="font-bold text-yellow-400">{room.players_count}/10 Players</span>
+                            <Badge variant="secondary" className="bg-white/25 text-white font-semibold px-3 py-1 backdrop-blur-sm">
+                              Round #{room.round_number || 1}
+                            </Badge>
                           </div>
                           
-                          <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
-                            <div 
-                              className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-3 rounded-full transition-all duration-500 ease-out relative"
-                              style={{ width: `${(room.players_count / 10) * 100}%` }}
-                            >
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/20"></div>
+                          <div className="grid grid-cols-2 gap-4 mt-4">
+                            <div className="bg-white/15 rounded-lg p-3 backdrop-blur-sm">
+                              <div className="text-white/80 text-xs uppercase tracking-wide font-medium">Players</div>
+                              <div className="text-white font-bold text-lg">{room.players_count}/10</div>
+                            </div>
+                            <div className="bg-white/15 rounded-lg p-3 backdrop-blur-sm">
+                              <div className="text-white/80 text-xs uppercase tracking-wide font-medium">Prize Pool</div>
+                              <div className="text-white font-bold text-lg">{room.prize_pool}</div>
                             </div>
                           </div>
-                          
-                          <div className="text-center text-xs text-slate-500">
-                            {room.players_count === 10 ? '🔥 Battle in Progress!' : 
-                             room.players_count >= 7 ? '⚡ Almost Full!' :
-                             room.players_count >= 4 ? '🎯 Halfway There!' :
-                             '🚀 Join the Battle!'}
-                          </div>
                         </div>
-                        
-                        <Separator className="bg-slate-700" />
-                        
-                        {selectedRoom === roomType ? (
+                      </CardHeader>
+                      <CardContent className="p-6">
+                        <div className="space-y-6">
                           <div className="space-y-3">
-                            <Input
-                              type="number"
-                              value={betAmount}
-                              onChange={(e) => setBetAmount(e.target.value)}
-                              placeholder={`Bet amount (${config.min}-${config.max})`}
-                              className="bg-slate-700 border-slate-600 text-white"
-                              min={config.min}
-                              max={config.max}
-                            />
-                            <div className="flex gap-2">
-                              <Button 
-                                onClick={() => joinRoom(roomType)}
-                                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                                disabled={room.players_count >= 10}
+                            <div className="flex justify-between items-center">
+                              <span className="text-slate-400 font-medium">Battle Progress</span>
+                              <span className="font-bold text-yellow-400">{room.players_count}/10 Players</span>
+                            </div>
+                            
+                            <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
+                              <div 
+                                className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-3 rounded-full transition-all duration-500 ease-out relative"
+                                style={{ width: `${(room.players_count / 10) * 100}%` }}
                               >
-                                Join Battle
-                              </Button>
-                              <Button 
-                                onClick={() => setSelectedRoom(null)}
-                                variant="outline"
-                                className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                              >
-                                Cancel
-                              </Button>
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/20"></div>
+                              </div>
+                            </div>
+                            
+                            <div className="text-center text-xs text-slate-500">
+                              {room.players_count === 10 ? '🔥 Battle in Progress!' : 
+                               room.players_count >= 7 ? '⚡ Almost Full!' :
+                               room.players_count >= 4 ? '🎯 Halfway There!' :
+                               '🚀 Join the Battle!'}
                             </div>
                           </div>
-                        ) : (
-                          <Button 
-                            onClick={() => setSelectedRoom(roomType)}
-                            className={`w-full bg-gradient-to-r ${config.gradient} hover:opacity-90`}
-                            disabled={room.players_count >= 10 || room.status !== 'waiting'}
-                          >
-                            {room.players_count >= 10 ? 'Room Full' : 
-                             room.status === 'playing' ? 'Game In Progress' : 'Enter Battle'}
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
+                          
+                          <Separator className="bg-slate-700" />
+                          
+                          {selectedRoom === roomType ? (
+                            <div className="space-y-3">
+                              <Input
+                                type="number"
+                                value={betAmount}
+                                onChange={(e) => setBetAmount(e.target.value)}
+                                placeholder={`Bet amount (${config.min}-${config.max})`}
+                                className="bg-slate-700 border-slate-600 text-white"
+                                min={config.min}
+                                max={config.max}
+                              />
+                              <div className="flex gap-2">
+                                <Button 
+                                  onClick={() => joinRoom(roomType)}
+                                  className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                                  disabled={room.players_count >= 10}
+                                >
+                                  Join Battle
+                                </Button>
+                                <Button 
+                                  onClick={() => setSelectedRoom(null)}
+                                  variant="outline"
+                                  className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <Button 
+                              onClick={() => setSelectedRoom(roomType)}
+                              className={`w-full bg-gradient-to-r ${config.gradient} hover:opacity-90`}
+                              disabled={room.players_count >= 10 || room.status !== 'waiting'}
+                            >
+                              {room.players_count >= 10 ? 'Room Full' : 
+                               room.status === 'playing' ? 'Game In Progress' : 'Enter Battle'}
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
                     </Card>
                   );
                 })}
+                </div>
               </div>
             )}
 
             {/* Leaderboard */}
             {activeTab === 'leaderboard' && (
-            <Card className="bg-slate-800/90 border-slate-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-yellow-400">
-                  <Trophy className="w-5 h-5" />
-                  Top Players
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {leaderboard.map((player, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <Badge variant="secondary" className={`
-                          ${index === 0 ? 'bg-yellow-500 text-black' : 
-                            index === 1 ? 'bg-slate-400 text-black' :
-                            index === 2 ? 'bg-amber-600 text-white' : 'bg-slate-600'}
-                        `}>
-                          #{index + 1}
-                        </Badge>
-                        <span className="font-medium text-white">{player.username}</span>
+              <Card className="bg-slate-800/90 border-slate-700">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-yellow-400">
+                    <Trophy className="w-5 h-5" />
+                    Top Players
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {leaderboard.map((player, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <Badge variant="secondary" className={`
+                            ${index === 0 ? 'bg-yellow-500 text-black' : 
+                              index === 1 ? 'bg-slate-400 text-black' :
+                              index === 2 ? 'bg-amber-600 text-white' : 'bg-slate-600'}
+                          `}>
+                            #{index + 1}
+                          </Badge>
+                          <span className="font-medium text-white">{player.username}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Coins className="w-4 h-4 text-yellow-400" />
+                          <span className="font-bold text-yellow-400">{player.token_balance}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Coins className="w-4 h-4 text-yellow-400" />
-                        <span className="font-bold text-yellow-400">{player.token_balance}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
+                    ))}
+                  </div>
+                </CardContent>
               </Card>
             )}
 
             {/* Game History */}
             {activeTab === 'history' && (
-            <Card className="bg-slate-800/90 border-slate-700">
-              <CardHeader>
-                <CardTitle className="text-slate-100">Recent Battle Results</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {gameHistory.map((game, index) => {
-                    const config = ROOM_CONFIGS[game.room_type];
-                    return (
-                      <div key={index} className="p-4 bg-slate-700/30 rounded-lg border border-slate-600">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-lg">{config.icon}</span>
-                              <span className="font-medium text-white">{config.name}</span>
-                              <Badge variant="outline" className="border-slate-500 text-slate-300">
-                                Round #{game.round_number}
-                              </Badge>
+              <Card className="bg-slate-800/90 border-slate-700">
+                <CardHeader>
+                  <CardTitle className="text-slate-100">Recent Battle Results</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {gameHistory.map((game, index) => {
+                      const config = ROOM_CONFIGS[game.room_type];
+                      return (
+                        <div key={index} className="p-4 bg-slate-700/30 rounded-lg border border-slate-600">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-lg">{config.icon}</span>
+                                <span className="font-medium text-white">{config.name}</span>
+                                <Badge variant="outline" className="border-slate-500 text-slate-300">
+                                  Round #{game.round_number}
+                                </Badge>
+                              </div>
+                              <div className="text-sm text-slate-400">
+                                Winner: <span className="text-green-400 font-medium">{game.winner?.username}</span>
+                              </div>
                             </div>
-                            <div className="text-sm text-slate-400">
-                              Winner: <span className="text-green-400 font-medium">{game.winner?.username}</span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-lg font-bold text-yellow-400">{game.prize_pool} tokens</div>
-                            <div className="text-xs text-slate-400">
-                              {new Date(game.finished_at).toLocaleTimeString()}
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-yellow-400">{game.prize_pool} tokens</div>
+                              <div className="text-xs text-slate-400">
+                                {new Date(game.finished_at).toLocaleTimeString()}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
+                      );
+                    })}
+                  </div>
+                </CardContent>
               </Card>
             )}
 
             {/* Token Purchase */}
             {activeTab === 'tokens' && (
-            <Card className="bg-slate-800/90 border-slate-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-green-400">
-                  <Coins className="w-5 h-5" />
-                  Purchase Casino Tokens
-                </CardTitle>
-                <CardDescription className="text-slate-400">
-                  Send SOL to our wallet address below to receive casino tokens at rate: 1 SOL = 1,000 tokens
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                
-                {/* Casino Wallet Address */}
-                <div className="p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-                  <h3 className="text-lg font-semibold text-white mb-2">Casino Wallet Address</h3>
-                  <div className="flex items-center justify-between bg-slate-800 p-3 rounded-lg">
-                    <code className="text-green-400 font-mono text-sm break-all">
-                      {CASINO_WALLET_ADDRESS}
-                    </code>
-                    <Button
-                      onClick={() => {
-                        navigator.clipboard.writeText(CASINO_WALLET_ADDRESS);
-                        toast.success('Wallet address copied!');
-                      }}
-                      size="sm"
-                      variant="outline"
-                      className="ml-2 border-slate-600 text-slate-300 hover:bg-slate-700"
-                    >
-                      Copy
-                    </Button>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-2">
-                    Send your SOL to this address, then use the form below to claim your tokens
-                  </p>
-                </div>
-
-                {/* Token Claim Form */}
-                <div className="p-4 bg-slate-700/30 rounded-lg border border-slate-600">
-                  <h3 className="text-lg font-semibold text-white mb-3">
-                    {walletMonitoring ? 'Monitoring Payment...' : 'Send SOL & Get Tokens'}
-                  </h3>
+              <Card className="bg-slate-800/90 border-slate-700">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-green-400">
+                    <Coins className="w-5 h-5" />
+                    Purchase Casino Tokens
+                  </CardTitle>
+                  <CardDescription className="text-slate-400">
+                    Send SOL to our wallet address below to receive casino tokens at rate: 1 SOL = 1,000 tokens
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
                   
-                  {walletMonitoring ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-center p-6">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400"></div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-yellow-400 font-medium">Monitoring wallet for payment...</div>
-                        <div className="text-slate-400 text-sm mt-1">
-                          Waiting for {solAmount} SOL payment to arrive
-                        </div>
-                        <div className="text-xs text-slate-500 mt-2">
-                          This may take a few moments. Do not refresh the page.
-                        </div>
-                      </div>
-                      <Button 
-                        onClick={() => setWalletMonitoring(false)}
+                  {/* Casino Wallet Address */}
+                  <div className="p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                    <h3 className="text-lg font-semibold text-white mb-2">Casino Wallet Address</h3>
+                    <div className="flex items-center justify-between bg-slate-800 p-3 rounded-lg">
+                      <code className="text-green-400 font-mono text-sm break-all">
+                        {CASINO_WALLET_ADDRESS}
+                      </code>
+                      <Button
+                        onClick={() => {
+                          navigator.clipboard.writeText(CASINO_WALLET_ADDRESS);
+                          toast.success('Wallet address copied!');
+                        }}
+                        size="sm"
                         variant="outline"
-                        className="w-full border-slate-600 text-slate-300 hover:bg-slate-700"
+                        className="ml-2 border-slate-600 text-slate-300 hover:bg-slate-700"
                       >
-                        Cancel Monitoring
+                        Copy
                       </Button>
                     </div>
-                  ) : (
-                    <form onSubmit={purchaseTokens} className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                          SOL Amount to Send
-                        </label>
-                        <Input
-                          type="number"
-                          step="0.001"
-                          value={solAmount}
-                          onChange={(e) => setSolAmount(e.target.value)}
-                          placeholder="Enter SOL amount (e.g., 0.5)"
-                          className="bg-slate-700 border-slate-600 text-white"
-                        />
-                      </div>
-                      {solAmount && (
-                        <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                          <div className="text-sm text-green-300">
-                            You will receive: <span className="font-bold text-green-400">
-                              {Math.floor(parseFloat(solAmount || 0) * 1000)} casino tokens
-                            </span>
+                    <p className="text-xs text-slate-400 mt-2">
+                      Send your SOL to this address, then use the form below to claim your tokens
+                    </p>
+                  </div>
+
+                  {/* Token Claim Form */}
+                  <div className="p-4 bg-slate-700/30 rounded-lg border border-slate-600">
+                    <h3 className="text-lg font-semibold text-white mb-3">
+                      {walletMonitoring ? 'Monitoring Payment...' : 'Send SOL & Get Tokens'}
+                    </h3>
+                    
+                    {walletMonitoring ? (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-center p-6">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400"></div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-yellow-400 font-medium">Monitoring wallet for payment...</div>
+                          <div className="text-slate-400 text-sm mt-1">
+                            Waiting for {solAmount} SOL payment to arrive
+                          </div>
+                          <div className="text-xs text-slate-500 mt-2">
+                            This may take a few moments. Do not refresh the page.
                           </div>
                         </div>
-                      )}
-                      <Button 
-                        type="submit" 
-                        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-                        disabled={!solAmount || parseFloat(solAmount) <= 0}
-                      >
-                        <Coins className="w-4 h-4 mr-2" />
-                        Start Monitoring ({solAmount ? Math.floor(parseFloat(solAmount) * 1000) : 0} tokens)
-                      </Button>
-                    </form>
-                  )}
-                </div>
+                        <Button 
+                          onClick={() => setWalletMonitoring(false)}
+                          variant="outline"
+                          className="w-full border-slate-600 text-slate-300 hover:bg-slate-700"
+                        >
+                          Cancel Monitoring
+                        </Button>
+                      </div>
+                    ) : (
+                      <form onSubmit={purchaseTokens} className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">
+                            SOL Amount to Send
+                          </label>
+                          <Input
+                            type="number"
+                            step="0.001"
+                            value={solAmount}
+                            onChange={(e) => setSolAmount(e.target.value)}
+                            placeholder="Enter SOL amount (e.g., 0.5)"
+                            className="bg-slate-700 border-slate-600 text-white"
+                          />
+                        </div>
+                        {solAmount && (
+                          <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                            <div className="text-sm text-green-300">
+                              You will receive: <span className="font-bold text-green-400">
+                                {Math.floor(parseFloat(solAmount || 0) * 1000)} casino tokens
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                        <Button 
+                          type="submit" 
+                          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                          disabled={!solAmount || parseFloat(solAmount) <= 0}
+                        >
+                          <Coins className="w-4 h-4 mr-2" />
+                          Start Monitoring ({solAmount ? Math.floor(parseFloat(solAmount) * 1000) : 0} tokens)
+                        </Button>
+                      </form>
+                    )}
+                  </div>
 
-                {/* Instructions */}
-                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                  <h4 className="font-semibold text-blue-400 mb-2">📝 How to Purchase Tokens:</h4>
-                  <ol className="text-sm text-slate-300 space-y-1 list-decimal list-inside">
-                    <li>Copy the casino wallet address above</li>
-                    <li>Send SOL from your wallet to this address</li>
-                    <li>Enter the amount you sent in the form</li>
-                    <li>Click "Claim Tokens" to receive your casino tokens</li>
-                  </ol>
-                </div>
-              </CardContent>
+                  {/* Instructions */}
+                  <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <h4 className="font-semibold text-blue-400 mb-2">📝 How to Purchase Tokens:</h4>
+                    <ol className="text-sm text-slate-300 space-y-1 list-decimal list-inside">
+                      <li>Copy the casino wallet address above</li>
+                      <li>Send SOL from your wallet to this address</li>
+                      <li>Enter the amount you sent in the form</li>
+                      <li>Click "Start Monitoring" to automatically receive your tokens</li>
+                    </ol>
+                  </div>
+                </CardContent>
               </Card>
             )}
 
@@ -813,7 +812,7 @@ function App() {
         </main>
       </div>
       <Toaster richColors position="top-right" />
-    </>
+    </div>
   );
 }
 
