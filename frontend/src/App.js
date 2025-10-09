@@ -423,6 +423,10 @@ function App() {
         setBetAmount('');
         setSelectedRoom(null);
         toast.success(`Joined ${config.name}! Position ${response.data.position}/2`);
+        
+        if (response.data.position === 2) {
+          toast.info('🔥 Battle starting! Winner will be announced shortly...');
+        }
         loadRooms();
       }
     } catch (error) {
