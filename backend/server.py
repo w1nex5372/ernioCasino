@@ -42,6 +42,13 @@ class RoomType(str, Enum):
     SILVER = "silver"
     GOLD = "gold"
 
+# ** EDIT THESE LINES TO ADD YOUR PRIZE LINKS **
+PRIZE_LINKS = {
+    RoomType.BRONZE: "https://your-prize-link-1.com",  # Prize link for Bronze room
+    RoomType.SILVER: "https://your-prize-link-2.com",  # Prize link for Silver room  
+    RoomType.GOLD: "https://your-prize-link-3.com"     # Prize link for Gold room
+}
+
 ROOM_SETTINGS = {
     RoomType.BRONZE: {"min_bet": 150, "max_bet": 450, "name": "Bronze Room"},
     RoomType.SILVER: {"min_bet": 500, "max_bet": 1500, "name": "Silver Room"},
