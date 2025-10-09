@@ -784,58 +784,36 @@ function App() {
         )}
 
         {/* Main Content */}
-        <main className={`flex-1 ${isMobile ? 'pb-20' : 'p-6'} p-3 md:p-6`}>
-          <div className="space-y-6">
+        <main className={`flex-1 ${isMobile ? 'p-3 pb-20' : 'p-6'}`}>
+          <div className={`${isMobile ? 'space-y-4' : 'space-y-6'}`}>
 
-            {/* Quick Buy Tokens Card - Always Visible */}
-            <Card className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border-green-500/30">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                      <Coins className="w-6 h-6 text-white" />
+            {/* Welcome Card - Desktop Only */}
+            {!isMobile && (
+              <Card className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border-green-500/30">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                        <Coins className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">Welcome, {user.first_name}!</h3>
+                        <p className="text-green-200">Send SOL to get tokens for betting • Rate: 1 SOL = 1,000 tokens</p>
+                        <p className="text-yellow-400 font-semibold">Your Balance: {user.token_balance || 0} tokens</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white">Welcome, {user.first_name}!</h3>
-                      <p className="text-green-200">Send SOL to get tokens for betting • Rate: 1 SOL = 1,000 tokens</p>
-                      <p className="text-yellow-400 font-semibold">Your Balance: {user.token_balance || 0} tokens</p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => setActiveTab('tokens')}
-                    size="lg"
-                    className="bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-4 text-lg"
-                  >
-                    <Coins className="w-5 h-5 mr-2" />
-                    Buy Tokens Now
-                  </Button>
-                </div>
-                
-                {/* Show wallet address directly */}
-                <div className="mt-4 p-4 bg-green-800/30 rounded-lg">
-                  <h4 className="text-sm font-semibold text-green-300 mb-2">🏦 Casino Wallet Address:</h4>
-                  <div className="flex items-center justify-between bg-green-900/50 p-3 rounded-lg">
-                    <code className="text-green-400 font-mono text-sm break-all">
-                      {CASINO_WALLET_ADDRESS}
-                    </code>
                     <Button
-                      onClick={() => {
-                        navigator.clipboard.writeText(CASINO_WALLET_ADDRESS);
-                        toast.success('Wallet address copied!');
-                      }}
-                      size="sm"
-                      variant="outline"
-                      className="ml-2 border-green-600 text-green-400 hover:bg-green-700"
+                      onClick={() => setActiveTab('tokens')}
+                      size="lg"
+                      className="bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-4 text-lg"
                     >
-                      Copy
+                      <Coins className="w-5 h-5 mr-2" />
+                      Buy Tokens Now
                     </Button>
                   </div>
-                  <p className="text-xs text-green-300 mt-2">
-                    💡 Send SOL to this address, then click "Buy Tokens Now" to claim your casino tokens!
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Battle Rooms */}
             {activeTab === 'rooms' && (
