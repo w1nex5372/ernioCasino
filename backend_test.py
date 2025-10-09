@@ -75,26 +75,27 @@ class SolanaCasinoAPITester:
             self.log_test(f"Telegram Auth User {user_number}", False, str(e))
             return False
 
-    def test_get_user(self):
+    def test_get_user(self, user_number=1):
         """Test getting user by ID"""
-        if not self.test_user:
-            self.log_test("Get User", False, "No test user available")
+        test_user = self.test_user1 if user_number == 1 else self.test_user2
+        if not test_user:
+            self.log_test(f"Get User {user_number}", False, "No test user available")
             return False
         
         try:
-            response = requests.get(f"{self.api_url}/users/{self.test_user['id']}")
+            response = requests.get(f"{self.api_url}/users/{test_user['id']}")
             success = response.status_code == 200
             
             if success:
                 user_data = response.json()
-                details = f"Retrieved user: {user_data['username']}, Balance: {user_data['token_balance']}"
+                details = f"Retrieved user: {user_data['first_name']}, Balance: {user_data['token_balance']}"
             else:
                 details = f"Status: {response.status_code}, Response: {response.text}"
             
-            self.log_test("Get User", success, details)
+            self.log_test(f"Get User {user_number}", success, details)
             return success
         except Exception as e:
-            self.log_test("Get User", False, str(e))
+            self.log_test(f"Get User {user_number}", False, str(e))
             return False
 
     def test_purchase_tokens(self):
