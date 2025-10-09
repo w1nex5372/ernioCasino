@@ -37,9 +37,8 @@ CASINO_WALLET_PRIVATE_KEY = os.environ.get('CASINO_WALLET_PRIVATE_KEY', '')
 CASINO_WALLET_ADDRESS = 'YourWalletAddressHere12345678901234567890123456789'  # This will be set from env or generated
 
 # MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+client = AsyncIOMotorClient(MONGO_URL)
+db = client[DB_NAME]
 
 # Socket.IO setup
 sio = socketio.AsyncServer(
