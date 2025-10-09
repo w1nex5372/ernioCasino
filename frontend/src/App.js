@@ -149,33 +149,39 @@ function App() {
     // Auto-authenticate if opened from Telegram
     const autoAuthenticateFromTelegram = async () => {
       try {
+        console.log('Checking for Telegram Web App...');
+        
         // Check if Telegram Web App is available
         if (window.Telegram && window.Telegram.WebApp) {
           const webApp = window.Telegram.WebApp;
           webApp.ready();
           
-          const initData = webApp.initData;
+          console.log('Telegram WebApp found, initDataUnsafe:', webApp.initDataUnsafe);
+          
           const user = webApp.initDataUnsafe?.user;
           
           if (user && user.id) {
-            console.log('Telegram user found:', user);
+            console.log('Telegram user data:', user);
             
-            // Create auth data
+            // Create auth data with minimal required fields
             const authData = {
-              id: user.id,
-              first_name: user.first_name,
+              id: parseInt(user.id), // Ensure it's a number
+              first_name: user.first_name || 'Telegram User',
               last_name: user.last_name || null,
               username: user.username || null,
               photo_url: user.photo_url || null,
               auth_date: Math.floor(Date.now() / 1000),
-              hash: webApp.initDataUnsafe?.hash || 'telegram_auto'
+              hash: 'telegram_webapp' // Simple identifier
             };
+
+            console.log('Sending auth data:', authData);
 
             // Send auth data to backend
             const response = await axios.post(`${API}/auth/telegram`, {
               telegram_auth_data: authData
             });
 
+            console.log('Auth response:', response.data);
             setUser(response.data);
             toast.success(`Welcome, ${user.first_name}!`);
             
@@ -183,11 +189,16 @@ function App() {
             webApp.expand();
             
             return true;
+          } else {
+            console.log('No user data in Telegram WebApp');
           }
+        } else {
+          console.log('Telegram WebApp not available');
         }
         return false;
       } catch (error) {
         console.error('Auto auth failed:', error);
+        toast.error('Authentication failed: ' + (error.response?.data?.detail || error.message));
         return false;
       }
     };
