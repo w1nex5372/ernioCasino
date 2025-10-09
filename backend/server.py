@@ -566,7 +566,7 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
     target_room.players.append(player)
     target_room.prize_pool += request.bet_amount
     
-    # Notify all clients about new player
+    # Notify all clients about new player and update all room states
     await sio.emit('player_joined', {
         'room_id': target_room.id,
         'room_type': target_room.room_type,
@@ -574,6 +574,9 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         'players_count': len(target_room.players),
         'prize_pool': target_room.prize_pool
     })
+    
+    # Broadcast updated room states to all clients
+    await broadcast_room_updates()
     
     # Start game if room is full
     if len(target_room.players) == 2:
