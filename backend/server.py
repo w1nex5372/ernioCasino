@@ -58,17 +58,31 @@ ROOM_SETTINGS = {
 }
 
 # Models
+class TelegramAuthData(BaseModel):
+    id: int
+    first_name: str
+    last_name: Optional[str] = None
+    username: Optional[str] = None
+    photo_url: Optional[str] = None
+    auth_date: int
+    hash: str
+
 class User(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    username: str
+    telegram_id: int
+    first_name: str
+    last_name: Optional[str] = None
+    telegram_username: Optional[str] = None
+    photo_url: Optional[str] = None
     wallet_address: Optional[str] = None
     token_balance: int = Field(default=0)
+    is_verified: bool = Field(default=False)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_login: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class UserCreate(BaseModel):
-    username: str
-    wallet_address: Optional[str] = None
+    telegram_auth_data: TelegramAuthData
 
 class TokenPurchase(BaseModel):
     user_id: str
