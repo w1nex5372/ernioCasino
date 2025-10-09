@@ -855,21 +855,23 @@ function App() {
                       <CardHeader className={`bg-gradient-to-br ${config.gradient} text-white relative overflow-hidden`}>
                         <div className="absolute inset-0 bg-black/10"></div>
                         <div className="relative z-10">
-                          <div className="flex items-center justify-between mb-2">
+                          <div className={`flex items-center justify-between mb-2 ${isMobile ? 'flex-wrap gap-2' : ''}`}>
                             <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                                <span className="text-2xl">{config.icon}</span>
+                              <div className={`${isMobile ? 'w-10 h-10' : 'w-12 h-12'} bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm`}>
+                                <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>{config.icon}</span>
                               </div>
                               <div>
-                                <CardTitle className="text-xl font-bold">
+                                <CardTitle className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold`}>
                                   {config.name}
                                 </CardTitle>
-                                <CardDescription className="text-white/90 font-medium">
+                                <CardDescription className={`text-white/90 font-medium ${isMobile ? 'text-sm' : ''}`}>
                                   {config.min} - {config.max} tokens
                                 </CardDescription>
                               </div>
                             </div>
-                            <Badge variant="secondary" className="bg-white/25 text-white font-semibold px-3 py-1 backdrop-blur-sm">
+                            <Badge variant="secondary" className={`bg-white/25 text-white font-semibold backdrop-blur-sm ${
+                              isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1'
+                            }`}>
                               Round #{room.round_number || 1}
                             </Badge>
                           </div>
