@@ -980,7 +980,7 @@ function App() {
                                 </Badge>
                               </div>
                               <div className="text-sm text-slate-400">
-                                Winner: <span className="text-green-400 font-medium">{game.winner?.username}</span>
+                                Winner: <span className="text-green-400 font-medium">{game.winner?.username || 'Unknown'}</span>
                               </div>
                             </div>
                             <div className="text-right">
