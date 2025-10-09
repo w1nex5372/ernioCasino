@@ -282,7 +282,7 @@ class PaymentMonitor:
                 return
                 
             # Get wallet public key
-            wallet_pubkey = PublicKey(CASINO_WALLET_ADDRESS)
+            wallet_pubkey = Pubkey.from_string(CASINO_WALLET_ADDRESS)
             
             # Get recent transactions
             response = await self.client.get_signatures_for_address(
