@@ -688,11 +688,12 @@ function App() {
                   </ol>
                 </div>
               </CardContent>
-            </Card>
-            </TabsContent>
+              </Card>
+            )}
 
-          </Tabs>
-        </div>
+          </div>
+        </main>
+      </div>
       </div>
       <Toaster richColors position="top-right" />
     </div>
