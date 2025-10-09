@@ -528,8 +528,8 @@ function App() {
               </div>
             )}
 
-          {/* Leaderboard */}
-          <TabsContent value="leaderboard">
+            {/* Leaderboard */}
+            {activeTab === 'leaderboard' && (
             <Card className="bg-slate-800/90 border-slate-700">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-yellow-400">
