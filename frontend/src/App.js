@@ -674,61 +674,81 @@ function App() {
         </div>
       </header>
 
-      <div className={`${isMobile ? 'pb-20' : 'flex'}`}>
-        {/* Desktop Sidebar */}
-        {!isMobile && (
-          <nav className="w-64 bg-slate-800/50 backdrop-blur-sm border-r border-slate-700 min-h-screen p-4">
-            <div className="space-y-2">
-              <button
-                onClick={() => setActiveTab('rooms')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === 'rooms' 
-                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
-                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                }`}
-              >
-                <Users className="w-5 h-5" />
-                Battle Rooms
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('leaderboard')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === 'leaderboard' 
-                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
-                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                }`}
-              >
-                <Trophy className="w-5 h-5" />
-                Leaderboard
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('history')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === 'history' 
-                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
-                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                }`}
-              >
-                <Timer className="w-5 h-5" />
-                History
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('tokens')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === 'tokens' 
-                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold' 
-                    : 'text-slate-300 hover:bg-slate-700 hover:text-white bg-green-600/20'
-                }`}
-              >
-                <Coins className="w-5 h-5" />
-                Buy Tokens
-              </button>
-            </div>
+      <div className="flex">
+        {/* Sidebar Navigation - Same for Desktop and Mobile */}
+        <nav className={`${isMobile ? 'w-16' : 'w-64'} bg-slate-800/50 backdrop-blur-sm border-r border-slate-700 min-h-screen p-2 md:p-4`}>
+          <div className="space-y-2">
+            <button
+              onClick={() => setActiveTab('rooms')}
+              className={`w-full flex items-center ${isMobile ? 'justify-center p-3' : 'gap-3 px-4 py-3'} rounded-lg transition-all duration-200 ${
+                activeTab === 'rooms' 
+                  ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+              }`}
+              title="Battle Rooms"
+            >
+              <Users className="w-5 h-5" />
+              {!isMobile && <span>Battle Rooms</span>}
+            </button>
             
-            {/* Quick Stats */}
+            <button
+              onClick={() => setActiveTab('leaderboard')}
+              className={`w-full flex items-center ${isMobile ? 'justify-center p-3' : 'gap-3 px-4 py-3'} rounded-lg transition-all duration-200 ${
+                activeTab === 'leaderboard' 
+                  ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+              }`}
+              title="Leaderboard"
+            >
+              <Trophy className="w-5 h-5" />
+              {!isMobile && <span>Leaderboard</span>}
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`w-full flex items-center ${isMobile ? 'justify-center p-3' : 'gap-3 px-4 py-3'} rounded-lg transition-all duration-200 ${
+                activeTab === 'history' 
+                  ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+              }`}
+              title="History"
+            >
+              <Timer className="w-5 h-5" />
+              {!isMobile && <span>History</span>}
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('tokens')}
+              className={`w-full flex items-center ${isMobile ? 'justify-center p-3' : 'gap-3 px-4 py-3'} rounded-lg transition-all duration-200 ${
+                activeTab === 'tokens' 
+                  ? 'bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+              }`}
+              title="Buy Tokens"
+            >
+              <Coins className="w-5 h-5" />
+              {!isMobile && <span>Buy Tokens</span>}
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('prizes')}
+              className={`w-full flex items-center ${isMobile ? 'justify-center p-3' : 'gap-3 px-4 py-3'} rounded-lg transition-all duration-200 ${
+                activeTab === 'prizes' 
+                  ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold' 
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+              }`}
+              title="My Prizes"
+            >
+              <Trophy className="w-5 h-5" />
+              {!isMobile && <span>My Prizes</span>}
+              {!isMobile && userPrizes.length > 0 && (
+                <Badge className="bg-green-500 text-white">{userPrizes.length}</Badge>
+              )}
+            </button>
+          </div>
+          
+          {/* Quick Stats - Only on Desktop */}
+          {!isMobile && (
             <div className="mt-8 space-y-4">
               <div className="bg-slate-700/50 rounded-lg p-4">
                 <div className="text-xs text-slate-400 uppercase tracking-wide mb-1">Your Balance</div>
@@ -736,11 +756,11 @@ function App() {
                 <div className="text-xs text-slate-500">Casino Tokens</div>
               </div>
             </div>
-          </nav>
-        )}
+          )}
+        </nav>
 
         {/* Main Content */}
-        <main className={`flex-1 p-3 md:p-6 ${isMobile ? 'min-h-screen' : ''}`}>
+        <main className="flex-1 p-3 md:p-6">
           <div className="space-y-6">
 
             {/* Quick Buy Tokens Card - Always Visible */}
