@@ -28,7 +28,8 @@ db = client[os.environ['DB_NAME']]
 sio = socketio.AsyncServer(
     cors_allowed_origins="*",
     logger=True,
-    engineio_logger=True
+    engineio_logger=True,
+    async_mode='asgi'
 )
 
 # FastAPI app
