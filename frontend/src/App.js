@@ -189,31 +189,12 @@ function App() {
     }
   };
 
-  const createUser = async (e) => {
-    e.preventDefault();
-    if (!username.trim()) {
-      toast.error('Please enter a username');
-      return;
+  // Load prizes when user changes
+  useEffect(() => {
+    if (user) {
+      loadUserPrizes();
     }
-
-    try {
-      const response = await axios.post(`${API}/users`, {
-        username: username.trim(),
-        wallet_address: walletAddress.trim() || null
-      });
-      setUser(response.data);
-      setUsername('');
-      setWalletAddress('');
-      toast.success('Welcome to the casino!');
-      // Load user prizes after user creation
-      setTimeout(() => {
-        loadUserPrizes();
-      }, 500);
-    } catch (error) {
-      console.error('Failed to create user:', error);
-      toast.error('Failed to create user');
-    }
-  };
+  }, [user]);
 
   const purchaseTokens = async (e) => {
     e.preventDefault();
