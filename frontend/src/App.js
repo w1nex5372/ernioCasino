@@ -456,18 +456,7 @@ function App() {
               </h1>
             </div>
             
-            <div className="flex items-center gap-1 md:gap-6">
-              {/* Install Button */}
-              {showInstallPrompt && (
-                <Button
-                  onClick={handleInstallClick}
-                  size="sm"
-                  className="bg-green-600 hover:bg-green-700 text-xs px-2 py-1"
-                >
-                  📱 Install
-                </Button>
-              )}
-              
+            <div className="flex items-center gap-2 md:gap-6">
               {!isMobile && (
                 <div className="flex items-center gap-2">
                   <Wallet className="w-4 h-4 text-slate-400" />
@@ -479,6 +468,12 @@ function App() {
                 <span className="text-sm md:text-lg font-bold text-yellow-400">{user.token_balance}</span>
                 {!isMobile && <span className="text-slate-400">tokens</span>}
               </div>
+              {userPrizes.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <Trophy className="w-4 h-4 text-green-400" />
+                  <span className="text-sm text-green-400">{userPrizes.length} prizes</span>
+                </div>
+              )}
               <div className="flex items-center gap-1">
                 <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
                 {!isMobile && (
