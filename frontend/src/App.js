@@ -872,9 +872,9 @@ function App() {
                             <Button 
                               onClick={() => setSelectedRoom(roomType)}
                               className={`w-full bg-gradient-to-r ${config.gradient} hover:opacity-90 ${isMobile ? 'h-12 text-lg font-semibold' : ''}`}
-                              disabled={room.players_count >= 10 || room.status !== 'waiting'}
+                              disabled={room.players_count >= 2 || room.status !== 'waiting'}
                             >
-                              {room.players_count >= 10 ? 'Room Full' : 
+                              {room.players_count >= 2 ? 'Room Full' : 
                                room.status === 'playing' ? 'Game In Progress' : 'Enter Battle'}
                             </Button>
                           )}
