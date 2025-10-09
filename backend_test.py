@@ -350,46 +350,80 @@ class SolanaCasinoAPITester:
 
     def run_all_tests(self):
         """Run all API tests"""
-        print("🎰 Starting Solana Casino API Tests...")
-        print("=" * 50)
+        print("🎰 Starting Solana Casino 2-Player Game Tests...")
+        print("=" * 60)
         
         # Basic connectivity
         if not self.test_api_root():
             print("❌ API is not accessible, stopping tests")
             return False
         
-        # User management tests
-        if not self.test_create_user():
-            print("❌ User creation failed, stopping tests")
+        # Create two test users with Telegram authentication
+        print("\n👥 Creating Test Users...")
+        if not self.test_telegram_auth(1):
+            print("❌ User 1 creation failed, stopping tests")
             return False
         
-        self.test_get_user()
+        if not self.test_telegram_auth(2):
+            print("❌ User 2 creation failed, stopping tests")
+            return False
         
-        # Token purchase test (critical for the reported issue)
-        token_purchase_success = self.test_purchase_tokens()
-        if not token_purchase_success:
-            print("⚠️  Token purchase failed - this matches the reported issue!")
+        # Verify user retrieval
+        self.test_get_user(1)
+        self.test_get_user(2)
         
-        # Room and game tests
+        # Give both users tokens for betting
+        print("\n💰 Purchasing Tokens for Both Users...")
+        token_purchase_success1 = self.test_purchase_tokens(1)
+        token_purchase_success2 = self.test_purchase_tokens(2)
+        
+        if not token_purchase_success1 or not token_purchase_success2:
+            print("⚠️  Token purchase failed for one or both users!")
+        
+        # Test room system
+        print("\n🏠 Testing Room System...")
         rooms_success, rooms = self.test_get_rooms()
-        if rooms_success and self.test_user and self.test_user.get('token_balance', 0) >= 200:
-            self.test_join_room("bronze", 200)
+        
+        # Test prize endpoints before game
+        print("\n🏆 Testing Prize System (Before Game)...")
+        self.test_user_prizes(1)
+        self.test_user_prizes(2)
+        self.test_check_winner(1)
+        self.test_check_winner(2)
+        
+        # Test complete 2-player game flow
+        if (rooms_success and self.test_user1 and self.test_user2 and 
+            self.test_user1.get('token_balance', 0) >= 300 and 
+            self.test_user2.get('token_balance', 0) >= 300):
+            print("\n🎮 Testing Complete 2-Player Game Flow...")
+            self.test_two_player_game_flow()
+        else:
+            print("⚠️  Skipping 2-player game flow - insufficient setup")
+        
+        # Test prize endpoints after game
+        print("\n🏆 Testing Prize System (After Game)...")
+        self.test_user_prizes(1)
+        self.test_user_prizes(2)
         
         # Additional endpoints
+        print("\n📊 Testing Additional Endpoints...")
         self.test_leaderboard()
         self.test_game_history()
         
         # Error handling tests
+        print("\n🚫 Testing Error Handling...")
         self.test_invalid_endpoints()
         
         # Summary
-        print("\n" + "=" * 50)
+        print("\n" + "=" * 60)
         print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} passed")
         
         if self.failed_tests:
             print("\n❌ Failed Tests:")
             for test in self.failed_tests:
                 print(f"  - {test['name']}: {test['details']}")
+        else:
+            print("\n✅ All tests passed!")
         
         return self.tests_passed == self.tests_run
 
