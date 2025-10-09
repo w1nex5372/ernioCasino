@@ -662,9 +662,10 @@ function App() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+            </TabsContent>
 
-        </Tabs>
+          </Tabs>
+        </div>
       </div>
       <Toaster richColors position="top-right" />
     </div>
