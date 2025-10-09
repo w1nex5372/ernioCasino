@@ -1099,23 +1099,23 @@ function App() {
                   ) : (
                     <div className="space-y-4">
                       {userPrizes.map((prize, index) => (
-                        <div key={index} className="p-4 bg-slate-700/30 rounded-lg border border-slate-600">
-                          <div className="flex justify-between items-start">
+                        <div key={index} className={`${isMobile ? 'p-3' : 'p-4'} bg-slate-700/30 rounded-lg border border-slate-600`}>
+                          <div className={`${isMobile ? 'space-y-3' : 'flex justify-between items-start'}`}>
                             <div className="flex items-center gap-3">
-                              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                              <div className={`${isMobile ? 'w-10 h-10' : 'w-12 h-12'} rounded-full flex items-center justify-center ${
                                 prize.room_type === 'gold' ? 'bg-yellow-500' :
                                 prize.room_type === 'silver' ? 'bg-slate-400' : 'bg-amber-600'
                               }`}>
-                                <span className="text-2xl">
+                                <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>
                                   {prize.room_type === 'gold' ? '🥇' :
                                    prize.room_type === 'silver' ? '🥈' : '🥉'}
                                 </span>
                               </div>
-                              <div>
-                                <h4 className="font-semibold text-white">
+                              <div className="flex-1">
+                                <h4 className={`font-semibold text-white ${isMobile ? 'text-sm' : ''}`}>
                                   {ROOM_CONFIGS[prize.room_type].name} Winner
                                 </h4>
-                                <p className="text-sm text-slate-400">
+                                <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-slate-400`}>
                                   Round #{prize.round_number} • {prize.prize_pool} tokens won
                                 </p>
                                 <p className="text-xs text-slate-500">
@@ -1125,9 +1125,11 @@ function App() {
                             </div>
                             <Button
                               onClick={() => window.open(prize.prize_link, '_blank')}
-                              className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+                              className={`bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 ${
+                                isMobile ? 'w-full mt-2' : ''
+                              }`}
                             >
-                              Claim Prize
+                              🎁 Claim Prize
                             </Button>
                           </div>
                         </div>
