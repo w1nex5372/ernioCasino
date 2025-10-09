@@ -233,28 +233,36 @@ function App() {
     };
 
     // Try auto-authentication
+    let mounted = true;
+    
     const tryAuthentication = async () => {
       try {
+        if (!mounted) return;
         const success = await autoAuthenticateFromTelegram();
-        if (!success) {
+        if (!success && mounted) {
           setIsLoading(false); // Show manual auth if auto fails
         }
       } catch (error) {
         console.error('Authentication error:', error);
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     // Try authentication after a short delay
     const authTimeout = setTimeout(tryAuthentication, 1000);
     
-    // Fallback timeout to prevent infinite loading
+    // Fallback timeout to prevent infinite loading - more aggressive
     const fallbackTimeout = setTimeout(() => {
-      console.log('Authentication timeout, showing manual login');
-      setIsLoading(false);
-    }, 5000);
+      console.log('⚠️ Authentication timeout (3s), forcing manual login');
+      if (mounted) {
+        setIsLoading(false);
+      }
+    }, 3000); // Reduced to 3 seconds
 
     return () => {
+      mounted = false;
       clearTimeout(authTimeout);
       clearTimeout(fallbackTimeout);
     };
