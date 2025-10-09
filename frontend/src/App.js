@@ -149,38 +149,19 @@ function App() {
     // Auto-authenticate if opened from Telegram
     const autoAuthenticateFromTelegram = async () => {
       try {
-        console.log('=== TELEGRAM WEB APP DEBUGGING ===');
-        console.log('User Agent:', navigator.userAgent);
-        console.log('Window location:', window.location.href);
-        console.log('Document ready state:', document.readyState);
-        console.log('Window.Telegram exists:', !!window.Telegram);
-        
-        if (window.Telegram) {
-          console.log('Telegram object:', window.Telegram);
-          console.log('WebApp exists:', !!window.Telegram.WebApp);
-        }
-        
-        // Wait a bit more for Telegram script to fully load
-        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('Checking for Telegram Web App...');
         
         // Check if Telegram Web App is available
         if (window.Telegram && window.Telegram.WebApp) {
           const webApp = window.Telegram.WebApp;
-          console.log('WebApp object:', webApp);
-          console.log('WebApp version:', webApp.version);
-          console.log('WebApp platform:', webApp.platform);
-          console.log('WebApp viewportHeight:', webApp.viewportHeight);
-          console.log('WebApp isExpanded:', webApp.isExpanded);
-          
           webApp.ready();
           
-          console.log('After ready() - initDataUnsafe:', webApp.initDataUnsafe);
-          console.log('After ready() - initData:', webApp.initData);
+          console.log('Telegram WebApp found, initDataUnsafe:', webApp.initDataUnsafe);
           
           const user = webApp.initDataUnsafe?.user;
           
           if (user && user.id) {
-            console.log('✅ Telegram user data found:', user);
+            console.log('Telegram user data:', user);
             
             // Create auth data with minimal required fields
             const authData = {
@@ -190,28 +171,23 @@ function App() {
               username: user.username || null,
               photo_url: user.photo_url || null,
               auth_date: Math.floor(Date.now() / 1000),
-              hash: 'telegram_webapp' // Simple identifier
+              hash: 'telegram_auto' // Use original hash for auto-verification
             };
 
-            console.log('Sending auth data to backend:', authData);
+            console.log('Sending auth data:', authData);
 
             // Send auth data to backend
             const response = await axios.post(`${API}/auth/telegram`, {
               telegram_auth_data: authData
             });
 
-            console.log('✅ Backend auth response:', response.data);
+            console.log('Auth response:', response.data);
             setUser(response.data);
             setIsLoading(false);
-            toast.success(`🎉 Welcome to Casino Battle, ${user.first_name}!`);
+            toast.success(`Welcome, ${user.first_name}!`);
             
-            // Expand the Web App to full height and enable closing confirmation
+            // Expand the Web App to full height
             webApp.expand();
-            webApp.enableClosingConfirmation();
-            
-            // Set theme colors
-            webApp.setHeaderColor('#1e293b');
-            webApp.setBackgroundColor('#0f172a');
             
             // Load user data
             setTimeout(() => {
@@ -220,18 +196,15 @@ function App() {
             
             return true;
           } else {
-            console.warn('❌ No user data in Telegram WebApp initDataUnsafe');
-            console.log('WebApp.initDataUnsafe:', webApp.initDataUnsafe);
+            console.log('No user data in Telegram WebApp');
           }
         } else {
-          console.warn('❌ Telegram WebApp not available');
-          console.log('Available on window:', Object.keys(window).filter(key => key.includes('Telegram') || key.includes('telegram')));
+          console.log('Telegram WebApp not available');
         }
         return false;
       } catch (error) {
-        console.error('❌ Auto auth failed:', error);
-        console.error('Error stack:', error.stack);
-        toast.error('Telegram authentication failed: ' + (error.response?.data?.detail || error.message));
+        console.error('Auto auth failed:', error);
+        toast.error('Authentication failed: ' + (error.response?.data?.detail || error.message));
         return false;
       }
     };
