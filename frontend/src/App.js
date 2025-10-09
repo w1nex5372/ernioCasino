@@ -371,12 +371,21 @@ function App() {
               </TabsTrigger>
             </TabsList>
 
-          {/* Battle Rooms */}
-          <TabsContent value="rooms" className="space-y-6">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold mb-2">Choose Your Battle Arena</h2>
-              <p className="text-slate-400">10 players compete, highest bet has better winning odds</p>
-            </div>
+            {/* Battle Rooms */}
+            <TabsContent value="rooms" className="space-y-8">
+              <div className="text-center py-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full mb-4">
+                  <Users className="w-8 h-8 text-slate-900" />
+                </div>
+                <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+                  Choose Your Battle Arena
+                </h2>
+                <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+                  Join one of our three exclusive rooms where 10 players compete for the ultimate prize pool. 
+                  <br />
+                  <span className="text-yellow-400 font-medium">Higher bets = Better winning odds!</span>
+                </p>
+              </div>
             
             <div className="grid md:grid-cols-3 gap-6">
               {['bronze', 'silver', 'gold'].map((roomType) => {
