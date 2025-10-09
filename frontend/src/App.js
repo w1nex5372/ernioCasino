@@ -824,17 +824,17 @@ function App() {
             {/* Battle Rooms */}
             {activeTab === 'rooms' && (
               <div className="space-y-8">
-                <div className="text-center py-6">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full mb-4">
-                    <Users className="w-8 h-8 text-slate-900" />
+                <div className={`text-center ${isMobile ? 'py-4' : 'py-6'}`}>
+                  <div className={`inline-flex items-center justify-center ${isMobile ? 'w-12 h-12' : 'w-16 h-16'} bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full mb-4`}>
+                    <Users className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'} text-slate-900`} />
                   </div>
-                  <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-                    Choose Your Battle Arena
+                  <h2 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold mb-3 bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent`}>
+                    {isMobile ? 'Battle Arenas' : 'Choose Your Battle Arena'}
                   </h2>
-                  <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-                    Join one of our three exclusive rooms where 2 players battle for the prize! 
+                  <p className={`text-slate-400 ${isMobile ? 'text-sm px-4' : 'text-lg'} max-w-2xl mx-auto`}>
+                    {isMobile ? '2 players battle for prizes!' : 'Join one of our three exclusive rooms where 2 players battle for the prize!'}
                     <br />
-                    <span className="text-yellow-400 font-medium">Higher bet = Better winning odds!</span>
+                    <span className="text-yellow-400 font-medium">Higher bet = Better odds!</span>
                   </p>
                 </div>
                 
