@@ -612,8 +612,8 @@ function App() {
               </div>
               <div className="flex items-center gap-1">
                 <Coins className="w-4 h-4 text-yellow-400" />
-                <span className="text-sm md:text-lg font-bold text-yellow-400">{user.token_balance}</span>
-                {!isMobile && <span className="text-slate-400">tokens</span>}
+                <span className="text-sm md:text-lg font-bold text-yellow-400">{user.token_balance || 0}</span>
+                <span className="text-slate-400">tokens</span>
               </div>
               {userPrizes.length > 0 && (
                 <div className="flex items-center gap-1">
