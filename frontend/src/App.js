@@ -18,7 +18,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 // ** EDIT THIS LINE TO ADD YOUR SOLANA WALLET ADDRESS **
-const CASINO_WALLET_ADDRESS = "YOUR_SOLANA_WALLET_ADDRESS_HERE";
+const [casinoWalletAddress, setCasinoWalletAddress] = useState('Loading...');
 
 // ** EDIT THESE LINES TO ADD YOUR PRIZE LINKS **
 const PRIZE_LINKS = {
