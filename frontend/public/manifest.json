@@ -6,20 +6,24 @@
     {
       "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23fbbf24'/%3E%3Cpath d='M30 35h40l-5 30H35l-5-30z' fill='%230f172a'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%23fbbf24'/%3E%3C/svg%3E",
       "sizes": "192x192",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     },
     {
       "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23fbbf24'/%3E%3Cpath d='M30 35h40l-5 30H35l-5-30z' fill='%230f172a'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%23fbbf24'/%3E%3C/svg%3E",
       "sizes": "512x512",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "display": "standalone",
   "theme_color": "#fbbf24",
   "background_color": "#0f172a",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "scope": "/",
   "categories": ["games", "entertainment"],
+  "lang": "en-US",
   "shortcuts": [
     {
       "name": "Battle Rooms",
