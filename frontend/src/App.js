@@ -528,12 +528,95 @@ function App() {
             </Card>
           </TabsContent>
 
-                        <div className="w-full bg-slate-600 rounded-full h-2">
-                          <div 
-                            className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${(room.players_count / 10) * 100}%` }}
-                          />
+          {/* Token Purchase */}
+          <TabsContent value="tokens">
+            <Card className="bg-slate-800/90 border-slate-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-400">
+                  <Coins className="w-5 h-5" />
+                  Purchase Casino Tokens
+                </CardTitle>
+                <CardDescription className="text-slate-400">
+                  Send SOL to our wallet address below to receive casino tokens at rate: 1 SOL = 1,000 tokens
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                
+                {/* Casino Wallet Address */}
+                <div className="p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                  <h3 className="text-lg font-semibold text-white mb-2">Casino Wallet Address</h3>
+                  <div className="flex items-center justify-between bg-slate-800 p-3 rounded-lg">
+                    <code className="text-green-400 font-mono text-sm break-all">
+                      {CASINO_WALLET_ADDRESS}
+                    </code>
+                    <Button
+                      onClick={() => {
+                        navigator.clipboard.writeText(CASINO_WALLET_ADDRESS);
+                        toast.success('Wallet address copied!');
+                      }}
+                      size="sm"
+                      variant="outline"
+                      className="ml-2 border-slate-600 text-slate-300 hover:bg-slate-700"
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-2">
+                    Send your SOL to this address, then use the form below to claim your tokens
+                  </p>
+                </div>
+
+                {/* Token Claim Form */}
+                <div className="p-4 bg-slate-700/30 rounded-lg border border-slate-600">
+                  <h3 className="text-lg font-semibold text-white mb-3">Claim Your Tokens</h3>
+                  <form onSubmit={purchaseTokens} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                        SOL Amount Sent
+                      </label>
+                      <Input
+                        type="number"
+                        step="0.001"
+                        value={solAmount}
+                        onChange={(e) => setSolAmount(e.target.value)}
+                        placeholder="Enter SOL amount you sent"
+                        className="bg-slate-700 border-slate-600 text-white"
+                      />
+                    </div>
+                    {solAmount && (
+                      <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                        <div className="text-sm text-green-300">
+                          You will receive: <span className="font-bold text-green-400">
+                            {Math.floor(parseFloat(solAmount || 0) * 1000)} casino tokens
+                          </span>
                         </div>
+                      </div>
+                    )}
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                      disabled={!solAmount || parseFloat(solAmount) <= 0}
+                    >
+                      <Coins className="w-4 h-4 mr-2" />
+                      Claim {solAmount ? Math.floor(parseFloat(solAmount) * 1000) : 0} Tokens
+                    </Button>
+                  </form>
+                </div>
+
+                {/* Instructions */}
+                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <h4 className="font-semibold text-blue-400 mb-2">📝 How to Purchase Tokens:</h4>
+                  <ol className="text-sm text-slate-300 space-y-1 list-decimal list-inside">
+                    <li>Copy the casino wallet address above</li>
+                    <li>Send SOL from your wallet to this address</li>
+                    <li>Enter the amount you sent in the form</li>
+                    <li>Click "Claim Tokens" to receive your casino tokens</li>
+                  </ol>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
         </Tabs>
       </div>
       <Toaster richColors position="top-right" />
