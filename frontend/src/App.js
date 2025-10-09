@@ -526,7 +526,7 @@ function App() {
                   );
                 })}
               </div>
-            </TabsContent>
+            )}
 
           {/* Leaderboard */}
           <TabsContent value="leaderboard">
