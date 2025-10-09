@@ -334,24 +334,12 @@ function App() {
     checkBalance();
   };
 
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        toast.success('App will be installed!');
-      }
-      setDeferredPrompt(null);
-      setShowInstallPrompt(false);
-    } else {
-      // Fallback instructions
-      if (isMobile) {
-        toast.info('Tap your browser menu and select "Add to Home Screen"');
-      } else {
-        toast.info('Look for an install icon in your address bar, or bookmark this page!');
-      }
+  // Load prizes when socket events fire
+  useEffect(() => {
+    if (user) {
+      loadUserPrizes();
     }
-  };
+  }, [user]);
 
   const joinRoom = async (roomType) => {
     if (!betAmount || parseInt(betAmount) <= 0) {
