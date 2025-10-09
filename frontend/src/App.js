@@ -683,6 +683,7 @@ function App() {
         {/* Sidebar Navigation - Desktop Only */}
         {!isMobile && (
           <nav className="w-64 bg-slate-800/50 backdrop-blur-sm border-r border-slate-700 min-h-screen p-4">
+            <div className="space-y-2">
           <div className="space-y-2">
             <button
               onClick={() => setActiveTab('rooms')}
