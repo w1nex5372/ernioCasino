@@ -933,7 +933,7 @@ function App() {
                     <CardContent className="p-4">
                       <h3 className="text-center text-white font-semibold mb-3">Your Personal Address</h3>
                       <div className="bg-slate-900 p-3 rounded-lg mb-3">
-                        <code className="text-green-400 text-xs font-mono break-all block text-center">
+                        <code className="text-green-400 text-xs font-mono break-all block text-center leading-relaxed">
                           {casinoWalletAddress}
                         </code>
                       </div>
