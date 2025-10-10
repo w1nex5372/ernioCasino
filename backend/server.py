@@ -39,6 +39,95 @@ SOLANA_RPC_URL = os.environ.get('SOLANA_RPC_URL', 'https://api.devnet.solana.com
 CASINO_WALLET_PRIVATE_KEY = os.environ.get('CASINO_WALLET_PRIVATE_KEY', '')
 CASINO_WALLET_ADDRESS = os.environ.get('CASINO_WALLET_ADDRESS', 'YourWalletAddressHere12345678901234567890123456789')
 
+# HD Wallet Derivation System
+class SolanaWalletDerivation:
+    def __init__(self, master_private_key_base58: str = None):
+        """Initialize with master private key for derivation"""
+        self.master_private_key = master_private_key_base58
+        if master_private_key_base58:
+            try:
+                # Create master keypair from base58 private key
+                private_key_bytes = base58.b58decode(master_private_key_base58)
+                self.master_keypair = Keypair.from_bytes(private_key_bytes)
+                logging.info(f"🔑 Master wallet initialized: {self.master_keypair.pubkey()}")
+            except Exception as e:
+                logging.error(f"Error initializing master wallet: {e}")
+                self.master_keypair = None
+        else:
+            self.master_keypair = None
+    
+    def derive_user_address(self, user_id: str, telegram_id: int) -> dict:
+        """Derive a unique address for a user from master wallet"""
+        try:
+            # Create deterministic seed from master key + user identifiers
+            seed_string = f"casino_user_{user_id}_{telegram_id}"
+            seed_bytes = hashlib.sha256(seed_string.encode()).digest()
+            
+            # Use first 32 bytes as private key seed
+            derived_private_key = seed_bytes[:32]
+            
+            # Create keypair from derived seed
+            derived_keypair = Keypair.from_bytes(derived_private_key)
+            derived_address = str(derived_keypair.pubkey())
+            
+            logging.info(f"🎯 Derived address for user {telegram_id}: {derived_address}")
+            
+            return {
+                "address": derived_address,
+                "private_key_base58": base58.b58encode(derived_keypair.secret()).decode(),
+                "user_id": user_id,
+                "telegram_id": telegram_id,
+                "derivation_path": seed_string
+            }
+            
+        except Exception as e:
+            logging.error(f"Error deriving user address: {e}")
+            return None
+    
+    async def sweep_user_address_to_main(self, derived_keypair: Keypair, amount_lamports: int = None):
+        """Sweep funds from derived address to main wallet"""
+        try:
+            if not self.master_keypair:
+                logging.error("No master keypair configured for sweeping")
+                return False
+                
+            # Get balance of derived address
+            client = AsyncClient(SOLANA_RPC_URL)
+            balance_response = await client.get_balance(derived_keypair.pubkey())
+            
+            if not balance_response.value:
+                logging.info("No balance to sweep")
+                return False
+            
+            balance_lamports = balance_response.value
+            # Leave some lamports for rent (minimum account balance)
+            sweep_amount = balance_lamports - 890880 if balance_lamports > 890880 else 0
+            
+            if sweep_amount <= 0:
+                logging.info("Insufficient balance for sweep after rent")
+                return False
+            
+            # Create transfer instruction
+            transfer_instruction = transfer(
+                TransferParams(
+                    from_pubkey=derived_keypair.pubkey(),
+                    to_pubkey=self.master_keypair.pubkey(),
+                    lamports=sweep_amount
+                )
+            )
+            
+            logging.info(f"💸 Would sweep {sweep_amount} lamports from {derived_keypair.pubkey()} to {self.master_keypair.pubkey()}")
+            # TODO: Implement actual transaction signing and sending
+            
+            return True
+            
+        except Exception as e:
+            logging.error(f"Error sweeping funds: {e}")
+            return False
+
+# Initialize wallet derivation system
+wallet_derivation = SolanaWalletDerivation(CASINO_WALLET_PRIVATE_KEY)
+
 # MongoDB connection
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
