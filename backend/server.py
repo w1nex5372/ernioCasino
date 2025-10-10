@@ -418,11 +418,11 @@ class PaymentMonitor:
     async def _send_payment_confirmation(self, telegram_id: int, username: str, sol_amount: float, tokens_credited: int):
         """Send payment confirmation to user via Telegram"""
         try:
-            message = f"💰 <b>Payment Confirmed!</b>\n\n"
+            message = "💰 <b>Payment Confirmed!</b>\n\n"
             message += f"Hello {username}!\n\n"
             message += f"✅ Received: <b>{sol_amount} SOL</b>\n"
             message += f"🎰 Credited: <b>{tokens_credited:,} Casino Tokens</b>\n\n"
-            message += f"Your tokens are ready for battle! Good luck! 🎯"
+            message += "Your tokens are ready for battle! Good luck! 🎯"
             
             await send_telegram_message(telegram_id, message)
             logging.info(f"📨 Payment confirmation sent to {username}")
