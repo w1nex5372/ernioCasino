@@ -615,53 +615,32 @@ class PaymentMonitor:
         except Exception as e:
             logging.error(f"Error processing transaction {signature}: {e}")
     
-    async def _match_payment_request(self, signature: str, sol_amount: float):
-        """Match payment with active payment requests using amount + timing"""
+    async def _credit_tokens_for_derived_address(self, signature: str, sol_amount: float, derived_address: str):
+        """Credit tokens to user who owns the derived address"""
         try:
-            matched_request = None
-            current_time = time.time()
+            # Find user by derived address
+            user = await db.users.find_one({"derived_solana_address": derived_address})
             
-            # Clean up expired requests
-            expired_requests = []
-            for req_id, request in active_payment_requests.items():
-                if request.is_expired():
-                    expired_requests.append(req_id)
+            if not user:
+                logging.error(f"❌ No user found for derived address {derived_address}! Payment of {sol_amount} SOL lost!")
+                return
             
-            for req_id in expired_requests:
-                del active_payment_requests[req_id]
+            # Calculate tokens using real-time EUR price
+            sol_price = await price_oracle.get_sol_eur_price()
+            tokens_to_credit = price_oracle.calculate_tokens_from_sol(sol_amount, sol_price)
             
-            # Try to match payment with active requests
-            for req_id, request in active_payment_requests.items():
-                if request.matches_payment(sol_amount):
-                    matched_request = request
-                    break
-            
-            if matched_request:
-                # Found matching request!
-                logging.info(f"🎯 Matched payment {sol_amount} SOL with request {matched_request.id} for user {matched_request.telegram_id}")
-                
-                # Calculate tokens using real-time EUR price
-                sol_price = await price_oracle.get_sol_eur_price()
-                tokens_to_credit = price_oracle.calculate_tokens_from_sol(sol_amount, sol_price)
-                
-                # Credit tokens to user
-                await self._credit_tokens_to_user(
-                    signature, 
-                    sol_amount, 
-                    tokens_to_credit, 
-                    matched_request.telegram_id,
-                    sol_price
-                )
-                
-                # Mark request as completed and remove
-                matched_request.status = "completed"
-                del active_payment_requests[matched_request.id]
-                
-            else:
-                logging.warning(f"⚠️ No matching payment request for {sol_amount} SOL in transaction {signature}")
+            # Credit tokens to user
+            await self._credit_tokens_to_user(
+                signature, 
+                sol_amount, 
+                tokens_to_credit, 
+                user['telegram_id'],
+                sol_price,
+                derived_address
+            )
                 
         except Exception as e:
-            logging.error(f"Error matching payment request: {e}")
+            logging.error(f"Error crediting tokens for derived address: {e}")
     
     async def _credit_tokens_to_user(self, signature: str, sol_amount: float, tokens_to_credit: int, telegram_id: int, sol_eur_price: float):
         """Credit tokens to specific user account"""
