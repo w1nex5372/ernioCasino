@@ -413,7 +413,7 @@ class PaymentMonitor:
         asyncio.create_task(self._monitor_payments())
     
     async def _monitor_payments(self):
-        """Monitor all user addresses for incoming payments"""
+        """Monitor casino wallet for incoming payments"""
         try:
             while self.monitoring:
                 await self._check_for_payments()
@@ -427,31 +427,19 @@ class PaymentMonitor:
                 asyncio.create_task(self._monitor_payments())
     
     async def _check_for_payments(self):
-        """Check for new payments to all monitored user addresses"""
+        """Check for new payments to casino wallet"""
         try:
-            if not self.monitored_addresses:
-                # No addresses to monitor yet
+            if not CASINO_WALLET_ADDRESS or CASINO_WALLET_ADDRESS == 'YourWalletAddressHere12345678901234567890123456789':
                 return
                 
-            # Check each monitored address
-            for address in list(self.monitored_addresses):  # Create copy to avoid modification during iteration
-                await self._check_address_for_payments(address)
-                    
-        except Exception as e:
-            logging.error(f"Error checking payments: {e}")
-    
-    async def _check_address_for_payments(self, address: str):
-        """Check a specific address for new payments"""
-        try:
             # Get wallet public key
-            wallet_pubkey = Pubkey.from_string(address)
+            wallet_pubkey = Pubkey.from_string(CASINO_WALLET_ADDRESS)
             
             # Get recent transactions
-            last_sig = self.last_checked_signatures.get(address)
             response = await self.client.get_signatures_for_address(
                 wallet_pubkey, 
-                limit=5,
-                before=last_sig if last_sig else None
+                limit=10,
+                before=self.last_checked_signature if self.last_checked_signature else None
             )
             
             if response.value:
@@ -459,17 +447,17 @@ class PaymentMonitor:
                 
                 # Process new transactions (most recent first)
                 for sig_info in reversed(signatures):
-                    if last_sig and sig_info.signature == last_sig:
+                    if self.last_checked_signature and sig_info.signature == self.last_checked_signature:
                         break
                         
-                    await self._process_transaction(sig_info.signature, address)
+                    await self._process_transaction(sig_info.signature)
                 
-                # Update last checked signature for this address
+                # Update last checked signature
                 if signatures:
-                    self.last_checked_signatures[address] = signatures[0].signature
+                    self.last_checked_signature = signatures[0].signature
                     
         except Exception as e:
-            logging.error(f"Error checking address {address}: {e}")
+            logging.error(f"Error checking payments: {e}")
     
     async def _process_transaction(self, signature: str, receiving_address: str):
         """Process a single transaction for payment detection"""
