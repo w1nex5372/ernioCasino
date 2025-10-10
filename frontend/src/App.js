@@ -172,8 +172,14 @@ function App() {
       try {
         console.log('🔍 Initializing Telegram Web App authentication...');
         
+        // Quick check first - if no Telegram at all, fail fast
+        if (typeof window.Telegram === 'undefined') {
+          console.error('❌ Telegram object not found - not in Telegram environment');
+          throw new Error('This casino must be opened through Telegram');
+        }
+        
         // Wait for Telegram script to fully load
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
         console.log('Checking Telegram environment...');
         console.log('window.Telegram:', window.Telegram);
