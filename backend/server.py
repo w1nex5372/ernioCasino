@@ -1250,10 +1250,13 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         {"$inc": {"token_balance": -request.bet_amount}}
     )
     
-    # Add player to room
+    # Add player to room with full Telegram info
     player = RoomPlayer(
         user_id=request.user_id,
-        username=user_doc.get('first_name', 'Player'),
+        username=user_doc.get('username', ''),  # @username
+        first_name=user_doc.get('first_name', 'Player'),
+        last_name=user_doc.get('last_name', ''),
+        photo_url=user_doc.get('photo_url', ''),
         bet_amount=request.bet_amount
     )
     target_room.players.append(player)
