@@ -234,7 +234,7 @@ function App() {
         setIsLoading(false);
         
         // Show welcome message
-        toast.success(`🎰 Welcome to Casino Battle, ${user.first_name}!`);
+        toast.success(`Welcome to Casino Battle, ${user.first_name}!`);
         
         // Configure WebApp settings
         webApp.enableClosingConfirmation();
