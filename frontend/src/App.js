@@ -375,6 +375,30 @@ function App() {
     };
   }, []);
 
+  // User session management
+  const saveUserSession = (userData) => {
+    try {
+      localStorage.setItem('casino_user', JSON.stringify(userData));
+      console.log('User session saved');
+    } catch (e) {
+      console.log('Failed to save user session:', e);
+    }
+  };
+
+  const refreshUserData = async (userId) => {
+    try {
+      // Refresh user balance and data from server
+      const response = await axios.get(`${API}/user/${userId}`);
+      if (response.data) {
+        setUser(response.data);
+        saveUserSession(response.data);
+        console.log('User data refreshed:', response.data);
+      }
+    } catch (error) {
+      console.log('Failed to refresh user data:', error);
+    }
+  };
+
   // Data loading functions
   const loadRooms = async () => {
     try {
