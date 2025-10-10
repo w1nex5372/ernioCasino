@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks
+from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 import socketio
 from dotenv import load_dotenv
@@ -39,12 +39,14 @@ app = FastAPI(title="Solana Casino Battle Royale")
 
 
 @app.get("/", tags=["Health"])
-async def read_root():
+async def read_root(request: Request):
     """Simple root endpoint to verify the service is running."""
+    base_url = str(request.base_url).rstrip("/")
+    api_path = "/api"
     return {
         "message": "Solana Casino Battle Royale backend is running.",
-        "api_base": "/api",
-        "docs": "/docs"
+        "api_base": f"{base_url}{api_path}",
+        "docs": f"{base_url}/docs"
     }
 
 

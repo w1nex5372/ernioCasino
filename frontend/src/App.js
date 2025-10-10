@@ -14,17 +14,17 @@ import { Toaster } from './components/ui/sonner';
 import { Crown, Coins, Users, Trophy, Zap, Wallet, Play, Timer } from 'lucide-react';
 import './App.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-
-console.log('[App] process.env.REACT_APP_BACKEND_URL:', process.env.REACT_APP_BACKEND_URL);
-if (!BACKEND_URL) {
-  console.error(
-    '[App] REACT_APP_BACKEND_URL is not defined. Check your frontend .env configuration.'
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8000/api";
+console.log('[App] process.env.REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+console.log('[App] Resolved API_BASE:', API_BASE);
+if (!process.env.REACT_APP_API_URL) {
+  console.warn(
+    '[App] Falling back to default API base URL. Update REACT_APP_API_URL in your .env file.'
   );
 }
 
-const API = BACKEND_URL ? `${BACKEND_URL}/api` : '/api';
-console.log('[App] API base URL resolved to:', API);
+const SOCKET_URL = API_BASE.replace(/\/?api\/?$/, '');
+console.log('[App] Socket URL resolved to:', SOCKET_URL);
 
 // ** EDIT THIS LINE TO ADD YOUR SOLANA WALLET ADDRESS **
 const CASINO_WALLET_ADDRESS = "YOUR_SOLANA_WALLET_ADDRESS_HERE";
@@ -99,7 +99,7 @@ function App() {
 
   useEffect(() => {
     // Initialize Socket.IO connection
-    const newSocket = io(BACKEND_URL, {
+    const newSocket = io(SOCKET_URL || API_BASE, {
       transports: ['websocket', 'polling'],
       timeout: 20000,
       forceNew: true
@@ -183,12 +183,12 @@ function App() {
               hash: 'telegram_webapp' // Simple identifier
             };
 
-            console.log('Sending auth data:', authData);
+            const requestPayload = { telegram_auth_data: authData };
+            const authUrl = `${API_BASE}/auth/telegram`;
+            console.log('[Telegram Auth] POST', authUrl, 'payload:', requestPayload);
 
             // Send auth data to backend
-            const response = await axios.post(`${API}/auth/telegram`, {
-              telegram_auth_data: authData
-            });
+            const response = await axios.post(authUrl, requestPayload);
 
             console.log('Auth response:', response.data);
             setUser(response.data);
@@ -229,7 +229,7 @@ function App() {
 
   const loadRooms = async () => {
     try {
-      const response = await axios.get(`${API}/rooms`);
+      const response = await axios.get(`${API_BASE}/rooms`);
       setRooms(response.data.rooms);
     } catch (error) {
       console.error('Failed to load rooms:', error);
@@ -239,7 +239,7 @@ function App() {
 
   const loadGameHistory = async () => {
     try {
-      const response = await axios.get(`${API}/game-history?limit=10`);
+      const response = await axios.get(`${API_BASE}/game-history?limit=10`);
       setGameHistory(response.data.games);
     } catch (error) {
       console.error('Failed to load game history:', error);
@@ -248,7 +248,7 @@ function App() {
 
   const loadLeaderboard = async () => {
     try {
-      const response = await axios.get(`${API}/leaderboard`);
+      const response = await axios.get(`${API_BASE}/leaderboard`);
       setLeaderboard(response.data.leaderboard);
     } catch (error) {
       console.error('Failed to load leaderboard:', error);
@@ -258,7 +258,7 @@ function App() {
   const loadUserPrizes = async () => {
     if (!user) return;
     try {
-      const response = await axios.get(`${API}/user/${user.id}/prizes`);
+      const response = await axios.get(`${API_BASE}/user/${user.id}/prizes`);
       setUserPrizes(response.data.prizes);
     } catch (error) {
       console.error('Failed to load user prizes:', error);
@@ -285,7 +285,7 @@ function App() {
       // Demo mode - instant credit
       const tokenAmount = Math.floor(parseFloat(solAmount) * 1000);
       try {
-        const response = await axios.post(`${API}/purchase-tokens`, {
+        const response = await axios.post(`${API_BASE}/purchase-tokens`, {
           user_id: user.id,
           sol_amount: parseFloat(solAmount),
           token_amount: tokenAmount
@@ -354,7 +354,7 @@ function App() {
             // Automatically credit tokens
             const tokenAmount = Math.floor(expectedAmount * 1000);
             try {
-              const response = await axios.post(`${API}/purchase-tokens`, {
+              const response = await axios.post(`${API_BASE}/purchase-tokens`, {
                 user_id: user.id,
                 sol_amount: expectedAmount,
                 token_amount: tokenAmount
@@ -437,7 +437,7 @@ function App() {
 
       console.log('Sending join room request:', joinData);
 
-      const response = await axios.post(`${API}/join-room`, joinData);
+      const response = await axios.post(`${API_BASE}/join-room`, joinData);
 
       console.log('Join room response:', response.data);
 
@@ -497,8 +497,7 @@ function App() {
 
         const userData = JSON.parse(userParam);
         
-        // Send auth data to backend
-        const response = await axios.post(`${API}/auth/telegram`, {
+        const authPayload = {
           telegram_auth_data: {
             id: userData.id,
             first_name: userData.first_name,
@@ -508,7 +507,12 @@ function App() {
             auth_date: Math.floor(Date.now() / 1000),
             hash: urlParams.get('hash')
           }
-        });
+        };
+        const manualAuthUrl = `${API_BASE}/auth/telegram`;
+        console.log('[Telegram Auth] POST', manualAuthUrl, 'payload:', authPayload);
+
+        // Send auth data to backend
+        const response = await axios.post(manualAuthUrl, authPayload);
 
         setUser(response.data);
         setIsLoading(false);
