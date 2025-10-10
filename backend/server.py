@@ -845,35 +845,84 @@ async def get_casino_wallet():
         "message": "This endpoint is deprecated. Each user now gets a personal wallet address."
     }
 
-@api_router.get("/user/{user_id}/wallet")
-async def get_user_personal_wallet(user_id: str):
-    """Get user's personal Solana wallet address for payments"""
+@api_router.post("/user/{user_id}/payment-request")
+async def create_payment_request(user_id: str, request: dict):
+    """Create a payment request for token purchase"""
     try:
         # Find user by ID
         user = await db.users.find_one({"id": user_id})
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
-        # Get or create personal address
-        personal_address = await get_or_create_user_address(user_id, user['telegram_id'])
+        # Get EUR amount from request
+        eur_amount = float(request.get("eur_amount", 0))
+        if eur_amount <= 0:
+            raise HTTPException(status_code=400, detail="Invalid EUR amount")
         
-        # Add address to monitoring
-        await payment_monitor.add_address_to_monitor(personal_address)
+        # Get current SOL/EUR price
+        sol_eur_price = await price_oracle.get_sol_eur_price()
+        
+        # Create payment request
+        payment_request = PaymentRequest(user_id, user['telegram_id'], eur_amount)
+        expected_sol = await payment_request.calculate_expected_sol()
+        
+        # Store in active requests
+        active_payment_requests[payment_request.id] = payment_request
+        
+        logging.info(f"💳 Created payment request {payment_request.id} for user {user['first_name']}: €{eur_amount} = {expected_sol:.6f} SOL")
         
         return {
-            "personal_wallet_address": personal_address,
-            "user_id": user_id,
-            "network": "devnet", 
-            "conversion_rate": {
-                "sol_to_tokens": 1000,
-                "description": "1 SOL = 1,000 Casino Tokens"
-            },
-            "instructions": f"Send SOL to this address and tokens will be automatically credited to your account within 10 seconds!"
+            "request_id": payment_request.id,
+            "casino_wallet": CASINO_WALLET_ADDRESS,
+            "eur_amount": eur_amount,
+            "expected_sol_amount": expected_sol,
+            "current_sol_price": sol_eur_price,
+            "tokens_to_receive": payment_request.tokens_to_credit,
+            "expires_in_seconds": 300,
+            "network": "devnet",
+            "instructions": f"Send exactly {expected_sol:.6f} SOL to the casino wallet within 5 minutes"
         }
         
     except Exception as e:
-        logging.error(f"Error getting user wallet: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get wallet address")
+        logging.error(f"Error creating payment request: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create payment request")
+
+@api_router.get("/sol-eur-price")
+async def get_sol_eur_price():
+    """Get current SOL/EUR price"""
+    try:
+        price = await price_oracle.get_sol_eur_price()
+        return {
+            "sol_eur_price": price,
+            "last_updated": price_oracle.last_update,
+            "conversion_info": {
+                "1_eur": f"{1/price:.6f} SOL",
+                "100_tokens": f"{1/price:.6f} SOL",
+                "description": "1 EUR = 100 tokens"
+            }
+        }
+    except Exception as e:
+        logging.error(f"Error getting SOL price: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get price")
+
+@api_router.get("/casino-wallet")
+async def get_casino_wallet():
+    """Get casino wallet address and current pricing"""
+    try:
+        sol_price = await price_oracle.get_sol_eur_price()
+        return {
+            "wallet_address": CASINO_WALLET_ADDRESS,
+            "network": "devnet",
+            "current_sol_eur_price": sol_price,
+            "conversion_rate": {
+                "eur_to_tokens": 100,
+                "description": "1 EUR = 100 Casino Tokens (real-time SOL pricing)"
+            },
+            "instructions": "Use /user/{user_id}/payment-request to create a payment request"
+        }
+    except Exception as e:
+        logging.error(f"Error getting casino wallet info: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get wallet info")
 
 @api_router.post("/auth/telegram", response_model=User)
 async def telegram_auth(user_data: UserCreate):
