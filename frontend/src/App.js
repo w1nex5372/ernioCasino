@@ -603,9 +603,9 @@ function App() {
             {activeTab === 'rooms' && (
               <div className={isMobile ? 'space-y-4' : 'space-y-6'}>
                 {isMobile ? (
-                  <div className="text-center py-4 px-3">
-                    <h2 className="text-xl font-bold text-white mb-2">Casino Rooms</h2>
-                    <p className="text-sm text-slate-400">
+                  <div className="text-center py-3 px-2">
+                    <h2 className="text-lg font-bold text-white mb-1">Casino Rooms</h2>
+                    <p className="text-xs text-slate-400">
                       2 players • Higher bet = better odds
                     </p>
                   </div>
