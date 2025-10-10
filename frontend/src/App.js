@@ -17,8 +17,7 @@ import './App.css';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// ** EDIT THIS LINE TO ADD YOUR SOLANA WALLET ADDRESS **
-const [casinoWalletAddress, setCasinoWalletAddress] = useState('Loading...');
+// ** Wallet address will be loaded from backend **
 
 // ** EDIT THESE LINES TO ADD YOUR PRIZE LINKS **
 const PRIZE_LINKS = {
