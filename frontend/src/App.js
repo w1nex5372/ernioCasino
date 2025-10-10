@@ -1079,7 +1079,7 @@ function App() {
                     Buy Casino Tokens
                   </CardTitle>
                   <CardDescription className="text-slate-400">
-                    Send SOL to YOUR PERSONAL wallet address below. Tokens credited automatically! (Rate: 1 SOL = 1,000 tokens)
+                    Send SOL to casino wallet. Real-time EUR conversion! (Rate: 1 EUR = 100 tokens)
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
