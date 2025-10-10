@@ -215,9 +215,10 @@ function App() {
             headers: { 'Content-Type': 'application/json' }
           });
           
+          // Don't change loading state since user is already set
+          // Just update with authenticated user data
           setUser(response.data);
-          setIsLoading(false);
-          toast.success('Preview mode active');
+          toast.success('Authenticated via preview mode');
           
           setTimeout(() => {
             loadUserPrizes();
