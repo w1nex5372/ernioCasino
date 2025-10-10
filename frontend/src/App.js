@@ -58,6 +58,7 @@ function App() {
   // Data state
   const [rooms, setRooms] = useState([]);
   const [activeRoom, setActiveRoom] = useState(null);
+  const [roomParticipants, setRoomParticipants] = useState({}); // Track participants per room
   const [gameHistory, setGameHistory] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [userPrizes, setUserPrizes] = useState([]);
