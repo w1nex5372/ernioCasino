@@ -243,73 +243,36 @@ function App() {
           loadDerivedWallet();
         }, 1000);
         
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        if (!window.Telegram || !window.Telegram.WebApp) {
-          throw new Error('This casino must be opened through Telegram');
-        }
-        
-        const webApp = window.Telegram.WebApp;
-        
-        // Check for valid user data
-        if (!webApp.initData && (!webApp.initDataUnsafe || !webApp.initDataUnsafe.user)) {
-          throw new Error('This casino must be opened through Telegram');
-        }
-        
-        console.log('📱 Telegram WebApp detected');
-        
-        webApp.ready();
-        webApp.expand();
-        
-        const telegramUser = webApp.initDataUnsafe?.user;
-        if (!telegramUser || !telegramUser.id) {
-          throw new Error('No Telegram user data available');
-        }
-        
-        const authData = {
-          id: parseInt(telegramUser.id),
-          first_name: telegramUser.first_name || 'Telegram User',
-          last_name: telegramUser.last_name || null,
-          username: telegramUser.username || null,
-          photo_url: telegramUser.photo_url || null,
-          auth_date: Math.floor(Date.now() / 1000),
-          hash: 'telegram_webapp',
-          telegram_id: parseInt(telegramUser.id)
-        };
-
-        const response = await axios.post(`${API}/auth/telegram`, {
-          telegram_auth_data: authData
-        }, {
-          timeout: 15000,
-          headers: { 'Content-Type': 'application/json' }
-        });
-        
-        setUser(response.data);
-        setIsLoading(false);
-        
-        toast.success(`Welcome to Casino Battle, ${telegramUser.first_name}!`);
-        
-        webApp.enableClosingConfirmation();
-        if (webApp.setHeaderColor) webApp.setHeaderColor('#1e293b');
-        if (webApp.setBackgroundColor) webApp.setBackgroundColor('#0f172a');
-        
-        setTimeout(() => {
-          loadUserPrizes();
-          loadDerivedWallet();
-        }, 1000);
-        
       } catch (error) {
-        console.error('❌ Authentication failed:', error);
+        console.error('❌ Telegram authentication failed:', error);
+        console.error('Error details:', error.response || error.message);
         
         if (error.message.includes('Telegram')) {
+          // Not in Telegram environment
           setIsLoading(false);
           setTelegramError(true);
+          toast.error('Please open this app through Telegram');
         } else if (error.response?.status >= 500) {
-          setIsLoading(true);
-          setTimeout(() => authenticateFromTelegram(), 5000);
+          // Server error - retry
+          console.log('Server error, retrying in 5 seconds...');
+          setTimeout(() => {
+            console.log('Retrying authentication...');
+            authenticateFromTelegram();
+          }, 5000);
+          toast.error('Server error - retrying...');
+        } else if (error.response?.status === 400) {
+          // Bad request - authentication data issue
+          setIsLoading(false);
+          toast.error('Authentication data error. Please restart the app.');
         } else {
+          // Other errors
           setIsLoading(false);
           toast.error(`Authentication failed: ${error.message}`);
+          console.log('Will retry in 10 seconds...');
+          setTimeout(() => {
+            setIsLoading(true);
+            authenticateFromTelegram();
+          }, 10000);
         }
       }
     };
