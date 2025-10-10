@@ -325,8 +325,22 @@ function App() {
       }
     };
 
-    // Try background authentication (won't block UI)
-    setTimeout(authenticateFromTelegram, 1000);
+    // Start authentication immediately
+    const authTimeout = setTimeout(authenticateFromTelegram, 100);
+    
+    // Fallback timeout for stuck authentication
+    const fallbackTimeout = setTimeout(() => {
+      if (isLoading) {
+        console.log('Authentication timeout - check Telegram environment');
+        setIsLoading(false);
+        setTelegramError(true);
+      }
+    }, 8000);
+    
+    return () => {
+      clearTimeout(authTimeout);
+      clearTimeout(fallbackTimeout);
+    };
   }, []);
 
   // Data loading functions
