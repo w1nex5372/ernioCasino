@@ -202,9 +202,6 @@ function App() {
           user: initDataUnsafe?.user
         });
         
-        console.log('🔍 Telegram WebApp initData:', webApp.initData);
-        console.log('🔍 Telegram WebApp initDataUnsafe:', webApp.initDataUnsafe);
-        
         const user = initDataUnsafe?.user;
         if (!user || !user.id) {
           throw new Error('No Telegram user data available');
