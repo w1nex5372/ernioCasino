@@ -1092,7 +1092,7 @@ function App() {
                   {/* Casino Wallet Address */}
                   <div className={`${isMobile ? 'p-4' : 'p-6'} bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-lg border border-green-500/30`}>
                     <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold text-white mb-4 text-center`}>
-                      {isMobile ? 'Wallet Address' : 'Casino Wallet Address'}
+                      {isMobile ? 'Your Personal Address' : 'Your Personal Solana Address'}
                     </h3>
                     <div className={`bg-slate-800 ${isMobile ? 'p-3' : 'p-4'} rounded-lg border border-slate-600`}>
                       <code className={`text-green-400 font-mono ${isMobile ? 'text-sm' : 'text-lg'} break-all block text-center`}>
