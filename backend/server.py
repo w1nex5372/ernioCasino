@@ -609,13 +609,17 @@ class PaymentMonitor:
         except Exception as e:
             logging.error(f"Error crediting tokens to user: {e}")
     
-    async def _send_payment_confirmation(self, telegram_id: int, username: str, sol_amount: float, tokens_credited: int):
+    async def _send_payment_confirmation(self, telegram_id: int, username: str, sol_amount: float, tokens_credited: int, sol_eur_price: float):
         """Send payment confirmation to user via Telegram"""
         try:
+            eur_value = sol_amount * sol_eur_price
+            
             message = "💰 <b>Payment Confirmed!</b>\n\n"
             message += f"Hello {username}!\n\n"
             message += f"✅ Received: <b>{sol_amount} SOL</b>\n"
+            message += f"💶 EUR Value: <b>€{eur_value:.2f}</b> (1 SOL = €{sol_eur_price:.4f})\n"
             message += f"🎰 Credited: <b>{tokens_credited:,} Casino Tokens</b>\n\n"
+            message += f"💡 <i>Rate: 1 EUR = 100 tokens</i>\n\n"
             message += "Your tokens are ready for battle! Good luck! 🎯"
             
             await send_telegram_message(telegram_id, message)
