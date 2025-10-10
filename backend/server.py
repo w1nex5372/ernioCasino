@@ -92,6 +92,8 @@ class User(BaseModel):
     telegram_username: Optional[str] = None
     photo_url: Optional[str] = None
     wallet_address: Optional[str] = None
+    # NEW: Each user gets unique Solana receiving address
+    personal_solana_address: Optional[str] = None
     token_balance: int = Field(default=0)
     is_verified: bool = Field(default=False)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
