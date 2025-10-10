@@ -36,6 +36,18 @@ sio = socketio.AsyncServer(
 
 # FastAPI app
 app = FastAPI(title="Solana Casino Battle Royale")
+
+
+@app.get("/", tags=["Health"])
+async def read_root():
+    """Simple root endpoint to verify the service is running."""
+    return {
+        "message": "Solana Casino Battle Royale backend is running.",
+        "api_base": "/api",
+        "docs": "/docs"
+    }
+
+
 api_router = APIRouter(prefix="/api")
 
 # Room types and settings

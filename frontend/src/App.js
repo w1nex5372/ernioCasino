@@ -15,7 +15,16 @@ import { Crown, Coins, Users, Trophy, Zap, Wallet, Play, Timer } from 'lucide-re
 import './App.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+
+console.log('[App] process.env.REACT_APP_BACKEND_URL:', process.env.REACT_APP_BACKEND_URL);
+if (!BACKEND_URL) {
+  console.error(
+    '[App] REACT_APP_BACKEND_URL is not defined. Check your frontend .env configuration.'
+  );
+}
+
+const API = BACKEND_URL ? `${BACKEND_URL}/api` : '/api';
+console.log('[App] API base URL resolved to:', API);
 
 // ** EDIT THIS LINE TO ADD YOUR SOLANA WALLET ADDRESS **
 const CASINO_WALLET_ADDRESS = "YOUR_SOLANA_WALLET_ADDRESS_HERE";
