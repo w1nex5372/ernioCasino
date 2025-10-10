@@ -514,11 +514,11 @@ function App() {
                 <h1 className="text-lg font-bold text-white">Casino</h1>
               </div>
               <div className="flex items-center gap-2">
-                <div className="text-right">
-                  <div className="text-xs text-slate-400">Balance</div>
-                  <div className="text-sm font-bold text-yellow-400">{user.token_balance || 0}</div>
+                <div className="text-right min-w-0 flex-shrink-0">
+                  <div className="text-xs text-slate-400 leading-tight">Balance</div>
+                  <div className="text-sm font-bold text-yellow-400 truncate">{user.token_balance || 0}</div>
                 </div>
-                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
               </div>
             </div>
           ) : (
