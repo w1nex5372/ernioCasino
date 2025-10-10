@@ -451,8 +451,8 @@ class PaymentMonitor:
         except Exception as e:
             logging.error(f"Error processing transaction {signature}: {e}")
     
-    async def _credit_tokens_for_payment(self, signature: str, sol_amount: float, transaction):
-        """Credit tokens to user account for SOL payment"""
+    async def _credit_tokens_for_payment(self, signature: str, sol_amount: float, receiving_address: str):
+        """Credit tokens to user account for SOL payment - NOW WITH CORRECT USER IDENTIFICATION"""
         try:
             # Calculate tokens to credit (1 SOL = 1000 tokens)
             tokens_to_credit = int(sol_amount * 1000)
@@ -460,20 +460,18 @@ class PaymentMonitor:
             if tokens_to_credit <= 0:
                 return
             
-            # For demo purposes, credit to the most recent user if we can't identify sender
-            # In production, you'd implement sender identification logic
-            recent_user = await db.users.find_one(
-                {}, 
-                sort=[("last_login", -1)]
-            )
+            # FIXED: Find user by their personal Solana address
+            user = await db.users.find_one({
+                "personal_solana_address": receiving_address
+            })
             
-            if not recent_user:
-                logging.warning(f"No user found to credit {tokens_to_credit} tokens for {sol_amount} SOL")
+            if not user:
+                logging.error(f"❌ No user found for address {receiving_address}! Payment of {sol_amount} SOL lost!")
                 return
             
-            # Credit tokens to user
+            # Credit tokens to the CORRECT user
             result = await db.users.update_one(
-                {"telegram_id": recent_user["telegram_id"]},
+                {"telegram_id": user["telegram_id"]},
                 {
                     "$inc": {"token_balance": tokens_to_credit},
                     "$push": {
@@ -481,6 +479,7 @@ class PaymentMonitor:
                             "transaction_id": str(signature),
                             "sol_amount": float(sol_amount),
                             "tokens_credited": int(tokens_to_credit),
+                            "receiving_address": receiving_address,
                             "timestamp": datetime.now(timezone.utc).isoformat(),
                             "status": "completed"
                         }
@@ -489,21 +488,21 @@ class PaymentMonitor:
             )
             
             if result.modified_count > 0:
-                logging.info(f"✅ Credited {tokens_to_credit} tokens to user {recent_user['first_name']} for {sol_amount} SOL")
+                logging.info(f"✅ Credited {tokens_to_credit} tokens to CORRECT user {user['first_name']} (ID: {user['telegram_id']}) for {sol_amount} SOL")
                 
                 # Send notification to user
-                if recent_user.get('telegram_id'):
+                if user.get('telegram_id'):
                     await self._send_payment_confirmation(
-                        recent_user['telegram_id'],
-                        recent_user['first_name'],
+                        user['telegram_id'],
+                        user['first_name'],
                         sol_amount,
                         tokens_to_credit
                     )
                 
                 # Broadcast token update to frontend
                 await sio.emit('token_balance_updated', {
-                    'user_id': recent_user['id'],
-                    'new_balance': recent_user.get('token_balance', 0) + tokens_to_credit,
+                    'user_id': user['id'],
+                    'new_balance': user.get('token_balance', 0) + tokens_to_credit,
                     'tokens_added': tokens_to_credit,
                     'sol_received': sol_amount
                 })
