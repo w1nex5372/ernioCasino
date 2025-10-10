@@ -322,10 +322,30 @@ function App() {
       }
     };
 
-    // AUTHENTICATION DISABLED - INSTANT ACCESS MODE
-    console.log('Instant access mode - no authentication needed');
+    // Start authentication with fast timeout
+    const authTimeout = setTimeout(authenticateFromTelegram, 100);
     
-    // No timeouts needed since user is set immediately above
+    // Fallback timeout - if auth takes too long, force access
+    const fallbackTimeout = setTimeout(() => {
+      if (isLoading) {
+        console.log('Auth timeout - enabling fallback access');
+        setUser({
+          id: 'fallback-' + Date.now(),
+          first_name: 'User',
+          last_name: '',
+          token_balance: 2000,
+          telegram_id: 777777777
+        });
+        setIsLoading(false);
+        setCasinoWalletAddress('FallbackWallet123...');
+        toast.success('Fallback access enabled');
+      }
+    }, 3000);
+    
+    return () => {
+      clearTimeout(authTimeout);
+      clearTimeout(fallbackTimeout);
+    };
   }, []);
 
   // Data loading functions
