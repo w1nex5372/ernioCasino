@@ -71,14 +71,15 @@ function App() {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [betAmount, setBetAmount] = useState('');
 
-  // Mobile detection - fixed for portrait mode
+  // Mobile detection - force mobile for portrait
   useEffect(() => {
     const checkMobile = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      // More accurate mobile detection - anything under 768px width OR portrait orientation on small screens
-      setIsMobile(width <= 768);
-      console.log(`Mobile detection: width=${width}, height=${height}, isMobile=${width <= 768}`);
+      // Force mobile detection for portrait mode or small screens
+      const shouldBeMobile = width <= 768 || (width < height && width <= 1024);
+      setIsMobile(shouldBeMobile);
+      console.log(`Mobile detection: width=${width}, height=${height}, isMobile=${shouldBeMobile}`);
     };
     
     checkMobile();
