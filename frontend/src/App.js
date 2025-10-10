@@ -163,6 +163,10 @@ function App() {
   }, []);
 
   useEffect(() => {
+    // Clear any cached data on app start
+    localStorage.clear();
+    sessionStorage.clear();
+    
     loadRooms();
     loadGameHistory();
     loadLeaderboard();
