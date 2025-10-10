@@ -321,6 +321,7 @@ function App() {
         console.error('❌ Background authentication failed:', error);
         // Keep existing instant access user - don't change UI
         console.log('Keeping instant access user since background auth failed');
+        setIsLoading(false);
       }
     };
 
