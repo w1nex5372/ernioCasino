@@ -1006,11 +1006,46 @@ async def get_casino_wallet():
                 "eur_to_tokens": 100,
                 "description": "1 EUR = 100 Casino Tokens (real-time SOL pricing)"
             },
-            "instructions": "Use /user/{user_id}/payment-request to create a payment request"
+            "instructions": "Users get personal derived addresses for payments"
         }
     except Exception as e:
         logging.error(f"Error getting casino wallet info: {e}")
         raise HTTPException(status_code=500, detail="Failed to get wallet info")
+
+@api_router.post("/admin/cleanup-database")
+async def cleanup_database_for_production(admin_key: str):
+    """ADMIN ONLY: Clean database for production launch"""
+    try:
+        # Simple admin key check (in production, use proper authentication)
+        if admin_key != "PRODUCTION_CLEANUP_2025":
+            raise HTTPException(status_code=403, detail="Unauthorized")
+        
+        # Clear all test data
+        deleted_users = await db.users.delete_many({})
+        deleted_completed_games = await db.completed_games.delete_many({})
+        deleted_winner_prizes = await db.winner_prizes.delete_many({})
+        
+        # Reset room counters
+        await db.rooms.delete_many({})
+        
+        logging.info("🧹 PRODUCTION CLEANUP COMPLETE")
+        logging.info(f"Deleted: {deleted_users.deleted_count} users")
+        logging.info(f"Deleted: {deleted_completed_games.deleted_count} completed games")  
+        logging.info(f"Deleted: {deleted_winner_prizes.deleted_count} winner prizes")
+        
+        return {
+            "status": "success",
+            "message": "Database cleaned for production",
+            "deleted": {
+                "users": deleted_users.deleted_count,
+                "completed_games": deleted_completed_games.deleted_count,
+                "winner_prizes": deleted_winner_prizes.deleted_count
+            }
+        }
+        
+    except Exception as e:
+        logging.error(f"Error cleaning database: {e}")
+        raise HTTPException(status_code=500, detail="Failed to clean database")
 
 @api_router.post("/auth/telegram", response_model=User)
 async def telegram_auth(user_data: UserCreate):
