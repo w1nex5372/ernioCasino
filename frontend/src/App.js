@@ -321,7 +321,7 @@ function App() {
       }
     };
 
-    // Auto-authenticate from Telegram on app load - Telegram ONLY
+    // Auto-authenticate from Telegram on app load - with Demo fallback for testing
     let mounted = true;
     
     const initializeCasino = async () => {
@@ -329,12 +329,23 @@ function App() {
       
       console.log('🎰 Starting Casino Battle Royale...');
       
-      // Only try Telegram authentication - no fallback
-      await autoAuthenticateFromTelegram();
+      try {
+        // Try Telegram authentication first
+        const success = await autoAuthenticateFromTelegram();
+        if (!success && mounted) {
+          console.log('🔄 Telegram auth failed, stopping loading state');
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Authentication error:', error);
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
     };
 
     // Start authentication immediately
-    const initTimeout = setTimeout(initializeCasino, 500);
+    const initTimeout = setTimeout(initializeCasino, 200);
 
     return () => {
       mounted = false;
