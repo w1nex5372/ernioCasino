@@ -883,16 +883,27 @@ function App() {
                                   />
                                   
                                   <Button
-                                    onClick={() => joinRoom(roomType)}
-                                    disabled={room.players_count >= 2 || !betAmount || user.token_balance < betAmount}
+                                    onClick={() => {
+                                      console.log('Desktop join clicked!', {
+                                        roomType,
+                                        betAmount,
+                                        userBalance: user.token_balance,
+                                        playersCount: room.players_count
+                                      });
+                                      joinRoom(roomType);
+                                    }}
+                                    disabled={room.players_count >= 2 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount)}
                                     className={`w-full ${
-                                      room.players_count >= 2 
+                                      (room.players_count >= 2 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount))
                                         ? 'bg-slate-600 cursor-not-allowed' 
                                         : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600'
                                     } text-white font-bold py-3`}
                                   >
                                     <Play className="w-4 h-4 mr-2" />
-                                    {room.players_count >= 2 ? 'Room Full' : 'Join Battle'}
+                                    {room.players_count >= 2 ? 'Room Full' : 
+                                     !betAmount ? 'Enter Bet Amount' :
+                                     parseInt(betAmount) < config.min || parseInt(betAmount) > config.max ? 'Invalid Amount' :
+                                     user.token_balance < parseInt(betAmount) ? 'Insufficient Tokens' : 'Join Battle'}
                                   </Button>
                                 </div>
                               </div>
