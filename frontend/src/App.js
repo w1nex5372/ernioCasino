@@ -1072,14 +1072,14 @@ function App() {
           <div className="flex justify-around items-center py-3 px-2">
             <button
               onClick={() => setActiveTab('rooms')}
-              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 ${
+              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 min-w-0 ${
                 activeTab === 'rooms' 
                   ? 'text-yellow-400 bg-yellow-400/10' 
                   : 'text-slate-400 active:bg-slate-700/50'
               }`}
             >
-              <Users className="w-6 h-6 mb-1" />
-              <span className="text-xs font-medium">Rooms</span>
+              <Users className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium leading-tight">Rooms</span>
             </button>
             
             <button
