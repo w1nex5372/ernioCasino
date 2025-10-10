@@ -307,9 +307,37 @@ function App() {
         }, 1000);
         
       } catch (error) {
-        console.error('❌ Background authentication failed:', error);
-        // Keep existing instant access user - don't change UI
-        console.log('Keeping instant access user since background auth failed');
+        console.error('❌ Telegram authentication failed:', error);
+        
+        // If we have Telegram user data, try to find existing account
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+          const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
+          if (telegramUser && telegramUser.id) {
+            try {
+              console.log('Trying to find existing user by Telegram ID:', telegramUser.id);
+              const response = await axios.get(`${API}/users/telegram/${telegramUser.id}`);
+              
+              if (response.data) {
+                console.log('Found existing user with tokens!', response.data);
+                setUser(response.data);
+                saveUserSession(response.data);
+                setIsLoading(false);
+                toast.success(`Welcome back, ${response.data.first_name}! Your tokens are restored.`);
+                
+                setTimeout(() => {
+                  loadUserPrizes();
+                  loadDerivedWallet();
+                }, 1000);
+                return;
+              }
+            } catch (lookupError) {
+              console.log('User not found by Telegram ID:', lookupError);
+            }
+          }
+        }
+        
+        // If all else fails, create temporary account
+        console.log('Creating temporary account as last resort');
         setIsLoading(false);
       }
     };
