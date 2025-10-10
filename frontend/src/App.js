@@ -764,38 +764,39 @@ function App() {
             {/* Token Purchase Tab */}
             {activeTab === 'tokens' && (
               isMobile ? (
-                <div className="space-y-4">
+                <div className="space-y-3 max-w-full">
                   <Card className="bg-slate-800/90 border-slate-700">
-                    <CardContent className="p-4 text-center">
-                      <h2 className="text-lg font-bold text-white mb-2">Token Balance</h2>
-                      <div className="text-2xl font-bold text-yellow-400">{user.token_balance || 0}</div>
-                      <div className="text-sm text-slate-400">tokens</div>
+                    <CardContent className="p-3 text-center">
+                      <h2 className="text-base font-bold text-white mb-1">Your Balance</h2>
+                      <div className="text-xl font-bold text-yellow-400">{user.token_balance || 0}</div>
+                      <div className="text-xs text-slate-400">tokens</div>
                     </CardContent>
                   </Card>
                   
-                  <Card className="bg-slate-800/90 border-slate-700">
-                    <CardContent className="p-4">
-                      <h3 className="text-center text-white font-semibold mb-3 leading-tight">Your Personal Address</h3>
-                      <div className="bg-slate-900 p-3 rounded-lg mb-3 overflow-hidden">
+                  <Card className="bg-slate-800/90 border-slate-700 max-w-full overflow-hidden">
+                    <CardContent className="p-3">
+                      <h3 className="text-center text-white font-semibold mb-2 text-sm">Your Wallet</h3>
+                      <div className="bg-slate-900 p-2 rounded-lg mb-2 overflow-hidden">
                         <code className="text-green-400 text-xs font-mono break-all block text-center leading-relaxed">
-                          {casinoWalletAddress}
+                          {casinoWalletAddress && casinoWalletAddress !== 'Loading...' ? casinoWalletAddress : 'Loading wallet...'}
                         </code>
                       </div>
                       <Button
                         onClick={() => {
                           navigator.clipboard.writeText(casinoWalletAddress);
-                          toast.success('Address copied!');
+                          toast.success('Copied!');
                         }}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3"
+                        disabled={!casinoWalletAddress || casinoWalletAddress === 'Loading...'}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 text-sm"
                       >
-                        📋 Copy Address
+                        📋 Copy
                       </Button>
-                      <div className="mt-3 p-2 bg-green-500/10 border border-green-500/20 rounded text-center">
+                      <div className="mt-2 p-2 bg-green-500/10 border border-green-500/20 rounded text-center">
                         <p className="text-xs text-green-300">
-                          Send SOL here → Get tokens automatically!
+                          Send SOL → Get tokens!
                         </p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          Rate based on current SOL/EUR price
+                        <p className="text-xs text-slate-400">
+                          Auto conversion
                         </p>
                       </div>
                     </CardContent>
