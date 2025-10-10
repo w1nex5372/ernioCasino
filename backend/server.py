@@ -642,7 +642,7 @@ class PaymentMonitor:
         except Exception as e:
             logging.error(f"Error crediting tokens for derived address: {e}")
     
-    async def _credit_tokens_to_user(self, signature: str, sol_amount: float, tokens_to_credit: int, telegram_id: int, sol_eur_price: float):
+    async def _credit_tokens_to_user(self, signature: str, sol_amount: float, tokens_to_credit: int, telegram_id: int, sol_eur_price: float, derived_address: str = None):
         """Credit tokens to specific user account"""
         try:
             if tokens_to_credit <= 0:
