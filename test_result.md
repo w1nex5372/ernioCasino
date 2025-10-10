@@ -252,9 +252,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Telegram Prize Notification System"
-    - "Winner Selection and Game Round Logic"  
-    - "Claim Prize Button UI"
+    - "Mobile Portrait Layout Optimization"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
