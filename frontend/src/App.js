@@ -583,65 +583,7 @@ function App() {
     }
   };
 
-  // Telegram Web App authentication
-  const authenticateWithTelegram = async () => {
-    setIsLoading(true);
-    try {
-      // Check if running inside Telegram Web App
-      if (window.Telegram && window.Telegram.WebApp) {
-        const webApp = window.Telegram.WebApp;
-        webApp.ready();
-        
-        const initData = webApp.initData;
-        if (!initData) {
-          toast.error('Please open this app through Telegram');
-          return;
-        }
-
-        // Parse init data
-        const urlParams = new URLSearchParams(initData);
-        const userParam = urlParams.get('user');
-        
-        if (!userParam) {
-          toast.error('No user data found');
-          return;
-        }
-
-        const userData = JSON.parse(userParam);
-        
-        // Send auth data to backend
-        const response = await axios.post(`${API}/auth/telegram`, {
-          telegram_auth_data: {
-            id: userData.id,
-            first_name: userData.first_name,
-            last_name: userData.last_name,
-            username: userData.username,
-            photo_url: userData.photo_url,
-            auth_date: Math.floor(Date.now() / 1000),
-            hash: urlParams.get('hash')
-          }
-        });
-
-        setUser(response.data);
-        setIsLoading(false);
-        toast.success(`Welcome, ${userData.first_name}!`);
-        
-        // Load user prizes after authentication
-        setTimeout(() => {
-          loadUserPrizes();
-        }, 500);
-
-      } else {
-        // Fallback for non-Telegram environment
-        setIsLoading(false);
-        toast.error('This app must be opened through Telegram');
-      }
-    } catch (error) {
-      console.error('Telegram auth failed:', error);
-      setIsLoading(false);
-      toast.error(error.response?.data?.detail || 'Authentication failed');
-    }
-  };
+  // Old manual authentication function removed - only auto-authentication now
 
   if (isLoading) {
     return (
