@@ -66,8 +66,8 @@ class SolanaWalletDerivation:
             # This is simpler and more reliable than trying to create valid Solana keypairs
             seed_hash = hashlib.sha256(seed_string.encode()).digest()
             
-            # Create a valid-looking Solana address (base58 encoded)
-            address_bytes = seed_hash + hashlib.sha256(seed_hash).digest()[:4]  # 36 bytes
+            # Create a valid Solana address (base58 encoded, exactly 32 bytes)
+            address_bytes = seed_hash[:32]  # Use exactly 32 bytes for valid Solana address
             derived_address = base58.b58encode(address_bytes).decode()
             
             # For demo purposes, we'll track this address but won't need the private key
