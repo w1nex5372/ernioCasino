@@ -936,47 +936,43 @@ async def get_casino_wallet():
         "message": "This endpoint is deprecated. Each user now gets a personal wallet address."
     }
 
-@api_router.post("/user/{user_id}/payment-request")
-async def create_payment_request(user_id: str, request: dict):
-    """Create a payment request for token purchase"""
+@api_router.get("/user/{user_id}/derived-wallet")
+async def get_user_derived_wallet(user_id: str):
+    """Get user's personal derived Solana address for payments"""
     try:
         # Find user by ID
         user = await db.users.find_one({"id": user_id})
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
-        # Get EUR amount from request
-        eur_amount = float(request.get("eur_amount", 0))
-        if eur_amount <= 0:
-            raise HTTPException(status_code=400, detail="Invalid EUR amount")
+        # Get or create derived address
+        derived_info = await get_or_create_derived_address(user_id, user['telegram_id'])
         
-        # Get current SOL/EUR price
+        if not derived_info:
+            raise HTTPException(status_code=500, detail="Failed to create derived address")
+        
+        # Add address to monitoring
+        await payment_monitor.add_address_to_monitor(derived_info["address"])
+        
+        # Get current SOL/EUR price for display
         sol_eur_price = await price_oracle.get_sol_eur_price()
         
-        # Create payment request
-        payment_request = PaymentRequest(user_id, user['telegram_id'], eur_amount)
-        expected_sol = await payment_request.calculate_expected_sol()
-        
-        # Store in active requests
-        active_payment_requests[payment_request.id] = payment_request
-        
-        logging.info(f"💳 Created payment request {payment_request.id} for user {user['first_name']}: €{eur_amount} = {expected_sol:.6f} SOL")
-        
         return {
-            "request_id": payment_request.id,
-            "casino_wallet": CASINO_WALLET_ADDRESS,
-            "eur_amount": eur_amount,
-            "expected_sol_amount": expected_sol,
-            "current_sol_price": sol_eur_price,
-            "tokens_to_receive": payment_request.tokens_to_credit,
-            "expires_in_seconds": 300,
+            "derived_wallet_address": derived_info["address"],
+            "user_id": user_id,
+            "telegram_id": user['telegram_id'],
             "network": "devnet",
-            "instructions": f"Send exactly {expected_sol:.6f} SOL to the casino wallet within 5 minutes"
+            "current_sol_eur_price": sol_eur_price,
+            "conversion_rate": {
+                "eur_to_tokens": 100,
+                "description": f"1 EUR = 100 tokens (1 SOL = €{sol_eur_price})"
+            },
+            "instructions": f"Send SOL to YOUR personal address above. Tokens credited automatically! 1 SOL = {int(sol_eur_price * 100)} tokens"
         }
         
     except Exception as e:
-        logging.error(f"Error creating payment request: {e}")
-        raise HTTPException(status_code=500, detail="Failed to create payment request")
+        logging.error(f"Error getting derived wallet: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get derived wallet address")
 
 @api_router.get("/sol-eur-price")
 async def get_sol_eur_price():
