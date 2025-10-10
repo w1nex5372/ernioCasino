@@ -178,7 +178,45 @@ function App() {
         
         // Check if we're in Telegram Web App environment
         if (!window.Telegram || !window.Telegram.WebApp) {
-          throw new Error('This casino must be opened through Telegram');
+          console.log('Not in Telegram environment, creating test user...');
+          
+          // Create test user for preview/testing
+          const testUser = {
+            id: 999999999,
+            first_name: 'Preview',
+            last_name: 'User',
+            username: 'preview_user'
+          };
+          
+          const authData = {
+            id: testUser.id,
+            first_name: testUser.first_name,
+            last_name: testUser.last_name,
+            username: testUser.username,
+            photo_url: null,
+            auth_date: Math.floor(Date.now() / 1000),
+            hash: 'telegram_webapp',
+            telegram_id: testUser.id
+          };
+          
+          // Authenticate test user
+          const response = await axios.post(`${API}/auth/telegram`, {
+            telegram_auth_data: authData
+          }, {
+            timeout: 15000,
+            headers: { 'Content-Type': 'application/json' }
+          });
+          
+          setUser(response.data);
+          setIsLoading(false);
+          toast.success('Preview mode: Casino loaded!');
+          
+          setTimeout(() => {
+            loadUserPrizes();
+            loadDerivedWallet();
+          }, 1000);
+          
+          return;
         }
         
         const webApp = window.Telegram.WebApp;
