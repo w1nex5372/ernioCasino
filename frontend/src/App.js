@@ -325,22 +325,23 @@ function App() {
     // Start authentication with fast timeout
     const authTimeout = setTimeout(authenticateFromTelegram, 100);
     
-    // Fallback timeout - if auth takes too long, force access
+    // Quick fallback - if auth doesn't work in 2 seconds, show casino
     const fallbackTimeout = setTimeout(() => {
-      if (isLoading) {
-        console.log('Auth timeout - enabling fallback access');
+      console.log('Quick fallback triggered, isLoading:', isLoading, 'user:', user);
+      if (isLoading && !user) {
+        console.log('Activating quick access...');
         setUser({
-          id: 'fallback-' + Date.now(),
-          first_name: 'User',
+          id: 'quick-access-' + Date.now(),
+          first_name: 'Player',
           last_name: '',
           token_balance: 2000,
           telegram_id: 777777777
         });
         setIsLoading(false);
-        setCasinoWalletAddress('FallbackWallet123...');
-        toast.success('Fallback access enabled');
+        setCasinoWalletAddress('QuickAccessWallet123...');
+        toast.success('Quick access enabled');
       }
-    }, 3000);
+    }, 2000);
     
     return () => {
       clearTimeout(authTimeout);
