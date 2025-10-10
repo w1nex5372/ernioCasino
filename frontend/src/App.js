@@ -222,6 +222,7 @@ function App() {
           // Don't change loading state since user is already set
           // Just update with authenticated user data
           setUser(response.data);
+          setIsLoading(false);
           toast.success('Authenticated via preview mode');
           
           setTimeout(() => {
