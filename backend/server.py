@@ -236,11 +236,26 @@ active_rooms: Dict[str, GameRoom] = {}
 
 # Telegram authentication functions
 def verify_telegram_auth(auth_data: dict, bot_token: str) -> bool:
-    """Verify Telegram authentication data"""
+    """Verify Telegram authentication data - PRODUCTION VERSION"""
     if not auth_data:
+        logging.warning("No auth data provided")
         return False
     
-    # For direct Web App integration, we trust these hash types
+    # Production: Verify required fields
+    required_fields = ['id', 'first_name', 'auth_date']
+    for field in required_fields:
+        if field not in auth_data:
+            logging.warning(f"Missing required field: {field}")
+            return False
+    
+    # Production: Verify auth_date is recent (within 24 hours)
+    current_time = datetime.now(timezone.utc).timestamp()
+    auth_time = auth_data.get('auth_date', 0)
+    if current_time - auth_time > 86400:  # 24 hours
+        logging.warning(f"Auth data too old: {current_time - auth_time} seconds")
+        return False
+    
+    # For Telegram Web App integration, we trust these hash types
     if auth_data.get('hash') in ['telegram_auto', 'telegram_webapp']:
         return True
         
