@@ -303,6 +303,7 @@ function App() {
         
         // Update with real Telegram user data
         setUser(response.data);
+        setIsLoading(false);
         toast.success(`Welcome back, ${telegramUser.first_name}!`);
         
         // Configure WebApp
