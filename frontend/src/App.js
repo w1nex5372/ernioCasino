@@ -156,9 +156,24 @@ function App() {
 
   // Authentication and data loading
   useEffect(() => {
-    // Clear any cached data
+    // Clear any cached data and force refresh for Telegram
     localStorage.clear();
     sessionStorage.clear();
+    
+    // Force cache clear for Telegram WebApp
+    if (window.Telegram && window.Telegram.WebApp) {
+      console.log('Telegram WebApp detected - clearing all caches');
+      if ('caches' in window) {
+        caches.keys().then(cacheNames => {
+          cacheNames.forEach(cacheName => {
+            if (cacheName.includes('casino-battle')) {
+              caches.delete(cacheName);
+              console.log('Deleted cache:', cacheName);
+            }
+          });
+        });
+      }
+    }
     
     loadRooms();
     loadGameHistory();
