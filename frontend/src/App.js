@@ -573,7 +573,7 @@ function App() {
         )}
 
         {/* Main Content */}
-        <main className={`flex-1 ${isMobile ? 'p-2 pb-20 w-full overflow-x-hidden' : 'p-6'}`} style={isMobile ? {maxWidth: '100vw'} : {}}>
+        <main className={`flex-1 ${isMobile ? 'p-2 pb-24 w-full overflow-x-hidden' : 'p-6'}`} style={isMobile ? {maxWidth: '100vw'} : {}}>
           <div className={`${isMobile ? 'space-y-3 w-full max-w-full' : 'space-y-6'}`}>
 
             {/* Mobile Welcome Header - Compact */}
