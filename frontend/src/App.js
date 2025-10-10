@@ -256,22 +256,26 @@ function App() {
       } catch (error) {
         console.error('❌ Telegram authentication failed:', error);
         
-        // Show error and keep in loading state (don't show manual login)
-        setIsLoading(true);
-        
         if (error.message.includes('Telegram')) {
-          toast.error('❌ Please open this casino through Telegram');
+          // If Telegram is not available, stop loading and show proper message
+          setIsLoading(false);
+          toast.error('❌ This casino must be opened through Telegram Web App');
+          return false;
         } else if (error.response?.status >= 500) {
+          // For server errors, keep retrying
+          setIsLoading(true);
           toast.error('🔧 Server error - please try again in a moment');
+          
+          // Retry after delay
+          setTimeout(() => {
+            console.log('🔄 Retrying authentication...');
+            autoAuthenticateFromTelegram();
+          }, 5000);
         } else {
+          // For other errors, show message and stop loading  
+          setIsLoading(false);
           toast.error(`🚫 Authentication failed: ${error.message}`);
         }
-        
-        // Retry after delay
-        setTimeout(() => {
-          console.log('🔄 Retrying authentication...');
-          autoAuthenticateFromTelegram();
-        }, 5000);
         
         return false;
       }
