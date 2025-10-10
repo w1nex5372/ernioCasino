@@ -238,12 +238,16 @@ function App() {
           telegram_id: parseInt(telegramUser.id)
         };
 
+        console.log('Sending authentication request with data:', authData);
+        
         const response = await axios.post(`${API}/auth/telegram`, {
           telegram_auth_data: authData
         }, {
           timeout: 15000,
           headers: { 'Content-Type': 'application/json' }
         });
+        
+        console.log('Authentication response:', response.data);
         
         setUser(response.data);
         setIsLoading(false);
