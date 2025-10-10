@@ -52,7 +52,7 @@ function App() {
   const [socket, setSocket] = useState(null);
   const [user, setUser] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);  // SKIP LOADING
   const [telegramError, setTelegramError] = useState(false);
 
   // Data state
