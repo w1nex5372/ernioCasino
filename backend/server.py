@@ -470,19 +470,46 @@ async def get_or_create_derived_address(user_id: str, telegram_id: int) -> dict:
 class PaymentMonitor:
     def __init__(self):
         self.client = AsyncClient(SOLANA_RPC_URL)
-        self.last_checked_signature = None
+        self.last_checked_signatures = {}  # Track last signature per address
         self.monitoring = False
+        self.monitored_addresses = set()  # All derived addresses being monitored
         
     async def start_monitoring(self):
-        """Start monitoring Solana payments to single casino wallet"""
+        """Start monitoring Solana payments to derived addresses"""
         if self.monitoring:
             return
             
         self.monitoring = True
-        logging.info(f"🚀 Starting payment monitoring for casino wallet: {CASINO_WALLET_ADDRESS}")
+        logging.info(f"🚀 Starting payment monitoring for derived addresses")
+        
+        # Load existing derived addresses
+        await self._load_derived_addresses()
         
         # Run monitoring in background
         asyncio.create_task(self._monitor_payments())
+    
+    async def _load_derived_addresses(self):
+        """Load all derived addresses from database to monitor"""
+        try:
+            users = await db.users.find(
+                {"derived_solana_address": {"$exists": True, "$ne": None}},
+                {"telegram_id": 1, "derived_solana_address": 1, "first_name": 1}
+            ).to_list(length=None)
+            
+            for user in users:
+                address = user.get('derived_solana_address')
+                if address:
+                    self.monitored_addresses.add(address)
+            
+            logging.info(f"📍 Monitoring {len(self.monitored_addresses)} derived addresses")
+            
+        except Exception as e:
+            logging.error(f"Error loading derived addresses: {e}")
+    
+    async def add_address_to_monitor(self, address: str):
+        """Add a new derived address to monitoring"""
+        self.monitored_addresses.add(address)
+        logging.info(f"➕ Added derived address to monitoring: {address}")
     
     async def _monitor_payments(self):
         """Monitor casino wallet for incoming payments"""
