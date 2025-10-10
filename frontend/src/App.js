@@ -1096,14 +1096,14 @@ function App() {
             
             <button
               onClick={() => setActiveTab('prizes')}
-              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 relative ${
+              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 relative min-w-0 ${
                 activeTab === 'prizes' 
                   ? 'text-purple-400 bg-purple-400/10' 
                   : 'text-slate-400 active:bg-slate-700/50'
               }`}
             >
-              <Trophy className="w-6 h-6 mb-1" />
-              <span className="text-xs font-medium">Prizes</span>
+              <Trophy className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium leading-tight">Prizes</span>
               {userPrizes.length > 0 && (
                 <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {userPrizes.length}
