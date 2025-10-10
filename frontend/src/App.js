@@ -283,7 +283,7 @@ function App() {
     const initializeCasino = async () => {
       if (!mounted) return;
       
-      console.log('🎰 Starting Casino Battle Royale...');
+      // Initialize casino for production users
       
       try {
         // Try Telegram authentication first
