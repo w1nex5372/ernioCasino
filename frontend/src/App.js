@@ -1114,9 +1114,9 @@ function App() {
                       💰 Balance: <span className="text-yellow-400 font-bold">{user.token_balance || 0} tokens</span>
                     </p>
                     {isMobile && (
-                      <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                        <p className="text-xs text-blue-300 text-center">
-                          📝 Send SOL to this address, then tokens will be added to your account
+                      <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                        <p className="text-xs text-green-300 text-center">
+                          ⚡ This is YOUR personal address! Send SOL here and tokens appear automatically within 10 seconds!
                         </p>
                       </div>
                     )}
