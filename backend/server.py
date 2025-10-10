@@ -1073,10 +1073,12 @@ async def cleanup_database_for_production(admin_key: str):
             await db[collection_name].drop()
             logging.info(f"Dropped collection: {collection_name}")
         
-        logging.info("🧹 PRODUCTION CLEANUP COMPLETE")
+        logging.info("🧹 COMPLETE DATABASE WIPE FINISHED")
         logging.info(f"Deleted: {deleted_users.deleted_count} users")
         logging.info(f"Deleted: {deleted_completed_games.deleted_count} completed games")  
         logging.info(f"Deleted: {deleted_winner_prizes.deleted_count} winner prizes")
+        logging.info(f"Deleted: {deleted_rooms.deleted_count} rooms")
+        logging.info("All collections dropped and recreated")
         
         return {
             "status": "success",
