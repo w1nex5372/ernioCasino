@@ -782,7 +782,7 @@ function App() {
                 <div className="space-y-3 max-w-full">
                   <Card className="bg-slate-800/90 border-slate-700">
                     <CardContent className="p-3 text-center">
-                      <h2 className="text-base font-bold text-white mb-1">Your Balance</h2>
+                      <h2 className="text-sm font-bold text-white mb-1">Current Balance</h2>
                       <div className="text-xl font-bold text-yellow-400">{user.token_balance || 0}</div>
                       <div className="text-xs text-slate-400">tokens</div>
                     </CardContent>
@@ -790,28 +790,38 @@ function App() {
                   
                   <Card className="bg-slate-800/90 border-slate-700 max-w-full overflow-hidden">
                     <CardContent className="p-3">
-                      <h3 className="text-center text-white font-semibold mb-2 text-sm">Your Wallet</h3>
+                      <h3 className="text-center text-white font-semibold mb-2 text-sm">Send SOL Here</h3>
                       <div className="bg-slate-900 p-2 rounded-lg mb-2 overflow-hidden">
                         <code className="text-green-400 text-xs font-mono break-all block text-center leading-relaxed">
-                          {casinoWalletAddress && casinoWalletAddress !== 'Loading...' ? casinoWalletAddress : 'Loading wallet...'}
+                          {casinoWalletAddress && casinoWalletAddress !== 'Loading...' ? casinoWalletAddress : 'Loading...'}
                         </code>
                       </div>
-                      <Button
-                        onClick={() => {
-                          navigator.clipboard.writeText(casinoWalletAddress);
-                          toast.success('Copied!');
-                        }}
-                        disabled={!casinoWalletAddress || casinoWalletAddress === 'Loading...'}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 text-sm"
-                      >
-                        📋 Copy
-                      </Button>
-                      <div className="mt-2 p-2 bg-green-500/10 border border-green-500/20 rounded text-center">
-                        <p className="text-xs text-green-300">
-                          Send SOL → Get tokens!
+                      <div className="flex gap-2 mb-2">
+                        <Button
+                          onClick={() => {
+                            navigator.clipboard.writeText(casinoWalletAddress);
+                            toast.success('Address copied!');
+                          }}
+                          disabled={!casinoWalletAddress || casinoWalletAddress === 'Loading...'}
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 text-sm"
+                        >
+                          📋 Copy
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            toast.info('Send SOL to get tokens automatically!');
+                          }}
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 text-sm"
+                        >
+                          ℹ️ Help
+                        </Button>
+                      </div>
+                      <div className="p-2 bg-green-500/10 border border-green-500/20 rounded text-center">
+                        <p className="text-xs text-green-300 font-medium">
+                          Auto Conversion Active
                         </p>
                         <p className="text-xs text-slate-400">
-                          Auto conversion
+                          SOL → EUR → Tokens (1 EUR = 100 tokens)
                         </p>
                       </div>
                     </CardContent>
