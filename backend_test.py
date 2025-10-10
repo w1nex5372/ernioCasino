@@ -463,6 +463,13 @@ class SolanaCasinoAPITester:
         print("\n🏠 Testing Room System...")
         rooms_success, rooms = self.test_get_rooms()
         
+        # Test Solana address derivation system
+        print("\n🔑 Testing Solana Address Derivation...")
+        self.test_solana_address_derivation(1)
+        self.test_solana_address_derivation(2)
+        self.test_sol_eur_price()
+        self.test_casino_wallet_info()
+
         # Test prize endpoints before game
         print("\n🏆 Testing Prize System (Before Game)...")
         self.test_user_prizes(1)
