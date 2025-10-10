@@ -1063,7 +1063,7 @@ function App() {
                   : 'text-slate-400 active:bg-slate-700/50'
               }`}
             >
-              <Timer className="w-5 h-5 mb-1" />
+              <Timer className="w-4 h-4 mb-0.5" />
               <span className="text-xs font-medium leading-tight">History</span>
             </button>
           </div>
