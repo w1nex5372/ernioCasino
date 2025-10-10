@@ -23,6 +23,25 @@ if (!process.env.REACT_APP_API_URL) {
   );
 }
 
+const logApiRequest = (label, url, payload) => {
+  if (typeof payload !== 'undefined') {
+    console.log(`[API] ${label} → ${url}`, payload);
+  } else {
+    console.log(`[API] ${label} → ${url}`);
+  }
+};
+
+const logApiResponse = (label, data) => {
+  console.log(`[API] ${label} ←`, data);
+};
+
+const logApiError = (label, error) => {
+  console.error(`[API] ${label} ✕`, error);
+  if (error?.response?.data) {
+    console.error(`[API] ${label} response data:`, error.response.data);
+  }
+};
+
 const SOCKET_URL = API_BASE.replace(/\/?api\/?$/, '');
 console.log('[App] Socket URL resolved to:', SOCKET_URL);
 
@@ -185,12 +204,12 @@ function App() {
 
             const requestPayload = { telegram_auth_data: authData };
             const authUrl = `${API_BASE}/auth/telegram`;
-            console.log('[Telegram Auth] POST', authUrl, 'payload:', requestPayload);
+            logApiRequest('Telegram Auth (auto)', authUrl, requestPayload);
 
             // Send auth data to backend
             const response = await axios.post(authUrl, requestPayload);
 
-            console.log('Auth response:', response.data);
+            logApiResponse('Telegram Auth (auto)', response.data);
             setUser(response.data);
             setIsLoading(false); // Important: Stop loading state
             toast.success(`Welcome, ${user.first_name}!`);
@@ -212,7 +231,7 @@ function App() {
         }
         return false;
       } catch (error) {
-        console.error('Auto auth failed:', error);
+        logApiError('Telegram Auth (auto)', error);
         toast.error('Authentication failed: ' + (error.response?.data?.detail || error.message));
         return false;
       }
@@ -229,39 +248,51 @@ function App() {
 
   const loadRooms = async () => {
     try {
-      const response = await axios.get(`${API_BASE}/rooms`);
+      const url = `${API_BASE}/rooms`;
+      logApiRequest('Load Rooms', url);
+      const response = await axios.get(url);
+      logApiResponse('Load Rooms', response.data);
       setRooms(response.data.rooms);
     } catch (error) {
-      console.error('Failed to load rooms:', error);
+      logApiError('Load Rooms', error);
       toast.error('Failed to load rooms');
     }
   };
 
   const loadGameHistory = async () => {
     try {
-      const response = await axios.get(`${API_BASE}/game-history?limit=10`);
+      const url = `${API_BASE}/game-history?limit=10`;
+      logApiRequest('Load Game History', url);
+      const response = await axios.get(url);
+      logApiResponse('Load Game History', response.data);
       setGameHistory(response.data.games);
     } catch (error) {
-      console.error('Failed to load game history:', error);
+      logApiError('Load Game History', error);
     }
   };
 
   const loadLeaderboard = async () => {
     try {
-      const response = await axios.get(`${API_BASE}/leaderboard`);
+      const url = `${API_BASE}/leaderboard`;
+      logApiRequest('Load Leaderboard', url);
+      const response = await axios.get(url);
+      logApiResponse('Load Leaderboard', response.data);
       setLeaderboard(response.data.leaderboard);
     } catch (error) {
-      console.error('Failed to load leaderboard:', error);
+      logApiError('Load Leaderboard', error);
     }
   };
 
   const loadUserPrizes = async () => {
     if (!user) return;
     try {
-      const response = await axios.get(`${API_BASE}/user/${user.id}/prizes`);
+      const url = `${API_BASE}/user/${user.id}/prizes`;
+      logApiRequest('Load User Prizes', url);
+      const response = await axios.get(url);
+      logApiResponse('Load User Prizes', response.data);
       setUserPrizes(response.data.prizes);
     } catch (error) {
-      console.error('Failed to load user prizes:', error);
+      logApiError('Load User Prizes', error);
     }
   };
 
@@ -285,11 +316,15 @@ function App() {
       // Demo mode - instant credit
       const tokenAmount = Math.floor(parseFloat(solAmount) * 1000);
       try {
-        const response = await axios.post(`${API_BASE}/purchase-tokens`, {
+        const url = `${API_BASE}/purchase-tokens`;
+        const payload = {
           user_id: user.id,
           sol_amount: parseFloat(solAmount),
           token_amount: tokenAmount
-        });
+        };
+        logApiRequest('Purchase Tokens (demo)', url, payload);
+        const response = await axios.post(url, payload);
+        logApiResponse('Purchase Tokens (demo)', response.data);
 
         if (response.data.success) {
           setUser(prev => ({
@@ -300,7 +335,7 @@ function App() {
           toast.success(`Demo: Received ${tokenAmount} tokens!`);
         }
       } catch (error) {
-        console.error('Failed to purchase tokens:', error);
+        logApiError('Purchase Tokens (demo)', error);
         toast.error(error.response?.data?.detail || 'Failed to purchase tokens');
       }
       return;
@@ -354,11 +389,15 @@ function App() {
             // Automatically credit tokens
             const tokenAmount = Math.floor(expectedAmount * 1000);
             try {
-              const response = await axios.post(`${API_BASE}/purchase-tokens`, {
+              const url = `${API_BASE}/purchase-tokens`;
+              const payload = {
                 user_id: user.id,
                 sol_amount: expectedAmount,
                 token_amount: tokenAmount
-              });
+              };
+              logApiRequest('Purchase Tokens (auto credit)', url, payload);
+              const response = await axios.post(url, payload);
+              logApiResponse('Purchase Tokens (auto credit)', response.data);
 
               if (response.data.success) {
                 setUser(prev => ({
@@ -368,7 +407,7 @@ function App() {
                 toast.success(`🎉 Received ${tokenAmount} tokens automatically!`);
               }
             } catch (error) {
-              console.error('Failed to credit tokens:', error);
+              logApiError('Purchase Tokens (auto credit)', error);
               toast.error('Payment detected but failed to credit tokens. Contact support.');
             }
             return;
@@ -435,11 +474,12 @@ function App() {
         bet_amount: bet
       };
 
-      console.log('Sending join room request:', joinData);
+      const url = `${API_BASE}/join-room`;
+      logApiRequest('Join Room', url, joinData);
 
-      const response = await axios.post(`${API_BASE}/join-room`, joinData);
+      const response = await axios.post(url, joinData);
 
-      console.log('Join room response:', response.data);
+      logApiResponse('Join Room', response.data);
 
       if (response.data.success) {
         setUser(prev => ({
@@ -456,9 +496,8 @@ function App() {
         loadRooms();
       }
     } catch (error) {
-      console.error('Failed to join room - Full error:', error);
-      console.error('Error response:', error.response);
-      
+      logApiError('Join Room', error);
+
       let errorMessage = 'Failed to join room';
       
       if (error.response?.data?.detail) {
@@ -509,10 +548,11 @@ function App() {
           }
         };
         const manualAuthUrl = `${API_BASE}/auth/telegram`;
-        console.log('[Telegram Auth] POST', manualAuthUrl, 'payload:', authPayload);
+        logApiRequest('Telegram Auth (manual)', manualAuthUrl, authPayload);
 
         // Send auth data to backend
         const response = await axios.post(manualAuthUrl, authPayload);
+        logApiResponse('Telegram Auth (manual)', response.data);
 
         setUser(response.data);
         setIsLoading(false);
@@ -529,7 +569,7 @@ function App() {
         toast.error('This app must be opened through Telegram');
       }
     } catch (error) {
-      console.error('Telegram auth failed:', error);
+      logApiError('Telegram Auth (manual)', error);
       setIsLoading(false);
       toast.error(error.response?.data?.detail || 'Authentication failed');
     }

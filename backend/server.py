@@ -37,15 +37,19 @@ sio = socketio.AsyncServer(
 # FastAPI app
 app = FastAPI(title="Solana Casino Battle Royale")
 
+# Optional public base URL so responses match the externally reachable address (e.g. ngrok)
+PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL")
+
 
 @app.get("/", tags=["Health"])
 async def read_root(request: Request):
     """Simple root endpoint to verify the service is running."""
-    base_url = str(request.base_url).rstrip("/")
-    api_path = "/api"
+    request_base = str(request.base_url).rstrip("/")
+    base_url = PUBLIC_BASE_URL.rstrip("/") if PUBLIC_BASE_URL else request_base
+    api_path = f"{base_url}/api"
     return {
-        "message": "Solana Casino Battle Royale backend is running.",
-        "api_base": f"{base_url}{api_path}",
+        "message": "Backend running",
+        "api_base": api_path,
         "docs": f"{base_url}/docs"
     }
 
@@ -335,9 +339,16 @@ def initialize_rooms():
         active_rooms[room.id] = room
 
 # API Routes
-@api_router.get("/")
-async def root():
-    return {"message": "Solana Casino Battle Royale API"}
+@api_router.get("/", tags=["Health"])
+async def api_health(request: Request):
+    """API health endpoint."""
+    request_base = str(request.base_url).rstrip("/")
+    base_url = PUBLIC_BASE_URL.rstrip("/") if PUBLIC_BASE_URL else request_base
+    return {
+        "message": "Backend running",
+        "api_base": f"{base_url}/api",
+        "docs": f"{base_url}/docs"
+    }
 
 @api_router.post("/auth/telegram", response_model=User)
 async def telegram_auth(user_data: UserCreate):
@@ -584,7 +595,7 @@ app.include_router(api_router)
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
