@@ -179,7 +179,6 @@ function App() {
       console.log('Demo user already set for mobile testing');
       return;
     };
-    };
 
     const initTimeout = setTimeout(authenticateFromTelegram, 200);
     return () => clearTimeout(initTimeout);
