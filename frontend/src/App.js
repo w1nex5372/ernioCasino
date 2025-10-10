@@ -380,25 +380,36 @@ function App() {
             <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">⚠️</span>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Telegram Required</h3>
-            <p className="text-slate-400 mb-4">This casino is a Telegram Web App and must be opened through Telegram.</p>
-            <div className="space-y-3 text-left">
+            <h3 className="text-xl font-bold text-white mb-2">Telegram Web App Required</h3>
+            <p className="text-slate-400 mb-4">This casino must be opened as a Telegram Web App, not in a regular browser.</p>
+            
+            <div className="space-y-3 text-left mb-4">
               <div className="flex items-start gap-3">
-                <span className="text-yellow-400 font-bold">1.</span>
-                <p className="text-sm text-slate-300">Open Telegram on your device</p>
+                <span className="text-yellow-400 font-bold text-lg">📱</span>
+                <p className="text-sm text-slate-300">Open Telegram on your mobile device</p>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-yellow-400 font-bold">2.</span>
-                <p className="text-sm text-slate-300">Search for the casino bot</p>
+                <span className="text-yellow-400 font-bold text-lg">🔍</span>
+                <p className="text-sm text-slate-300">Find your casino bot or Web App</p>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-yellow-400 font-bold">3.</span>
-                <p className="text-sm text-slate-300">Launch the Web App from Telegram</p>
+                <span className="text-yellow-400 font-bold text-lg">🚀</span>
+                <p className="text-sm text-slate-300">Tap "Launch" or "Open App" in Telegram</p>
               </div>
             </div>
-            <div className="mt-6 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <p className="text-xs text-blue-300">
-                💡 For security, this app only works within Telegram.
+            
+            <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg mb-4">
+              <p className="text-sm text-blue-300 font-medium mb-1">
+                🔒 Why Telegram Only?
+              </p>
+              <p className="text-xs text-blue-200">
+                Authentication and payments work securely only within Telegram's environment.
+              </p>
+            </div>
+            
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-sm text-red-300 font-medium">
+                ⚠️ Not working? Contact support with error details.
               </p>
             </div>
             <Button
