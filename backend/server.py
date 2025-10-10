@@ -406,7 +406,7 @@ class PaymentMonitor:
         except Exception as e:
             logging.error(f"Error checking address {address}: {e}")
     
-    async def _process_transaction(self, signature: str):
+    async def _process_transaction(self, signature: str, receiving_address: str):
         """Process a single transaction for payment detection"""
         try:
             # Get transaction details
@@ -424,29 +424,29 @@ class PaymentMonitor:
             pre_balances = meta.pre_balances
             post_balances = meta.post_balances
             
-            # Find casino wallet in account keys
+            # Find receiving address in account keys
             account_keys = transaction.transaction.message.account_keys
-            casino_wallet_index = None
+            receiving_address_index = None
             
             for i, key in enumerate(account_keys):
-                if str(key) == CASINO_WALLET_ADDRESS:
-                    casino_wallet_index = i
+                if str(key) == receiving_address:
+                    receiving_address_index = i
                     break
             
-            if casino_wallet_index is None:
+            if receiving_address_index is None:
                 return
             
             # Calculate SOL received (in lamports)
-            if len(post_balances) > casino_wallet_index and len(pre_balances) > casino_wallet_index:
-                balance_change = post_balances[casino_wallet_index] - pre_balances[casino_wallet_index]
+            if len(post_balances) > receiving_address_index and len(pre_balances) > receiving_address_index:
+                balance_change = post_balances[receiving_address_index] - pre_balances[receiving_address_index]
                 
                 if balance_change > 0:  # Received SOL
                     sol_amount = balance_change / 1_000_000_000  # Convert lamports to SOL
                     
-                    logging.info(f"💰 Received {sol_amount} SOL in transaction {signature}")
+                    logging.info(f"💰 Received {sol_amount} SOL in transaction {signature} to address {receiving_address}")
                     
-                    # Try to identify the sender and credit tokens
-                    await self._credit_tokens_for_payment(signature, sol_amount, transaction)
+                    # Credit tokens to the user who owns this address
+                    await self._credit_tokens_for_payment(signature, sol_amount, receiving_address)
                     
         except Exception as e:
             logging.error(f"Error processing transaction {signature}: {e}")
