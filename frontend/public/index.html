@@ -194,34 +194,7 @@
                 });
             }
             
-            // AGGRESSIVE cache clearing for Telegram WebApp
-            if ('caches' in window) {
-                console.log('FORCE UPDATE: Clearing ALL caches');
-                caches.keys().then(function(names) {
-                    names.forEach(function(name) {
-                        if (name.includes('casino-battle')) {
-                            console.log('Deleting cache:', name);
-                            caches.delete(name);
-                        }
-                    });
-                });
-                
-                // Send message to service worker to clear cache
-                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                    navigator.serviceWorker.controller.postMessage({
-                        type: 'CLEAR_CACHE'
-                    });
-                }
-            }
-            
-            // Force reload for Telegram WebApp
-            if (window.Telegram && window.Telegram.WebApp) {
-                console.log('Telegram WebApp detected - FORCE REFRESH');
-                // Force hard reload after cache clear
-                setTimeout(() => {
-                    window.location.reload(true);
-                }, 1000);
-            }
+            // Normal cache handling - no aggressive clearing
         </script>
     </body>
 </html>
