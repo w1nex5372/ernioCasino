@@ -63,11 +63,13 @@ class SolanaWalletDerivation:
             seed_string = f"casino_user_{user_id}_{telegram_id}"
             seed_bytes = hashlib.sha256(seed_string.encode()).digest()
             
-            # Use first 32 bytes as private key seed
-            derived_private_key = seed_bytes[:32]
+            # Solana keypair needs 64 bytes (32 private key + 32 public key)
+            # Double the hash to get 64 bytes
+            private_key_32 = seed_bytes[:32]
+            full_keypair_bytes = private_key_32 + hashlib.sha256(private_key_32).digest()[:32]
             
-            # Create keypair from derived seed
-            derived_keypair = Keypair.from_bytes(derived_private_key)
+            # Create keypair from 64-byte seed
+            derived_keypair = Keypair.from_bytes(full_keypair_bytes)
             derived_address = str(derived_keypair.pubkey())
             
             logging.info(f"🎯 Derived address for user {telegram_id}: {derived_address}")
