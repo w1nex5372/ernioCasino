@@ -216,45 +216,9 @@ function App() {
         // Quick check for Telegram environment
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // If not in Telegram, create test user
+        // If not in Telegram environment, throw error to trigger fallback
         if (!window.Telegram || !window.Telegram.WebApp) {
-          const testUser = {
-            id: 999999999,
-            first_name: 'Preview',
-            last_name: 'User',
-            username: 'preview_user'
-          };
-          
-          const authData = {
-            id: testUser.id,
-            first_name: testUser.first_name,
-            last_name: testUser.last_name,
-            username: testUser.username,
-            photo_url: null,
-            auth_date: Math.floor(Date.now() / 1000),
-            hash: 'telegram_webapp',
-            telegram_id: testUser.id
-          };
-          
-          const response = await axios.post(`${API}/auth/telegram`, {
-            telegram_auth_data: authData
-          }, {
-            timeout: 10000,
-            headers: { 'Content-Type': 'application/json' }
-          });
-          
-          // Update with authenticated user data and save session
-          setUser(response.data);
-          saveUserSession(response.data);
-          setIsLoading(false);
-          toast.success('Authenticated successfully');
-          
-          setTimeout(() => {
-            loadUserPrizes();
-            loadDerivedWallet();
-          }, 1000);
-          
-          return;
+          throw new Error('Not in Telegram environment');
         }
         
         const webApp = window.Telegram.WebApp;
