@@ -317,22 +317,47 @@ function App() {
     // Start authentication immediately
     const authTimeout = setTimeout(authenticateFromTelegram, 100);
     
-    // Fallback timeout - but don't show error if user was already set
-    const fallbackTimeout = setTimeout(() => {
+    // Fallback timeout - load user from Telegram data if available
+    const fallbackTimeout = setTimeout(async () => {
       if (isLoading && !user) {
-        console.log('Authentication timeout - creating fallback user');
-        // Create fallback user instead of showing error
+        console.log('Authentication timeout - trying Telegram user data extraction');
+        
+        let telegramUser = null;
+        
+        // Try to get Telegram user data even if authentication failed
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+          telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
+        }
+        
+        if (telegramUser && telegramUser.id) {
+          // Try to find existing user in database by Telegram ID
+          try {
+            const response = await axios.get(`${API}/users/telegram/${telegramUser.id}`);
+            if (response.data) {
+              setUser(response.data);
+              saveUserSession(response.data);
+              setIsLoading(false);
+              toast.success(`Welcome back, ${telegramUser.first_name}!`);
+              return;
+            }
+          } catch (e) {
+            console.log('User not found in database, will create fallback');
+          }
+        }
+        
+        // Last resort fallback
         setUser({
           id: 'fallback-' + Date.now(),
-          first_name: 'Player',
-          last_name: '',
+          first_name: telegramUser?.first_name || 'Player',
+          last_name: telegramUser?.last_name || '',
           token_balance: 0,
-          telegram_id: Date.now()
+          telegram_id: telegramUser?.id || Date.now(),
+          username: telegramUser?.username || ''
         });
         setIsLoading(false);
-        toast.info('Fallback authentication - please contact support if issues persist');
+        toast.warning('Using temporary account - your tokens may not be available');
       }
-    }, 8000);
+    }, 5000);
     
     return () => {
       clearTimeout(authTimeout);
