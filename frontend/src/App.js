@@ -905,53 +905,87 @@ function App() {
               </Card>
             )}
 
-            {/* Token Purchase */}
+            {/* Token Purchase - SIMPLIFIED */}
             {activeTab === 'tokens' && (
-              <Card className="bg-slate-800/90 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-green-400">
-                    <Coins className="w-5 h-5" />
-                    Buy Casino Tokens
-                  </CardTitle>
-                  <CardDescription className="text-slate-400">
-                    Send SOL to casino wallet. Real-time EUR conversion! (Rate: 1 EUR = 100 tokens)
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {/* Casino Wallet Address */}
-                  <div className={`${isMobile ? 'p-4' : 'p-6'} bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-lg border border-green-500/30`}>
-                    <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold text-white mb-4 text-center`}>
-                      {isMobile ? 'Casino Wallet Address' : 'Casino Solana Wallet Address'}
-                    </h3>
-                    <div className={`bg-slate-800 ${isMobile ? 'p-3' : 'p-4'} rounded-lg border border-slate-600`}>
-                      <code className={`text-green-400 font-mono ${isMobile ? 'text-sm' : 'text-lg'} break-all block text-center`}>
-                        {casinoWalletAddress}
-                      </code>
-                    </div>
-                    <div className="flex justify-center mt-4">
+              isMobile ? (
+                // MOBILE: Ultra-simplified version
+                <div className="space-y-4">
+                  {/* Balance Display */}
+                  <Card className="bg-slate-800/90 border-slate-700">
+                    <CardContent className="p-4 text-center">
+                      <h2 className="text-lg font-bold text-white mb-2">Token Balance</h2>
+                      <div className="text-2xl font-bold text-yellow-400">{user.token_balance || 0}</div>
+                      <div className="text-sm text-slate-400">tokens</div>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Wallet Address */}
+                  <Card className="bg-slate-800/90 border-slate-700">
+                    <CardContent className="p-4">
+                      <h3 className="text-center text-white font-semibold mb-3">Your Personal Address</h3>
+                      <div className="bg-slate-900 p-3 rounded-lg mb-3">
+                        <code className="text-green-400 text-xs font-mono break-all block text-center">
+                          {casinoWalletAddress}
+                        </code>
+                      </div>
                       <Button
                         onClick={() => {
                           navigator.clipboard.writeText(casinoWalletAddress);
-                          toast.success('Wallet address copied!');
+                          toast.success('Address copied!');
                         }}
-                        className={`bg-green-600 hover:bg-green-700 text-white font-semibold ${isMobile ? 'px-4 py-3 w-full' : 'px-6 py-2'}`}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3"
                       >
-                        📋 {isMobile ? 'Copy Address' : 'Copy Address'}
+                        📋 Copy Address
                       </Button>
-                    </div>
-                    <p className={`text-center text-slate-300 ${isMobile ? 'text-sm' : 'text-sm'} mt-4`}>
-                      💰 Balance: <span className="text-yellow-400 font-bold">{user.token_balance || 0} tokens</span>
-                    </p>
-                    {isMobile && (
-                      <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                        <p className="text-xs text-blue-300 text-center">
-                          💰 Send SOL to this address! Automatic EUR conversion: 1 EUR = 100 tokens. Tokens credited within 10 seconds!
+                      <div className="mt-3 p-2 bg-green-500/10 border border-green-500/20 rounded text-center">
+                        <p className="text-xs text-green-300">
+                          Send SOL here → Get tokens automatically!
+                        </p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          1 EUR = 100 tokens
                         </p>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : (
+                // DESKTOP: Full version
+                <Card className="bg-slate-800/90 border-slate-700">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-green-400">
+                      <Coins className="w-5 h-5" />
+                      Buy Casino Tokens
+                    </CardTitle>
+                    <CardDescription className="text-slate-400">
+                      Send SOL to your personal address. Automatic conversion: 1 EUR = 100 tokens
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="p-6 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-lg border border-green-500/30">
+                      <h3 className="text-xl font-semibold text-white mb-4 text-center">Your Personal Solana Address</h3>
+                      <div className="bg-slate-800 p-4 rounded-lg border border-slate-600">
+                        <code className="text-green-400 font-mono text-lg break-all block text-center">
+                          {casinoWalletAddress}
+                        </code>
+                      </div>
+                      <div className="flex justify-center mt-4">
+                        <Button
+                          onClick={() => {
+                            navigator.clipboard.writeText(casinoWalletAddress);
+                            toast.success('Address copied!');
+                          }}
+                          className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2"
+                        >
+                          📋 Copy Address
+                        </Button>
+                      </div>
+                      <p className="text-center text-slate-300 text-sm mt-4">
+                        💰 Current Balance: <span className="text-yellow-400 font-bold">{user.token_balance || 0} tokens</span>
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
             )}
 
             {/* My Prizes */}
