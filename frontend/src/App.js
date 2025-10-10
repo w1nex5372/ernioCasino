@@ -734,16 +734,16 @@ function App() {
                       <CardHeader className={`bg-gradient-to-br ${config.gradient} text-white relative overflow-hidden`}>
                         <div className="absolute inset-0 bg-black/10"></div>
                         <div className="relative z-10">
-                          <div className={`flex items-center justify-between mb-2 ${isMobile ? 'flex-wrap gap-2' : ''}`}>
+                          <div className={`flex items-center justify-between mb-2 ${isMobile ? 'flex-col gap-3' : ''}`}>
                             <div className="flex items-center gap-3">
                               <div className={`${isMobile ? 'w-10 h-10' : 'w-12 h-12'} bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm`}>
                                 <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>{config.icon}</span>
                               </div>
-                              <div>
-                                <CardTitle className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold`}>
+                              <div className={isMobile ? 'text-center' : ''}>
+                                <CardTitle className={`${isMobile ? 'text-base' : 'text-xl'} font-bold leading-tight`}>
                                   {config.name}
                                 </CardTitle>
-                                <CardDescription className={`text-white/90 font-medium ${isMobile ? 'text-sm' : ''}`}>
+                                <CardDescription className={`text-white/90 font-medium ${isMobile ? 'text-xs' : ''} leading-tight`}>
                                   {config.min} - {config.max} tokens
                                 </CardDescription>
                               </div>
