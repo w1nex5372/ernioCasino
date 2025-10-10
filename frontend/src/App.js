@@ -260,6 +260,7 @@ function App() {
         if (error.message.includes('Telegram')) {
           // If Telegram is not available, stop loading and show proper message
           setIsLoading(false);
+          setTelegramError(true);
           toast.error('❌ This casino must be opened through Telegram Web App');
           return false;
         } else if (error.response?.status >= 500) {
