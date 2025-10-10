@@ -659,9 +659,16 @@ class PaymentMonitor:
             logging.error(f"Error crediting tokens for derived address: {e}")
     
     async def _credit_tokens_to_user(self, signature: str, sol_amount: float, tokens_to_credit: int, telegram_id: int, sol_eur_price: float, derived_address: str = None):
-        """Credit tokens to specific user account"""
+        """Credit tokens to specific user account - PRODUCTION VERSION"""
         try:
             if tokens_to_credit <= 0:
+                logging.warning(f"Invalid token amount: {tokens_to_credit}")
+                return
+            
+            # Production: Minimum payment validation (prevent dust payments)
+            min_sol_amount = 0.001  # Minimum 0.001 SOL
+            if sol_amount < min_sol_amount:
+                logging.warning(f"Payment too small: {sol_amount} SOL (minimum: {min_sol_amount})")
                 return
             
             # Find user by telegram_id
@@ -669,6 +676,16 @@ class PaymentMonitor:
             
             if not user:
                 logging.error(f"❌ No user found for telegram_id {telegram_id}! Payment of {sol_amount} SOL lost!")
+                return
+            
+            # Production: Check for duplicate transactions
+            existing_payment = await db.users.find_one({
+                "telegram_id": telegram_id,
+                "payment_history.transaction_id": str(signature)
+            })
+            
+            if existing_payment:
+                logging.warning(f"Duplicate transaction detected: {signature}")
                 return
             
             # Credit tokens to user
