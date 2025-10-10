@@ -588,29 +588,29 @@ class PaymentMonitor:
             pre_balances = meta.pre_balances
             post_balances = meta.post_balances
             
-            # Find casino wallet in account keys
+            # Find receiving address in account keys
             account_keys = transaction.transaction.message.account_keys
-            casino_wallet_index = None
+            receiving_address_index = None
             
             for i, key in enumerate(account_keys):
-                if str(key) == CASINO_WALLET_ADDRESS:
-                    casino_wallet_index = i
+                if str(key) == receiving_address:
+                    receiving_address_index = i
                     break
             
-            if casino_wallet_index is None:
+            if receiving_address_index is None:
                 return
             
             # Calculate SOL received (in lamports)
-            if len(post_balances) > casino_wallet_index and len(pre_balances) > casino_wallet_index:
-                balance_change = post_balances[casino_wallet_index] - pre_balances[casino_wallet_index]
+            if len(post_balances) > receiving_address_index and len(pre_balances) > receiving_address_index:
+                balance_change = post_balances[receiving_address_index] - pre_balances[receiving_address_index]
                 
                 if balance_change > 0:  # Received SOL
                     sol_amount = balance_change / 1_000_000_000  # Convert lamports to SOL
                     
-                    logging.info(f"💰 Received {sol_amount} SOL in transaction {signature}")
+                    logging.info(f"💰 Received {sol_amount} SOL in transaction {signature} to derived address {receiving_address}")
                     
-                    # Try to match with active payment requests
-                    await self._match_payment_request(signature, sol_amount)
+                    # Credit tokens to user who owns this derived address
+                    await self._credit_tokens_for_derived_address(signature, sol_amount, receiving_address)
                     
         except Exception as e:
             logging.error(f"Error processing transaction {signature}: {e}")
