@@ -89,6 +89,16 @@ body {
     overflow-x: hidden;
   }
   
+  /* Force hide desktop sidebar in portrait */
+  .desktop-sidebar {
+    display: none !important;
+  }
+  
+  /* Ensure mobile bottom nav shows */
+  .mobile-bottom-nav {
+    display: flex !important;
+  }
+  
   /* Ensure all text fits within viewport */
   h1, h2, h3, h4, h5, h6, p, span, div {
     max-width: 100%;
@@ -105,6 +115,21 @@ body {
   /* Smooth scrolling */
   * {
     -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Force mobile layout for narrow screens */
+@media (max-width: 768px) {
+  .desktop-sidebar {
+    display: none !important;
+  }
+  
+  .mobile-bottom-nav {
+    display: flex !important;
+  }
+  
+  .desktop-welcome-card {
+    display: none !important;
   }
 }
 
