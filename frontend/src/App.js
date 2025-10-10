@@ -415,8 +415,8 @@ function App() {
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white ${
-      isMobile ? 'overflow-x-hidden max-w-full' : ''
-    }`}>
+      isMobile ? 'overflow-x-hidden max-w-full w-full' : ''
+    }`} style={isMobile ? {maxWidth: '100vw', width: '100vw'} : {}}>
       {/* Header */}
       <header className="bg-slate-900/90 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
         <div className="px-4 py-3">
