@@ -173,14 +173,11 @@ function App() {
       try {
         console.log('🔍 Initializing Telegram Web App authentication...');
         
-        // Wait for Telegram script to load
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Quick check for Telegram environment
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Check if we're in Telegram Web App environment
+        // If not in Telegram, create test user
         if (!window.Telegram || !window.Telegram.WebApp) {
-          console.log('Not in Telegram environment, creating test user...');
-          
-          // Create test user for preview/testing
           const testUser = {
             id: 999999999,
             first_name: 'Preview',
@@ -199,17 +196,16 @@ function App() {
             telegram_id: testUser.id
           };
           
-          // Authenticate test user
           const response = await axios.post(`${API}/auth/telegram`, {
             telegram_auth_data: authData
           }, {
-            timeout: 15000,
+            timeout: 10000,
             headers: { 'Content-Type': 'application/json' }
           });
           
           setUser(response.data);
           setIsLoading(false);
-          toast.success('Preview mode: Casino loaded!');
+          toast.success('Preview mode active');
           
           setTimeout(() => {
             loadUserPrizes();
