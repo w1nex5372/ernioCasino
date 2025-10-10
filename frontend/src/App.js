@@ -202,12 +202,15 @@ function App() {
           user: initDataUnsafe?.user
         });
         
+        console.log('🔍 Telegram WebApp initData:', webApp.initData);
+        console.log('🔍 Telegram WebApp initDataUnsafe:', webApp.initDataUnsafe);
+        
         const user = initDataUnsafe?.user;
         if (!user || !user.id) {
           throw new Error('No Telegram user data available');
         }
         
-        console.log('👤 Telegram user found:', {
+        console.log('✅ Telegram user data found:', {
           id: user.id,
           first_name: user.first_name,
           username: user.username
