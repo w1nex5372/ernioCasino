@@ -1051,7 +1051,7 @@ function App() {
                   : 'text-slate-400 active:bg-slate-700/50'
               }`}
             >
-              <Crown className="w-5 h-5 mb-1" />
+              <Crown className="w-4 h-4 mb-0.5" />
               <span className="text-xs font-medium leading-tight">Board</span>
             </button>
             
