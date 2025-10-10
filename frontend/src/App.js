@@ -181,7 +181,7 @@ function App() {
     
     // Try Telegram authentication in background (will update user if successful)
     const tryTelegramAuth = async () => {
-    const authenticateFromTelegram = async () => {
+      // Background Telegram auth - updates user if in Telegram environment
       try {
         console.log('🔍 Initializing Telegram Web App authentication...');
         
