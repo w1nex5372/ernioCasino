@@ -76,6 +76,7 @@ function App() {
   const [casinoWalletAddress, setCasinoWalletAddress] = useState('Loading...');
   const [userPrizes, setUserPrizes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [telegramError, setTelegramError] = useState(false);
 
   // Check if mobile (portrait orientation specifically)
   useEffect(() => {
