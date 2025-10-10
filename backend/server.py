@@ -188,7 +188,7 @@ class User(BaseModel):
     wallet_address: Optional[str] = None
     # NEW: Each user gets unique Solana receiving address
     personal_solana_address: Optional[str] = None
-    token_balance: int = Field(default=0)
+    token_balance: int = Field(default=0)  # Starting balance - users must purchase tokens
     is_verified: bool = Field(default=False)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_login: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
