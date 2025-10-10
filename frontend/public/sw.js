@@ -42,31 +42,21 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - BYPASS CACHE FOR HTML
+// EMERGENCY - NO CACHE AT ALL
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  console.log('SW: EMERGENCY MODE - Bypassing cache for:', event.request.url);
   
-  // For HTML files and API calls, always fetch from network
-  if (event.request.mode === 'navigate' || 
-      event.request.destination === 'document' ||
-      url.pathname.endsWith('.html') ||
-      url.pathname.includes('/api/')) {
-    
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        // Only fallback to cache if network fails
-        return caches.match(event.request);
-      })
-    );
-  } else {
-    // For other resources, try cache first
-    event.respondWith(
-      caches.match(event.request)
-        .then((response) => {
-          return response || fetch(event.request);
-        })
-    );
-  }
+  // BYPASS ALL CACHE - Always fetch from network
+  event.respondWith(
+    fetch(event.request.clone()).then(response => {
+      console.log('SW: Fresh response for:', event.request.url);
+      return response;
+    }).catch(error => {
+      console.log('SW: Network failed for:', event.request.url, error);
+      // Only for critical failures, try cache
+      return caches.match(event.request);
+    })
+  );
 });
 
 // Message handler for manual cache refresh
