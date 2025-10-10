@@ -667,6 +667,7 @@ class PaymentMonitor:
                             "sol_eur_price": float(sol_eur_price),
                             "eur_value": float(sol_amount * sol_eur_price),
                             "tokens_credited": int(tokens_to_credit),
+                            "derived_address": derived_address,
                             "timestamp": datetime.now(timezone.utc).isoformat(),
                             "status": "completed"
                         }
