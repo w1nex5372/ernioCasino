@@ -246,7 +246,98 @@ async def send_prize_notification(telegram_id: int, username: str, room_type: st
         logging.error(f"Error sending prize notification: {e}")
         return False
 
-# Solana Address Generation System
+# CoinGecko API Integration for Real-time SOL/EUR Pricing
+class PriceOracle:
+    def __init__(self):
+        self.cached_price = None
+        self.last_update = 0
+        self.cache_duration = 60  # Cache for 60 seconds
+        
+    async def get_sol_eur_price(self) -> float:
+        """Get current SOL price in EUR from CoinGecko API"""
+        try:
+            # Check cache first
+            current_time = time.time()
+            if self.cached_price and (current_time - self.last_update) < self.cache_duration:
+                return self.cached_price
+            
+            # Fetch from CoinGecko
+            url = "https://api.coingecko.com/api/v3/simple/price"
+            params = {
+                "ids": "solana",
+                "vs_currencies": "eur"
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params, timeout=10) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        price = data["solana"]["eur"]
+                        
+                        # Update cache
+                        self.cached_price = float(price)
+                        self.last_update = current_time
+                        
+                        logging.info(f"💰 Updated SOL/EUR price: {price} EUR")
+                        return self.cached_price
+                    else:
+                        logging.error(f"CoinGecko API error: {response.status}")
+                        # Return cached price or fallback
+                        return self.cached_price or 0.0052  # Your fallback rate
+                        
+        except Exception as e:
+            logging.error(f"Error fetching SOL price: {e}")
+            # Return cached price or fallback
+            return self.cached_price or 0.0052
+    
+    def calculate_tokens_from_sol(self, sol_amount: float, sol_eur_price: float) -> int:
+        """Calculate tokens from SOL amount using real-time EUR price"""
+        # SOL → EUR → Tokens (1 EUR = 100 tokens)
+        eur_value = sol_amount * sol_eur_price
+        tokens = int(eur_value * 100)
+        
+        logging.info(f"💱 Conversion: {sol_amount} SOL × {sol_eur_price} EUR/SOL = {eur_value:.4f} EUR = {tokens} tokens")
+        return tokens
+
+# Initialize price oracle
+price_oracle = PriceOracle()
+
+# Payment Request System
+class PaymentRequest:
+    def __init__(self, user_id: str, telegram_id: int, eur_amount: float):
+        self.id = str(uuid.uuid4())[:8]  # Short ID
+        self.user_id = user_id
+        self.telegram_id = telegram_id
+        self.eur_amount = eur_amount
+        self.expected_sol_amount = None
+        self.tokens_to_credit = int(eur_amount * 100)  # 1 EUR = 100 tokens
+        self.created_at = time.time()
+        self.expires_at = time.time() + 300  # 5 minutes
+        self.status = "pending"
+        
+    async def calculate_expected_sol(self) -> float:
+        """Calculate expected SOL amount based on current price"""
+        sol_price = await price_oracle.get_sol_eur_price()
+        self.expected_sol_amount = self.eur_amount / sol_price
+        return self.expected_sol_amount
+    
+    def is_expired(self) -> bool:
+        return time.time() > self.expires_at
+    
+    def matches_payment(self, received_sol: float, tolerance: float = 0.02) -> bool:
+        """Check if received SOL matches expected amount (2% tolerance)"""
+        if not self.expected_sol_amount:
+            return False
+        
+        min_amount = self.expected_sol_amount * (1 - tolerance)
+        max_amount = self.expected_sol_amount * (1 + tolerance)
+        
+        return min_amount <= received_sol <= max_amount
+
+# Payment request storage
+active_payment_requests = {}  # request_id -> PaymentRequest
+
+# Solana Address Generation System (DEPRECATED - now using single casino wallet)
 def generate_unique_solana_address(user_id: str, telegram_id: int) -> str:
     """
     Generate a unique Solana address for a user using deterministic derivation
