@@ -163,21 +163,85 @@ function App() {
     loadGameHistory();
     loadLeaderboard();
     
-    // Demo authentication for mobile testing - IMMEDIATE
-    console.log('🔍 Activating demo mode immediately...');
-    setUser({
-      id: 'demo-user-123',
-      first_name: 'Demo',
-      last_name: 'User', 
-      token_balance: 1500,
-      telegram_id: 123456789
-    });
-    setIsLoading(false);
-    
+    // Telegram authentication
     const authenticateFromTelegram = async () => {
-      // Skip authentication - already set demo user above
-      console.log('Demo user already set for mobile testing');
-      return;
+      try {
+        console.log('🔍 Initializing Telegram Web App authentication...');
+        
+        // Quick check - if no Telegram, fail fast
+        if (typeof window.Telegram === 'undefined') {
+          throw new Error('This casino must be opened through Telegram');
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        if (!window.Telegram || !window.Telegram.WebApp) {
+          throw new Error('This casino must be opened through Telegram');
+        }
+        
+        const webApp = window.Telegram.WebApp;
+        
+        // Check for valid user data
+        if (!webApp.initData && (!webApp.initDataUnsafe || !webApp.initDataUnsafe.user)) {
+          throw new Error('This casino must be opened through Telegram');
+        }
+        
+        console.log('📱 Telegram WebApp detected');
+        
+        webApp.ready();
+        webApp.expand();
+        
+        const telegramUser = webApp.initDataUnsafe?.user;
+        if (!telegramUser || !telegramUser.id) {
+          throw new Error('No Telegram user data available');
+        }
+        
+        const authData = {
+          id: parseInt(telegramUser.id),
+          first_name: telegramUser.first_name || 'Telegram User',
+          last_name: telegramUser.last_name || null,
+          username: telegramUser.username || null,
+          photo_url: telegramUser.photo_url || null,
+          auth_date: Math.floor(Date.now() / 1000),
+          hash: 'telegram_webapp',
+          telegram_id: parseInt(telegramUser.id)
+        };
+
+        const response = await axios.post(`${API}/auth/telegram`, {
+          telegram_auth_data: authData
+        }, {
+          timeout: 15000,
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        setUser(response.data);
+        setIsLoading(false);
+        
+        toast.success(`Welcome to Casino Battle, ${telegramUser.first_name}!`);
+        
+        webApp.enableClosingConfirmation();
+        if (webApp.setHeaderColor) webApp.setHeaderColor('#1e293b');
+        if (webApp.setBackgroundColor) webApp.setBackgroundColor('#0f172a');
+        
+        setTimeout(() => {
+          loadUserPrizes();
+          loadDerivedWallet();
+        }, 1000);
+        
+      } catch (error) {
+        console.error('❌ Authentication failed:', error);
+        
+        if (error.message.includes('Telegram')) {
+          setIsLoading(false);
+          setTelegramError(true);
+        } else if (error.response?.status >= 500) {
+          setIsLoading(true);
+          setTimeout(() => authenticateFromTelegram(), 5000);
+        } else {
+          setIsLoading(false);
+          toast.error(`Authentication failed: ${error.message}`);
+        }
+      }
     };
 
     const initTimeout = setTimeout(authenticateFromTelegram, 200);
