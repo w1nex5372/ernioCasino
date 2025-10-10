@@ -201,8 +201,6 @@ function App() {
           console.error('❌ No Telegram user data available - not in Telegram context');
           throw new Error('This casino must be opened through Telegram');
         }
-        
-        const webApp = window.Telegram.WebApp;
         console.log('📱 Telegram WebApp detected:', {
           version: webApp.version,
           platform: webApp.platform,
