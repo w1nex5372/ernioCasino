@@ -318,22 +318,16 @@ function App() {
     }
   };
 
-  const loadPersonalWallet = async () => {
+  const loadCasinoWallet = async () => {
     try {
-      if (!user || !user.id) {
-        console.log('No user ID available for wallet loading');
-        return;
-      }
-      
-      const response = await axios.get(`${API}/user/${user.id}/wallet`);
-      setCasinoWalletAddress(response.data.personal_wallet_address);
-      console.log('👤 Personal wallet loaded:', response.data.personal_wallet_address);
-      console.log('🔄 Conversion rate:', response.data.conversion_rate);
-      toast.success('Personal wallet address loaded! 💳');
+      const response = await axios.get(`${API}/casino-wallet`);
+      setCasinoWalletAddress(response.data.wallet_address);
+      console.log('🏦 Casino wallet loaded:', response.data.wallet_address);
+      console.log('💰 Current SOL/EUR price:', response.data.current_sol_eur_price);
     } catch (error) {
-      console.error('Failed to load personal wallet:', error);
-      setCasinoWalletAddress('Error loading personal wallet');
-      toast.error('Failed to load your personal wallet address');
+      console.error('Failed to load casino wallet:', error);
+      setCasinoWalletAddress('Error loading wallet');
+      toast.error('Failed to load casino wallet address');
     }
   };
 
