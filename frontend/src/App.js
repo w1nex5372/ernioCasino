@@ -1022,7 +1022,7 @@ function App() {
                   : 'text-slate-400 active:bg-slate-700/50'
               }`}
             >
-              <Coins className="w-5 h-5 mb-1" />
+              <Coins className="w-4 h-4 mb-0.5" />
               <span className="text-xs font-medium leading-tight">Tokens</span>
             </button>
             
