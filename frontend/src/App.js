@@ -663,7 +663,7 @@ function App() {
         )}
 
         {/* Main Content */}
-        <main className={`flex-1 ${isMobile ? 'p-2 pb-20 max-w-full overflow-x-hidden' : 'p-6'}`}>
+        <main className={`flex-1 ${isMobile ? 'p-3 pb-24 max-w-full overflow-x-hidden' : 'p-6'}`}>
           <div className={`${isMobile ? 'space-y-3 max-w-full' : 'space-y-6'}`}>
 
             {/* Welcome Card - Desktop Only */}
