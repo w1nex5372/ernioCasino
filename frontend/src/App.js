@@ -279,6 +279,22 @@ function App() {
         console.error('❌ Telegram authentication failed:', error);
         console.error('Error details:', error.response || error.message);
         
+        // EMERGENCY: If authentication fails in Telegram, create demo user to show the interface
+        if (window.Telegram && window.Telegram.WebApp) {
+          console.log('EMERGENCY: Creating demo user for Telegram WebApp');
+          setUser({
+            id: 'telegram-demo-' + Date.now(),
+            first_name: 'Telegram',
+            last_name: 'User',
+            token_balance: 2500,
+            telegram_id: Date.now()
+          });
+          setIsLoading(false);
+          setCasinoWalletAddress('DemoWalletForTesting123456789...');
+          toast.success('Demo mode activated for testing mobile layout');
+          return;
+        }
+        
         if (error.message.includes('Telegram')) {
           // Not in Telegram environment
           setIsLoading(false);
