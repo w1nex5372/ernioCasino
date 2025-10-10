@@ -163,22 +163,20 @@ function App() {
     loadGameHistory();
     loadLeaderboard();
     
-    // Demo authentication for mobile testing
+    // Demo authentication for mobile testing - IMMEDIATE
+    console.log('🔍 Activating demo mode immediately...');
+    setUser({
+      id: 'demo-user-123',
+      first_name: 'Demo',
+      last_name: 'User', 
+      token_balance: 1500,
+      telegram_id: 123456789
+    });
+    setIsLoading(false);
+    
     const authenticateFromTelegram = async () => {
-      try {
-        console.log('🔍 Activating demo mode for mobile layout testing...');
-        
-        // Use demo mode for mobile layout testing
-        setUser({
-          id: 'demo-user-123',
-          first_name: 'Demo',
-          last_name: 'User',
-          token_balance: 1500,
-          telegram_id: 123456789
-        });
-        setIsLoading(false);
-        toast.success('Demo mode activated');
-        return;
+      // Skip authentication - already set demo user
+      return;
         
         await new Promise(resolve => setTimeout(resolve, 1500));
         
