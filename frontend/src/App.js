@@ -173,11 +173,26 @@ function App() {
         console.log('🔍 Initializing Telegram Web App authentication...');
         
         // Wait for Telegram script to fully load
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        console.log('Checking Telegram environment...');
+        console.log('window.Telegram:', window.Telegram);
+        console.log('window.Telegram?.WebApp:', window.Telegram?.WebApp);
         
         // Check if we're in Telegram environment
         if (!window.Telegram || !window.Telegram.WebApp) {
           console.error('❌ Not running in Telegram Web App environment');
+          throw new Error('This casino must be opened through Telegram');
+        }
+        
+        const webApp = window.Telegram.WebApp;
+        console.log('WebApp object:', webApp);
+        console.log('WebApp.initData:', webApp.initData);
+        console.log('WebApp.initDataUnsafe:', webApp.initDataUnsafe);
+        
+        // Additional check - if no init data, we're likely not in Telegram
+        if (!webApp.initData && (!webApp.initDataUnsafe || !webApp.initDataUnsafe.user)) {
+          console.error('❌ No Telegram user data available - not in Telegram context');
           throw new Error('This casino must be opened through Telegram');
         }
         
