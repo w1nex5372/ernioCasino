@@ -328,8 +328,9 @@ function App() {
           setIsLoading(false);
           toast.error('Authentication data error: ' + (error.response?.data?.detail || error.message));
         } else {
-          setIsLoading(false);
-          toast.error(`Authentication failed: ${error.message}`);
+          // Keep existing user, just log the error
+          console.log('Auth failed but keeping instant access user');
+          toast.error(`Background auth failed: ${error.message}`);
         }
       }
     };
