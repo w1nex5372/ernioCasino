@@ -634,75 +634,129 @@ function App() {
                     const config = ROOM_CONFIGS[roomType];
                     
                     return (
-                      <Card key={roomType} className={`bg-slate-800/90 border-slate-700 overflow-hidden hover:border-yellow-500/50 transition-all duration-300 ${
-                        isMobile ? 'max-w-full w-full mx-auto' : ''
-                      }`}>
-                        <CardHeader className={`bg-gradient-to-br ${config.gradient} text-white relative overflow-hidden`}>
-                          <div className="absolute inset-0 bg-black/10"></div>
-                          <div className="relative z-10">
-                            <div className={`flex items-center justify-between mb-2 ${isMobile ? 'flex-col gap-3' : ''}`}>
-                              <div className="flex items-center gap-3">
-                                <div className={`${isMobile ? 'w-10 h-10' : 'w-12 h-12'} bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm`}>
-                                  <span className={`${isMobile ? 'text-xl' : 'text-2xl'}`}>{config.icon}</span>
+                      <Card key={roomType} className="bg-slate-800/90 border-slate-700 overflow-hidden">
+                        {isMobile ? (
+                          // MOBILE: Compact card layout
+                          <>
+                            <div className={`bg-gradient-to-r ${config.gradient} p-3`}>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-2xl">{config.icon}</span>
+                                  <div>
+                                    <h3 className="text-white font-bold text-lg">{config.name}</h3>
+                                    <p className="text-white/80 text-sm">{config.min} - {config.max} tokens</p>
+                                  </div>
                                 </div>
-                                <div className={isMobile ? 'text-center' : ''}>
-                                  <CardTitle className={`${isMobile ? 'text-base' : 'text-xl'} font-bold leading-tight`}>
-                                    {config.name}
-                                  </CardTitle>
-                                  <CardDescription className={`text-white/90 font-medium ${isMobile ? 'text-xs' : ''} leading-tight`}>
-                                    {config.min} - {config.max} tokens
-                                  </CardDescription>
-                                </div>
+                                <Badge className="bg-white/20 text-white text-xs px-2 py-1">
+                                  {room.players_count}/2
+                                </Badge>
                               </div>
-                              <Badge className="bg-white/20 text-white font-bold">
-                                {room.players_count}/2 players
-                              </Badge>
                             </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="p-4">
-                          <div className="space-y-4">
-                            {room.players_count === 0 && (
-                              <p className="text-slate-400 text-sm text-center">No players yet. Be the first to join!</p>
-                            )}
-                            
-                            {room.players_count === 1 && (
-                              <p className="text-yellow-400 text-sm text-center font-medium">1 player waiting. Join now!</p>
-                            )}
-                            
-                            {room.players_count >= 2 && (
-                              <p className="text-red-400 text-sm text-center font-medium">Room full - game in progress</p>
-                            )}
-                            
-                            <div className="space-y-3">
+                            <div className="p-4 space-y-3">
+                              {room.players_count === 0 && (
+                                <p className="text-slate-400 text-sm text-center">No players yet</p>
+                              )}
+                              {room.players_count === 1 && (
+                                <p className="text-yellow-400 text-sm text-center font-medium">1 player waiting</p>
+                              )}
+                              {room.players_count >= 2 && (
+                                <p className="text-red-400 text-sm text-center font-medium">Room full</p>
+                              )}
+                              
                               <Input
                                 type="number"
-                                placeholder={`Bet amount (${config.min}-${config.max})`}
+                                placeholder={`${config.min}-${config.max} tokens`}
                                 value={selectedRoom === roomType ? betAmount : ''}
                                 onChange={(e) => {
                                   setSelectedRoom(roomType);
                                   setBetAmount(e.target.value);
                                 }}
-                                min={config.min}
-                                max={config.max}
-                                className="bg-slate-700 border-slate-600 text-white"
+                                className="bg-slate-700 border-slate-600 text-white text-center h-10"
                               />
                               
                               <Button
                                 onClick={() => joinRoom(roomType)}
                                 disabled={room.players_count >= 2 || !betAmount || user.token_balance < betAmount}
-                                className={`w-full ${
+                                className={`w-full h-12 text-white font-bold ${
                                   room.players_count >= 2 
                                     ? 'bg-slate-600 cursor-not-allowed' 
-                                    : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600'
-                                } text-white font-bold py-3`}
+                                    : 'bg-green-600 hover:bg-green-700'
+                                }`}
                               >
                                 <Play className="w-4 h-4 mr-2" />
-                                {room.players_count >= 2 ? 'Room Full' : 'Join Battle'}
+                                {room.players_count >= 2 ? 'Full' : 'Join'}
                               </Button>
                             </div>
-                          </div>
-                        </CardContent>
+                          </>
+                        ) : (
+                          // DESKTOP: Full card layout
+                          <>
+                            <CardHeader className={`bg-gradient-to-br ${config.gradient} text-white relative overflow-hidden`}>
+                              <div className="absolute inset-0 bg-black/10"></div>
+                              <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                                      <span className="text-2xl">{config.icon}</span>
+                                    </div>
+                                    <div>
+                                      <CardTitle className="text-xl font-bold leading-tight">
+                                        {config.name}
+                                      </CardTitle>
+                                      <CardDescription className="text-white/90 font-medium leading-tight">
+                                        {config.min} - {config.max} tokens
+                                      </CardDescription>
+                                    </div>
+                                  </div>
+                                  <Badge className="bg-white/20 text-white font-bold">
+                                    {room.players_count}/2 players
+                                  </Badge>
+                                </div>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="p-4">
+                              <div className="space-y-4">
+                                {room.players_count === 0 && (
+                                  <p className="text-slate-400 text-sm text-center">No players yet. Be the first to join!</p>
+                                )}
+                                {room.players_count === 1 && (
+                                  <p className="text-yellow-400 text-sm text-center font-medium">1 player waiting. Join now!</p>
+                                )}
+                                {room.players_count >= 2 && (
+                                  <p className="text-red-400 text-sm text-center font-medium">Room full - game in progress</p>
+                                )}
+                                
+                                <div className="space-y-3">
+                                  <Input
+                                    type="number"
+                                    placeholder={`Bet amount (${config.min}-${config.max})`}
+                                    value={selectedRoom === roomType ? betAmount : ''}
+                                    onChange={(e) => {
+                                      setSelectedRoom(roomType);
+                                      setBetAmount(e.target.value);
+                                    }}
+                                    min={config.min}
+                                    max={config.max}
+                                    className="bg-slate-700 border-slate-600 text-white"
+                                  />
+                                  
+                                  <Button
+                                    onClick={() => joinRoom(roomType)}
+                                    disabled={room.players_count >= 2 || !betAmount || user.token_balance < betAmount}
+                                    className={`w-full ${
+                                      room.players_count >= 2 
+                                        ? 'bg-slate-600 cursor-not-allowed' 
+                                        : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600'
+                                    } text-white font-bold py-3`}
+                                  >
+                                    <Play className="w-4 h-4 mr-2" />
+                                    {room.players_count >= 2 ? 'Room Full' : 'Join Battle'}
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </>
+                        )}
                       </Card>
                     );
                   })}
