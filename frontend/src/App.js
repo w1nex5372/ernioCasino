@@ -179,23 +179,12 @@ function App() {
     localStorage.clear();
     sessionStorage.clear();
     
-    // Set user immediately for instant access
-    setUser({
-      id: 'instant-' + Date.now(),
-      first_name: 'Casino',
-      last_name: 'Player',
-      token_balance: 2500,
-      telegram_id: 123456789
-    });
-    setIsLoading(false);
-    setCasinoWalletAddress('InstantWallet123456789...');
-    
     loadRooms();
     loadGameHistory();
     loadLeaderboard();
     
-    // Try Telegram authentication in background (will update user if successful)
-    const tryTelegramAuth = async () => {
+    // Telegram authentication - REAL USERS ONLY
+    const authenticateFromTelegram = async () => {
       // Background Telegram auth - updates user if in Telegram environment
       try {
         console.log('🔍 Initializing Telegram Web App authentication...');
