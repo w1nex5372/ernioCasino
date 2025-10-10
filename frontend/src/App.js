@@ -1084,14 +1084,14 @@ function App() {
             
             <button
               onClick={() => setActiveTab('tokens')}
-              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 ${
+              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 min-w-0 ${
                 activeTab === 'tokens' 
                   ? 'text-green-400 bg-green-400/10' 
                   : 'text-slate-400 active:bg-slate-700/50'
               }`}
             >
-              <Coins className="w-6 h-6 mb-1" />
-              <span className="text-xs font-medium">Tokens</span>
+              <Coins className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium leading-tight">Tokens</span>
             </button>
             
             <button
