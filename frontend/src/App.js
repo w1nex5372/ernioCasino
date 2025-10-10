@@ -650,23 +650,23 @@ function App() {
                         {isMobile ? (
                           // MOBILE: Compact card layout - fixed overflow
                           <div className="w-full max-w-full overflow-hidden">
-                            <div className={`bg-gradient-to-r ${config.gradient} p-3`}>
+                            <div className={`bg-gradient-to-r ${config.gradient} p-2`}>
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                                  <span className="text-xl flex-shrink-0">{config.icon}</span>
+                                  <span className="text-lg flex-shrink-0">{config.icon}</span>
                                   <div className="min-w-0 flex-1">
-                                    <h3 className="text-white font-bold text-base truncate">{config.name}</h3>
-                                    <p className="text-white/80 text-xs truncate">{config.min}-{config.max} tokens</p>
+                                    <h3 className="text-white font-bold text-sm truncate">{config.name}</h3>
+                                    <p className="text-white/80 text-xs truncate">{config.min}-{config.max}</p>
                                   </div>
                                 </div>
-                                <Badge className="bg-white/20 text-white text-xs px-2 py-1 flex-shrink-0">
+                                <Badge className="bg-white/20 text-white text-xs px-1 py-0.5 flex-shrink-0">
                                   {room.players_count}/2
                                 </Badge>
                               </div>
                             </div>
-                            <div className="p-3 space-y-3">
+                            <div className="p-2 space-y-2">
                               {room.players_count === 0 && (
-                                <p className="text-slate-400 text-xs text-center">Empty room</p>
+                                <p className="text-slate-400 text-xs text-center">Empty</p>
                               )}
                               {room.players_count === 1 && (
                                 <p className="text-yellow-400 text-xs text-center font-medium">1 waiting</p>
@@ -683,20 +683,20 @@ function App() {
                                   setSelectedRoom(roomType);
                                   setBetAmount(e.target.value);
                                 }}
-                                className="bg-slate-700 border-slate-600 text-white text-center h-10 text-sm"
+                                className="bg-slate-700 border-slate-500 text-white text-center h-9 text-sm placeholder:text-slate-400 focus:border-yellow-400"
                               />
                               
                               <Button
                                 onClick={() => joinRoom(roomType)}
                                 disabled={room.players_count >= 2 || !betAmount || user.token_balance < betAmount}
-                                className={`w-full h-10 text-white font-semibold text-sm ${
+                                className={`w-full h-9 text-white font-semibold text-sm ${
                                   room.players_count >= 2 
                                     ? 'bg-slate-600 cursor-not-allowed' 
                                     : 'bg-green-600 hover:bg-green-700'
                                 }`}
                               >
                                 <Play className="w-3 h-3 mr-1" />
-                                {room.players_count >= 2 ? 'Full' : 'Join Battle'}
+                                {room.players_count >= 2 ? 'Full' : 'Join'}
                               </Button>
                             </div>
                           </div>
