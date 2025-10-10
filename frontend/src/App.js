@@ -338,26 +338,10 @@ function App() {
       }
     };
 
-    // Start authentication immediately
-    authenticateFromTelegram();
+    // AUTHENTICATION DISABLED - INSTANT ACCESS MODE
+    console.log('Instant access mode - no authentication needed');
     
-    // Also set a backup timeout in case authentication gets stuck
-    const backupTimeout = setTimeout(() => {
-      if (isLoading && !user) {
-        console.log('Authentication timeout - forcing preview mode');
-        setUser({
-          id: 'timeout-user-' + Date.now(),
-          first_name: 'Timeout',
-          last_name: 'User',
-          token_balance: 1500,
-          telegram_id: 888888888
-        });
-        setIsLoading(false);
-        toast.success('Backup authentication activated');
-      }
-    }, 5000);
-    
-    return () => clearTimeout(backupTimeout);
+    // No timeouts needed since user is set immediately above
   }, []);
 
   // Data loading functions
