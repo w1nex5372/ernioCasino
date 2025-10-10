@@ -317,7 +317,6 @@ function App() {
         console.log('Keeping instant access user since background auth failed');
       }
     };
-    };
 
     // Try background authentication (won't block UI)
     setTimeout(tryTelegramAuth, 1000);
