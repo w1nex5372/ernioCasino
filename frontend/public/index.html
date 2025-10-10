@@ -163,5 +163,44 @@
                 person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
             });
         </script>
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                    // Force update service worker for mobile layout fixes
+                    navigator.serviceWorker.register('/sw.js')
+                        .then(function(registration) {
+                            console.log('SW registered with scope: ', registration.scope);
+                            // Check for updates immediately
+                            registration.update();
+                            
+                            // Listen for new service worker
+                            registration.addEventListener('updatefound', () => {
+                                console.log('New service worker found, forcing reload...');
+                                const newWorker = registration.installing;
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        console.log('New content is available, reloading...');
+                                        window.location.reload();
+                                    }
+                                });
+                            });
+                        }, function(err) {
+                            console.log('SW registration failed: ', err);
+                        });
+                });
+            }
+            
+            // Force cache clear for mobile layout fixes
+            if ('caches' in window) {
+                caches.keys().then(function(names) {
+                    names.forEach(function(name) {
+                        if (name.includes('casino-battle-v1')) {
+                            console.log('Clearing old cache:', name);
+                            caches.delete(name);
+                        }
+                    });
+                });
+            }
+        </script>
     </body>
 </html>
