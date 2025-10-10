@@ -604,11 +604,11 @@ function App() {
 
             {/* Battle Rooms Tab */}
             {activeTab === 'rooms' && (
-              <div className="space-y-6">
+              <div className={isMobile ? 'space-y-4' : 'space-y-6'}>
                 {isMobile ? (
-                  <div className="text-center py-3 px-4">
-                    <h2 className="text-lg font-bold text-white mb-2 leading-tight">Casino Rooms</h2>
-                    <p className="text-xs text-slate-400 leading-relaxed">
+                  <div className="text-center py-4 px-3">
+                    <h2 className="text-xl font-bold text-white mb-2">Casino Rooms</h2>
+                    <p className="text-sm text-slate-400">
                       2 players • Higher bet = better odds
                     </p>
                   </div>
@@ -628,7 +628,7 @@ function App() {
                   </div>
                 )}
                 
-                <div className={`grid gap-4 md:gap-8 max-w-7xl mx-auto ${isMobile ? 'grid-cols-1 px-2' : 'lg:grid-cols-3 md:grid-cols-2 grid-cols-1'}`}>
+                <div className={`grid gap-4 ${isMobile ? 'grid-cols-1 px-3' : 'lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto'}`}>
                   {['bronze', 'silver', 'gold'].map((roomType) => {
                     const room = rooms.find(r => r.room_type === roomType) || { players_count: 0 };
                     const config = ROOM_CONFIGS[roomType];
