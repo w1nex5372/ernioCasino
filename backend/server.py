@@ -1268,7 +1268,9 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         'room_type': target_room.room_type,
         'player': player.dict(),
         'players_count': len(target_room.players),
-        'prize_pool': target_room.prize_pool
+        'prize_pool': target_room.prize_pool,
+        'all_players': [p.dict() for p in target_room.players],  # All participants for display
+        'room_status': 'filling' if len(target_room.players) == 1 else 'ready'
     })
     
     # Broadcast updated room states to all clients
