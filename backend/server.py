@@ -19,7 +19,10 @@ import hmac
 import aiohttp
 from solana.rpc.async_api import AsyncClient
 from solders.pubkey import Pubkey
+from solders.keypair import Keypair
+from solders.system_program import transfer, TransferParams
 import time
+import base58
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
