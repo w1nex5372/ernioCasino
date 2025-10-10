@@ -71,15 +71,16 @@ function App() {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [betAmount, setBetAmount] = useState('');
 
-  // Mobile detection - portrait mode optimized
+  // Mobile detection - force mobile for Telegram WebApp
   useEffect(() => {
     const checkMobile = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      // Detect mobile: portrait mode OR narrow screens
-      const shouldBeMobile = width <= 768 || (height > width && width <= 1024);
+      // Force mobile in Telegram WebApp environment or narrow screens
+      const isTelegram = window.Telegram && window.Telegram.WebApp;
+      const shouldBeMobile = width <= 768 || isTelegram || (height > width && width <= 1024);
       setIsMobile(shouldBeMobile);
-      console.log(`Mobile detection: width=${width}, height=${height}, isMobile=${shouldBeMobile}`);
+      console.log(`Mobile detection: width=${width}, height=${height}, isTelegram=${!!isTelegram}, isMobile=${shouldBeMobile}`);
     };
     
     checkMobile();
