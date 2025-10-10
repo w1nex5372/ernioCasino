@@ -363,16 +363,23 @@ function App() {
     }
   };
 
-  const loadCasinoWallet = async () => {
+  const loadDerivedWallet = async () => {
     try {
-      const response = await axios.get(`${API}/casino-wallet`);
-      setCasinoWalletAddress(response.data.wallet_address);
-      console.log('🏦 Casino wallet loaded:', response.data.wallet_address);
+      if (!user || !user.id) {
+        console.log('No user ID available for derived wallet loading');
+        return;
+      }
+      
+      const response = await axios.get(`${API}/user/${user.id}/derived-wallet`);
+      setCasinoWalletAddress(response.data.derived_wallet_address);
+      console.log('🔑 Personal derived wallet loaded:', response.data.derived_wallet_address);
       console.log('💰 Current SOL/EUR price:', response.data.current_sol_eur_price);
+      console.log('🔄 Conversion:', response.data.conversion_rate);
+      toast.success('Your personal wallet address loaded! 🎯');
     } catch (error) {
-      console.error('Failed to load casino wallet:', error);
-      setCasinoWalletAddress('Error loading wallet');
-      toast.error('Failed to load casino wallet address');
+      console.error('Failed to load derived wallet:', error);
+      setCasinoWalletAddress('Error loading personal wallet');
+      toast.error('Failed to load your personal wallet address');
     }
   };
 
