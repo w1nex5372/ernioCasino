@@ -577,7 +577,7 @@ function App() {
 
             {/* Welcome Card - Desktop Only */}
             {!isMobile && (
-              <Card className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border-green-500/30">
+              <Card className="desktop-welcome-card bg-gradient-to-r from-green-600/20 to-emerald-600/20 border-green-500/30">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
