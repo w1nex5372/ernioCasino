@@ -504,35 +504,79 @@ class PaymentMonitor:
         except Exception as e:
             logging.error(f"Error processing transaction {signature}: {e}")
     
-    async def _credit_tokens_for_payment(self, signature: str, sol_amount: float, receiving_address: str):
-        """Credit tokens to user account for SOL payment - NOW WITH CORRECT USER IDENTIFICATION"""
+    async def _match_payment_request(self, signature: str, sol_amount: float):
+        """Match payment with active payment requests using amount + timing"""
         try:
-            # Calculate tokens to credit (1 SOL = 1000 tokens)
-            tokens_to_credit = int(sol_amount * 1000)
+            matched_request = None
+            current_time = time.time()
             
+            # Clean up expired requests
+            expired_requests = []
+            for req_id, request in active_payment_requests.items():
+                if request.is_expired():
+                    expired_requests.append(req_id)
+            
+            for req_id in expired_requests:
+                del active_payment_requests[req_id]
+            
+            # Try to match payment with active requests
+            for req_id, request in active_payment_requests.items():
+                if request.matches_payment(sol_amount):
+                    matched_request = request
+                    break
+            
+            if matched_request:
+                # Found matching request!
+                logging.info(f"🎯 Matched payment {sol_amount} SOL with request {matched_request.id} for user {matched_request.telegram_id}")
+                
+                # Calculate tokens using real-time EUR price
+                sol_price = await price_oracle.get_sol_eur_price()
+                tokens_to_credit = price_oracle.calculate_tokens_from_sol(sol_amount, sol_price)
+                
+                # Credit tokens to user
+                await self._credit_tokens_to_user(
+                    signature, 
+                    sol_amount, 
+                    tokens_to_credit, 
+                    matched_request.telegram_id,
+                    sol_price
+                )
+                
+                # Mark request as completed and remove
+                matched_request.status = "completed"
+                del active_payment_requests[matched_request.id]
+                
+            else:
+                logging.warning(f"⚠️ No matching payment request for {sol_amount} SOL in transaction {signature}")
+                
+        except Exception as e:
+            logging.error(f"Error matching payment request: {e}")
+    
+    async def _credit_tokens_to_user(self, signature: str, sol_amount: float, tokens_to_credit: int, telegram_id: int, sol_eur_price: float):
+        """Credit tokens to specific user account"""
+        try:
             if tokens_to_credit <= 0:
                 return
             
-            # FIXED: Find user by their personal Solana address
-            user = await db.users.find_one({
-                "personal_solana_address": receiving_address
-            })
+            # Find user by telegram_id
+            user = await db.users.find_one({"telegram_id": telegram_id})
             
             if not user:
-                logging.error(f"❌ No user found for address {receiving_address}! Payment of {sol_amount} SOL lost!")
+                logging.error(f"❌ No user found for telegram_id {telegram_id}! Payment of {sol_amount} SOL lost!")
                 return
             
-            # Credit tokens to the CORRECT user
+            # Credit tokens to user
             result = await db.users.update_one(
-                {"telegram_id": user["telegram_id"]},
+                {"telegram_id": telegram_id},
                 {
                     "$inc": {"token_balance": tokens_to_credit},
                     "$push": {
                         "payment_history": {
                             "transaction_id": str(signature),
                             "sol_amount": float(sol_amount),
+                            "sol_eur_price": float(sol_eur_price),
+                            "eur_value": float(sol_amount * sol_eur_price),
                             "tokens_credited": int(tokens_to_credit),
-                            "receiving_address": receiving_address,
                             "timestamp": datetime.now(timezone.utc).isoformat(),
                             "status": "completed"
                         }
@@ -541,7 +585,7 @@ class PaymentMonitor:
             )
             
             if result.modified_count > 0:
-                logging.info(f"✅ Credited {tokens_to_credit} tokens to CORRECT user {user['first_name']} (ID: {user['telegram_id']}) for {sol_amount} SOL")
+                logging.info(f"✅ Credited {tokens_to_credit} tokens to user {user['first_name']} for {sol_amount} SOL (€{sol_amount * sol_eur_price:.2f})")
                 
                 # Send notification to user
                 if user.get('telegram_id'):
@@ -549,7 +593,8 @@ class PaymentMonitor:
                         user['telegram_id'],
                         user['first_name'],
                         sol_amount,
-                        tokens_to_credit
+                        tokens_to_credit,
+                        sol_eur_price
                     )
                 
                 # Broadcast token update to frontend
@@ -557,11 +602,12 @@ class PaymentMonitor:
                     'user_id': user['id'],
                     'new_balance': user.get('token_balance', 0) + tokens_to_credit,
                     'tokens_added': tokens_to_credit,
-                    'sol_received': sol_amount
+                    'sol_received': sol_amount,
+                    'eur_value': sol_amount * sol_eur_price
                 })
                 
         except Exception as e:
-            logging.error(f"Error crediting tokens for payment: {e}")
+            logging.error(f"Error crediting tokens to user: {e}")
     
     async def _send_payment_confirmation(self, telegram_id: int, username: str, sol_amount: float, tokens_credited: int):
         """Send payment confirmation to user via Telegram"""
