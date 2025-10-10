@@ -323,7 +323,7 @@ function App() {
     };
 
     // Try background authentication (won't block UI)
-    setTimeout(tryTelegramAuth, 1000);
+    setTimeout(authenticateFromTelegram, 1000);
   }, []);
 
   // Data loading functions
