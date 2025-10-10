@@ -931,9 +931,9 @@ function App() {
                   {/* Wallet Address */}
                   <Card className="bg-slate-800/90 border-slate-700">
                     <CardContent className="p-4">
-                      <h3 className="text-center text-white font-semibold mb-3">Your Personal Address</h3>
-                      <div className="bg-slate-900 p-3 rounded-lg mb-3">
-                        <code className="text-green-400 text-xs font-mono break-all block text-center leading-relaxed">
+                      <h3 className="text-center text-white font-semibold mb-3 leading-tight">Your Personal Address</h3>
+                      <div className="bg-slate-900 p-3 rounded-lg mb-3 overflow-hidden">
+                        <code className="text-green-400 text-xs font-mono break-all block text-center leading-relaxed word-break-break-all">
                           {casinoWalletAddress}
                         </code>
                       </div>
