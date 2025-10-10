@@ -72,13 +72,10 @@ class SolanaWalletDerivation:
             
             # For demo purposes, we'll track this address but won't need the private key
             # In production, you'd use proper Solana keypair derivation libraries
-            derived_address = str(derived_keypair.pubkey())
-            
             logging.info(f"🎯 Derived address for user {telegram_id}: {derived_address}")
             
             return {
                 "address": derived_address,
-                "private_key_base58": base58.b58encode(derived_keypair.secret()).decode(),
                 "user_id": user_id,
                 "telegram_id": telegram_id,
                 "derivation_path": seed_string
