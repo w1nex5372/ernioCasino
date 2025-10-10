@@ -1,5 +1,5 @@
-// Casino Battle Royale Service Worker - FORCE UPDATE v3
-const CACHE_NAME = 'casino-battle-v3-force-update-20241010';
+// Casino Battle Royale Service Worker - EMERGENCY UPDATE v4
+const CACHE_NAME = 'casino-battle-EMERGENCY-v4-' + Date.now();
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',
