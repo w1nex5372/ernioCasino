@@ -219,8 +219,6 @@ function App() {
           telegram_id: parseInt(user.id) // Ensure telegram_id is set for notifications
         };
 
-        console.log('📤 Sending auth data to backend:', authData);
-
         // Authenticate with backend
         const response = await axios.post(`${API}/auth/telegram`, {
           telegram_auth_data: authData
@@ -230,8 +228,6 @@ function App() {
             'Content-Type': 'application/json'
           }
         });
-
-        console.log('✅ Authentication successful:', response.data);
         
         // Set user and stop loading
         setUser(response.data);
