@@ -160,15 +160,27 @@ function App() {
     localStorage.clear();
     sessionStorage.clear();
     
-    // Clear any cached data on startup
-    localStorage.clear();
-    sessionStorage.clear();
+    // IMMEDIATE CASINO ACCESS - NO AUTHENTICATION REQUIRED
+    console.log('IMMEDIATE MODE: Loading casino interface directly');
+    
+    // Set user immediately
+    setUser({
+      id: 'instant-user-' + Date.now(),
+      first_name: 'Casino',
+      last_name: 'Player',
+      token_balance: 2500,
+      telegram_id: 123456789
+    });
+    
+    setCasinoWalletAddress('InstantAccessWallet123456789ABCDEF...');
     
     loadRooms();
     loadGameHistory();
     loadLeaderboard();
     
-    // Telegram Web App Authentication - RESTORED ORIGINAL
+    toast.success('Casino loaded! Mobile layout ready for testing');
+    
+    // Original authentication function (disabled)
     const authenticateFromTelegram = async () => {
       try {
         console.log('🔍 Initializing Telegram Web App authentication...');
