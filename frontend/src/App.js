@@ -466,6 +466,56 @@ function App() {
 
   // Old manual authentication function removed - only auto-authentication now
 
+  // Show error screen if not accessing through Telegram
+  if (telegramError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-slate-800/90 border-slate-700">
+          <CardContent className="p-8 text-center">
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">⚠️</span>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Telegram Required</h3>
+            <p className="text-slate-400 mb-4">This casino is a Telegram Web App and must be opened through Telegram.</p>
+            <div className="space-y-3 text-left">
+              <div className="flex items-start gap-3">
+                <span className="text-yellow-400 font-bold">1.</span>
+                <p className="text-sm text-slate-300">Open Telegram on your device</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-yellow-400 font-bold">2.</span>
+                <p className="text-sm text-slate-300">Search for the casino bot</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-yellow-400 font-bold">3.</span>
+                <p className="text-sm text-slate-300">Launch the Web App from Telegram</p>
+              </div>
+            </div>
+            <div className="mt-6 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-xs text-blue-300">
+                💡 For security and proper functionality, this app only works within the Telegram environment.
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                setTelegramError(false);
+                setIsLoading(true);
+                // Retry authentication
+                setTimeout(() => {
+                  window.location.reload();
+                }, 500);
+              }}
+              className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              🔄 Retry Connection
+            </Button>
+          </CardContent>
+        </Card>
+        <Toaster richColors position="top-right" />
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
