@@ -217,6 +217,21 @@ frontend:
           agent: "testing"
           comment: "TESTED: Complete frontend UI flow working perfectly. App loads correctly with proper Telegram authentication requirement. All critical areas tested: 1) Initial loading shows 'Casino Battle Royale' title and 'Connect Telegram Account' button correctly 2) Token purchase section displays casino wallet address and exchange rate (1 SOL = 1,000 tokens) 3) UI navigation system with sidebar for Battle Rooms, Leaderboard, History, Buy Tokens, My Prizes tabs 4) Room cards show Bronze/Silver/Gold with correct betting ranges (150-450, 500-1500, 2000-8000 tokens) and room icons (🥉🥈🥇) 5) My Prizes tab accessible with proper 'No Prizes Yet' message and 'Claim Prize' buttons functionality 6) Responsive design works on both desktop (1920x800) and mobile (375x800) viewports 7) WebSocket connection attempts detected, proper error handling for non-Telegram environment 8) Professional UI with proper spacing, colors, and security indicators. All functionality working as expected."
 
+  - task: "Mobile Portrait Layout Optimization"
+    implemented: false
+    working: false
+    file: "frontend/src/App.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "User reported mobile portrait layout has illogical and interrupted text display issues"
+        - working: false
+          agent: "main"
+          comment: "Need to review and optimize mobile layout for better text flow and readability in portrait orientation"
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
