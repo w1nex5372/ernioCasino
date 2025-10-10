@@ -722,7 +722,7 @@ function App() {
                   </div>
                 )}
                 
-                <div className={`grid gap-4 md:gap-8 max-w-7xl mx-auto ${isMobile ? 'grid-cols-1' : 'lg:grid-cols-3 md:grid-cols-2 grid-cols-1'}`}>
+                <div className={`grid gap-4 md:gap-8 max-w-7xl mx-auto ${isMobile ? 'grid-cols-1 px-2' : 'lg:grid-cols-3 md:grid-cols-2 grid-cols-1'}`}>
                 {['bronze', 'silver', 'gold'].map((roomType) => {
                   const room = rooms.find(r => r.room_type === roomType) || { players_count: 0, prize_pool: 0 };
                   const config = ROOM_CONFIGS[roomType];
