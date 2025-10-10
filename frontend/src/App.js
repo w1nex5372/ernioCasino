@@ -497,7 +497,7 @@ function App() {
       <div className="flex">
         {/* Desktop Sidebar */}
         {!isMobile && (
-          <nav className="w-64 bg-slate-800/50 backdrop-blur-sm border-r border-slate-700 min-h-screen p-4">
+          <nav className="desktop-sidebar w-64 bg-slate-800/50 backdrop-blur-sm border-r border-slate-700 min-h-screen p-4">
             <div className="space-y-2">
               <button
                 onClick={() => setActiveTab('rooms')}
