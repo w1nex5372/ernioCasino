@@ -165,9 +165,19 @@ function App() {
       try {
         console.log('🔍 Initializing Telegram Web App authentication...');
         
-        // Quick check - if no Telegram, fail fast
+        // Quick check - if no Telegram, use demo mode for mobile testing
         if (typeof window.Telegram === 'undefined') {
-          throw new Error('This casino must be opened through Telegram');
+          console.log('No Telegram found, activating demo mode');
+          setUser({
+            id: 'demo-user-123',
+            first_name: 'Demo',
+            last_name: 'User',
+            token_balance: 1500,
+            telegram_id: 123456789
+          });
+          setIsLoading(false);
+          toast.success('Demo mode activated for testing');
+          return;
         }
         
         await new Promise(resolve => setTimeout(resolve, 1500));
