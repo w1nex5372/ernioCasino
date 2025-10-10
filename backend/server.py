@@ -1338,10 +1338,12 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         background_tasks.add_task(start_game_round, target_room)
     
     return {
+        "status": "joined",
         "success": True,
         "room_id": target_room.id,
         "position": len(target_room.players),
-        "players_needed": 2 - len(target_room.players)
+        "players_needed": 2 - len(target_room.players),
+        "new_balance": user_doc.get('token_balance', 0) - request.bet_amount
     }
 
 @api_router.get("/room/{room_id}")
