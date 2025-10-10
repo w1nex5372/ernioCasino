@@ -1047,6 +1047,62 @@ async def get_casino_wallet():
         logging.error(f"Error getting casino wallet info: {e}")
         raise HTTPException(status_code=500, detail="Failed to get wallet info")
 
+@api_router.post("/admin/add-tokens")
+async def add_tokens_to_user(admin_key: str, username: str, tokens: int):
+    """Add tokens to a specific user by username"""
+    
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    try:
+        # Find user by username
+        user_doc = await db.users.find_one({"username": username})
+        
+        if user_doc:
+            # Update existing user
+            result = await db.users.update_one(
+                {"username": username},
+                {"$inc": {"token_balance": tokens}}
+            )
+            
+            new_balance = user_doc.get('token_balance', 0) + tokens
+            
+            return {
+                "status": "success",
+                "message": f"Added {tokens} tokens to existing user {username}",
+                "new_balance": new_balance,
+                "user_id": user_doc.get('id')
+            }
+        else:
+            # Create new user with tokens
+            new_user_id = str(uuid.uuid4())
+            
+            new_user = {
+                "id": new_user_id,
+                "telegram_id": 999000000 + hash(username) % 1000000,  # Generate fake telegram_id
+                "first_name": username.replace("@", "").title(),
+                "last_name": "",
+                "username": username,
+                "photo_url": "",
+                "token_balance": tokens,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "last_login": datetime.now(timezone.utc).isoformat(),
+                "is_verified": True
+            }
+            
+            await db.users.insert_one(new_user)
+            
+            return {
+                "status": "success", 
+                "message": f"Created new user {username} with {tokens} tokens",
+                "new_balance": tokens,
+                "user_id": new_user_id
+            }
+            
+    except Exception as e:
+        logging.error(f"Failed to add tokens: {e}")
+        raise HTTPException(status_code=500, detail="Failed to add tokens")
+
 @api_router.post("/admin/cleanup-database")
 async def cleanup_database_for_production(admin_key: str):
     """ADMIN ONLY: Clean database for production launch"""
