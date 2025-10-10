@@ -487,7 +487,7 @@ function App() {
                 <Crown className="w-5 h-5 text-yellow-400 flex-shrink-0" />
                 <div>
                   <h1 className="text-sm font-bold text-white">Casino</h1>
-                  <div className="text-xs text-green-400">v3.0</div>
+                  <div className="text-xs text-red-400 font-bold">v4.0 EMERGENCY</div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
