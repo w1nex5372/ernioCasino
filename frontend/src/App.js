@@ -312,27 +312,11 @@ function App() {
         }, 1000);
         
       } catch (error) {
-        console.error('❌ Authentication failed:', error);
-        console.error('Error response:', error.response);
-        console.error('Error message:', error.message);
-        
-        if (error.message.includes('Telegram')) {
-          setIsLoading(false);
-          setTelegramError(true);
-        } else if (error.response?.status >= 500) {
-          console.log('Server error, retrying in 5 seconds...');
-          toast.error('Server error, retrying...');
-          setTimeout(() => authenticateFromTelegram(), 5000);
-        } else if (error.response?.status === 400) {
-          console.log('Bad request:', error.response.data);
-          setIsLoading(false);
-          toast.error('Authentication data error: ' + (error.response?.data?.detail || error.message));
-        } else {
-          // Keep existing user, just log the error
-          console.log('Auth failed but keeping instant access user');
-          toast.error(`Background auth failed: ${error.message}`);
-        }
+        console.error('❌ Background authentication failed:', error);
+        // Keep existing instant access user - don't change UI
+        console.log('Keeping instant access user since background auth failed');
       }
+    };
     };
 
     // Try background authentication (won't block UI)
