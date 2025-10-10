@@ -509,9 +509,9 @@ function App() {
           {isMobile ? (
             /* Mobile Header - Simplified */
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Crown className="w-6 h-6 text-yellow-400" />
-                <h1 className="text-lg font-bold text-white">Casino</h1>
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <Crown className="w-6 h-6 text-yellow-400 flex-shrink-0" />
+                <h1 className="text-lg font-bold text-white truncate">Casino</h1>
               </div>
               <div className="flex items-center gap-2">
                 <div className="text-right min-w-0 flex-shrink-0">
