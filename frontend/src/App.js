@@ -560,6 +560,17 @@ function App() {
         <main className={`flex-1 ${isMobile ? 'p-3 pb-24 max-w-full overflow-x-hidden' : 'p-6'}`}>
           <div className={`${isMobile ? 'space-y-3 max-w-full' : 'space-y-6'}`}>
 
+            {/* Mobile Welcome Header */}
+            {isMobile && (
+              <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/30 rounded-lg p-4 mb-4">
+                <div className="text-center">
+                  <h3 className="text-lg font-bold text-white mb-1">Welcome, {user.first_name}!</h3>
+                  <p className="text-green-200 text-sm mb-2">Send SOL → Get Tokens</p>
+                  <p className="text-yellow-400 font-semibold">Balance: {user.token_balance || 0} tokens</p>
+                </div>
+              </div>
+            )}
+
             {/* Welcome Card - Desktop Only */}
             {!isMobile && (
               <Card className="desktop-welcome-card bg-gradient-to-r from-green-600/20 to-emerald-600/20 border-green-500/30">
