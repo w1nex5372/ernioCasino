@@ -267,12 +267,20 @@ function App() {
         
       } catch (error) {
         console.error('❌ Authentication failed:', error);
+        console.error('Error response:', error.response);
+        console.error('Error message:', error.message);
         
         if (error.message.includes('Telegram')) {
           setIsLoading(false);
           setTelegramError(true);
         } else if (error.response?.status >= 500) {
+          console.log('Server error, retrying in 5 seconds...');
+          toast.error('Server error, retrying...');
           setTimeout(() => authenticateFromTelegram(), 5000);
+        } else if (error.response?.status === 400) {
+          console.log('Bad request:', error.response.data);
+          setIsLoading(false);
+          toast.error('Authentication data error: ' + (error.response?.data?.detail || error.message));
         } else {
           setIsLoading(false);
           toast.error(`Authentication failed: ${error.message}`);
