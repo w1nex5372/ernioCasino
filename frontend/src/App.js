@@ -175,9 +175,33 @@ function App() {
     localStorage.clear();
     sessionStorage.clear();
     
-    // Clear any cached data on startup
-    localStorage.clear();
-    sessionStorage.clear();
+    // Check for saved user session first
+    const savedUser = localStorage.getItem('casino_user');
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        console.log('Found saved user session:', userData);
+        setUser(userData);
+        setIsLoading(false);
+        toast.success('Welcome back! Session restored.');
+        
+        // Load fresh data
+        loadRooms();
+        loadGameHistory();
+        loadLeaderboard();
+        loadUserPrizes();
+        
+        // Still try to refresh user data in background
+        setTimeout(() => {
+          refreshUserData(userData.id);
+        }, 2000);
+        
+        return;
+      } catch (e) {
+        console.log('Failed to parse saved user, continuing with auth');
+        localStorage.removeItem('casino_user');
+      }
+    }
     
     loadRooms();
     loadGameHistory();
