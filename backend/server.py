@@ -1385,6 +1385,30 @@ async def get_game_history(limit: int = 20):
     
     return {"games": games}
 
+@api_router.get("/user/{user_id}")
+async def get_user_data(user_id: str):
+    """Get user data including current balance"""
+    try:
+        user_doc = await db.users.find_one({"id": user_id})
+        if not user_doc:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {
+            "id": user_doc.get('id'),
+            "telegram_id": user_doc.get('telegram_id'),
+            "first_name": user_doc.get('first_name'),
+            "last_name": user_doc.get('last_name', ''),
+            "username": user_doc.get('username', ''),
+            "photo_url": user_doc.get('photo_url', ''),
+            "token_balance": user_doc.get('token_balance', 0),
+            "created_at": user_doc.get('created_at'),
+            "last_login": user_doc.get('last_login'),
+            "is_verified": user_doc.get('is_verified', False)
+        }
+    except Exception as e:
+        logging.error(f"Failed to get user data: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get user data")
+
 @api_router.get("/user/{user_id}/prizes")
 async def get_user_prizes(user_id: str):
     """Get all prize links won by a specific user"""
