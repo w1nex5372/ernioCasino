@@ -73,6 +73,7 @@ function App() {
   const [walletMonitoring, setWalletMonitoring] = useState(false);
   const [lastKnownBalance, setLastKnownBalance] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [casinoWalletAddress, setCasinoWalletAddress] = useState('Loading...');
   const [userPrizes, setUserPrizes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
