@@ -196,52 +196,16 @@ function App() {
     loadGameHistory();
     loadLeaderboard();
     
-    // EMERGENCY: Skip authentication in Telegram WebApp for testing
+    // Telegram Web App Authentication - RESTORED ORIGINAL
     const authenticateFromTelegram = async () => {
       try {
-        console.log('🔍 EMERGENCY MODE: Checking Telegram environment...');
-        
-        // Wait a bit for Telegram to load
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // If we detect Telegram WebApp, bypass authentication immediately
-        if (window.Telegram && window.Telegram.WebApp) {
-          console.log('EMERGENCY: Telegram WebApp detected - BYPASSING AUTHENTICATION');
-          
-          // Create demo user immediately for testing mobile layout
-          const demoUser = {
-            id: 'telegram-emergency-' + Date.now(),
-            first_name: 'Emergency',
-            last_name: 'User',
-            token_balance: 3000,
-            telegram_id: Date.now()
-          };
-          
-          setUser(demoUser);
-          setIsLoading(false);
-          setCasinoWalletAddress('EmergencyTestWallet123456789ABCDEF...');
-          toast.success('EMERGENCY MODE: Mobile layout testing enabled');
-          
-          // Configure Telegram WebApp
-          const webApp = window.Telegram.WebApp;
-          webApp.ready();
-          webApp.expand();
-          if (webApp.setHeaderColor) webApp.setHeaderColor('#1e293b');
-          if (webApp.setBackgroundColor) webApp.setBackgroundColor('#0f172a');
-          
-          return; // Exit early with demo user
-        }
-        
-        // Original authentication code (for non-Telegram environments)
         console.log('🔍 Initializing Telegram Web App authentication...');
         
-        if (typeof window.Telegram === 'undefined') {
-          console.error('Telegram object not found');
-          throw new Error('This casino must be opened through Telegram');
-        }
+        // Wait for Telegram script to load
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
-        if (!window.Telegram.WebApp) {
-          console.error('Telegram WebApp not found');
+        // Check if we're in Telegram Web App environment
+        if (!window.Telegram || !window.Telegram.WebApp) {
           throw new Error('This casino must be opened through Telegram');
         }
         
