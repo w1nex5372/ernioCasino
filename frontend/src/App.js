@@ -164,9 +164,25 @@ function App() {
     loadGameHistory();
     loadLeaderboard();
     
-    // Telegram authentication
+    // Demo mode for testing all pages
     const authenticateFromTelegram = async () => {
       try {
+        console.log('🔍 Demo mode: Setting up test user...');
+        
+        // Demo user for testing all casino pages
+        setUser({
+          id: 'demo-user-456',
+          first_name: 'Demo',
+          last_name: 'Player',
+          token_balance: 2500,
+          telegram_id: 456789012
+        });
+        setIsLoading(false);
+        setCasinoWalletAddress('DemoWalletAddress123456789ABCDEF...');
+        toast.success('Demo mode: All casino pages ready!');
+        return;
+        
+        // Real Telegram authentication (temporarily disabled)
         console.log('🔍 Initializing Telegram Web App authentication...');
         
         // Quick check - if no Telegram, fail fast
