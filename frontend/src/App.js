@@ -449,8 +449,9 @@ function App() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
             <h3 className="text-xl font-bold text-white mb-2">Connecting to Telegram...</h3>
             <p className="text-slate-400">Authenticating your account</p>
-            <div className="mt-4 p-2 bg-green-500/10 border border-green-500/20 rounded">
-              <p className="text-xs text-green-300">App Version: v3.0 - Force Update</p>
+            <div className="mt-4 p-2 bg-red-500/20 border border-red-500/40 rounded">
+              <p className="text-xs text-red-300 font-bold">EMERGENCY UPDATE: v4.0</p>
+              <p className="text-xs text-red-200">Timestamp: {Date.now()}</p>
             </div>
           </CardContent>
         </Card>
