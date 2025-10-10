@@ -1052,13 +1052,26 @@ async def cleanup_database_for_production(admin_key: str):
         if admin_key != "PRODUCTION_CLEANUP_2025":
             raise HTTPException(status_code=403, detail="Unauthorized")
         
-        # Clear all test data
+        # Clear ALL collections completely
         deleted_users = await db.users.delete_many({})
         deleted_completed_games = await db.completed_games.delete_many({})
         deleted_winner_prizes = await db.winner_prizes.delete_many({})
+        deleted_rooms = await db.rooms.delete_many({})
         
-        # Reset room counters
-        await db.rooms.delete_many({})
+        # Also clear any other potential collections
+        try:
+            deleted_transactions = await db.transactions.delete_many({})
+            deleted_payments = await db.payments.delete_many({})
+            deleted_wallets = await db.wallets.delete_many({})
+            deleted_sessions = await db.sessions.delete_many({})
+        except Exception as e:
+            logging.info(f"Some collections didn't exist: {e}")
+        
+        # Drop and recreate the entire database to ensure complete cleanup
+        collection_names = await db.list_collection_names()
+        for collection_name in collection_names:
+            await db[collection_name].drop()
+            logging.info(f"Dropped collection: {collection_name}")
         
         logging.info("🧹 PRODUCTION CLEANUP COMPLETE")
         logging.info(f"Deleted: {deleted_users.deleted_count} users")
