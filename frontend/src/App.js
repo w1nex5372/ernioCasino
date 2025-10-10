@@ -210,27 +210,16 @@ function App() {
         }
         
         const webApp = window.Telegram.WebApp;
-        console.log('Telegram WebApp found:', webApp);
-        console.log('InitData:', webApp.initData);
-        console.log('InitDataUnsafe:', webApp.initDataUnsafe);
         
         // Initialize WebApp
         webApp.ready();
         webApp.expand();
         
-        // Check for user data
-        if (!webApp.initData && (!webApp.initDataUnsafe || !webApp.initDataUnsafe.user)) {
-          console.error('No Telegram user data available');
-          throw new Error('No Telegram user data available');
-        }
-        
+        // Get Telegram user data
         const telegramUser = webApp.initDataUnsafe?.user;
         if (!telegramUser || !telegramUser.id) {
-          console.error('Invalid Telegram user data');
-          throw new Error('Invalid Telegram user data');
+          throw new Error('No Telegram user data available');
         }
-        
-        console.log('Telegram user found:', telegramUser);
         
         // Prepare authentication data
         const authData = {
@@ -243,8 +232,7 @@ function App() {
           hash: webApp.initData || 'telegram_webapp',
           telegram_id: parseInt(telegramUser.id)
         };
-        
-        console.log('Sending authentication request...');
+
         const response = await axios.post(`${API}/auth/telegram`, {
           telegram_auth_data: authData
         }, {
@@ -252,11 +240,10 @@ function App() {
           headers: { 'Content-Type': 'application/json' }
         });
         
-        console.log('Authentication successful:', response.data);
         setUser(response.data);
         setIsLoading(false);
         
-        toast.success(`Welcome to Casino Battle, ${telegramUser.first_name}!`);
+        toast.success(`Welcome back, ${telegramUser.first_name}!`);
         
         // Configure WebApp
         webApp.enableClosingConfirmation();
@@ -270,51 +257,16 @@ function App() {
         }, 1000);
         
       } catch (error) {
-        console.error('❌ Telegram authentication failed:', error);
-        console.error('Error details:', error.response || error.message);
-        
-        // EMERGENCY: If authentication fails in Telegram, create demo user to show the interface
-        if (window.Telegram && window.Telegram.WebApp) {
-          console.log('EMERGENCY: Creating demo user for Telegram WebApp');
-          setUser({
-            id: 'telegram-demo-' + Date.now(),
-            first_name: 'Telegram',
-            last_name: 'User',
-            token_balance: 2500,
-            telegram_id: Date.now()
-          });
-          setIsLoading(false);
-          setCasinoWalletAddress('DemoWalletForTesting123456789...');
-          toast.success('Demo mode activated for testing mobile layout');
-          return;
-        }
+        console.error('❌ Authentication failed:', error);
         
         if (error.message.includes('Telegram')) {
-          // Not in Telegram environment
           setIsLoading(false);
           setTelegramError(true);
-          toast.error('Please open this app through Telegram');
         } else if (error.response?.status >= 500) {
-          // Server error - retry
-          console.log('Server error, retrying in 5 seconds...');
-          setTimeout(() => {
-            console.log('Retrying authentication...');
-            authenticateFromTelegram();
-          }, 5000);
-          toast.error('Server error - retrying...');
-        } else if (error.response?.status === 400) {
-          // Bad request - authentication data issue
-          setIsLoading(false);
-          toast.error('Authentication data error. Please restart the app.');
+          setTimeout(() => authenticateFromTelegram(), 5000);
         } else {
-          // Other errors
           setIsLoading(false);
           toast.error(`Authentication failed: ${error.message}`);
-          console.log('Will retry in 10 seconds...');
-          setTimeout(() => {
-            setIsLoading(true);
-            authenticateFromTelegram();
-          }, 10000);
         }
       }
     };
