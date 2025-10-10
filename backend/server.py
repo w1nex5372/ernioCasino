@@ -731,15 +731,46 @@ async def root():
 
 @api_router.get("/casino-wallet")
 async def get_casino_wallet():
-    """Get casino wallet address for payments"""
+    """Get casino wallet address for payments - DEPRECATED, use /user/{user_id}/wallet"""
     return {
-        "wallet_address": CASINO_WALLET_ADDRESS,
+        "wallet_address": "DEPRECATED - Use personal wallet endpoint",
         "network": "devnet",
         "conversion_rate": {
             "sol_to_tokens": 1000,
             "description": "1 SOL = 1,000 Casino Tokens"
-        }
+        },
+        "message": "This endpoint is deprecated. Each user now gets a personal wallet address."
     }
+
+@api_router.get("/user/{user_id}/wallet")
+async def get_user_personal_wallet(user_id: str):
+    """Get user's personal Solana wallet address for payments"""
+    try:
+        # Find user by ID
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Get or create personal address
+        personal_address = await get_or_create_user_address(user_id, user['telegram_id'])
+        
+        # Add address to monitoring
+        await payment_monitor.add_address_to_monitor(personal_address)
+        
+        return {
+            "personal_wallet_address": personal_address,
+            "user_id": user_id,
+            "network": "devnet", 
+            "conversion_rate": {
+                "sol_to_tokens": 1000,
+                "description": "1 SOL = 1,000 Casino Tokens"
+            },
+            "instructions": f"Send SOL to this address and tokens will be automatically credited to your account within 10 seconds!"
+        }
+        
+    except Exception as e:
+        logging.error(f"Error getting user wallet: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get wallet address")
 
 @api_router.post("/auth/telegram", response_model=User)
 async def telegram_auth(user_data: UserCreate):
