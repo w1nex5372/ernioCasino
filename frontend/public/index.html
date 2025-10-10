@@ -171,50 +171,11 @@
             });
         </script>
         <script>
-            // EMERGENCY CACHE CLEARING
-            console.log('EMERGENCY UPDATE v4.0 LOADING');
-            
-            // Clear everything immediately
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    registrations.forEach(function(registration) {
-                        console.log('Unregistering SW:', registration);
-                        registration.unregister();
-                    });
-                });
-            }
-            
-            if ('caches' in window) {
-                caches.keys().then(function(names) {
-                    names.forEach(function(name) {
-                        console.log('Deleting cache:', name);
-                        caches.delete(name);
-                    });
-                });
-            }
-            
-            // Clear storage
-            try {
-                localStorage.clear();
-                sessionStorage.clear();
-                if (window.indexedDB) {
-                    indexedDB.databases().then(databases => {
-                        databases.forEach(db => indexedDB.deleteDatabase(db.name));
-                    });
-                }
-            } catch(e) {
-                console.log('Storage clear error:', e);
-            }
-            
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                    // Register new service worker with timestamp
-                    const timestamp = Date.now();
-                    navigator.serviceWorker.register('/sw.js?v=' + timestamp)
+                    navigator.serviceWorker.register('/sw.js')
                         .then(function(registration) {
                             console.log('SW registered with scope: ', registration.scope);
-                            // Check for updates immediately
-                            registration.update();
                             
                             // Listen for new service worker
                             registration.addEventListener('updatefound', () => {
