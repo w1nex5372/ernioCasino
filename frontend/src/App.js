@@ -116,6 +116,20 @@ function App() {
     // Game events
     newSocket.on('player_joined', (data) => {
       console.log('👤 Player joined:', data);
+      
+      // Update room participants
+      setRoomParticipants(prev => ({
+        ...prev,
+        [data.room_type]: data.all_players || []
+      }));
+      
+      // Show notification
+      toast.success(
+        `🎯 ${data.player.first_name} joined ${data.room_type} room! (${data.players_count}/2)`,
+        { duration: 3000 }
+      );
+      
+      // Reload rooms to update counts
       loadRooms();
     });
 
