@@ -325,8 +325,9 @@ function App() {
         
         console.log('Authentication response:', response.data);
         
-        // Update with real Telegram user data
+        // Update with real Telegram user data and save session
         setUser(response.data);
+        saveUserSession(response.data);
         setIsLoading(false);
         toast.success(`Welcome back, ${telegramUser.first_name}!`);
         
