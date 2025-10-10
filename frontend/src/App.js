@@ -697,21 +697,30 @@ function App() {
             {/* Battle Rooms */}
             {activeTab === 'rooms' && (
               <div className="space-y-8">
-                <div className={`text-center ${isMobile ? 'py-3 px-4' : 'py-6'}`}>
-                  <div className={`inline-flex items-center justify-center ${isMobile ? 'w-10 h-10' : 'w-16 h-16'} bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full mb-3`}>
-                    <Users className={`${isMobile ? 'w-5 h-5' : 'w-8 h-8'} text-slate-900`} />
+                {!isMobile ? (
+                  // DESKTOP: Full header
+                  <div className="text-center py-6">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full mb-3">
+                      <Users className="w-8 h-8 text-slate-900" />
+                    </div>
+                    <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+                      Choose Your Battle Arena
+                    </h2>
+                    <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+                      Join one of our three exclusive rooms where 2 players battle for the prize!
+                      <br />
+                      <span className="text-yellow-400 font-medium">Higher bet = Better winning odds!</span>
+                    </p>
                   </div>
-                  <h2 className={`${isMobile ? 'text-lg' : 'text-3xl'} font-bold mb-2 bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent`}>
-                    {isMobile ? 'Battle Rooms' : 'Choose Your Battle Arena'}
-                  </h2>
-                  <p className={`text-slate-400 ${isMobile ? 'text-xs' : 'text-lg'} max-w-2xl mx-auto`}>
-                    {isMobile ? '2 players compete for prizes!' : 'Join one of our three exclusive rooms where 2 players battle for the prize!'}
-                    {!isMobile && <br />}
-                    <span className="text-yellow-400 font-medium">
-                      {isMobile ? ' Higher bet = better odds!' : 'Higher bet = Better winning odds!'}
-                    </span>
-                  </p>
-                </div>
+                ) : (
+                  // MOBILE: Simple header
+                  <div className="text-center py-3 px-4">
+                    <h2 className="text-lg font-bold text-white mb-1">Casino Rooms</h2>
+                    <p className="text-xs text-slate-400">
+                      2 players • Higher bet = better odds
+                    </p>
+                  </div>
+                )}
                 
                 <div className={`grid gap-4 md:gap-8 max-w-7xl mx-auto ${isMobile ? 'grid-cols-1' : 'lg:grid-cols-3 md:grid-cols-2 grid-cols-1'}`}>
                 {['bronze', 'silver', 'gold'].map((roomType) => {
