@@ -70,7 +70,7 @@ function App() {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [betAmount, setBetAmount] = useState('');
   const [activeTab, setActiveTab] = useState('rooms');
-  const [walletMonitoring, setWalletMonitoring] = useState(false);
+  // Removed wallet monitoring - using backend system
   const [lastKnownBalance, setLastKnownBalance] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [casinoWalletAddress, setCasinoWalletAddress] = useState('Loading...');
