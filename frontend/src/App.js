@@ -160,18 +160,35 @@ function App() {
     localStorage.clear();
     sessionStorage.clear();
     
-    // Force cache clear for Telegram WebApp
+    // EMERGENCY: Force refresh for Telegram WebApp
+    console.log('EMERGENCY UPDATE v4.0 - Starting app');
+    
     if (window.Telegram && window.Telegram.WebApp) {
-      console.log('Telegram WebApp detected - clearing all caches');
-      if ('caches' in window) {
-        caches.keys().then(cacheNames => {
-          cacheNames.forEach(cacheName => {
-            if (cacheName.includes('casino-battle')) {
+      console.log('Telegram WebApp detected - EMERGENCY cache clear');
+      
+      // Check if this is an old cached version
+      const currentTime = Date.now();
+      const lastUpdate = localStorage.getItem('lastEmergencyUpdate');
+      
+      if (!lastUpdate || (currentTime - parseInt(lastUpdate)) > 30000) {
+        console.log('FORCING EMERGENCY REFRESH');
+        localStorage.setItem('lastEmergencyUpdate', currentTime.toString());
+        
+        // Clear everything
+        if ('caches' in window) {
+          caches.keys().then(cacheNames => {
+            cacheNames.forEach(cacheName => {
               caches.delete(cacheName);
-              console.log('Deleted cache:', cacheName);
-            }
+              console.log('EMERGENCY: Deleted cache:', cacheName);
+            });
           });
-        });
+        }
+        
+        // Force hard refresh after small delay
+        setTimeout(() => {
+          console.log('EMERGENCY: Forcing hard reload');
+          window.location.href = window.location.href + '?emergency=' + currentTime;
+        }, 2000);
       }
     }
     
