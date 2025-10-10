@@ -806,16 +806,27 @@ function App() {
                               />
                               
                               <Button
-                                onClick={() => joinRoom(roomType)}
-                                disabled={room.players_count >= 2 || !betAmount || user.token_balance < betAmount}
+                                onClick={() => {
+                                  console.log('Join button clicked!', {
+                                    roomType,
+                                    betAmount,
+                                    userBalance: user.token_balance,
+                                    playersCount: room.players_count
+                                  });
+                                  joinRoom(roomType);
+                                }}
+                                disabled={room.players_count >= 2 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount)}
                                 className={`w-full h-9 text-white font-semibold text-sm ${
-                                  room.players_count >= 2 
+                                  (room.players_count >= 2 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount))
                                     ? 'bg-slate-600 cursor-not-allowed' 
                                     : 'bg-green-600 hover:bg-green-700'
                                 }`}
                               >
                                 <Play className="w-3 h-3 mr-1" />
-                                {room.players_count >= 2 ? 'Full' : 'Join'}
+                                {room.players_count >= 2 ? 'Full' : 
+                                 !betAmount ? 'Enter Bet' :
+                                 parseInt(betAmount) < config.min || parseInt(betAmount) > config.max ? 'Invalid' :
+                                 user.token_balance < parseInt(betAmount) ? 'Low Balance' : 'Join'}
                               </Button>
                             </div>
                           </div>
