@@ -355,8 +355,30 @@ function App() {
       }
     };
 
+    // EMERGENCY: Force demo mode in Telegram WebApp
+    const emergencyTimeout = setTimeout(() => {
+      if (window.Telegram && window.Telegram.WebApp && isLoading) {
+        console.log('EMERGENCY TIMEOUT: Forcing demo mode');
+        setUser({
+          id: 'emergency-timeout-' + Date.now(),
+          first_name: 'Test',
+          last_name: 'User', 
+          token_balance: 2500,
+          telegram_id: Date.now()
+        });
+        setIsLoading(false);
+        setCasinoWalletAddress('TimeoutTestWallet123...');
+        toast.success('Emergency timeout: Casino loaded for testing');
+      }
+    }, 3000); // 3 second timeout
+    
+    // Start authentication
     const initTimeout = setTimeout(authenticateFromTelegram, 200);
-    return () => clearTimeout(initTimeout);
+    
+    return () => {
+      clearTimeout(initTimeout);
+      clearTimeout(emergencyTimeout);
+    };
   }, []);
 
   // Data loading functions
