@@ -283,12 +283,12 @@ class PriceOracle:
                     else:
                         logging.error(f"CoinGecko API error: {response.status}")
                         # Return cached price or fallback
-                        return self.cached_price or 0.0052  # Your fallback rate
+                        return self.cached_price or 180.0  # Realistic fallback rate
                         
         except Exception as e:
             logging.error(f"Error fetching SOL price: {e}")
             # Return cached price or fallback
-            return self.cached_price or 0.0052
+            return self.cached_price or 180.0
     
     def calculate_tokens_from_sol(self, sol_amount: float, sol_eur_price: float) -> int:
         """Calculate tokens from SOL amount using real-time EUR price"""
