@@ -744,9 +744,18 @@ function App() {
                                     <p className="text-white/80 text-xs truncate">{config.min}-{config.max}</p>
                                   </div>
                                 </div>
-                                <Badge className="bg-white/20 text-white text-xs px-1 py-0.5 flex-shrink-0">
-                                  {room.players_count}/2
-                                </Badge>
+                                <div className="flex items-center gap-1">
+                                  <Badge className={`text-xs px-2 py-0.5 flex-shrink-0 ${
+                                    room.players_count === 0 ? 'bg-slate-500 text-white' :
+                                    room.players_count === 1 ? 'bg-yellow-500 text-black animate-pulse' :
+                                    'bg-green-500 text-black'
+                                  }`}>
+                                    {room.players_count === 0 ? '🎯 Empty' :
+                                     room.players_count === 1 ? '🔥 Filling' :
+                                     '⚡ Ready'}
+                                  </Badge>
+                                  <span className="text-xs text-white/70">{room.players_count}/2</span>
+                                </div>
                               </div>
                             </div>
                             <div className="p-2 space-y-2">
