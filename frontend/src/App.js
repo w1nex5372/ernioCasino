@@ -715,8 +715,8 @@ function App() {
                 ) : (
                   // MOBILE: Simple header
                   <div className="text-center py-3 px-4">
-                    <h2 className="text-lg font-bold text-white mb-1">Casino Rooms</h2>
-                    <p className="text-xs text-slate-400">
+                    <h2 className="text-lg font-bold text-white mb-2 leading-tight">Casino Rooms</h2>
+                    <p className="text-xs text-slate-400 leading-relaxed">
                       2 players • Higher bet = better odds
                     </p>
                   </div>
