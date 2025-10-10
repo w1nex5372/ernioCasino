@@ -274,6 +274,85 @@ class SolanaCasinoAPITester:
             self.log_test(f"Check Winner User {user_number}", False, str(e))
             return False
 
+    def test_solana_address_derivation(self, user_number=1):
+        """Test Solana address derivation system"""
+        test_user = self.test_user1 if user_number == 1 else self.test_user2
+        if not test_user:
+            self.log_test(f"Solana Address Derivation User {user_number}", False, "No test user available")
+            return False
+        
+        try:
+            response = requests.get(f"{self.api_url}/user/{test_user['id']}/derived-wallet")
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                address = data.get('derived_wallet_address', '')
+                telegram_id = data.get('telegram_id', '')
+                sol_price = data.get('current_sol_eur_price', 0)
+                
+                # Validate address format (should be base58 encoded)
+                address_valid = len(address) > 20 and len(address) < 50  # Basic validation
+                
+                details = f"User {user_number} derived address: {address[:8]}...{address[-8:]} (Telegram ID: {telegram_id}, SOL Price: €{sol_price})"
+                if not address_valid:
+                    success = False
+                    details += " - INVALID ADDRESS FORMAT"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test(f"Solana Address Derivation User {user_number}", success, details)
+            return success, data if success else None
+        except Exception as e:
+            self.log_test(f"Solana Address Derivation User {user_number}", False, str(e))
+            return False, None
+
+    def test_sol_eur_price(self):
+        """Test SOL/EUR price endpoint"""
+        try:
+            response = requests.get(f"{self.api_url}/sol-eur-price")
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                price = data.get('sol_eur_price', 0)
+                last_updated = data.get('last_updated', 0)
+                details = f"SOL/EUR Price: €{price}, Last Updated: {last_updated}"
+                
+                # Validate price is reasonable (between €50-€500)
+                if price < 50 or price > 500:
+                    success = False
+                    details += " - PRICE OUT OF REASONABLE RANGE"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test("SOL/EUR Price", success, details)
+            return success
+        except Exception as e:
+            self.log_test("SOL/EUR Price", False, str(e))
+            return False
+
+    def test_casino_wallet_info(self):
+        """Test casino wallet info endpoint"""
+        try:
+            response = requests.get(f"{self.api_url}/casino-wallet")
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                wallet_address = data.get('wallet_address', '')
+                network = data.get('network', '')
+                sol_price = data.get('current_sol_eur_price', 0)
+                details = f"Casino wallet: {wallet_address[:8]}...{wallet_address[-8:]} on {network}, SOL Price: €{sol_price}"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test("Casino Wallet Info", success, details)
+            return success
+        except Exception as e:
+            self.log_test("Casino Wallet Info", False, str(e))
+            return False
+
     def test_two_player_game_flow(self):
         """Test complete 2-player game flow with winner selection"""
         if not self.test_user1 or not self.test_user2:
