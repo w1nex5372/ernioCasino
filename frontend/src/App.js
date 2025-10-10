@@ -1027,7 +1027,7 @@ function App() {
               }`}
             >
               <Crown className="w-5 h-5 mb-1" />
-              <span className="text-xs font-medium leading-tight">Leaders</span>
+              <span className="text-xs font-medium leading-tight">Board</span>
             </button>
             
             <button
