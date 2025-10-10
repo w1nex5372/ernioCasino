@@ -570,8 +570,8 @@ class PaymentMonitor:
         except Exception as e:
             logging.error(f"Error checking address {address}: {e}")
     
-    async def _process_transaction(self, signature: str):
-        """Process a single transaction for payment detection using Payment Request System"""
+    async def _process_transaction(self, signature: str, receiving_address: str):
+        """Process a single transaction for payment detection using Derived Address System"""
         try:
             # Get transaction details
             tx = await self.client.get_transaction(signature)
