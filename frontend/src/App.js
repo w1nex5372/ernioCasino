@@ -182,37 +182,31 @@ function App() {
         const userData = JSON.parse(savedUser);
         console.log('Found saved user session:', userData);
         
-        // IMMEDIATELY refresh from server to get latest balance
-        try {
-          const response = await axios.get(`${API}/user/${userData.id}`);
-          if (response.data) {
-            console.log('✅ Refreshed user data from server:', response.data);
-            setUser(response.data);
-            saveUserSession(response.data);
-            setIsLoading(false);
-            toast.success(`Welcome back! Balance: ${response.data.token_balance} tokens`);
-            
-            // Load fresh data
-            loadRooms();
-            loadGameHistory();
-            loadLeaderboard();
-            loadUserPrizes();
-            
-            return;
-          }
-        } catch (refreshError) {
-          console.log('Failed to refresh from server, using cached data:', refreshError);
-          // Fallback to cached data if server refresh fails
-          setUser(userData);
-          setIsLoading(false);
-          toast.success('Welcome back! Session restored.');
-        }
+        // Set cached user first for instant UI
+        setUser(userData);
+        setIsLoading(false);
+        toast.success('Welcome back! Session restored.');
         
         // Load fresh data
         loadRooms();
         loadGameHistory();
         loadLeaderboard();
         loadUserPrizes();
+        
+        // IMMEDIATELY refresh from server to get latest balance (async)
+        (async () => {
+          try {
+            const response = await axios.get(`${API}/user/${userData.id}`);
+            if (response.data) {
+              console.log('✅ Refreshed user data from server:', response.data);
+              setUser(response.data);
+              saveUserSession(response.data);
+              toast.success(`Balance updated: ${response.data.token_balance} tokens`);
+            }
+          } catch (refreshError) {
+            console.log('Failed to refresh from server:', refreshError);
+          }
+        })();
         
         return;
       } catch (e) {
