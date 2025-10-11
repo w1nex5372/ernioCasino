@@ -272,6 +272,12 @@ test_plan:
 agent_communication:
     - agent: "main"
       message: "Implemented Telegram prize notifications and verified frontend prize claiming is already functional. Ready for backend testing to verify 2-player game flow, winner selection, Telegram messaging, and database operations."
+    - agent: "main"  
+      message: "LOGO REMOVAL COMPLETE: Successfully removed 'Made with Emergent' logo from /app/frontend/public/index.html. Logo no longer visible in application."
+    - agent: "main"
+      message: "WEBSOCKET ISSUE DIAGNOSED: Root cause identified via troubleshoot_agent and deployment_agent. WebSocket connections failing because external HTTPS proxy/load balancer at solana-casino-2.preview.emergentagent.com not configured to handle WebSocket upgrades. This is an infrastructure-level issue requiring deployment configuration changes, not application code fixes."
+    - agent: "main"
+      message: "DEPLOYMENT LIMITATION IDENTIFIED: Application uses Solana blockchain integration (solana, solders packages) which is not supported on Emergent platform deployment according to deployment_agent scan. This is a fundamental architectural limitation."
     - agent: "testing"
       message: "BACKEND TESTING COMPLETE: All critical backend functionality is working correctly. 2-player game flow tested end-to-end with successful winner selection, prize storage, and Telegram notification attempts. All API endpoints responding correctly. Database operations (user creation, game completion, prize storage) all working. System ready for production use."
     - agent: "testing"
