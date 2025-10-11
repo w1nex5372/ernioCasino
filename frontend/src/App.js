@@ -1452,30 +1452,47 @@ function App() {
                       </div>
                     </div>
 
-                    {/* Dynamic Winner Display */}
-                    <div className="space-y-3">
+                    {/* Dynamic Winner Display with Telegram Integration */}
+                    <div className="space-y-4">
                       <h2 className="text-2xl font-bold text-green-400 animate-pulse">
-                        Congratulations, @{winnerData.winner?.username || winnerData.winner_name}!
+                        🏆 Winner: @{winnerData.winner_username || winnerData.winner?.username || winnerData.winner_name}
                       </h2>
                       
-                      {/* Winner Photo */}
+                      {/* Winner Photo with Enhanced Display */}
                       <div className="flex justify-center">
                         <div className="relative">
-                          <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-gold-500 shadow-lg">
-                            {winnerData.winner?.photo_url ? (
+                          <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-gold-500 shadow-xl shadow-gold-500/50">
+                            {winnerData.winner_photo || winnerData.winner?.photo_url ? (
                               <img 
-                                src={winnerData.winner.photo_url} 
+                                src={winnerData.winner_photo || winnerData.winner.photo_url} 
                                 alt={winnerData.winner_name} 
                                 className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  console.log('Photo failed to load, using fallback');
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling.style.display = 'flex';
+                                }}
                               />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl">
-                                {(winnerData.winner_name || 'W').charAt(0).toUpperCase()}
-                              </div>
-                            )}
+                            ) : null}
+                            <div className="w-full h-full bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl" 
+                                 style={{display: (winnerData.winner_photo || winnerData.winner?.photo_url) ? 'none' : 'flex'}}>
+                              {(winnerData.winner_name || 'W').charAt(0).toUpperCase()}
+                            </div>
                           </div>
-                          <div className="absolute -inset-1 bg-gradient-to-r from-gold-400/50 to-yellow-500/50 rounded-full animate-pulse -z-10"></div>
+                          <div className="absolute -inset-2 bg-gradient-to-r from-gold-400/30 to-yellow-500/30 rounded-full animate-pulse -z-10"></div>
                         </div>
+                      </div>
+
+                      {/* Winner Name Display */}
+                      <div className="text-center">
+                        <p className="text-lg font-semibold text-white">
+                          {winnerData.winner_name}
+                        </p>
+                        {winnerData.winner_username && (
+                          <p className="text-sm text-slate-300">
+                            @{winnerData.winner_username}
+                          </p>
+                        )}
                       </div>
                     </div>
 
