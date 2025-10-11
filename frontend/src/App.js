@@ -215,34 +215,31 @@ function App() {
     console.log('🚪 lobbyData:', lobbyData);
   }, [inLobby, lobbyData]);
 
-  // POLL for room participants while in lobby (ensures both players see each other)
+  // Polling for lobby participants (only if in lobby)
   useEffect(() => {
-    if (!inLobby || !lobbyData) {
+    console.log(`🚪 inLobby changed: ${inLobby}`);
+    console.log(`🚪 lobbyData:`, lobbyData);
+    
+    if (!inLobby || !lobbyData || !lobbyData.room_type) {
       console.log('⚠️ Polling NOT started - inLobby:', inLobby, 'lobbyData:', lobbyData);
       return;
     }
-    
-    console.log('🔄 Starting lobby participant polling for', lobbyData.room_type);
+
     let pollCount = 0;
-    
+
     const fetchParticipants = async () => {
       pollCount++;
-      console.log(`📡 Poll #${pollCount} - Fetching participants for ${lobbyData.room_type}...`);
+      console.log(`🔄 Poll #${pollCount} - Fetching participants for ${lobbyData.room_type}...`);
       
       try {
         const response = await axios.get(`${API}/room-participants/${lobbyData.room_type}`);
-        console.log(`📊 Poll #${pollCount} - Response:`, response.data);
-        
-        // ALWAYS update, even if empty (to clear old data)
         const players = response.data.players || [];
-        console.log(`👥 Poll #${pollCount} - Players found:`, players.length, players);
+        
+        console.log(`👥 Found ${players.length} players in ${lobbyData.room_type}:`, players);
         
         setRoomParticipants(prev => {
-          const updated = {
-            ...prev,
-            [lobbyData.room_type]: players
-          };
-          console.log(`✅ Poll #${pollCount} - State updated:`, updated[lobbyData.room_type]);
+          const updated = { ...prev, [lobbyData.room_type]: players };
+          console.log('🔄 Updated roomParticipants:', updated);
           return updated;
         });
         
@@ -257,22 +254,73 @@ function App() {
           console.log('🚀 STARTING WINNER DETECTION FOR:', lobbyData.room_type);
           startWinnerDetection(lobbyData.room_type);
         }
+        
       } catch (error) {
-        console.error(`❌ Poll #${pollCount} - Failed:`, error);
+        console.error('Error fetching participants:', error);
       }
     };
-    
+
     // Fetch immediately
     fetchParticipants();
     
     // Then poll every 2000ms (reasonable for lobby updates)
     const pollInterval = setInterval(fetchParticipants, 2000);
-    
+
     return () => {
-      console.log(`🛑 Stopping lobby participant polling after ${pollCount} polls`);
+      console.log('🧹 Cleaning up lobby polling');
       clearInterval(pollInterval);
     };
   }, [inLobby, lobbyData]);
+
+  // Global winner detection for ALL users (even if not in lobby)
+  useEffect(() => {
+    let globalWinnerCheckInterval;
+    
+    // Only start global checking if user is authenticated
+    if (user && user.telegram_id) {
+      console.log('🌐 Starting global winner detection for user:', user.first_name);
+      
+      const checkForGlobalWinners = async () => {
+        try {
+          // Check for very recent completed games (last 10 seconds)
+          const response = await axios.get(`${API}/game-history?limit=5`);
+          const games = response.data.games;
+          
+          const veryRecentGame = games.find(game => 
+            game.status === 'finished' &&
+            new Date(game.finished_at) > new Date(Date.now() - 10000) // Last 10 seconds
+          );
+          
+          if (veryRecentGame && !showWinnerScreen) {
+            console.log('🌟 GLOBAL WINNER DETECTED! Broadcasting to ALL users:', veryRecentGame);
+            
+            // Check if current user was in this game
+            const userWasInGame = veryRecentGame.players?.some(p => 
+              p.telegram_id === user.telegram_id || p.user_id === user.id
+            );
+            
+            if (userWasInGame) {
+              console.log('🎯 Current user participated in this game! Showing winner screen...');
+              await broadcastWinnerToAllPlayers(veryRecentGame, veryRecentGame.room_type);
+            }
+          }
+          
+        } catch (error) {
+          console.error('Global winner check error:', error);
+        }
+      };
+      
+      // Check every 2 seconds for global winners
+      globalWinnerCheckInterval = setInterval(checkForGlobalWinners, 2000);
+    }
+    
+    return () => {
+      if (globalWinnerCheckInterval) {
+        console.log('🧹 Cleaning up global winner detection');
+        clearInterval(globalWinnerCheckInterval);
+      }
+    };
+  }, [user, showWinnerScreen]);
 
   // Mobile detection - force mobile for Telegram WebApp
   useEffect(() => {
