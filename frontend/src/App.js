@@ -490,15 +490,6 @@ function App() {
     }
   };
 
-  const loadLeaderboard = async () => {
-    try {
-      const response = await axios.get(`${API}/leaderboard`);
-      setLeaderboard(response.data.leaderboard);
-    } catch (error) {
-      console.error('Failed to load leaderboard:', error);
-    }
-  };
-
   const loadUserPrizes = async () => {
     try {
       if (!user || !user.id) return;
