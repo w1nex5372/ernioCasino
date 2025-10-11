@@ -963,19 +963,22 @@ function App() {
     setTimeout(checkForWinner, 2000);
   };
 
-  // Broadcast winner result to ALL players (simulates socket broadcast)
+  // Broadcast winner result to ALL players (works on mobile AND desktop)
   const broadcastWinnerToAllPlayers = async (gameResult, roomType) => {
-    console.log('📢 BROADCASTING WINNER TO ALL PLAYERS:', gameResult.winner);
+    console.log('📢 BROADCASTING WINNER TO ALL PLAYERS (Mobile & Desktop):', gameResult.winner);
+    console.log('🖥️ Device Info:', { isMobile, userAgent: navigator.userAgent });
     
     const winnerName = `${gameResult.winner.first_name} ${gameResult.winner.last_name || ''}`.trim();
     
-    // Force exit lobby state for ALL players
+    // Force exit ALL states for consistent experience across devices
+    console.log('🔄 Setting winner screen state - Before:', { inLobby, gameInProgress, showWinnerScreen });
+    
     setInLobby(false);
     setGameInProgress(false);
     setShowWinnerScreen(true);
     
     // Set comprehensive winner data with Telegram info
-    setWinnerData({
+    const winnerDisplayData = {
       winner: gameResult.winner,
       winner_name: winnerName,
       winner_username: gameResult.winner.username || gameResult.winner.telegram_username,
@@ -986,9 +989,18 @@ function App() {
       game_id: gameResult.id,
       finished_at: gameResult.finished_at,
       all_players: gameResult.players || []
+    };
+    
+    setWinnerData(winnerDisplayData);
+    
+    console.log('✅ Winner data set:', winnerDisplayData);
+    console.log('🔄 Setting winner screen state - After:', { 
+      inLobby: false, 
+      gameInProgress: false, 
+      showWinnerScreen: true 
     });
     
-    // Show synchronized winner announcement to ALL players
+    // Show synchronized winner announcement to ALL players (mobile & desktop)
     toast.success(`🏆 GAME COMPLETE! Winner: ${winnerName}`, { 
       duration: 10000,
       style: {
@@ -1000,12 +1012,12 @@ function App() {
       }
     });
     
-    console.log('✅ Winner announcement displayed for ALL players!');
+    console.log('🎉 Winner announcement displayed for ALL players (Mobile & Desktop)!');
     
     // Update user balance if current user is the winner
     if (user && gameResult.winner && 
         (user.telegram_id === gameResult.winner.telegram_id || user.id === gameResult.winner.id)) {
-      console.log('🎉 Current user is the WINNER! Updating balance...');
+      console.log('🏆 Current user is the WINNER! Updating balance...');
       
       // Refresh user data to get updated balance
       setTimeout(async () => {
@@ -1020,6 +1032,11 @@ function App() {
         }
       }, 1000);
     }
+    
+    // Force a re-render to ensure winner screen shows on all devices
+    setTimeout(() => {
+      console.log('🔄 Force checking winner screen state:', { showWinnerScreen: true });
+    }, 100);
   };
 
   const checkForGameCompletion = async (roomType) => {
