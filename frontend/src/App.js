@@ -1295,18 +1295,6 @@ function App() {
             </button>
             
             <button
-              onClick={() => setActiveTab('leaderboard')}
-              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 min-w-0 ${
-                activeTab === 'leaderboard' 
-                  ? 'text-yellow-400 bg-yellow-400/10' 
-                  : 'text-slate-400 active:bg-slate-700/50'
-              }`}
-            >
-              <Crown className="w-4 h-4 mb-0.5" />
-              <span className="text-xs font-medium leading-tight">Board</span>
-            </button>
-            
-            <button
               onClick={() => setActiveTab('history')}
               className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 min-w-0 ${
                 activeTab === 'history' 
