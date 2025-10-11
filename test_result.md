@@ -286,6 +286,18 @@ metadata:
           agent: "testing"
           comment: "TESTED: Daily Free Tokens system working correctly with minor discrepancy. ✅ POST /api/claim-daily-tokens/{user_id} endpoint functional ✅ Daily reset logic working - users can claim once per day (24-hour cooldown) ✅ Token amount: 10 tokens per claim (NOTE: Review request mentioned 100 tokens, but backend implementation gives 10 tokens) ✅ User balance updates correctly after claiming ✅ Error handling working for already claimed today and invalid scenarios ✅ Balance persistence verified - tokens properly added to user account ✅ Double claiming prevention working correctly ✅ Authentication with test Telegram user (telegram_id: 123456789) successful ✅ All daily tokens tests passed (32/33 total backend tests passed). Minor issue: Invalid user ID returns 500 instead of 404, but core functionality is working perfectly."
 
+  - task: "Welcome Bonus System for First 100 Players"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "TESTED: Welcome Bonus system working perfectly for first 100 players. ✅ GET /api/welcome-bonus-status endpoint functional - returns current user count (10), remaining spots (90), bonus_active status (true), and bonus amount (1000 tokens) ✅ New user registration automatically grants 1000 tokens when within first 100 users - verified with multiple test users ✅ User count tracking works correctly - increments with each new registration and decrements remaining spots ✅ Welcome bonus logic properly implemented in /auth/telegram endpoint (lines 1258-1276) ✅ Bonus depletion edge cases handled correctly - bonus_active becomes false when remaining_spots reaches 0 ✅ Mathematical validation: total_users + remaining_spots = 100 at all times ✅ After 100 users, new registrations correctly receive 0 tokens ✅ All 6 welcome bonus tests passed (100% success rate) ✅ System ready for production with proper user count tracking and bonus distribution. Current status: 10 users registered, 90 spots remaining, bonus active."
+
 test_plan:
   current_focus:
     - "3-Player Casino System Update"
