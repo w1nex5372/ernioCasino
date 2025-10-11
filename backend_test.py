@@ -690,6 +690,10 @@ class SolanaCasinoAPITester:
         self.test_leaderboard()
         self.test_game_history()
         
+        # Test the specific room participant tracking scenario
+        print("\n🎯 Testing Room Participant Tracking Scenario...")
+        self.test_room_participant_tracking()
+        
         # Error handling tests
         print("\n🚫 Testing Error Handling...")
         self.test_invalid_endpoints()
