@@ -185,6 +185,14 @@ function App() {
       });
       setShowWinnerScreen(true);
       
+      // AUTO-CLOSE after 1 second and return to rooms
+      setTimeout(() => {
+        setShowWinnerScreen(false);
+        setWinnerData(null);
+        setActiveTab('rooms');
+        toast.success('Room reset! Ready for new players 🎰');
+      }, 1000);
+      
       setActiveRoom(null);
       setInLobby(false);
       setLobbyData(null);
