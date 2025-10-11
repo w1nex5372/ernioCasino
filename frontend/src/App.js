@@ -1034,7 +1034,7 @@ function App() {
 
             {/* WINNER ANNOUNCEMENT SCREEN - Show to all players after game */}
             {showWinnerScreen && winnerData && (
-              <Card className="bg-slate-800/90 border-2 border-yellow-500">
+              <Card className={`bg-slate-800/90 border-2 ${winnerData.is_winner ? 'border-green-500 shadow-lg shadow-green-500/50' : 'border-red-500 shadow-lg shadow-red-500/50'}`}>
                 <CardContent className="p-8">
                   <div className="text-center space-y-6">
                     {/* Trophy Animation */}
