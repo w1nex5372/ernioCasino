@@ -833,7 +833,94 @@ function App() {
     }
   };
 
-  // Removed problematic checkGameStatus function that caused infinite loops
+  // Winner detection system for 3-player games
+  const startWinnerDetection = (roomType) => {
+    let attempts = 0;
+    const maxAttempts = 20; // Check for 20 seconds max
+    
+    console.log(`🔍 Starting winner detection for ${roomType} room`);
+    
+    const checkForWinner = async () => {
+      attempts++;
+      console.log(`🔍 Winner detection attempt ${attempts}/${maxAttempts} for ${roomType}`);
+      
+      try {
+        // Check game history for recent completed games of this room type
+        const response = await axios.get(`${API}/game-history?limit=10`);
+        const games = response.data.games;
+        
+        // Look for the most recent completed game of this room type
+        const recentGame = games.find(game => 
+          game.room_type === roomType && 
+          game.status === 'finished' &&
+          new Date(game.finished_at) > new Date(Date.now() - 30000) // Within last 30 seconds
+        );
+        
+        if (recentGame && recentGame.winner) {
+          console.log('🏆 WINNER FOUND!', recentGame.winner);
+          
+          // FORCE TRANSITION TO WINNER SCREEN FOR ALL PLAYERS
+          const winnerName = `${recentGame.winner.first_name} ${recentGame.winner.last_name || ''}`.trim();
+          
+          // Exit lobby state immediately  
+          setInLobby(false);
+          setGameInProgress(false);
+          setShowWinnerScreen(true);
+          
+          // Set winner data
+          setWinnerData({
+            winner: recentGame.winner,
+            winner_name: winnerName,
+            room_type: roomType,
+            prize_pool: recentGame.prize_pool,
+            prize_link: recentGame.prize_link
+          });
+          
+          // Show winner announcement
+          toast.success(`🎉 WINNER: ${winnerName}! 🏆`, { 
+            duration: 8000,
+            style: {
+              background: '#10b981',
+              color: 'white',
+              fontSize: '18px',
+              fontWeight: 'bold'
+            }
+          });
+          
+          console.log('✅ Winner screen activated for all players!');
+          
+          // Reload rooms after 5 seconds
+          setTimeout(() => {
+            loadRooms();
+          }, 5000);
+          
+          return true; // Winner found, stop checking
+        }
+        
+        // Continue checking if no winner yet and under max attempts
+        if (attempts < maxAttempts) {
+          console.log(`⏳ No winner yet, checking again in 1 second... (${attempts}/${maxAttempts})`);
+          setTimeout(checkForWinner, 1000);
+        } else {
+          console.log('❌ Winner detection timeout - no winner found after 20 attempts');
+          toast.error('Game completion timeout - please check manually', { duration: 5000 });
+        }
+        
+      } catch (error) {
+        console.error('❌ Error in winner detection:', error);
+        
+        // Retry on error if under max attempts
+        if (attempts < maxAttempts) {
+          setTimeout(checkForWinner, 1000);
+        }
+      }
+      
+      return false;
+    };
+    
+    // Start checking after 3 second delay (give backend time to process)
+    setTimeout(checkForWinner, 3000);
+  };
 
   const checkForGameCompletion = async (roomType) => {
     try {
