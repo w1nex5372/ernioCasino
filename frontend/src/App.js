@@ -223,7 +223,6 @@ function App() {
         // Load fresh data
         loadRooms();
         loadGameHistory();
-        loadLeaderboard();
         loadUserPrizes();
         
         // IMMEDIATELY refresh from server to get latest balance (async)
