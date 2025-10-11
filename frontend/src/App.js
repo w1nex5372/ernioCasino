@@ -1004,17 +1004,20 @@ function App() {
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl text-green-400 flex items-center justify-center gap-2">
                     <Zap className="w-6 h-6 animate-pulse" />
-                    {ROOM_CONFIGS[currentGameData.room_type]?.icon} Game In Progress
+                    {ROOM_CONFIGS[currentGameData.room_type]?.icon} Room is Full!
                   </CardTitle>
-                  <CardDescription className="text-lg">
-                    Winner will be announced in 3 seconds!
+                  <CardDescription className="text-lg text-white">
+                    This game at {new Date().toLocaleTimeString()} has taken place and is now FULL.
                   </CardDescription>
+                  <p className="text-yellow-400 font-bold text-xl mt-2 animate-pulse">
+                    Winner will be announced in 3 seconds!
+                  </p>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {/* Show both players competing */}
                     <div>
-                      <h3 className="text-white font-semibold mb-3 text-center">Battle Participants:</h3>
+                      <h3 className="text-white font-semibold mb-3 text-center">Players in This Game:</h3>
                       <div className="space-y-3">
                         {currentGameData.players?.map((player, index) => (
                           <div key={`game-player-${player.user_id}`} className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-600/20 to-blue-600/20 rounded-lg border border-green-500/30">
