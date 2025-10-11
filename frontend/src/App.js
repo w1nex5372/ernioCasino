@@ -203,7 +203,7 @@ function App() {
     // Check for saved user session first
     if (savedSession) {
       try {
-        const userData = JSON.parse(savedUser);
+        const userData = JSON.parse(savedSession);
         console.log('Found saved user session:', userData);
         
         // Set cached user first for instant UI
