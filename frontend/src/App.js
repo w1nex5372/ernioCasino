@@ -1518,7 +1518,7 @@ function App() {
                   ))}
                 </div>
 
-                <Card className="w-full max-w-lg bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-2 border-gold-500 shadow-2xl shadow-gold-500/50 relative animate-slideUp">
+                <Card className="w-full max-w-lg desktop-winner-card bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-2 border-gold-500 shadow-2xl shadow-gold-500/50 relative animate-slideUp">
                   <CardContent className="p-8 text-center space-y-6">
                     
                     {/* 🏆 Winner Announcement Title */}
