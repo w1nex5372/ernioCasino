@@ -1187,7 +1187,7 @@ function App() {
               </Card>
             )}
 
-            {/* GAME IN PROGRESS SCREEN - Show both players during game */}
+            {/* GAME IN PROGRESS SCREEN - Show countdown */}
             {gameInProgress && currentGameData && (
               <Card className="bg-slate-800/90 border-2 border-green-500/50">
                 <CardHeader className="text-center">
@@ -1198,9 +1198,15 @@ function App() {
                   <CardDescription className="text-lg text-white">
                     This game at {new Date().toLocaleTimeString()} has taken place and is now FULL.
                   </CardDescription>
-                  <p className="text-yellow-400 font-bold text-xl mt-2 animate-pulse">
-                    Winner will be announced in 3 seconds!
-                  </p>
+                  
+                  {/* COUNTDOWN TIMER */}
+                  <div className="mt-4">
+                    <CountdownTimer 
+                      onComplete={() => {
+                        console.log('⏰ Countdown complete, waiting for winner...');
+                      }}
+                    />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
