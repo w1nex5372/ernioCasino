@@ -1579,7 +1579,7 @@ function App() {
                                      room.players_count === 1 ? '🔥 Filling' :
                                      '⚡ Ready'}
                                   </Badge>
-                                  <span className="text-xs text-white/70">{room.players_count}/2</span>
+                                  <span className="text-xs text-white/70">{room.players_count}/3</span>
                                 </div>
                               </div>
                             </div>
