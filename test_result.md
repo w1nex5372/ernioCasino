@@ -300,7 +300,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Welcome Bonus System for First 100 Players"
+    - "Review Request Bugs Verification Complete"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
