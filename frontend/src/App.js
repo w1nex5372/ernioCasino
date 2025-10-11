@@ -259,9 +259,13 @@ function App() {
         }
         
         const webApp = window.Telegram.WebApp;
+        console.log('=' * 50);
+        console.log('🔍 TELEGRAM WEB APP DEBUG INFO:');
         console.log('WebApp object:', webApp);
         console.log('WebApp.initData:', webApp.initData);
         console.log('WebApp.initDataUnsafe:', webApp.initDataUnsafe);
+        console.log('WebApp.initDataUnsafe.user:', webApp.initDataUnsafe?.user);
+        console.log('=' * 50);
         
         // Initialize WebApp
         webApp.ready();
