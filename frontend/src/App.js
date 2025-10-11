@@ -1377,19 +1377,21 @@ function App() {
                                     roomType,
                                     betAmount,
                                     userBalance: user.token_balance,
-                                    playersCount: room.players_count
+                                    playersCount: room.players_count,
+                                    roomStatus: room.status
                                   });
                                   joinRoom(roomType);
                                 }}
-                                disabled={room.players_count >= 2 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount)}
+                                disabled={room.status === 'playing' || room.status === 'finished' || room.players_count >= 2 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount)}
                                 className={`w-full h-9 text-white font-semibold text-sm ${
-                                  (room.players_count >= 2 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount))
+                                  (room.status === 'playing' || room.status === 'finished' || room.players_count >= 2 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount))
                                     ? 'bg-slate-600 cursor-not-allowed' 
                                     : 'bg-green-600 hover:bg-green-700'
                                 }`}
                               >
                                 <Play className="w-3 h-3 mr-1" />
-                                {room.players_count >= 2 ? 'Full' : 
+                                {room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
+                                 room.players_count >= 2 ? 'Full' : 
                                  !betAmount ? 'Enter Bet' :
                                  parseInt(betAmount) < config.min || parseInt(betAmount) > config.max ? 'Invalid' :
                                  user.token_balance < parseInt(betAmount) ? 'Low Balance' : 'Join'}
