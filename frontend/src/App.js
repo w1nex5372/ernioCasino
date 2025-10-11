@@ -1376,10 +1376,10 @@ function App() {
                               <p className="text-yellow-400 text-sm font-medium">Bet: {player.bet_amount} tokens</p>
                             </div>
                             
-                            {/* VS Badge between players */}
-                            {index === 0 && currentGameData.players.length === 2 && (
-                              <div className="absolute left-1/2 transform -translate-x-1/2 bg-red-500 text-white font-bold px-3 py-1 rounded-full text-sm">
-                                VS
+                            {/* Battle indicator for 3-player games */}
+                            {index === 1 && currentGameData.players.length === 3 && (
+                              <div className="absolute left-1/2 transform -translate-x-1/2 bg-red-500 text-white font-bold px-2 py-1 rounded-full text-xs">
+                                ⚔️ BATTLE
                               </div>
                             )}
                           </div>
