@@ -161,10 +161,27 @@ function App() {
 
   // Socket connection
   useEffect(() => {
+    console.log('🔌 Connecting to WebSocket:', BACKEND_URL);
     const newSocket = io(BACKEND_URL, {
+      path: '/socket.io',
       transports: ['websocket', 'polling'],
       timeout: 10000,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
       forceNew: true
+    });
+    
+    newSocket.on('connect', () => {
+      console.log('✅ WebSocket connected! ID:', newSocket.id);
+    });
+    
+    newSocket.on('connect_error', (error) => {
+      console.error('❌ WebSocket connection error:', error);
+    });
+    
+    newSocket.on('disconnect', (reason) => {
+      console.warn('⚠️ WebSocket disconnected:', reason);
     });
 
     setSocket(newSocket);
