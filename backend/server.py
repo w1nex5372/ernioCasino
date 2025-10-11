@@ -1104,6 +1104,47 @@ async def add_tokens_to_user(admin_key: str, username: str, tokens: int):
         logging.error(f"Failed to add tokens: {e}")
         raise HTTPException(status_code=500, detail="Failed to add tokens")
 
+@api_router.post("/admin/add-tokens/{telegram_id}")
+async def add_tokens_by_telegram_id(telegram_id: int, admin_key: str, tokens: int):
+    """Add tokens to a user by their Telegram ID - useful for testing"""
+    
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    try:
+        # Find user by telegram_id
+        user_doc = await db.users.find_one({"telegram_id": telegram_id})
+        
+        if user_doc:
+            # Update existing user's balance
+            result = await db.users.update_one(
+                {"telegram_id": telegram_id},
+                {"$inc": {"token_balance": tokens}}
+            )
+            
+            new_balance = user_doc.get('token_balance', 0) + tokens
+            
+            logging.info(f"✅ Added {tokens} tokens to Telegram user {telegram_id}. New balance: {new_balance}")
+            
+            return {
+                "status": "success",
+                "message": f"Added {tokens} tokens to Telegram user {telegram_id}",
+                "new_balance": new_balance,
+                "user_id": user_doc.get('id'),
+                "username": user_doc.get('username', 'unknown')
+            }
+        else:
+            # User doesn't exist yet - they need to login first
+            return {
+                "status": "user_not_found",
+                "message": f"User with Telegram ID {telegram_id} not found. Please login first via Telegram, then tokens can be added.",
+                "telegram_id": telegram_id
+            }
+            
+    except Exception as e:
+        logging.error(f"Failed to add tokens by Telegram ID: {e}")
+        raise HTTPException(status_code=500, detail="Failed to add tokens")
+
 @api_router.post("/admin/cleanup-database")
 async def cleanup_database_for_production(admin_key: str):
     """ADMIN ONLY: Clean database for production launch"""
