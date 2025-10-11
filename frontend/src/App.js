@@ -876,8 +876,98 @@ function App() {
               </Card>
             )}
 
+            {/* WINNER ANNOUNCEMENT SCREEN - Show to all players after game */}
+            {showWinnerScreen && winnerData && (
+              <Card className="bg-slate-800/90 border-2 border-yellow-500">
+                <CardContent className="p-8">
+                  <div className="text-center space-y-6">
+                    {/* Trophy Animation */}
+                    <div className="flex justify-center">
+                      <div className="w-24 h-24 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center animate-bounce">
+                        <Trophy className="w-12 h-12 text-slate-900" />
+                      </div>
+                    </div>
+                    
+                    {/* Winner Announcement */}
+                    <div>
+                      <h2 className="text-3xl font-bold text-yellow-400 mb-2">
+                        🎉 Winner! 🎉
+                      </h2>
+                      <p className="text-slate-400 text-lg">
+                        {ROOM_CONFIGS[winnerData.room_type]?.icon} {ROOM_CONFIGS[winnerData.room_type]?.name}
+                      </p>
+                    </div>
+                    
+                    {/* Winner Profile */}
+                    <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded-lg border border-yellow-500/30">
+                      {/* Profile Picture */}
+                      <div className="w-24 h-24 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 flex items-center justify-center text-slate-900 font-bold text-3xl">
+                        {winnerData.winner_photo ? (
+                          <img 
+                            src={winnerData.winner_photo} 
+                            alt={winnerData.winner_name} 
+                            className="w-24 h-24 rounded-full"
+                          />
+                        ) : (
+                          winnerData.winner_name?.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      
+                      {/* Winner Name */}
+                      <div>
+                        <p className="text-2xl font-bold text-white">
+                          {winnerData.winner_name}
+                        </p>
+                        {winnerData.winner_username && (
+                          <p className="text-slate-400">@{winnerData.winner_username}</p>
+                        )}
+                      </div>
+                      
+                      {/* Winner Badge */}
+                      {winnerData.is_winner && (
+                        <Badge className="bg-green-500 text-black text-lg px-4 py-2 animate-pulse">
+                          ✓ You Won!
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {/* Claim Prize Button - ONLY FOR WINNER */}
+                    {winnerData.is_winner && winnerData.prize_link && (
+                      <div className="space-y-3">
+                        <Button
+                          onClick={() => {
+                            window.open(winnerData.prize_link, '_blank');
+                            toast.success('Prize link opened!');
+                          }}
+                          className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold text-lg py-6"
+                        >
+                          🎁 Claim Your Prize Now!
+                        </Button>
+                        <p className="text-sm text-slate-400">
+                          Your prize is also saved in "My Prizes" tab
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Close Button */}
+                    <Button
+                      onClick={() => {
+                        setShowWinnerScreen(false);
+                        setWinnerData(null);
+                        setActiveTab('rooms');
+                      }}
+                      variant="outline"
+                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                    >
+                      {winnerData.is_winner ? 'Back to Rooms' : 'Close'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* LOBBY SCREEN - Show when player is waiting in room */}
-            {inLobby && lobbyData && (
+            {!showWinnerScreen && inLobby && lobbyData && (
               <Card className="bg-slate-800/90 border-2 border-yellow-500/50">
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl text-yellow-400 flex items-center justify-center gap-2">
