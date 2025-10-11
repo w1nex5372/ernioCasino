@@ -1204,7 +1204,8 @@ async def telegram_auth(user_data: UserCreate):
     telegram_data = user_data.telegram_auth_data
     
     # Log the incoming data for debugging
-    logging.info(f"Telegram auth attempt for user ID: {telegram_data.id}")
+    logging.info(f"🔐 Telegram auth attempt for user ID: {telegram_data.id}")
+    logging.info(f"📋 Full auth data: id={telegram_data.id}, first_name={telegram_data.first_name}, username={telegram_data.username}")
     
     # For Telegram Web App, be more permissive with authentication
     # Basic validation - user must have ID and first name
@@ -1213,10 +1214,12 @@ async def telegram_auth(user_data: UserCreate):
     
     # Skip hash verification for now since Web App integration can be complex
     # In production, you'd want proper hash verification
-    logging.info(f"Authenticating Telegram user: {telegram_data.first_name} (ID: {telegram_data.id})")
+    logging.info(f"🔍 Authenticating Telegram user: {telegram_data.first_name} (ID: {telegram_data.id})")
     
     # Check if user already exists
+    logging.info(f"🔎 Searching for existing user with telegram_id={telegram_data.id}")
     existing_user = await db.users.find_one({"telegram_id": telegram_data.id})
+    logging.info(f"🔎 Search result: {'FOUND' if existing_user else 'NOT FOUND'}")
     
     if existing_user:
         # Update last login time
