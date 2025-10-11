@@ -1739,61 +1739,6 @@ function App() {
               </Card>
             )}
 
-            {/* Prizes Tab */}
-            {activeTab === 'prizes' && (
-              <Card className="bg-slate-800/90 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-purple-400">
-                    <Trophy className="w-5 h-5" />
-                    My Prizes
-                  </CardTitle>
-                  <CardDescription>Your won prizes and rewards</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {userPrizes.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Trophy className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                      <p className="text-slate-400 mb-4">No prizes won yet</p>
-                      <Button onClick={() => setActiveTab('rooms')} className="bg-yellow-600 hover:bg-yellow-700">
-                        Start Playing
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {/* Show latest prize first */}
-                      {[...userPrizes].reverse().map((prize, index) => (
-                        <div key={index} className={`p-4 bg-gradient-to-r rounded-lg ${
-                          index === 0 
-                            ? 'from-yellow-600/30 to-orange-600/30 border-2 border-yellow-500/50' 
-                            : 'from-purple-600/20 to-pink-600/20 border border-purple-500/30'
-                        }`}>
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">{ROOM_CONFIGS[prize.room_type]?.icon}</span>
-                              <span className="font-medium text-white capitalize">{prize.room_type} Room Win</span>
-                            </div>
-                            <Badge className={index === 0 ? "bg-yellow-500 text-black animate-pulse" : "bg-purple-500 text-white"}>
-                              {index === 0 ? "Latest!" : "Won"}
-                            </Badge>
-                          </div>
-                          <div className="text-sm text-slate-300 mb-3">
-                            <div>Bet Amount: <span className="text-yellow-400">{prize.bet_amount} tokens</span></div>
-                            <div>Won: {new Date(prize.timestamp).toLocaleDateString()}</div>
-                          </div>
-                          <Button
-                            onClick={() => window.open(prize.prize_link, '_blank')}
-                            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold"
-                          >
-                            🎁 Claim Prize
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
           </div>
         </main>
       </div>
