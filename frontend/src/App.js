@@ -1743,44 +1743,44 @@ function App() {
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Bottom Navigation - BIGGER & BETTER */}
       {isMobile && (
         <nav className="mobile-bottom-nav fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur-sm border-t border-slate-700 z-50">
-          <div className="flex justify-around items-center py-2 px-1 safe-area-inset-bottom">
+          <div className="flex justify-around items-center py-4 px-4 safe-area-inset-bottom">
             <button
               onClick={() => setActiveTab('rooms')}
-              className={`flex flex-col items-center p-1 rounded-lg transition-all duration-200 min-w-0 ${
+              className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-[100px] ${
                 activeTab === 'rooms' 
-                  ? 'text-yellow-400 bg-yellow-400/10' 
-                  : 'text-slate-400 active:bg-slate-700/50'
+                  ? 'text-yellow-400 bg-yellow-400/20 scale-105' 
+                  : 'text-slate-300 active:bg-slate-700/50'
               }`}
             >
-              <Users className="w-4 h-4 mb-0.5" />
-              <span className="text-xs font-medium leading-tight">Rooms</span>
+              <Users className="w-7 h-7 mb-1" />
+              <span className="text-sm font-semibold">Rooms</span>
             </button>
             
             <button
               onClick={() => setActiveTab('tokens')}
-              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 min-w-0 ${
+              className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-[100px] ${
                 activeTab === 'tokens' 
-                  ? 'text-green-400 bg-green-400/10' 
-                  : 'text-slate-400 active:bg-slate-700/50'
+                  ? 'text-green-400 bg-green-400/20 scale-105' 
+                  : 'text-slate-300 active:bg-slate-700/50'
               }`}
             >
-              <Coins className="w-4 h-4 mb-0.5" />
-              <span className="text-xs font-medium leading-tight">Tokens</span>
+              <Coins className="w-7 h-7 mb-1" />
+              <span className="text-sm font-semibold">Tokens</span>
             </button>
             
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex flex-col items-center p-2 rounded-lg transition-all duration-200 min-w-0 ${
+              className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-[100px] ${
                 activeTab === 'history' 
-                  ? 'text-blue-400 bg-blue-400/10' 
-                  : 'text-slate-400 active:bg-slate-700/50'
+                  ? 'text-blue-400 bg-blue-400/20 scale-105' 
+                  : 'text-slate-300 active:bg-slate-700/50'
               }`}
             >
-              <Timer className="w-4 h-4 mb-0.5" />
-              <span className="text-xs font-medium leading-tight">History</span>
+              <Timer className="w-7 h-7 mb-1" />
+              <span className="text-sm font-semibold">History</span>
             </button>
           </div>
         </nav>
