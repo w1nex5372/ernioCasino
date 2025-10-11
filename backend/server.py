@@ -818,7 +818,7 @@ async def broadcast_room_updates():
                 'prize_pool': room.prize_pool,
                 'round_number': room.round_number,
                 'players_count': len(room.players),
-                'max_players': 2
+                'max_players': 3
             }
             room_data.append(room_info)
         
