@@ -357,14 +357,14 @@ function App() {
         console.log('⏱️ After 1 second - winnerData:', winnerData);
       }, 1000);
       
-      // AUTO-CLOSE after 5 seconds and return to rooms
+      // AUTO-CLOSE after 2 seconds and return to rooms
       setTimeout(() => {
-        console.log('⏰ 5 seconds passed, closing winner screen...');
+        console.log('⏰ 2 seconds passed, closing winner screen...');
         setShowWinnerScreen(false);
         setWinnerData(null);
         setActiveTab('rooms');
         toast.success('Room reset! Ready for new players 🎰');
-      }, 5000);
+      }, 2000);
       
       // Refresh data
       loadRooms();
