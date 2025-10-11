@@ -1167,7 +1167,7 @@ function App() {
             )}
 
             {/* Battle Rooms Tab */}
-            {activeTab === 'rooms' && !inLobby && !showWinnerScreen && (
+            {activeTab === 'rooms' && !inLobby && !showWinnerScreen && !gameInProgress && (
               <div className={isMobile ? 'space-y-4' : 'space-y-6'}>
                 {isMobile ? (
                   <div className="text-center py-2 px-2">
