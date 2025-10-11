@@ -52,7 +52,6 @@ function DailyTokensButton({ user, onClaim }) {
   const [claiming, setClaiming] = React.useState(false);
   const [canClaim, setCanClaim] = React.useState(true);
   const [timeLeft, setTimeLeft] = React.useState('');
-  const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
   const checkClaimStatus = React.useCallback(async () => {
     if (!user) return;
