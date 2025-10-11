@@ -1548,13 +1548,16 @@ function App() {
                         <div className="py-4">
                           <p className="text-green-400 font-semibold text-lg">✓ Room Full! Checking for winner...</p>
                           <button 
-                            onClick={() => {
-                              console.log('🔴 MANUAL WINNER CHECK TRIGGERED');
-                              checkForGameCompletion(lobbyData.room_type);
+                            onClick={async () => {
+                              console.log('🔴 MANUAL WINNER CHECK');
+                              const found = await checkForGameCompletion(lobbyData.room_type);
+                              if (!found) {
+                                toast.info('No winner yet, game still in progress...');
+                              }
                             }}
-                            className="mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold"
+                            className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold"
                           >
-                            🏆 Check Winner Now
+                            🔍 Check Winner
                           </button>
                         </div>
                       )}
