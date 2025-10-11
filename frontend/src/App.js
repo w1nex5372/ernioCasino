@@ -248,16 +248,10 @@ function App() {
         
         // React will automatically re-render when state changes
         if (players.length >= 3) {
-          console.log('🎉 3 PLAYERS FOUND! Starting winner detection...');
+          console.log('🎉 3 PLAYERS FOUND! Game should start soon!');
           
-          // IMMEDIATELY start checking for winner - don't wait for game status
-          setTimeout(() => {
-            console.log('🚀 FORCING GAME TRANSITION - Checking for completed game');
-            checkForGameCompletion(lobbyData.room_type);
-          }, 1000); // Start checking after 1 second
-          
-          // Also show immediate "Game Starting" message
-          toast.success(`🎰 3 Players Ready! Game Starting...`, { duration: 3000 });
+          // Show "Game Starting" message
+          toast.success(`🎰 Room Full! Game starting...`, { duration: 3000 });
         }
       } catch (error) {
         console.error(`❌ Poll #${pollCount} - Failed:`, error);
