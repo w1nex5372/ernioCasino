@@ -119,12 +119,17 @@ function App() {
     // Game events
     newSocket.on('player_joined', (data) => {
       console.log('👤 Player joined:', data);
+      console.log('All players in room:', data.all_players);
       
-      // Update room participants
-      setRoomParticipants(prev => ({
-        ...prev,
-        [data.room_type]: data.all_players || []
-      }));
+      // Update room participants - this will trigger lobby re-render
+      setRoomParticipants(prev => {
+        const updated = {
+          ...prev,
+          [data.room_type]: data.all_players || []
+        };
+        console.log('Updated roomParticipants:', updated);
+        return updated;
+      });
       
       // Show notification
       toast.success(
