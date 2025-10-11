@@ -56,7 +56,7 @@ function DailyTokensButton({ user, onClaim }) {
   const checkClaimStatus = React.useCallback(async () => {
     if (!user) return;
     
-    const lastClaim = user.last_claimed_daily_tokens;
+    const lastClaim = user.last_daily_claim;
     if (!lastClaim) {
       setCanClaim(true);
       setTimeLeft('');
