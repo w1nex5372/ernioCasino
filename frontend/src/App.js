@@ -992,10 +992,10 @@ function App() {
                       {console.log('Lobby - lobbyData:', lobbyData)}
                       {console.log('Lobby - roomParticipants:', roomParticipants)}
                       {console.log('Lobby - Current room players:', roomParticipants[lobbyData?.room_type])}
-                      <div className="space-y-3">
+                      <div className="space-y-3" key={`lobby-${lobbyData.room_type}-${roomParticipants[lobbyData.room_type]?.length || 0}`}>
                         {roomParticipants[lobbyData.room_type]?.length > 0 ? (
                           roomParticipants[lobbyData.room_type].map((player, index) => (
-                            <div key={index} className="flex items-center gap-4 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                            <div key={`player-${player.user_id}-${index}`} className="flex items-center gap-4 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
                               {/* Profile Picture */}
                               <div className="w-12 h-12 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 flex items-center justify-center text-slate-900 font-bold text-xl flex-shrink-0">
                                 {player.photo_url ? (
