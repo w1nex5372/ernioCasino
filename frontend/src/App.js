@@ -1283,16 +1283,6 @@ function App() {
                       </div>
                     </div>
                     
-                    {/* Loading Animation */}
-                    <div className="text-center py-4">
-                      <div className="flex justify-center gap-2 mb-3">
-                        <div className="w-3 h-3 bg-green-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                        <div className="w-3 h-3 bg-yellow-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                        <div className="w-3 h-3 bg-red-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
-                      </div>
-                      <p className="text-green-400 font-semibold text-lg">Selecting Winner...</p>
-                      <p className="text-slate-400 text-sm mt-1">Higher bet = Better odds!</p>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
