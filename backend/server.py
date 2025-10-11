@@ -1255,8 +1255,24 @@ async def telegram_auth(user_data: UserCreate):
     user_dict['created_at'] = user_dict['created_at'].isoformat()
     user_dict['last_login'] = user_dict['last_login'].isoformat()
     
+    # Check if user qualifies for welcome bonus (first 100 users)
+    user_count = await db.users.count_documents({})
+    welcome_bonus = 0
+    
+    if user_count < 100:
+        welcome_bonus = 1000
+        user_dict['token_balance'] = user_dict.get('token_balance', 0) + welcome_bonus
+        logging.info(f"🎁 WELCOME BONUS! User #{user_count + 1} gets {welcome_bonus} tokens!")
+    
     await db.users.insert_one(user_dict)
-    logging.info(f"🆕 Created new user: {user.first_name} (telegram_id: {user.telegram_id})")
+    
+    if welcome_bonus > 0:
+        logging.info(f"🆕 Created new user: {user.first_name} (telegram_id: {user.telegram_id}) with {welcome_bonus} welcome bonus! Total balance: {user_dict['token_balance']}")
+        # Update the user object to reflect the bonus
+        user.token_balance = user_dict['token_balance']
+    else:
+        logging.info(f"🆕 Created new user: {user.first_name} (telegram_id: {user.telegram_id}) - Welcome bonus period ended")
+    
     return user
 
 @api_router.get("/users/{user_id}", response_model=User)
