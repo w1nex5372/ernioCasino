@@ -47,6 +47,87 @@ const ROOM_CONFIGS = {
   }
 };
 
+// Daily Tokens Button Component
+function DailyTokensButton({ user, onClaim }) {
+  const [claiming, setClaiming] = React.useState(false);
+  const [canClaim, setCanClaim] = React.useState(true);
+  const [timeLeft, setTimeLeft] = React.useState('');
+  const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+
+  const checkClaimStatus = React.useCallback(async () => {
+    if (!user) return;
+    
+    const lastClaim = user.last_daily_claim;
+    if (!lastClaim) {
+      setCanClaim(true);
+      setTimeLeft('');
+      return;
+    }
+
+    try {
+      const lastClaimDate = new Date(lastClaim);
+      const now = new Date();
+      const timeSince = (now - lastClaimDate) / 1000; // seconds
+      const timeUntilNext = Math.max(0, 86400 - timeSince);
+
+      if (timeUntilNext === 0) {
+        setCanClaim(true);
+        setTimeLeft('');
+      } else {
+        setCanClaim(false);
+        const hours = Math.floor(timeUntilNext / 3600);
+        const minutes = Math.floor((timeUntilNext % 3600) / 60);
+        setTimeLeft(`${hours}h ${minutes}m`);
+      }
+    } catch (error) {
+      setCanClaim(true);
+    }
+  }, [user]);
+
+  React.useEffect(() => {
+    checkClaimStatus();
+    const interval = setInterval(checkClaimStatus, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, [checkClaimStatus]);
+
+  const handleClaim = async () => {
+    if (!canClaim || claiming) return;
+
+    setClaiming(true);
+    try {
+      const response = await axios.post(`${API}/claim-daily-tokens/${user.id}`);
+      
+      if (response.data.status === 'success') {
+        toast.success(`🎁 ${response.data.message}`, { duration: 3000 });
+        onClaim(response.data.new_balance);
+        setCanClaim(false);
+        checkClaimStatus();
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      toast.error('Failed to claim tokens');
+    } finally {
+      setClaiming(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleClaim}
+      disabled={!canClaim || claiming}
+      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+        canClaim && !claiming
+          ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 animate-pulse'
+          : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+      }`}
+      title={canClaim ? 'Claim 10 free tokens!' : `Next claim in ${timeLeft}`}
+    >
+      {claiming ? '...' : canClaim ? '🎁 Claim 10' : `⏰ ${timeLeft}`}
+    </button>
+  );
+}
+
 // Countdown Timer Component
 function CountdownTimer({ onComplete }) {
   const [count, setCount] = React.useState(3);
