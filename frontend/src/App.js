@@ -282,27 +282,48 @@ function App() {
       
       const checkForGlobalWinners = async () => {
         try {
-          // Check for very recent completed games (last 10 seconds)
-          const response = await axios.get(`${API}/game-history?limit=5`);
+          // Check for very recent completed games (last 30 seconds for better coverage)
+          const response = await axios.get(`${API}/game-history?limit=10`);
           const games = response.data.games;
+          
+          console.log(`🔍 Global winner check - Found ${games.length} recent games for ${user.first_name}`);
           
           const veryRecentGame = games.find(game => 
             game.status === 'finished' &&
-            new Date(game.finished_at) > new Date(Date.now() - 10000) // Last 10 seconds
+            new Date(game.finished_at) > new Date(Date.now() - 30000) // Last 30 seconds (increased)
           );
           
-          if (veryRecentGame && !showWinnerScreen) {
-            console.log('🌟 GLOBAL WINNER DETECTED! Broadcasting to ALL users:', veryRecentGame);
+          if (veryRecentGame) {
+            console.log('⏰ Recent completed game found:', {
+              gameId: veryRecentGame.id,
+              finishedAt: veryRecentGame.finished_at,
+              secondsAgo: (Date.now() - new Date(veryRecentGame.finished_at)) / 1000,
+              showWinnerScreen: showWinnerScreen
+            });
             
-            // Check if current user was in this game
-            const userWasInGame = veryRecentGame.players?.some(p => 
-              p.telegram_id === user.telegram_id || p.user_id === user.id
-            );
-            
-            if (userWasInGame) {
-              console.log('🎯 Current user participated in this game! Showing winner screen...');
-              await broadcastWinnerToAllPlayers(veryRecentGame, veryRecentGame.room_type);
+            if (!showWinnerScreen) {
+              console.log('🌟 GLOBAL WINNER DETECTED! Checking participation...');
+              
+              // Check if current user was in this game
+              const userWasInGame = veryRecentGame.players?.some(p => {
+                const match = p.telegram_id === user.telegram_id || p.user_id === user.id;
+                console.log(`🔍 Checking player ${p.first_name} (telegram_id: ${p.telegram_id}, user_id: ${p.user_id}) vs current user (telegram_id: ${user.telegram_id}, id: ${user.id}): ${match}`);
+                return match;
+              });
+              
+              console.log(`👥 User participation check: ${userWasInGame ? 'PARTICIPATED' : 'NOT PARTICIPATED'}`);
+              
+              if (userWasInGame) {
+                console.log('🎯 Current user participated in this game! Showing winner screen on ALL devices...');
+                await broadcastWinnerToAllPlayers(veryRecentGame, veryRecentGame.room_type);
+              } else {
+                console.log('ℹ️ User was not in this game, skipping winner screen');
+              }
+            } else {
+              console.log('ℹ️ Winner screen already showing, skipping...');
             }
+          } else {
+            console.log('⏳ No recent completed games found (last 30 seconds)');
           }
           
         } catch (error) {
