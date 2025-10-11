@@ -170,8 +170,15 @@ class SolanaCasinoAPITester:
             return False, []
 
     def test_join_room(self, user_number=1, room_type="bronze", bet_amount=200):
-        """Test joining a room"""
-        test_user = self.test_user1 if user_number == 1 else self.test_user2
+        """Test joining a room - Updated for 3-player system"""
+        test_user = None
+        if user_number == 1:
+            test_user = self.test_user1
+        elif user_number == 2:
+            test_user = self.test_user2
+        elif user_number == 3:
+            test_user = self.test_user3
+            
         if not test_user:
             self.log_test(f"Join Room User {user_number}", False, "No test user available")
             return False
@@ -188,7 +195,7 @@ class SolanaCasinoAPITester:
             
             if success:
                 result = response.json()
-                details = f"User {user_number} joined {room_type} room, position {result['position']}/2, players needed: {result['players_needed']}"
+                details = f"User {user_number} joined {room_type} room, position {result['position']}/3, players needed: {result['players_needed']}"
                 # Update local user balance
                 test_user['token_balance'] -= bet_amount
             else:
