@@ -246,8 +246,8 @@ function App() {
         });
         
         // React will automatically re-render when state changes
-        if (players.length >= 2) {
-          console.log('🎉 2 PLAYERS FOUND! Game should start soon!');
+        if (players.length >= 3) {
+          console.log('🎉 3 PLAYERS FOUND! Game should start soon!');
         }
       } catch (error) {
         console.error(`❌ Poll #${pollCount} - Failed:`, error);
