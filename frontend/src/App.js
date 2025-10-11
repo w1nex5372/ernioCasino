@@ -1430,7 +1430,7 @@ function App() {
                       {/* Winner Photo */}
                       <div className="flex justify-center">
                         <div className="relative">
-                          <div className="w-16 h-16 rounded-full overflow-hidden border-3 border-gold-500 shadow-lg">
+                          <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-gold-500 shadow-lg">
                             {winnerData.winner?.photo_url ? (
                               <img 
                                 src={winnerData.winner.photo_url} 
