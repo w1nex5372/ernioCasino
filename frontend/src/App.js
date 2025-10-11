@@ -620,27 +620,34 @@ function App() {
 
   // Game functions
   const joinRoom = async (roomType) => {
+    console.log('🎯 JOIN ROOM CALLED!', { roomType, user, betAmount });
+    
     if (!user) {
+      console.error('❌ No user');
       toast.error('Please authenticate first');
       return;
     }
 
     if (!betAmount || betAmount < ROOM_CONFIGS[roomType].min || betAmount > ROOM_CONFIGS[roomType].max) {
+      console.error('❌ Invalid bet amount', betAmount);
       toast.error(`Bet amount must be between ${ROOM_CONFIGS[roomType].min} - ${ROOM_CONFIGS[roomType].max} tokens`);
       return;
     }
 
     if (user.token_balance < betAmount) {
+      console.error('❌ Insufficient tokens');
       toast.error('Insufficient tokens');
       return;
     }
 
+    console.log('✅ Validation passed, calling API...');
     try {
       const response = await axios.post(`${API}/join-room`, {
         room_type: roomType,
         user_id: user.id,
         bet_amount: parseInt(betAmount)
       });
+      console.log('✅ API Response:', response.data);
 
       if (response.data.status === 'joined') {
         toast.success(`Joined ${ROOM_CONFIGS[roomType].name}! Waiting for opponent...`);
