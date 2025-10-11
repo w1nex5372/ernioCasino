@@ -40,7 +40,7 @@ class FinalVerificationTester:
                 self.log_test("Complete 3-Player Scenario", False, "Database cleanup failed")
                 return False
             
-            time.sleep(1)
+            time.sleep(3)  # Wait longer for rooms to be properly reset
             
             # Create the 3 specific users from review request
             users_config = [
