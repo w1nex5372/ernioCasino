@@ -172,17 +172,19 @@ function App() {
   // Authentication and data loading
   useEffect(() => {
     // Clear any cached data and force refresh for Telegram
-    // AGGRESSIVE CACHE CLEARING for Telegram Web App
-    console.log('🧹 Clearing all caches...');
-    localStorage.clear();
+    // AGGRESSIVE CACHE CLEARING for Telegram Web App (but preserve user session)
+    console.log('🧹 Clearing caches...');
+    const savedSession = localStorage.getItem('casino_user'); // Save before clearing
     sessionStorage.clear();
     
     // Clear Service Worker caches
     if ('caches' in window) {
       caches.keys().then(cacheNames => {
         cacheNames.forEach(cacheName => {
-          caches.delete(cacheName);
-          console.log('Deleted cache:', cacheName);
+          if (cacheName.includes('casino')) {
+            caches.delete(cacheName);
+            console.log('Deleted cache:', cacheName);
+          }
         });
       });
     }
@@ -199,6 +201,7 @@ function App() {
     }
     
     // Check for saved user session first
+    const savedUser = savedSession; // Use the saved session
     const savedUser = localStorage.getItem('casino_user');
     if (savedUser) {
       try {
