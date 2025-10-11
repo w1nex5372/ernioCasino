@@ -1600,7 +1600,16 @@ function App() {
                         </div>
                       ) : (
                         <div className="py-4">
-                          <p className="text-green-400 font-semibold text-lg">✓ Room Full! Game starting soon...</p>
+                          <p className="text-green-400 font-semibold text-lg">✓ Room Full! Checking for winner...</p>
+                          <button 
+                            onClick={() => {
+                              console.log('🔴 MANUAL WINNER CHECK TRIGGERED');
+                              checkForGameCompletion(lobbyData.room_type);
+                            }}
+                            className="mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold"
+                          >
+                            🏆 Check Winner Now
+                          </button>
                         </div>
                       )}
                     </div>
