@@ -764,11 +764,11 @@ function App() {
           // If backend save fails, use frontend-only fallback
           setUser({
             id: 'fallback-' + Date.now(),
-            first_name: fallbackUser.first_name,
-            last_name: fallbackUser.last_name,
+            first_name: fallbackTelegramData.first_name,
+            last_name: fallbackTelegramData.last_name,
             token_balance: 0,
-            telegram_id: fallbackUser.telegram_id,
-            username: fallbackUser.username
+            telegram_id: fallbackTelegramData.id,
+            username: fallbackTelegramData.username
           });
           toast.warning('Using temporary account - limited functionality');
         }
