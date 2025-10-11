@@ -167,14 +167,16 @@ function App() {
     });
 
     newSocket.on('game_finished', (data) => {
-      console.log('Game finished:', data);
+      console.log('🏆 Game finished:', data);
+      console.log('Current user:', user);
       
       // Hide game screen
       setGameInProgress(false);
       setCurrentGameData(null);
+      console.log('✅ Game screen hidden');
       
       // Show winner screen to all players
-      setWinnerData({
+      const winnerInfo = {
         winner_name: data.winner_name,
         winner_telegram_id: data.winner?.telegram_id || data.winner_telegram_id,
         winner_photo: data.winner?.photo_url || '',
@@ -182,11 +184,16 @@ function App() {
         room_type: data.room_type,
         prize_link: data.prize_link,
         is_winner: user && (user.telegram_id === data.winner?.telegram_id || user.id === data.winner_id)
-      });
+      };
+      console.log('👑 Winner info:', winnerInfo);
+      
+      setWinnerData(winnerInfo);
       setShowWinnerScreen(true);
+      console.log('✅ Winner screen should now be visible');
       
       // AUTO-CLOSE after 5 seconds and return to rooms
       setTimeout(() => {
+        console.log('⏰ 5 seconds passed, closing winner screen...');
         setShowWinnerScreen(false);
         setWinnerData(null);
         setActiveTab('rooms');
