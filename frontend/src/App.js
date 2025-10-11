@@ -344,7 +344,7 @@ function App() {
       
       // Show notification
       toast.success(
-        `🎯 ${data.player.first_name} joined ${data.room_type} room! (${data.players_count}/2)`,
+        `🎯 ${data.player.first_name} joined ${data.room_type} room! (${data.players_count}/3)`,
         { duration: 3000 }
       );
       
