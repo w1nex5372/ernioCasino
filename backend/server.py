@@ -1290,8 +1290,8 @@ async def get_welcome_bonus_status():
     }
 
 @api_router.post("/admin/update-user-name/{telegram_id}")
-async def update_user_name(telegram_id: int, first_name: str, username: str = "", admin_key: str = ""):
-    """Update user name and username"""
+async def update_user_name(telegram_id: int, first_name: str, username: str = "", photo_url: str = "", admin_key: str = ""):
+    """Update user name, username and photo"""
     if admin_key != "PRODUCTION_CLEANUP_2025":
         raise HTTPException(status_code=403, detail="Invalid admin key")
     
@@ -1300,6 +1300,10 @@ async def update_user_name(telegram_id: int, first_name: str, username: str = ""
         "first_name": first_name,
         "telegram_username": username
     }
+    
+    # Add photo_url if provided
+    if photo_url:
+        update_data["photo_url"] = photo_url
     
     result = await db.users.update_one(
         {"telegram_id": telegram_id}, 
@@ -1314,7 +1318,8 @@ async def update_user_name(telegram_id: int, first_name: str, username: str = ""
         "message": f"Updated user {telegram_id} name to {first_name}",
         "telegram_id": telegram_id,
         "first_name": first_name,
-        "username": username
+        "username": username,
+        "photo_url": photo_url
     }
 
 @api_router.get("/users/{user_id}", response_model=User)
