@@ -897,14 +897,17 @@ async def start_game_round(room: GameRoom):
     except Exception as e:
         logging.error(f"Error sending Telegram notification: {e}")
     
-    # Notify all clients of the winner (but don't broadcast the prize link)
+    # Notify all clients of the winner (include prize_link for display)
     await sio.emit('game_finished', {
         'room_id': room.id,
         'room_type': room.room_type,
         'winner': winner.dict(),
+        'winner_name': f"{winner.first_name} {winner.last_name}".strip(),
+        'winner_id': winner.user_id,
         'prize_pool': room.prize_pool,
+        'prize_link': prize_link,  # Include for winner screen
         'round_number': room.round_number,
-        'has_prize': True  # Indicate that there's a prize but don't show the link
+        'has_prize': True
     })
     
     # Send prize link privately to the winner
