@@ -1471,7 +1471,10 @@ async def get_user_data(user_id: str):
             "token_balance": user_doc.get('token_balance', 0),
             "created_at": user_doc.get('created_at'),
             "last_login": user_doc.get('last_login'),
-            "is_verified": user_doc.get('is_verified', False)
+            "is_verified": user_doc.get('is_verified', False),
+            "is_admin": user_doc.get('is_admin', False),
+            "is_owner": user_doc.get('is_owner', False),
+            "role": user_doc.get('role', 'user')
         }
     except Exception as e:
         logging.error(f"Failed to get user data: {e}")
