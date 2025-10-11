@@ -261,8 +261,8 @@ function App() {
     // Fetch immediately
     fetchParticipants();
     
-    // Then poll every 500ms (reliable for lobby updates)
-    const pollInterval = setInterval(fetchParticipants, 500);
+    // Then poll every 2000ms (reasonable for lobby updates)
+    const pollInterval = setInterval(fetchParticipants, 2000);
     
     return () => {
       console.log(`🛑 Stopping lobby participant polling after ${pollCount} polls`);
