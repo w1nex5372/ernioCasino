@@ -1252,7 +1252,7 @@ async def telegram_auth(user_data: UserCreate):
     user_dict['last_login'] = user_dict['last_login'].isoformat()
     
     await db.users.insert_one(user_dict)
-    logging.info(f"Created new user: {user.first_name}")
+    logging.info(f"🆕 Created new user: {user.first_name} (telegram_id: {user.telegram_id})")
     return user
 
 @api_router.get("/users/{user_id}", response_model=User)
