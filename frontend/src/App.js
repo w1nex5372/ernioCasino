@@ -988,8 +988,79 @@ function App() {
               </Card>
             )}
 
+            {/* GAME IN PROGRESS SCREEN - Show both players during game */}
+            {gameInProgress && currentGameData && (
+              <Card className="bg-slate-800/90 border-2 border-green-500/50">
+                <CardHeader className="text-center">
+                  <CardTitle className="text-2xl text-green-400 flex items-center justify-center gap-2">
+                    <Zap className="w-6 h-6 animate-pulse" />
+                    {ROOM_CONFIGS[currentGameData.room_type]?.icon} Game In Progress
+                  </CardTitle>
+                  <CardDescription className="text-lg">
+                    Winner will be announced in 3 seconds!
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Show both players competing */}
+                    <div>
+                      <h3 className="text-white font-semibold mb-3 text-center">Battle Participants:</h3>
+                      <div className="space-y-3">
+                        {currentGameData.players?.map((player, index) => (
+                          <div key={`game-player-${player.user_id}`} className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-600/20 to-blue-600/20 rounded-lg border border-green-500/30">
+                            {/* Profile Picture */}
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-400 to-blue-400 flex items-center justify-center text-slate-900 font-bold text-xl flex-shrink-0">
+                              {player.photo_url ? (
+                                <img src={player.photo_url} alt={player.first_name} className="w-12 h-12 rounded-full" />
+                              ) : (
+                                player.first_name?.charAt(0).toUpperCase()
+                              )}
+                            </div>
+                            
+                            {/* Player Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="text-white font-semibold truncate">
+                                  {player.first_name} {player.last_name || ''}
+                                </p>
+                                {player.user_id === user?.id && (
+                                  <Badge className="bg-blue-500 text-white text-xs">You</Badge>
+                                )}
+                              </div>
+                              {player.username && (
+                                <p className="text-slate-400 text-sm">@{player.username}</p>
+                              )}
+                              <p className="text-yellow-400 text-sm font-medium">Bet: {player.bet_amount} tokens</p>
+                            </div>
+                            
+                            {/* VS Badge between players */}
+                            {index === 0 && currentGameData.players.length === 2 && (
+                              <div className="absolute left-1/2 transform -translate-x-1/2 bg-red-500 text-white font-bold px-3 py-1 rounded-full text-sm">
+                                VS
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Loading Animation */}
+                    <div className="text-center py-4">
+                      <div className="flex justify-center gap-2 mb-3">
+                        <div className="w-3 h-3 bg-green-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                        <div className="w-3 h-3 bg-yellow-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                        <div className="w-3 h-3 bg-red-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                      </div>
+                      <p className="text-green-400 font-semibold text-lg">Selecting Winner...</p>
+                      <p className="text-slate-400 text-sm mt-1">Higher bet = Better odds!</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* LOBBY SCREEN - Show when player is waiting in room */}
-            {!showWinnerScreen && inLobby && lobbyData && (
+            {!showWinnerScreen && !gameInProgress && inLobby && lobbyData && (
               <Card className="bg-slate-800/90 border-2 border-yellow-500/50">
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl text-yellow-400 flex items-center justify-center gap-2">
