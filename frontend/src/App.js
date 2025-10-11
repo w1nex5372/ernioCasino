@@ -183,6 +183,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('rooms');
   const [isMobile, setIsMobile] = useState(false);
   const [casinoWalletAddress, setCasinoWalletAddress] = useState('Loading...');
+  const [welcomeBonusStatus, setWelcomeBonusStatus] = useState(null);
 
   // Form state
   const [selectedRoom, setSelectedRoom] = useState(null);
