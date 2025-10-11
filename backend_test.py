@@ -2584,8 +2584,8 @@ class SolanaCasinoAPITester:
         print("=" * 60)
         
         # PRIORITY 1: Test the critical issue first
-        print("🚨 PRIORITY TEST: Critical 3-Player Lobby → Winner Flow")
-        self.test_critical_3_player_lobby_to_winner_flow()
+        print("🚨 PRIORITY TEST: Critical Silver Room Lobby → Winner Flow")
+        self.test_critical_silver_room_lobby_to_winner_flow()
         
         # Basic connectivity
         if not self.test_api_root():
