@@ -1086,20 +1086,26 @@ function App() {
                           <p className="text-white text-2xl font-bold mb-2">
                             Congratulations!
                           </p>
+                          <p className="text-slate-300 text-lg mb-2">
+                            {ROOM_CONFIGS[winnerData.room_type]?.icon} {ROOM_CONFIGS[winnerData.room_type]?.name} at {winnerData.game_time}
+                          </p>
                         </>
                       ) : (
                         <>
-                          <h2 className="text-3xl font-bold text-red-400 mb-2">
-                            Game Over
+                          <h2 className="text-3xl font-bold text-orange-400 mb-3">
+                            Room {ROOM_CONFIGS[winnerData.room_type]?.name} is Full
                           </h2>
-                          <p className="text-white text-xl font-bold mb-2">
-                            Winner is: <span className="text-yellow-400">{winnerData.winner_name}</span>
+                          <p className="text-white text-lg mb-2">
+                            This game at <span className="text-yellow-400 font-bold">{winnerData.game_time}</span> has ended.
+                          </p>
+                          <p className="text-white text-2xl font-bold mb-2">
+                            Winner: <span className="text-green-400">{winnerData.winner_name}</span>
+                          </p>
+                          <p className="text-slate-400 text-sm">
+                            Better luck next time!
                           </p>
                         </>
                       )}
-                      <p className="text-slate-400 text-lg">
-                        {ROOM_CONFIGS[winnerData.room_type]?.icon} {ROOM_CONFIGS[winnerData.room_type]?.name}
-                      </p>
                     </div>
                     
                     {/* Winner Profile */}
