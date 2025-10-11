@@ -213,11 +213,11 @@ class RoomJoiningTester:
                 self.log_result("4. Player 2 Join Bronze", False, "Failed to create Player 2")
                 return False, None
             
-            # Join bronze room with specified data
+            # Join bronze room with valid bet amount (bronze range: 150-450)
             join_data = {
                 "user_id": "test-user-2",
                 "room_type": "bronze",
-                "bet_amount": 10
+                "bet_amount": 200  # Valid bet amount for bronze room
             }
             
             response = requests.post(f"{self.api_url}/join-room", json=join_data)
