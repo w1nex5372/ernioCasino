@@ -194,6 +194,7 @@ class User(BaseModel):
     is_admin: bool = Field(default=False)
     is_owner: bool = Field(default=False)
     role: str = Field(default="user")  # user, admin, owner
+    last_daily_claim: Optional[str] = None  # Timestamp of last daily token claim
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_login: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
