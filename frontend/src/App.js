@@ -77,6 +77,14 @@ function App() {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [betAmount, setBetAmount] = useState('');
 
+  // Debug roomParticipants changes
+  useEffect(() => {
+    console.log('🔄 roomParticipants changed:', roomParticipants);
+    if (lobbyData) {
+      console.log(`Players in ${lobbyData.room_type} room:`, roomParticipants[lobbyData.room_type]);
+    }
+  }, [roomParticipants, lobbyData]);
+
   // Mobile detection - force mobile for Telegram WebApp
   useEffect(() => {
     const checkMobile = () => {
