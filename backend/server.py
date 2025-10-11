@@ -832,7 +832,7 @@ async def broadcast_room_updates():
 
 async def start_game_round(room: GameRoom):
     """Start a game round when room is full"""
-    if len(room.players) != 2:
+    if len(room.players) != 3:
         return
     
     room.status = "playing"
