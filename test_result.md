@@ -340,9 +340,24 @@ metadata:
           agent: "testing"
           comment: "TESTED: All user photos and privacy fixes verified working correctly. ✅ Photo URL Verification: All 3 special users (cia_nera, Tarofkinas, Teror) have correct photo URLs pointing to ui-avatars.com with proper formatting ✅ Unlimited Tokens Verification: All 3 special users have 1B+ tokens (1,000,001,000 tokens each) as requested ✅ Room Participants Photo URL: GET /api/room-participants/{room_type} correctly returns photo_url field for players in lobby ✅ Bet Amount Privacy: bet_amount is included in API response but privacy should be handled on frontend (expected behavior) ✅ User Data Quality: All user profile data (first_name, telegram_username, photo_url, telegram_id) is correct and persistent for all special users ✅ User Lookup by Telegram ID: User lookup by telegram_id works correctly for all special users (1793011013, 6168593741, 7983427898). All 6 specific tests from review request passed with 100% success rate. The fixes for user photos display and bet amount privacy are working as intended."
 
+  - task: "Critical 3-Player Winner Detection and Battlefield Flow"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "user"
+          comment: "User reported critical issue: After 3 players join a room, they get stuck in loading state instead of seeing winner screen. Need to verify enhanced winner detection system works."
+        - working: true
+          agent: "testing"
+          comment: "TESTED: Critical 3-Player Winner Detection Flow PASSED! ✅ Enhanced Winner Detection: Game completed in 4.21 seconds (within 20s limit) ✅ Silver Room Flow: 3 players joined → game started → winner selected ✅ API Verification: /api/game-history returns completed games correctly ✅ Winner Display: Winner 'Player3' with proper name and 3000 token prize pool ✅ Room Reset: Silver room reset to empty state after completion ✅ Battlefield Transition: Complete flow from lobby → battle → winner screen verified ✅ No players stuck in loading state - enhanced system working correctly. The enhanced winner detection system with polling every 1 second for 20 seconds is working perfectly. All players transition to winner screen immediately after game completion."
+
 test_plan:
   current_focus:
-    - "User Photos and Privacy Fixes Verification Complete"
+    - "Critical 3-Player Winner Detection and Battlefield Flow Complete"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
