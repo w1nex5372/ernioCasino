@@ -378,55 +378,72 @@ class SolanaCasinoAPITester:
             self.log_test("Casino Wallet Info", False, str(e))
             return False
 
-    def test_two_player_game_flow(self):
-        """Test complete 2-player game flow with winner selection"""
-        if not self.test_user1 or not self.test_user2:
-            self.log_test("2-Player Game Flow", False, "Need both test users")
+    def test_three_player_game_flow(self):
+        """Test complete 3-player game flow with winner selection"""
+        if not self.test_user1 or not self.test_user2 or not self.test_user3:
+            self.log_test("3-Player Game Flow", False, "Need all three test users")
             return False
         
         try:
-            print("\n🎮 Testing 2-Player Game Flow...")
+            print("\n🎮 Testing 3-Player Game Flow...")
             
-            # Both users join the same Bronze room
+            # All three users join the same Bronze room
             bet_amount = 300  # Within Bronze range (150-450)
             
             # User 1 joins first
             success1, result1 = self.test_join_room(1, "bronze", bet_amount)
             if not success1:
-                self.log_test("2-Player Game Flow", False, "User 1 failed to join room")
+                self.log_test("3-Player Game Flow", False, "User 1 failed to join room")
                 return False
             
-            # User 2 joins second (should trigger game start)
+            # User 2 joins second (should NOT trigger game start yet)
             success2, result2 = self.test_join_room(2, "bronze", bet_amount)
             if not success2:
-                self.log_test("2-Player Game Flow", False, "User 2 failed to join room")
+                self.log_test("3-Player Game Flow", False, "User 2 failed to join room")
+                return False
+            
+            # Verify game hasn't started yet with only 2 players
+            if result2.get('players_needed', 0) != 1:
+                self.log_test("3-Player Game Flow", False, f"Expected 1 player needed after 2 joins, got {result2.get('players_needed')}")
+                return False
+            
+            # User 3 joins third (should trigger game start)
+            success3, result3 = self.test_join_room(3, "bronze", bet_amount)
+            if not success3:
+                self.log_test("3-Player Game Flow", False, "User 3 failed to join room")
+                return False
+            
+            # Verify game starts when 3rd player joins
+            if result3.get('players_needed', 1) != 0:
+                self.log_test("3-Player Game Flow", False, f"Expected 0 players needed after 3 joins, got {result3.get('players_needed')}")
                 return False
             
             # Wait for game to complete (3 seconds + processing time)
-            print("⏳ Waiting for game to complete...")
+            print("⏳ Waiting for 3-player game to complete...")
             time.sleep(5)
             
-            # Check if either user has won prizes
+            # Check if any user has won prizes
             success_prizes1, prizes1 = self.test_user_prizes(1)
             success_prizes2, prizes2 = self.test_user_prizes(2)
+            success_prizes3, prizes3 = self.test_user_prizes(3)
             
-            if not success_prizes1 or not success_prizes2:
-                self.log_test("2-Player Game Flow", False, "Failed to check prizes")
+            if not success_prizes1 or not success_prizes2 or not success_prizes3:
+                self.log_test("3-Player Game Flow", False, "Failed to check prizes")
                 return False
             
             # One user should have a new prize
-            total_new_prizes = len(prizes1) + len(prizes2)
+            total_new_prizes = len(prizes1) + len(prizes2) + len(prizes3)
             if total_new_prizes >= 1:
-                winner_num = 1 if len(prizes1) > 0 else 2
-                details = f"Game completed successfully! User {winner_num} won the prize. Total prizes found: {total_new_prizes}"
-                self.log_test("2-Player Game Flow", True, details)
+                winner_num = 1 if len(prizes1) > 0 else (2 if len(prizes2) > 0 else 3)
+                details = f"3-Player game completed successfully! User {winner_num} won the prize. Total prizes found: {total_new_prizes}"
+                self.log_test("3-Player Game Flow", True, details)
                 return True
             else:
-                self.log_test("2-Player Game Flow", False, "No winner found after game completion")
+                self.log_test("3-Player Game Flow", False, "No winner found after 3-player game completion")
                 return False
                 
         except Exception as e:
-            self.log_test("2-Player Game Flow", False, str(e))
+            self.log_test("3-Player Game Flow", False, str(e))
             return False
 
     def test_room_participant_tracking(self):
