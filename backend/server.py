@@ -1299,7 +1299,7 @@ async def get_active_rooms():
             "id": room.id,
             "room_type": room.room_type,
             "players_count": len(room.players),
-            "max_players": 2,
+            "max_players": 3,
             "status": room.status,
             "prize_pool": room.prize_pool,
             "round_number": room.round_number,
