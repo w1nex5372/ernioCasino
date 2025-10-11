@@ -298,6 +298,18 @@ metadata:
           agent: "testing"
           comment: "TESTED: Welcome Bonus system working perfectly for first 100 players. ✅ GET /api/welcome-bonus-status endpoint functional - returns current user count (10), remaining spots (90), bonus_active status (true), and bonus amount (1000 tokens) ✅ New user registration automatically grants 1000 tokens when within first 100 users - verified with multiple test users ✅ User count tracking works correctly - increments with each new registration and decrements remaining spots ✅ Welcome bonus logic properly implemented in /auth/telegram endpoint (lines 1258-1276) ✅ Bonus depletion edge cases handled correctly - bonus_active becomes false when remaining_spots reaches 0 ✅ Mathematical validation: total_users + remaining_spots = 100 at all times ✅ After 100 users, new registrations correctly receive 0 tokens ✅ All 6 welcome bonus tests passed (100% success rate) ✅ System ready for production with proper user count tracking and bonus distribution. Current status: 10 users registered, 90 spots remaining, bonus active."
 
+  - task: "Review Request Bugs Verification"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "TESTED: All 4 specific bugs from review request have been completely fixed and verified working. ✅ BUG 1 FIXED - 3-Player Game Logic: Room correctly waits for exactly 3 players before starting, not 2. Verified room status progression 0/3 → 1/3 → 2/3 → 3/3 with game starting only when 3rd player joins. All rooms show max_players=3. ✅ BUG 2 FIXED - Real Telegram Names: Players show real names like 'cia nera', 'Tarofkinas', 'Teror' instead of generic 'Participant2/3'. Fixed backend mapping issue from username to telegram_username field. ✅ BUG 3 FIXED - Unlimited Tokens: Verified specific users @cia_nera (telegram_id: 1793011013), @Teror (telegram_id: 7983427898), @Tarofkinas (telegram_id: 6168593741) all have 999M+ tokens. ✅ BUG 4 FIXED - Winner Display: Winners properly shown to all players with real names in game history. ✅ COMPLETE END-TO-END SCENARIO TESTED: All 3 specific users created, joined Bronze room, game started only when 3rd player joined, winner 'Tarofkinas' displayed with real name. All API endpoints working correctly for 3-player system. 100% success rate on all review request tests."
+
 test_plan:
   current_focus:
     - "Review Request Bugs Verification Complete"
