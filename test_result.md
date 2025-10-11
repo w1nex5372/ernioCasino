@@ -264,7 +264,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Mobile Portrait Layout Optimization"
+    - "Daily Free Tokens System"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
