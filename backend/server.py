@@ -1233,8 +1233,8 @@ async def telegram_auth(user_data: UserCreate):
             existing_user['created_at'] = datetime.fromisoformat(existing_user['created_at'])
         if isinstance(existing_user['last_login'], str):
             existing_user['last_login'] = datetime.fromisoformat(existing_user['last_login'])
-            
-        logging.info(f"Returning existing user: {existing_user['first_name']}")
+        
+        logging.info(f"✅ Returning existing user: {existing_user['first_name']} with balance: {existing_user.get('token_balance', 0)}")
         return User(**existing_user)
     
     # Create new user
