@@ -1855,7 +1855,7 @@ function App() {
       {/* Mobile Bottom Navigation - BIGGER & BETTER */}
       {isMobile && (
         <nav className="mobile-bottom-nav fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur-sm border-t border-slate-700 z-50">
-          <div className="flex justify-around items-center py-4 px-4 safe-area-inset-bottom">
+          <div className="flex justify-evenly items-center py-3 px-2 safe-area-inset-bottom max-w-md mx-auto">
             <button
               onClick={() => setActiveTab('rooms')}
               className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-[100px] ${
