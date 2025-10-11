@@ -1210,7 +1210,7 @@ function App() {
                     {/* Auto-close message */}
                     <div className="text-center">
                       <p className="text-slate-400 text-sm animate-pulse">
-                        Returning to rooms in 5 seconds...
+                        Returning to rooms in 2 seconds...
                       </p>
                     </div>
                   </div>
