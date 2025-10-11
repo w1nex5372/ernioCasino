@@ -140,13 +140,20 @@ function App() {
       setActiveRoom(data);
     });
 
+    newSocket.on('game_starting', (data) => {
+      console.log('Game starting:', data);
+      toast.info('Game starting! Good luck! 🎰');
+      // Keep in lobby but show game is starting
+    });
+
     newSocket.on('game_finished', (data) => {
-      console.log('🏁 Game finished:', data);
+      console.log('Game finished:', data);
       toast.success(`🏆 Game finished! Winner: ${data.winner_name}`);
       setActiveRoom(null);
+      setInLobby(false);
+      setLobbyData(null);
       loadRooms();
       loadGameHistory();
-      loadLeaderboard();
       if (user) loadUserPrizes();
     });
 
