@@ -829,43 +829,7 @@ function App() {
     }
   };
 
-  const checkGameStatus = async (roomType) => {
-    try {
-      // Check if there's an active or finished game for this room
-      const response = await axios.get(`${API}/rooms`);
-      const rooms = response.data.rooms;
-      const room = rooms.find(r => r.room_type === roomType);
-      
-      if (!room) return;
-      
-      console.log(`🎮 Room ${roomType} status:`, room.status, `players: ${room.players_count}/3`);
-      
-      // If room status is 'playing' and we're still in lobby, transition to game
-      if (room.status === 'playing' && inLobby) {
-        console.log('🎮 GAME STARTED! Transitioning from lobby to game...');
-        setInLobby(false);
-        setGameInProgress(true);
-        setCurrentGameData({
-          room_type: roomType,
-          players: roomParticipants[roomType] || [],
-          message: 'Game in progress...'
-        });
-        toast.success(`🎰 Game Started! Determining winner...`, { duration: 3000 });
-        
-        // Start checking for game completion
-        setTimeout(() => checkForGameCompletion(roomType), 2000);
-      }
-      
-      // If room status is 'finished', show winner
-      if (room.status === 'finished') {
-        console.log('🏆 GAME FINISHED! Checking for winner...');
-        checkForGameCompletion(roomType);
-      }
-      
-    } catch (error) {
-      console.error('Failed to check game status:', error);
-    }
-  };
+  // Removed problematic checkGameStatus function that caused infinite loops
 
   const checkForGameCompletion = async (roomType) => {
     try {
