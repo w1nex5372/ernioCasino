@@ -145,14 +145,17 @@ function App() {
 
     newSocket.on('game_starting', (data) => {
       console.log('🎮 Game starting:', data);
-      toast.info(`🎮 Game starting in ${data.room_type} room!`);
-      setActiveRoom(data);
-    });
-
-    newSocket.on('game_starting', (data) => {
-      console.log('Game starting:', data);
       toast.info('Game starting! Good luck! 🎰');
-      // Keep in lobby but show game is starting
+      
+      // Transition from lobby to game screen
+      setInLobby(false);
+      setGameInProgress(true);
+      setCurrentGameData({
+        room_type: data.room_type,
+        players: roomParticipants[data.room_type] || [],
+        message: 'Game in progress...'
+      });
+      setActiveRoom(data);
     });
 
     newSocket.on('game_finished', (data) => {
