@@ -161,6 +161,10 @@ function App() {
     newSocket.on('game_finished', (data) => {
       console.log('Game finished:', data);
       
+      // Hide game screen
+      setGameInProgress(false);
+      setCurrentGameData(null);
+      
       // Show winner screen to all players
       setWinnerData({
         winner_name: data.winner_name,
