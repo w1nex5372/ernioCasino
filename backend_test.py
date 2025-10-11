@@ -1419,6 +1419,286 @@ class SolanaCasinoAPITester:
             self.log_test("Daily Tokens Balance Persistence Direct", False, str(e))
             return False
 
+    def test_welcome_bonus_status(self):
+        """Test GET /api/welcome-bonus-status endpoint"""
+        try:
+            response = requests.get(f"{self.api_url}/welcome-bonus-status")
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                total_users = data.get('total_users', 0)
+                remaining_spots = data.get('remaining_spots', 0)
+                bonus_active = data.get('bonus_active', False)
+                bonus_amount = data.get('bonus_amount', 0)
+                message = data.get('message', '')
+                
+                # Validate response structure
+                if bonus_amount != 1000:
+                    success = False
+                    details = f"Expected bonus_amount=1000, got {bonus_amount}"
+                elif remaining_spots < 0:
+                    success = False
+                    details = f"Invalid remaining_spots: {remaining_spots}"
+                elif total_users + remaining_spots != 100:
+                    success = False
+                    details = f"Math error: {total_users} + {remaining_spots} != 100"
+                else:
+                    details = f"Status: {total_users} users, {remaining_spots} spots left, bonus_active={bonus_active}, amount={bonus_amount}"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test("Welcome Bonus Status API", success, details)
+            return success, data if success else None
+        except Exception as e:
+            self.log_test("Welcome Bonus Status API", False, str(e))
+            return False, None
+
+    def test_welcome_bonus_new_user_registration(self):
+        """Test that new users get welcome bonus if within first 100"""
+        try:
+            # Get current bonus status first
+            status_success, status_data = self.test_welcome_bonus_status()
+            if not status_success:
+                self.log_test("Welcome Bonus New User Registration", False, "Failed to get bonus status")
+                return False
+            
+            remaining_spots = status_data.get('remaining_spots', 0)
+            bonus_active = status_data.get('bonus_active', False)
+            
+            # Create a new unique user
+            unique_telegram_id = int(time.time()) % 1000000000  # Use timestamp for uniqueness
+            
+            user_data = {
+                "telegram_auth_data": {
+                    "id": unique_telegram_id,
+                    "first_name": "WelcomeTest",
+                    "last_name": "User",
+                    "username": f"welcometest{unique_telegram_id}",
+                    "photo_url": "https://example.com/welcometest.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+            success = response.status_code == 200
+            
+            if success:
+                user = response.json()
+                user_balance = user.get('token_balance', 0)
+                
+                if bonus_active and remaining_spots > 0:
+                    # User should get 1000 tokens as welcome bonus
+                    if user_balance == 1000:
+                        details = f"✅ New user #{100 - remaining_spots + 1} received 1000 welcome bonus tokens. Balance: {user_balance}"
+                    else:
+                        success = False
+                        details = f"❌ Expected 1000 welcome bonus tokens, user got {user_balance}"
+                else:
+                    # Welcome bonus period ended, user should get 0 tokens
+                    if user_balance == 0:
+                        details = f"✅ Welcome bonus period ended. New user correctly received 0 tokens. Balance: {user_balance}"
+                    else:
+                        success = False
+                        details = f"❌ Welcome bonus ended but user got {user_balance} tokens instead of 0"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test("Welcome Bonus New User Registration", success, details)
+            return success, user if success else None
+        except Exception as e:
+            self.log_test("Welcome Bonus New User Registration", False, str(e))
+            return False, None
+
+    def test_welcome_bonus_user_count_tracking(self):
+        """Test that user count increments correctly with each new registration"""
+        try:
+            # Get initial status
+            initial_response = requests.get(f"{self.api_url}/welcome-bonus-status")
+            if initial_response.status_code != 200:
+                self.log_test("Welcome Bonus User Count Tracking", False, "Failed to get initial status")
+                return False
+            
+            initial_data = initial_response.json()
+            initial_count = initial_data.get('total_users', 0)
+            initial_remaining = initial_data.get('remaining_spots', 0)
+            
+            # Create a new user
+            unique_telegram_id = int(time.time()) % 1000000000 + 1000  # Ensure uniqueness
+            
+            user_data = {
+                "telegram_auth_data": {
+                    "id": unique_telegram_id,
+                    "first_name": "CountTest",
+                    "last_name": "User",
+                    "username": f"counttest{unique_telegram_id}",
+                    "photo_url": "https://example.com/counttest.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+            if auth_response.status_code != 200:
+                self.log_test("Welcome Bonus User Count Tracking", False, "Failed to create new user")
+                return False
+            
+            # Get status after user creation
+            final_response = requests.get(f"{self.api_url}/welcome-bonus-status")
+            if final_response.status_code != 200:
+                self.log_test("Welcome Bonus User Count Tracking", False, "Failed to get final status")
+                return False
+            
+            final_data = final_response.json()
+            final_count = final_data.get('total_users', 0)
+            final_remaining = final_data.get('remaining_spots', 0)
+            
+            # Verify count increased by 1
+            success = final_count == initial_count + 1 and final_remaining == initial_remaining - 1
+            
+            if success:
+                details = f"✅ User count correctly incremented: {initial_count} → {final_count}, remaining: {initial_remaining} → {final_remaining}"
+            else:
+                details = f"❌ Count tracking failed: users {initial_count} → {final_count}, remaining {initial_remaining} → {final_remaining}"
+            
+            self.log_test("Welcome Bonus User Count Tracking", success, details)
+            return success
+        except Exception as e:
+            self.log_test("Welcome Bonus User Count Tracking", False, str(e))
+            return False
+
+    def test_welcome_bonus_depletion_edge_cases(self):
+        """Test welcome bonus behavior as we approach and exceed 100 users"""
+        try:
+            # Get current status
+            status_response = requests.get(f"{self.api_url}/welcome-bonus-status")
+            if status_response.status_code != 200:
+                self.log_test("Welcome Bonus Depletion Edge Cases", False, "Failed to get status")
+                return False
+            
+            status_data = status_response.json()
+            current_users = status_data.get('total_users', 0)
+            remaining_spots = status_data.get('remaining_spots', 0)
+            bonus_active = status_data.get('bonus_active', False)
+            
+            details = f"Current state: {current_users} users, {remaining_spots} spots remaining, bonus_active={bonus_active}"
+            
+            if remaining_spots > 0:
+                # Test that bonus is still active
+                if not bonus_active:
+                    success = False
+                    details += " - ERROR: Bonus should be active with remaining spots"
+                else:
+                    success = True
+                    details += " - ✅ Bonus correctly active with remaining spots"
+            else:
+                # Test that bonus is inactive
+                if bonus_active:
+                    success = False
+                    details += " - ERROR: Bonus should be inactive with no remaining spots"
+                else:
+                    success = True
+                    details += " - ✅ Bonus correctly inactive with no remaining spots"
+            
+            # Additional validation: total should always be 100
+            if current_users + remaining_spots != 100:
+                success = False
+                details += f" - ERROR: Math doesn't add up: {current_users} + {remaining_spots} != 100"
+            
+            self.log_test("Welcome Bonus Depletion Edge Cases", success, details)
+            return success
+        except Exception as e:
+            self.log_test("Welcome Bonus Depletion Edge Cases", False, str(e))
+            return False
+
+    def test_welcome_bonus_after_100_users(self):
+        """Test that welcome bonus stops after 100th user"""
+        try:
+            # Get current status
+            status_response = requests.get(f"{self.api_url}/welcome-bonus-status")
+            if status_response.status_code != 200:
+                self.log_test("Welcome Bonus After 100 Users", False, "Failed to get status")
+                return False
+            
+            status_data = status_response.json()
+            remaining_spots = status_data.get('remaining_spots', 0)
+            bonus_active = status_data.get('bonus_active', False)
+            
+            if remaining_spots > 0:
+                # Can't test this scenario yet - not enough users
+                self.log_test("Welcome Bonus After 100 Users", True, 
+                            f"Cannot test - still {remaining_spots} spots remaining. Test will be valid when bonus period ends.")
+                return True
+            
+            # Bonus period should be over - test creating new user gets 0 tokens
+            unique_telegram_id = int(time.time()) % 1000000000 + 2000
+            
+            user_data = {
+                "telegram_auth_data": {
+                    "id": unique_telegram_id,
+                    "first_name": "PostBonus",
+                    "last_name": "User",
+                    "username": f"postbonus{unique_telegram_id}",
+                    "photo_url": "https://example.com/postbonus.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+            success = auth_response.status_code == 200
+            
+            if success:
+                user = auth_response.json()
+                user_balance = user.get('token_balance', 0)
+                
+                if user_balance == 0:
+                    details = f"✅ Post-100 user correctly received 0 tokens (bonus period ended)"
+                else:
+                    success = False
+                    details = f"❌ Post-100 user incorrectly received {user_balance} tokens"
+            else:
+                details = f"Failed to create post-100 user: {auth_response.status_code}"
+            
+            self.log_test("Welcome Bonus After 100 Users", success, details)
+            return success
+        except Exception as e:
+            self.log_test("Welcome Bonus After 100 Users", False, str(e))
+            return False
+
+    def test_welcome_bonus_comprehensive(self):
+        """Comprehensive test of the Welcome Bonus system"""
+        try:
+            print("\n🎁 Testing Welcome Bonus System for First 100 Players...")
+            
+            # Test 1: Welcome Bonus Status API
+            print("📊 Testing Welcome Bonus Status API...")
+            self.test_welcome_bonus_status()
+            
+            # Test 2: New User Registration with Welcome Bonus
+            print("👤 Testing New User Registration with Welcome Bonus...")
+            self.test_welcome_bonus_new_user_registration()
+            
+            # Test 3: User Count Tracking
+            print("🔢 Testing User Count Tracking...")
+            self.test_welcome_bonus_user_count_tracking()
+            
+            # Test 4: Edge Cases and Depletion Logic
+            print("⚠️  Testing Welcome Bonus Depletion Edge Cases...")
+            self.test_welcome_bonus_depletion_edge_cases()
+            
+            # Test 5: Behavior After 100 Users
+            print("🚫 Testing Behavior After 100 Users...")
+            self.test_welcome_bonus_after_100_users()
+            
+            print("✅ Welcome Bonus comprehensive testing completed")
+            return True
+            
+        except Exception as e:
+            self.log_test("Welcome Bonus Comprehensive", False, str(e))
+            return False
+
     def test_invalid_endpoints(self):
         """Test error handling for invalid requests"""
         tests = [
