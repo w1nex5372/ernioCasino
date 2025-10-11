@@ -2344,6 +2344,10 @@ class SolanaCasinoAPITester:
         print("🎰 Starting Solana Casino 3-Player Game Tests...")
         print("=" * 60)
         
+        # PRIORITY 1: Test the critical issue first
+        print("🚨 PRIORITY TEST: Critical 3-Player Lobby → Winner Flow")
+        self.test_critical_3_player_lobby_to_winner_flow()
+        
         # Basic connectivity
         if not self.test_api_root():
             print("❌ API is not accessible, stopping tests")
