@@ -1436,41 +1436,6 @@ function App() {
                               </div>
                             </div>
                             <div className="p-2 space-y-2">
-                              {/* Room Participants Display */}
-                              <div className="min-h-[40px]">
-                                {roomParticipants[roomType] && roomParticipants[roomType].length > 0 ? (
-                                  <div className="space-y-1">
-                                    {roomParticipants[roomType].map((player, idx) => (
-                                      <div key={idx} className="flex items-center gap-2 bg-slate-700/50 rounded p-1">
-                                        <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-xs font-bold text-white">
-                                          {player.first_name?.[0] || '?'}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="text-xs text-white font-medium truncate">
-                                            {player.username ? `@${player.username}` : player.first_name}
-                                          </div>
-                                        </div>
-                                        <div className="text-xs text-yellow-400 font-bold">
-                                          {player.bet_amount}
-                                        </div>
-                                      </div>
-                                    ))}
-                                    {roomParticipants[roomType].length === 1 && (
-                                      <div className="flex items-center gap-2 bg-slate-600/30 rounded p-1 border-2 border-dashed border-slate-500">
-                                        <div className="w-5 h-5 bg-slate-500 rounded-full flex items-center justify-center">
-                                          <span className="text-xs">?</span>
-                                        </div>
-                                        <div className="text-xs text-slate-400 italic">Waiting for opponent...</div>
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center justify-center h-full">
-                                    <p className="text-slate-400 text-xs">Empty room</p>
-                                  </div>
-                                )}
-                              </div>
-                              
                               <Input
                                 type="number"
                                 placeholder={`${config.min}-${config.max}`}
