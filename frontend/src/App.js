@@ -833,12 +833,12 @@ function App() {
     }
   };
 
-  // Winner detection system for 3-player games
+  // Enhanced winner detection system for ALL players in room
   const startWinnerDetection = (roomType) => {
     let attempts = 0;
-    const maxAttempts = 20; // Check for 20 seconds max
+    const maxAttempts = 30; // Check for 30 seconds max
     
-    console.log(`🔍 Starting winner detection for ${roomType} room`);
+    console.log(`🔍 Starting synchronized winner detection for ${roomType} room`);
     
     const checkForWinner = async () => {
       attempts++;
@@ -846,64 +846,36 @@ function App() {
       
       try {
         // Check game history for recent completed games of this room type
-        const response = await axios.get(`${API}/game-history?limit=10`);
+        const response = await axios.get(`${API}/game-history?limit=15`);
         const games = response.data.games;
         
-        // Look for the most recent completed game of this room type
+        // Look for ANY recent completed game of this room type (within last 60 seconds)
         const recentGame = games.find(game => 
           game.room_type === roomType && 
           game.status === 'finished' &&
-          new Date(game.finished_at) > new Date(Date.now() - 30000) // Within last 30 seconds
+          new Date(game.finished_at) > new Date(Date.now() - 60000) // Within last 60 seconds
         );
         
         if (recentGame && recentGame.winner) {
-          console.log('🏆 WINNER FOUND!', recentGame.winner);
+          console.log('🏆 WINNER FOUND FOR ALL PLAYERS!', recentGame.winner);
           
-          // FORCE TRANSITION TO WINNER SCREEN FOR ALL PLAYERS
-          const winnerName = `${recentGame.winner.first_name} ${recentGame.winner.last_name || ''}`.trim();
-          
-          // Exit lobby state immediately  
-          setInLobby(false);
-          setGameInProgress(false);
-          setShowWinnerScreen(true);
-          
-          // Set winner data
-          setWinnerData({
-            winner: recentGame.winner,
-            winner_name: winnerName,
-            room_type: roomType,
-            prize_pool: recentGame.prize_pool,
-            prize_link: recentGame.prize_link
-          });
-          
-          // Show winner announcement
-          toast.success(`🎉 WINNER: ${winnerName}! 🏆`, { 
-            duration: 8000,
-            style: {
-              background: '#10b981',
-              color: 'white',
-              fontSize: '18px',
-              fontWeight: 'bold'
-            }
-          });
-          
-          console.log('✅ Winner screen activated for all players!');
-          
-          // Reload rooms after 5 seconds
-          setTimeout(() => {
-            loadRooms();
-          }, 5000);
+          // BROADCAST WINNER TO ALL PLAYERS IN THIS ROOM
+          await broadcastWinnerToAllPlayers(recentGame, roomType);
           
           return true; // Winner found, stop checking
         }
         
         // Continue checking if no winner yet and under max attempts
         if (attempts < maxAttempts) {
-          console.log(`⏳ No winner yet, checking again in 1 second... (${attempts}/${maxAttempts})`);
-          setTimeout(checkForWinner, 1000);
+          console.log(`⏳ No winner yet, checking again in 800ms... (${attempts}/${maxAttempts})`);
+          setTimeout(checkForWinner, 800);
         } else {
-          console.log('❌ Winner detection timeout - no winner found after 20 attempts');
-          toast.error('Game completion timeout - please check manually', { duration: 5000 });
+          console.log('❌ Winner detection timeout - no winner found after 30 attempts');
+          
+          // Force manual check as fallback
+          toast.error('Game taking longer than expected. Use "Force Check Winner" button.', { 
+            duration: 10000 
+          });
         }
         
       } catch (error) {
@@ -918,8 +890,67 @@ function App() {
       return false;
     };
     
-    // Start checking after 3 second delay (give backend time to process)
-    setTimeout(checkForWinner, 3000);
+    // Start checking after 2 second delay (give backend time to process)
+    setTimeout(checkForWinner, 2000);
+  };
+
+  // Broadcast winner result to ALL players (simulates socket broadcast)
+  const broadcastWinnerToAllPlayers = async (gameResult, roomType) => {
+    console.log('📢 BROADCASTING WINNER TO ALL PLAYERS:', gameResult.winner);
+    
+    const winnerName = `${gameResult.winner.first_name} ${gameResult.winner.last_name || ''}`.trim();
+    
+    // Force exit lobby state for ALL players
+    setInLobby(false);
+    setGameInProgress(false);
+    setShowWinnerScreen(true);
+    
+    // Set comprehensive winner data with Telegram info
+    setWinnerData({
+      winner: gameResult.winner,
+      winner_name: winnerName,
+      winner_username: gameResult.winner.username || gameResult.winner.telegram_username,
+      winner_photo: gameResult.winner.photo_url,
+      room_type: roomType,
+      prize_pool: gameResult.prize_pool,
+      prize_link: gameResult.prize_link,
+      game_id: gameResult.id,
+      finished_at: gameResult.finished_at,
+      all_players: gameResult.players || []
+    });
+    
+    // Show synchronized winner announcement to ALL players
+    toast.success(`🏆 GAME COMPLETE! Winner: ${winnerName}`, { 
+      duration: 10000,
+      style: {
+        background: 'linear-gradient(45deg, #10b981, #059669)',
+        color: 'white',
+        fontSize: '16px',
+        fontWeight: 'bold',
+        border: '2px solid #fbbf24'
+      }
+    });
+    
+    console.log('✅ Winner announcement displayed for ALL players!');
+    
+    // Update user balance if current user is the winner
+    if (user && gameResult.winner && 
+        (user.telegram_id === gameResult.winner.telegram_id || user.id === gameResult.winner.id)) {
+      console.log('🎉 Current user is the WINNER! Updating balance...');
+      
+      // Refresh user data to get updated balance
+      setTimeout(async () => {
+        try {
+          const userResponse = await axios.get(`${API}/users/telegram/${user.telegram_id}`);
+          if (userResponse.data) {
+            setUser(userResponse.data);
+            console.log('💰 Winner balance updated!');
+          }
+        } catch (error) {
+          console.error('Failed to refresh winner balance:', error);
+        }
+      }, 1000);
+    }
   };
 
   const checkForGameCompletion = async (roomType) => {
