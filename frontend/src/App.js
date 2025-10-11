@@ -166,9 +166,13 @@ function App() {
           return updated;
         });
         
-        // Force a re-render trigger
+        // Force lobby to re-render
+        setLobbyRefreshKey(prev => prev + 1);
+        
+        // Trigger game start when 2 players found
         if (players.length >= 2) {
           console.log('🎉 2 PLAYERS FOUND! Game should start soon!');
+          // WebSocket should handle this, but log for debugging
         }
       } catch (error) {
         console.error(`❌ Poll #${pollCount} - Failed:`, error);
