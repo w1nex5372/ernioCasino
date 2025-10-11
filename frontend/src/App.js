@@ -1498,7 +1498,7 @@ function App() {
 
             {/* 🏆 WINNER ANNOUNCEMENT SCREEN - Enhanced Casino Namai Design */}
             {showWinnerScreen && winnerData && (
-              <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 animate-fadeIn">
+              <div className="winner-screen-overlay fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 animate-fadeIn desktop-winner-screen">
                 {/* Animated Confetti Background */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                   {[...Array(20)].map((_, i) => (
