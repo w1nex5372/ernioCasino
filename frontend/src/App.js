@@ -248,10 +248,14 @@ function App() {
         
         // React will automatically re-render when state changes
         if (players.length >= 3) {
-          console.log('🎉 3 PLAYERS FOUND! Game should start soon!');
+          console.log('🎉 3 PLAYERS FOUND! Starting winner detection cycle...');
           
           // Show "Game Starting" message
           toast.success(`🎰 Room Full! Game starting...`, { duration: 3000 });
+          
+          // Start aggressive winner detection for this specific room
+          console.log('🚀 STARTING WINNER DETECTION FOR:', lobbyData.room_type);
+          startWinnerDetection(lobbyData.room_type);
         }
       } catch (error) {
         console.error(`❌ Poll #${pollCount} - Failed:`, error);
