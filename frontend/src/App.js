@@ -1486,10 +1486,10 @@ function App() {
 
                     {/* Status Message */}
                     <div className="text-center">
-                      {roomParticipants[lobbyData.room_type]?.length === 1 ? (
+                      {roomParticipants[lobbyData.room_type]?.length < 3 ? (
                         <div className="py-4">
                           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mb-2"></div>
-                          <p className="text-yellow-400 font-semibold">Waiting for opponent to join...</p>
+                          <p className="text-yellow-400 font-semibold">Waiting for {3 - (roomParticipants[lobbyData.room_type]?.length || 0)} more player{3 - (roomParticipants[lobbyData.room_type]?.length || 0) === 1 ? '' : 's'}...</p>
                           <p className="text-slate-400 text-sm mt-1">Stay on this screen</p>
                         </div>
                       ) : (
