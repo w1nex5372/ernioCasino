@@ -1814,6 +1814,10 @@ class SolanaCasinoAPITester:
         print("\n🎁 Testing Daily Free Tokens System...")
         self.test_daily_tokens_comprehensive()
         
+        # Test Welcome Bonus system
+        print("\n🎁 Testing Welcome Bonus System...")
+        self.test_welcome_bonus_comprehensive()
+        
         # Error handling tests
         print("\n🚫 Testing Error Handling...")
         self.test_invalid_endpoints()
