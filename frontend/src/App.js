@@ -1372,6 +1372,7 @@ function App() {
                                 placeholder={`${config.min}-${config.max}`}
                                 value={selectedRoom === roomType ? betAmount : ''}
                                 onChange={(e) => {
+                                  console.log('📝 Bet amount changed:', e.target.value, 'for room:', roomType);
                                   setSelectedRoom(roomType);
                                   setBetAmount(e.target.value);
                                 }}
