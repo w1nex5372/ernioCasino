@@ -1558,6 +1558,28 @@ function App() {
                     </div>
                   </div>
                 )}
+
+                {/* Welcome Bonus Banner */}
+                {welcomeBonusStatus && welcomeBonusStatus.bonus_active && (
+                  <div className="mb-6 max-w-4xl mx-auto">
+                    <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border-2 border-green-500/40 rounded-lg p-4 text-center relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10 animate-pulse"></div>
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <span className="text-2xl">🎁</span>
+                          <h3 className="text-xl font-bold text-green-400">Welcome Bonus Active!</h3>
+                          <span className="text-2xl">🎁</span>
+                        </div>
+                        <p className="text-white font-medium mb-2">
+                          First 100 players get <span className="text-yellow-400 font-bold">1000 FREE TOKENS!</span>
+                        </p>
+                        <p className="text-green-300 text-sm">
+                          ⏰ Only <span className="font-bold text-yellow-400">{welcomeBonusStatus.remaining_spots}</span> spots remaining!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 <div className={`grid gap-3 w-full ${isMobile ? 'grid-cols-1 px-1' : 'lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto'}`}>
                   {['bronze', 'silver', 'gold'].map((roomType) => {
