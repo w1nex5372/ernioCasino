@@ -327,7 +327,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Review Request Bugs Verification Complete"
+    - "Critical 3-Player Lobby to Winner Flow Issue Complete"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
