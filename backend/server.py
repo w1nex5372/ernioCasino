@@ -1396,6 +1396,31 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         "new_balance": user_doc.get('token_balance', 0) - request.bet_amount
     }
 
+@api_router.get("/room-participants/{room_type}")
+async def get_room_participants_by_type(room_type: str):
+    """Get current participants in a room by type - for lobby updates"""
+    # Find the active room of this type
+    target_room = None
+    for room in active_rooms.values():
+        if room.room_type == room_type and room.status == "waiting":
+            target_room = room
+            break
+    
+    if not target_room:
+        return {
+            "room_type": room_type,
+            "players": [],
+            "count": 0
+        }
+    
+    return {
+        "room_type": room_type,
+        "room_id": target_room.id,
+        "players": [p.dict() for p in target_room.players],
+        "count": len(target_room.players),
+        "status": target_room.status
+    }
+
 @api_router.get("/room/{room_id}")
 async def get_room_details(room_id: str):
     """Get detailed information about a specific room"""
