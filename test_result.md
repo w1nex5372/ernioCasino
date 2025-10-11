@@ -201,6 +201,18 @@ backend:
           agent: "testing"
           comment: "VERIFIED: Database reset confirmed successful through comprehensive testing. Backend logs show 'PRODUCTION CLEANUP COMPLETE' with 0 users, 0 completed games, 0 winner prizes deleted. All API endpoints working correctly with clean database state. System ready for production users."
 
+  - task: "Room Participant Tracking for 2-Player Bronze Room"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "TESTED: Room participant tracking when 2 players join Bronze room simultaneously working perfectly. ✅ Database cleanup via /api/admin/cleanup-database successful ✅ Player 1 (@cia_nera) joins Bronze room with bet_amount 450 - status 'joined', position 1 ✅ GET /api/room-participants/bronze returns 1 player with full details (first_name: 'cia', username: 'cia_nera', photo_url, bet_amount, joined_at) ✅ Player 2 (@tarofkinas) joins Bronze room with bet_amount 450 - status 'joined', position 2 ✅ Game starts automatically when 2 players join, room status changes to 'playing' ✅ GET /api/rooms shows Bronze room with 2 players and 'playing' status ✅ Participant tracking API correctly returns empty state when room is playing (expected behavior) ✅ All player details tracked correctly including first_name, username, photo_url as requested ✅ Room state transitions working: waiting → playing → new room created after completion. The exact scenario from the review request is working correctly."
+
 frontend:
   - task: "Claim Prize Button UI"
     implemented: true
