@@ -562,13 +562,17 @@ input[type="number"] {
   --tw-shadow: var(--tw-shadow-colored);
 }
 
-/* Apply animations */
+/* Apply animations - Enhanced for all devices */
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-out;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .animate-slideUp {
   animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .animate-confetti {
@@ -577,4 +581,31 @@ input[type="number"] {
 
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Ensure winner screen displays on all screen sizes */
+@media (min-width: 769px) {
+  /* Desktop specific winner screen adjustments */
+  .desktop-winner-screen {
+    padding: 2rem;
+  }
+  
+  .desktop-winner-card {
+    max-width: 600px;
+    min-width: 500px;
+  }
+}
+
+/* Force display for winner screen overlay */
+.winner-screen-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: rgba(0, 0, 0, 0.8) !important;
 }
