@@ -511,8 +511,7 @@ class SolanaCasinoAPITester:
             player2 = auth_response2.json()
             
             # Give player2 tokens
-            token_response2 = requests.post(f"{self.api_url}/admin/add-tokens/{player2['telegram_id']}", 
-                                          json={"admin_key": "PRODUCTION_CLEANUP_2025", "tokens": 1000})
+            token_response2 = requests.post(f"{self.api_url}/admin/add-tokens/{player2['telegram_id']}?admin_key=PRODUCTION_CLEANUP_2025&tokens=1000")
             
             print(f"✅ Player 2 created: {player2['first_name']} {player2['last_name']} (@{player2.get('telegram_username', 'tarofkinas')})")
             
