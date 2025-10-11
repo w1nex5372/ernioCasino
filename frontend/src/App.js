@@ -103,18 +103,37 @@ function App() {
     console.log('🚪 lobbyData:', lobbyData);
   }, [inLobby, lobbyData]);
 
-  // POLL for room updates while in lobby (fallback if WebSocket fails)
+  // POLL for room participants while in lobby (ensures both players see each other)
   useEffect(() => {
     if (!inLobby || !lobbyData) return;
     
-    console.log('🔄 Starting lobby polling...');
-    const pollInterval = setInterval(() => {
-      console.log('📡 Polling room updates...');
-      loadRooms(); // This will refresh room data
-    }, 1000); // Poll every 1 second
+    console.log('🔄 Starting lobby participant polling for', lobbyData.room_type);
+    
+    const fetchParticipants = async () => {
+      try {
+        const response = await axios.get(`${API}/room-participants/${lobbyData.room_type}`);
+        console.log('📡 Fetched participants:', response.data);
+        
+        if (response.data.players && response.data.players.length > 0) {
+          setRoomParticipants(prev => ({
+            ...prev,
+            [lobbyData.room_type]: response.data.players
+          }));
+          console.log('✅ Updated lobby with', response.data.players.length, 'players');
+        }
+      } catch (error) {
+        console.error('Failed to fetch room participants:', error);
+      }
+    };
+    
+    // Fetch immediately
+    fetchParticipants();
+    
+    // Then poll every 500ms
+    const pollInterval = setInterval(fetchParticipants, 500);
     
     return () => {
-      console.log('🛑 Stopping lobby polling');
+      console.log('🛑 Stopping lobby participant polling');
       clearInterval(pollInterval);
     };
   }, [inLobby, lobbyData]);
