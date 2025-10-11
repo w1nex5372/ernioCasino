@@ -1029,11 +1029,27 @@ function App() {
                       </div>
                     </div>
                     
-                    {/* Winner Announcement */}
+                    {/* Winner/Loser Announcement */}
                     <div>
-                      <h2 className="text-3xl font-bold text-yellow-400 mb-2">
-                        🎉 Winner! 🎉
-                      </h2>
+                      {winnerData.is_winner ? (
+                        <>
+                          <h2 className="text-4xl font-bold text-green-400 mb-2 animate-pulse">
+                            🎉 YOU WON! 🎉
+                          </h2>
+                          <p className="text-white text-2xl font-bold mb-2">
+                            Congratulations!
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <h2 className="text-3xl font-bold text-red-400 mb-2">
+                            Game Over
+                          </h2>
+                          <p className="text-white text-xl font-bold mb-2">
+                            Winner is: <span className="text-yellow-400">{winnerData.winner_name}</span>
+                          </p>
+                        </>
+                      )}
                       <p className="text-slate-400 text-lg">
                         {ROOM_CONFIGS[winnerData.room_type]?.icon} {ROOM_CONFIGS[winnerData.room_type]?.name}
                       </p>
