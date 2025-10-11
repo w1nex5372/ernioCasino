@@ -300,7 +300,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "3-Player Casino System Update"
+    - "Welcome Bonus System for First 100 Players"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
