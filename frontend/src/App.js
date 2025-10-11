@@ -85,6 +85,24 @@ function App() {
     }
   }, [roomParticipants, lobbyData]);
 
+  // Debug winner screen state
+  useEffect(() => {
+    console.log('🏆 showWinnerScreen changed:', showWinnerScreen);
+    console.log('🏆 winnerData:', winnerData);
+  }, [showWinnerScreen, winnerData]);
+
+  // Debug game in progress state
+  useEffect(() => {
+    console.log('🎮 gameInProgress changed:', gameInProgress);
+    console.log('🎮 currentGameData:', currentGameData);
+  }, [gameInProgress, currentGameData]);
+
+  // Debug lobby state
+  useEffect(() => {
+    console.log('🚪 inLobby changed:', inLobby);
+    console.log('🚪 lobbyData:', lobbyData);
+  }, [inLobby, lobbyData]);
+
   // Mobile detection - force mobile for Telegram WebApp
   useEffect(() => {
     const checkMobile = () => {
