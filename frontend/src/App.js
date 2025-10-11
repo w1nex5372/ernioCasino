@@ -249,7 +249,6 @@ function App() {
     
     loadRooms();
     loadGameHistory();
-    loadLeaderboard();
     
     // Telegram authentication - REAL USERS ONLY
     const authenticateFromTelegram = async () => {
