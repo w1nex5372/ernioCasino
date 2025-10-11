@@ -1144,7 +1144,7 @@ function App() {
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-2 mb-2">
                     <p className="text-yellow-400 font-medium text-sm">Balance: {user.token_balance || 0} tokens</p>
                     <button 
                       onClick={() => {
@@ -1159,6 +1159,7 @@ function App() {
                       </svg>
                     </button>
                   </div>
+                  <DailyTokensButton user={user} onClaim={(newBalance) => setUser({...user, token_balance: newBalance})} />
                 </div>
               </div>
             )}
