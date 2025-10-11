@@ -911,6 +911,10 @@ class SolanaCasinoAPITester:
         print("\n🎯 Testing Room Participant Tracking Scenario...")
         self.test_room_participant_tracking()
         
+        # Test Daily Free Tokens system
+        print("\n🎁 Testing Daily Free Tokens System...")
+        self.test_daily_tokens_comprehensive()
+        
         # Error handling tests
         print("\n🚫 Testing Error Handling...")
         self.test_invalid_endpoints()
