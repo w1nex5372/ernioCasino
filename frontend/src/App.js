@@ -1943,9 +1943,9 @@ function App() {
                             <Badge className="bg-green-500 text-white">Completed</Badge>
                           </div>
                           <div className="text-sm text-slate-300 space-y-1">
-                            <div>Winner: <span className="text-yellow-400 font-medium">{game.winner_name}</span></div>
-                            <div>Prize Pool: <span className="text-green-400">{game.total_pot} tokens</span></div>
-                            <div>Date: {new Date(game.completed_at).toLocaleDateString()}</div>
+                            <div>Winner: <span className="text-yellow-400 font-medium">{game.winner?.first_name || 'Unknown'}</span></div>
+                            <div>Prize Pool: <span className="text-green-400">{game.prize_pool} tokens</span></div>
+                            <div>Date: {new Date(game.finished_at).toLocaleDateString()}</div>
                           </div>
                         </div>
                       ))}
