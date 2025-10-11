@@ -188,10 +188,13 @@ function App() {
       console.log('🏆 Game finished:', data);
       console.log('Current user:', user);
       
-      // Hide game screen
+      // FORCE CLOSE ALL OTHER SCREENS
       setGameInProgress(false);
       setCurrentGameData(null);
-      console.log('✅ Game screen hidden');
+      setInLobby(false);
+      setLobbyData(null);
+      setActiveRoom(null);
+      console.log('✅ All game screens closed');
       
       // Show winner screen to all players
       const winnerInfo = {
