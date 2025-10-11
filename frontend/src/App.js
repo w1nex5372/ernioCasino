@@ -1048,7 +1048,7 @@ function App() {
                     <span className="text-lg font-bold text-yellow-400">{user.token_balance || 0}</span>
                     <span className="text-slate-400">tokens</span>
                   </div>
-                  <DailyTokensButton user={user} onClaim={(newBalance) => setUser({...user, token_balance: newBalance})} />
+                  <DailyTokensButton user={user} onClaim={(newBalance) => setUser({...user, token_balance: newBalance, last_claimed_daily_tokens: new Date().toISOString()})} />
                 </div>
                 {userPrizes.length > 0 && (
                   <div className="flex items-center gap-1">
@@ -1158,7 +1158,7 @@ function App() {
                       </svg>
                     </button>
                   </div>
-                  <DailyTokensButton user={user} onClaim={(newBalance) => setUser({...user, token_balance: newBalance})} />
+                  <DailyTokensButton user={user} onClaim={(newBalance) => setUser({...user, token_balance: newBalance, last_claimed_daily_tokens: new Date().toISOString()})} />
                 </div>
               </div>
             )}
