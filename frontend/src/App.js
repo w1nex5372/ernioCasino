@@ -620,7 +620,12 @@ function App() {
 
   // Game functions
   const joinRoom = async (roomType) => {
-    console.log('🎯 JOIN ROOM CALLED!', { roomType, user, betAmount });
+    console.log('🎯 JOIN ROOM CALLED!', { 
+      roomType, 
+      user: user ? 'EXISTS' : 'NULL', 
+      betAmount,
+      selectedRoom 
+    });
     
     if (!user) {
       console.error('❌ No user');
@@ -628,24 +633,39 @@ function App() {
       return;
     }
 
-    if (!betAmount || betAmount < ROOM_CONFIGS[roomType].min || betAmount > ROOM_CONFIGS[roomType].max) {
-      console.error('❌ Invalid bet amount', betAmount);
+    // Parse bet amount
+    const parsedBetAmount = parseInt(betAmount);
+    console.log('💰 Parsed bet amount:', parsedBetAmount);
+    
+    if (!parsedBetAmount || isNaN(parsedBetAmount)) {
+      console.error('❌ Invalid bet amount (not a number)', betAmount);
+      toast.error('Please enter a valid bet amount');
+      return;
+    }
+
+    if (parsedBetAmount < ROOM_CONFIGS[roomType].min || parsedBetAmount > ROOM_CONFIGS[roomType].max) {
+      console.error('❌ Bet amount out of range', parsedBetAmount);
       toast.error(`Bet amount must be between ${ROOM_CONFIGS[roomType].min} - ${ROOM_CONFIGS[roomType].max} tokens`);
       return;
     }
 
-    if (user.token_balance < betAmount) {
-      console.error('❌ Insufficient tokens');
+    if (user.token_balance < parsedBetAmount) {
+      console.error('❌ Insufficient tokens', { balance: user.token_balance, bet: parsedBetAmount });
       toast.error('Insufficient tokens');
       return;
     }
 
-    console.log('✅ Validation passed, calling API...');
+    console.log('✅ Validation passed, calling API with:', {
+      room_type: roomType,
+      user_id: user.id,
+      bet_amount: parsedBetAmount
+    });
+    
     try {
       const response = await axios.post(`${API}/join-room`, {
         room_type: roomType,
         user_id: user.id,
-        bet_amount: parseInt(betAmount)
+        bet_amount: parsedBetAmount
       });
       console.log('✅ API Response:', response.data);
 
