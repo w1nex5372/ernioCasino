@@ -1245,7 +1245,19 @@ function App() {
               <div className={isMobile ? 'space-y-4' : 'space-y-6'}>
                 {isMobile ? (
                   <div className="text-center py-2 px-2">
-                    <h2 className="text-base font-bold text-white mb-1">Casino Rooms</h2>
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-base font-bold text-white flex-1 text-center">Casino Rooms</h2>
+                      <Button
+                        onClick={() => {
+                          loadRooms();
+                          toast.success('Rooms refreshed!');
+                        }}
+                        size="sm"
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-xs"
+                      >
+                        🔄 Refresh
+                      </Button>
+                    </div>
                     <p className="text-xs text-slate-400">
                       2 players • Higher bet = better odds
                     </p>
@@ -1263,6 +1275,17 @@ function App() {
                       <br />
                       <span className="text-yellow-400 font-medium">Higher bet = Better winning odds!</span>
                     </p>
+                    <div className="mt-4">
+                      <Button
+                        onClick={() => {
+                          loadRooms();
+                          toast.success('Rooms refreshed!');
+                        }}
+                        className="bg-blue-500 hover:bg-blue-600 text-white"
+                      >
+                        🔄 Refresh Rooms
+                      </Button>
+                    </div>
                   </div>
                 )}
                 
