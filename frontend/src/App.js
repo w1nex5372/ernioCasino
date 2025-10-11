@@ -847,8 +847,111 @@ function App() {
               </Card>
             )}
 
+            {/* LOBBY SCREEN - Show when player is waiting in room */}
+            {inLobby && lobbyData && (
+              <Card className="bg-slate-800/90 border-2 border-yellow-500/50">
+                <CardHeader className="text-center">
+                  <CardTitle className="text-2xl text-yellow-400 flex items-center justify-center gap-2">
+                    <Users className="w-6 h-6" />
+                    {ROOM_CONFIGS[lobbyData.room_type]?.icon} {ROOM_CONFIGS[lobbyData.room_type]?.name} Lobby
+                  </CardTitle>
+                  <CardDescription className="text-lg">
+                    Bet Amount: {lobbyData.bet_amount} tokens
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Current room participants */}
+                    <div>
+                      <h3 className="text-white font-semibold mb-3 text-center">Players in Room:</h3>
+                      <div className="space-y-3">
+                        {roomParticipants[lobbyData.room_type]?.length > 0 ? (
+                          roomParticipants[lobbyData.room_type].map((player, index) => (
+                            <div key={index} className="flex items-center gap-4 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                              {/* Profile Picture */}
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 flex items-center justify-center text-slate-900 font-bold text-xl flex-shrink-0">
+                                {player.photo_url ? (
+                                  <img src={player.photo_url} alt={player.first_name} className="w-12 h-12 rounded-full" />
+                                ) : (
+                                  player.first_name?.charAt(0).toUpperCase()
+                                )}
+                              </div>
+                              
+                              {/* Player Info */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-white font-semibold truncate">
+                                    {player.first_name} {player.last_name || ''}
+                                  </p>
+                                  {player.user_id === user?.id && (
+                                    <Badge className="bg-green-500 text-black text-xs">You</Badge>
+                                  )}
+                                </div>
+                                {player.username && (
+                                  <p className="text-slate-400 text-sm">@{player.username}</p>
+                                )}
+                                <p className="text-yellow-400 text-sm font-medium">Bet: {player.bet_amount} tokens</p>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-4">
+                            <p className="text-slate-400">Loading players...</p>
+                          </div>
+                        )}
+                        
+                        {/* Show waiting slot if only 1 player */}
+                        {roomParticipants[lobbyData.room_type]?.length === 1 && (
+                          <div className="flex items-center gap-4 p-4 bg-slate-700/30 rounded-lg border border-dashed border-slate-600">
+                            <div className="w-12 h-12 rounded-full bg-slate-600 flex items-center justify-center text-slate-400 text-2xl flex-shrink-0">
+                              ?
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-slate-400 font-semibold">Waiting for opponent...</p>
+                              <p className="text-slate-500 text-sm">The game will start automatically when another player joins</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Status Message */}
+                    <div className="text-center">
+                      {roomParticipants[lobbyData.room_type]?.length === 1 ? (
+                        <div className="py-4">
+                          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mb-2"></div>
+                          <p className="text-yellow-400 font-semibold">Waiting for opponent to join...</p>
+                          <p className="text-slate-400 text-sm mt-1">Stay on this screen</p>
+                        </div>
+                      ) : (
+                        <div className="py-4">
+                          <p className="text-green-400 font-semibold text-lg">✓ Room Full! Game starting soon...</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Leave Room Button */}
+                    <div className="text-center pt-2">
+                      <Button 
+                        onClick={() => {
+                          setInLobby(false);
+                          setLobbyData(null);
+                          toast.info('Left the lobby');
+                          loadRooms();
+                        }}
+                        variant="outline"
+                        className="border-red-500 text-red-500 hover:bg-red-500/10"
+                      >
+                        Leave Lobby
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Battle Rooms Tab */}
-            {activeTab === 'rooms' && (
+            {activeTab === 'rooms' && !inLobby && (
               <div className={isMobile ? 'space-y-4' : 'space-y-6'}>
                 {isMobile ? (
                   <div className="text-center py-2 px-2">
