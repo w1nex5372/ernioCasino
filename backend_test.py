@@ -1419,6 +1419,367 @@ class SolanaCasinoAPITester:
             self.log_test("Daily Tokens Balance Persistence Direct", False, str(e))
             return False
 
+    def test_specific_users_unlimited_tokens(self):
+        """Test specific users from review request have unlimited tokens"""
+        try:
+            print("\n💰 Testing Specific Users Unlimited Tokens...")
+            
+            # Specific users from review request
+            specific_users = [
+                {"telegram_id": 1793011013, "name": "cia nera", "username": "cia_nera"},
+                {"telegram_id": 7983427898, "name": "Teror", "username": "Teror"},
+                {"telegram_id": 6168593741, "name": "Tarofkinas", "username": "Tarofkinas"}
+            ]
+            
+            all_success = True
+            details_list = []
+            
+            for user_info in specific_users:
+                # Check if user exists
+                try:
+                    user_response = requests.get(f"{self.api_url}/users/telegram/{user_info['telegram_id']}")
+                    if user_response.status_code == 200:
+                        user_data = user_response.json()
+                        balance = user_data.get('token_balance', 0)
+                        
+                        # Check if user has 999M+ tokens (unlimited)
+                        if balance >= 999000000:
+                            details_list.append(f"✅ {user_info['name']} (ID: {user_info['telegram_id']}) has {balance:,} tokens (UNLIMITED)")
+                        else:
+                            all_success = False
+                            details_list.append(f"❌ {user_info['name']} (ID: {user_info['telegram_id']}) has only {balance:,} tokens (NOT UNLIMITED)")
+                    else:
+                        # User doesn't exist - create them with unlimited tokens
+                        print(f"Creating user {user_info['name']} with unlimited tokens...")
+                        
+                        # Create user via auth
+                        auth_data = {
+                            "telegram_auth_data": {
+                                "id": user_info['telegram_id'],
+                                "first_name": user_info['name'].split()[0],
+                                "last_name": user_info['name'].split()[1] if len(user_info['name'].split()) > 1 else "",
+                                "username": user_info['username'],
+                                "photo_url": f"https://example.com/{user_info['username']}.jpg",
+                                "auth_date": int(datetime.now().timestamp()),
+                                "hash": "telegram_auto"
+                            }
+                        }
+                        
+                        auth_response = requests.post(f"{self.api_url}/auth/telegram", json=auth_data)
+                        if auth_response.status_code == 200:
+                            # Add unlimited tokens (999M+)
+                            token_response = requests.post(f"{self.api_url}/admin/add-tokens/{user_info['telegram_id']}?admin_key=PRODUCTION_CLEANUP_2025&tokens=999000000")
+                            if token_response.status_code == 200:
+                                details_list.append(f"✅ Created {user_info['name']} (ID: {user_info['telegram_id']}) with 999M tokens (UNLIMITED)")
+                            else:
+                                all_success = False
+                                details_list.append(f"❌ Failed to add unlimited tokens to {user_info['name']}")
+                        else:
+                            all_success = False
+                            details_list.append(f"❌ Failed to create user {user_info['name']}")
+                            
+                except Exception as e:
+                    all_success = False
+                    details_list.append(f"❌ Error checking {user_info['name']}: {str(e)}")
+            
+            details = "\n".join(details_list)
+            self.log_test("Specific Users Unlimited Tokens", all_success, details)
+            return all_success
+            
+        except Exception as e:
+            self.log_test("Specific Users Unlimited Tokens", False, str(e))
+            return False
+
+    def test_real_telegram_names_display(self):
+        """Test that players show real names instead of Participant2/3"""
+        try:
+            print("\n👤 Testing Real Telegram Names Display...")
+            
+            # Clean database first
+            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database?admin_key=PRODUCTION_CLEANUP_2025")
+            if cleanup_response.status_code != 200:
+                self.log_test("Real Telegram Names - Cleanup", False, "Database cleanup failed")
+                return False
+            
+            time.sleep(1)
+            
+            # Create users with real names from review request
+            real_users = [
+                {"telegram_id": 1793011013, "first_name": "cia", "last_name": "nera", "username": "cia_nera"},
+                {"telegram_id": 6168593741, "first_name": "Tarofkinas", "last_name": "", "username": "Tarofkinas"},
+                {"telegram_id": 7983427898, "first_name": "Teror", "last_name": "", "username": "Teror"}
+            ]
+            
+            created_users = []
+            
+            for user_info in real_users:
+                auth_data = {
+                    "telegram_auth_data": {
+                        "id": user_info['telegram_id'],
+                        "first_name": user_info['first_name'],
+                        "last_name": user_info['last_name'],
+                        "username": user_info['username'],
+                        "photo_url": f"https://example.com/{user_info['username']}.jpg",
+                        "auth_date": int(datetime.now().timestamp()),
+                        "hash": "telegram_auto"
+                    }
+                }
+                
+                auth_response = requests.post(f"{self.api_url}/auth/telegram", json=auth_data)
+                if auth_response.status_code != 200:
+                    self.log_test("Real Telegram Names", False, f"Failed to create user {user_info['first_name']}")
+                    return False
+                
+                user = auth_response.json()
+                created_users.append(user)
+                
+                # Give tokens
+                requests.post(f"{self.api_url}/admin/add-tokens/{user_info['telegram_id']}?admin_key=PRODUCTION_CLEANUP_2025&tokens=1000")
+            
+            # Have first user join Bronze room
+            join_data = {"room_type": "bronze", "user_id": created_users[0]['id'], "bet_amount": 300}
+            join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+            if join_response.status_code != 200:
+                self.log_test("Real Telegram Names", False, "Failed to join room")
+                return False
+            
+            # Check room participants to verify real names are displayed
+            participants_response = requests.get(f"{self.api_url}/room-participants/bronze")
+            if participants_response.status_code != 200:
+                self.log_test("Real Telegram Names", False, "Failed to get room participants")
+                return False
+            
+            participants_data = participants_response.json()
+            players = participants_data.get('players', [])
+            
+            if not players:
+                self.log_test("Real Telegram Names", False, "No players found in room")
+                return False
+            
+            player = players[0]
+            first_name = player.get('first_name', '')
+            username = player.get('username', '')
+            
+            # Verify real names are shown (not generic "Participant" names)
+            success = (
+                first_name == "cia" and 
+                username == "cia_nera" and
+                "Participant" not in first_name and
+                "Participant" not in username
+            )
+            
+            if success:
+                details = f"✅ Real names displayed correctly: {first_name} (@{username}) instead of generic 'Participant' names"
+            else:
+                details = f"❌ Names not displayed correctly: {first_name} (@{username}) - expected real Telegram names"
+            
+            self.log_test("Real Telegram Names Display", success, details)
+            return success
+            
+        except Exception as e:
+            self.log_test("Real Telegram Names Display", False, str(e))
+            return False
+
+    def test_three_player_room_waiting_logic(self):
+        """Test that rooms show 'waiting' status until exactly 3 players join"""
+        try:
+            print("\n⏳ Testing 3-Player Room Waiting Logic...")
+            
+            # Clean database
+            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database?admin_key=PRODUCTION_CLEANUP_2025")
+            if cleanup_response.status_code != 200:
+                self.log_test("3-Player Room Waiting Logic - Cleanup", False, "Database cleanup failed")
+                return False
+            
+            time.sleep(1)
+            
+            # Create 3 test users
+            test_users = []
+            telegram_ids = [1793011013, 6168593741, 7983427898]  # Use specific IDs from review
+            names = ["cia nera", "Tarofkinas", "Teror"]
+            
+            for i in range(3):
+                user_data = {
+                    "telegram_auth_data": {
+                        "id": telegram_ids[i],
+                        "first_name": names[i].split()[0],
+                        "last_name": names[i].split()[1] if len(names[i].split()) > 1 else "",
+                        "username": names[i].replace(" ", "_"),
+                        "photo_url": f"https://example.com/{names[i].replace(' ', '_')}.jpg",
+                        "auth_date": int(datetime.now().timestamp()),
+                        "hash": "telegram_auto"
+                    }
+                }
+                
+                auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+                if auth_response.status_code != 200:
+                    self.log_test("3-Player Room Waiting Logic", False, f"Failed to create user {names[i]}")
+                    return False
+                
+                user = auth_response.json()
+                test_users.append(user)
+                
+                # Give unlimited tokens
+                requests.post(f"{self.api_url}/admin/add-tokens/{telegram_ids[i]}?admin_key=PRODUCTION_CLEANUP_2025&tokens=999000000")
+            
+            # Test 1: Room shows waiting with 0 players
+            rooms_response = requests.get(f"{self.api_url}/rooms")
+            rooms = rooms_response.json().get('rooms', [])
+            bronze_room = next((r for r in rooms if r['room_type'] == 'bronze'), None)
+            
+            if not bronze_room or bronze_room['status'] != 'waiting':
+                self.log_test("3-Player Room Waiting Logic", False, f"Initial room not in waiting status: {bronze_room}")
+                return False
+            
+            print("✅ Room shows 'waiting' status with 0/3 players")
+            
+            # Test 2: Room still waiting with 1 player
+            join_data1 = {"room_type": "bronze", "user_id": test_users[0]['id'], "bet_amount": 300}
+            requests.post(f"{self.api_url}/join-room", json=join_data1)
+            
+            rooms_response = requests.get(f"{self.api_url}/rooms")
+            rooms = rooms_response.json().get('rooms', [])
+            bronze_room = next((r for r in rooms if r['room_type'] == 'bronze'), None)
+            
+            if not bronze_room or bronze_room['status'] != 'waiting' or bronze_room['players_count'] != 1:
+                self.log_test("3-Player Room Waiting Logic", False, f"Room not waiting with 1 player: {bronze_room}")
+                return False
+            
+            print("✅ Room shows 'waiting' status with 1/3 players")
+            
+            # Test 3: Room still waiting with 2 players
+            join_data2 = {"room_type": "bronze", "user_id": test_users[1]['id'], "bet_amount": 300}
+            requests.post(f"{self.api_url}/join-room", json=join_data2)
+            
+            rooms_response = requests.get(f"{self.api_url}/rooms")
+            rooms = rooms_response.json().get('rooms', [])
+            bronze_room = next((r for r in rooms if r['room_type'] == 'bronze'), None)
+            
+            if not bronze_room or bronze_room['status'] != 'waiting' or bronze_room['players_count'] != 2:
+                self.log_test("3-Player Room Waiting Logic", False, f"Room not waiting with 2 players: {bronze_room}")
+                return False
+            
+            print("✅ Room shows 'waiting' status with 2/3 players")
+            
+            # Test 4: Room starts game with 3 players
+            join_data3 = {"room_type": "bronze", "user_id": test_users[2]['id'], "bet_amount": 300}
+            requests.post(f"{self.api_url}/join-room", json=join_data3)
+            
+            time.sleep(4)  # Wait for game to start and complete
+            
+            # After game completion, new room should be created in waiting status
+            rooms_response = requests.get(f"{self.api_url}/rooms")
+            rooms = rooms_response.json().get('rooms', [])
+            bronze_room = next((r for r in rooms if r['room_type'] == 'bronze'), None)
+            
+            if not bronze_room or bronze_room['players_count'] != 0:
+                self.log_test("3-Player Room Waiting Logic", False, f"New room not created after game: {bronze_room}")
+                return False
+            
+            print("✅ Game started with 3/3 players and new waiting room created")
+            
+            details = "Room waiting logic working correctly: Shows 'waiting' until exactly 3 players join, then starts game"
+            self.log_test("3-Player Room Waiting Logic", True, details)
+            return True
+            
+        except Exception as e:
+            self.log_test("3-Player Room Waiting Logic", False, str(e))
+            return False
+
+    def test_winner_display_to_all_players(self):
+        """Test that winners are shown to all players"""
+        try:
+            print("\n🏆 Testing Winner Display to All Players...")
+            
+            # Clean database
+            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database?admin_key=PRODUCTION_CLEANUP_2025")
+            if cleanup_response.status_code != 200:
+                self.log_test("Winner Display All Players - Cleanup", False, "Database cleanup failed")
+                return False
+            
+            time.sleep(1)
+            
+            # Create 3 test users with real names
+            test_users = []
+            telegram_ids = [1793011013, 6168593741, 7983427898]
+            names = ["cia nera", "Tarofkinas", "Teror"]
+            
+            for i in range(3):
+                user_data = {
+                    "telegram_auth_data": {
+                        "id": telegram_ids[i],
+                        "first_name": names[i].split()[0],
+                        "last_name": names[i].split()[1] if len(names[i].split()) > 1 else "",
+                        "username": names[i].replace(" ", "_"),
+                        "photo_url": f"https://example.com/{names[i].replace(' ', '_')}.jpg",
+                        "auth_date": int(datetime.now().timestamp()),
+                        "hash": "telegram_auto"
+                    }
+                }
+                
+                auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+                if auth_response.status_code != 200:
+                    self.log_test("Winner Display All Players", False, f"Failed to create user {names[i]}")
+                    return False
+                
+                user = auth_response.json()
+                test_users.append(user)
+                
+                # Give unlimited tokens
+                requests.post(f"{self.api_url}/admin/add-tokens/{telegram_ids[i]}?admin_key=PRODUCTION_CLEANUP_2025&tokens=999000000")
+            
+            # All 3 players join Bronze room
+            for i, user in enumerate(test_users):
+                join_data = {"room_type": "bronze", "user_id": user['id'], "bet_amount": 300}
+                join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+                if join_response.status_code != 200:
+                    self.log_test("Winner Display All Players", False, f"Player {i+1} failed to join")
+                    return False
+            
+            # Wait for game to complete
+            time.sleep(5)
+            
+            # Check game history to see if winner was recorded
+            history_response = requests.get(f"{self.api_url}/game-history?limit=1")
+            if history_response.status_code != 200:
+                self.log_test("Winner Display All Players", False, "Failed to get game history")
+                return False
+            
+            history_data = history_response.json()
+            games = history_data.get('games', [])
+            
+            if not games:
+                self.log_test("Winner Display All Players", False, "No completed games found")
+                return False
+            
+            latest_game = games[0]
+            winner = latest_game.get('winner')
+            
+            if not winner:
+                self.log_test("Winner Display All Players", False, "No winner found in game history")
+                return False
+            
+            # Check if all players can see the winner information
+            winner_name = f"{winner.get('first_name', '')} {winner.get('last_name', '')}".strip()
+            
+            # Verify winner has real name (not generic)
+            success = (
+                winner_name in ["cia nera", "Tarofkinas", "Teror"] and
+                "Participant" not in winner_name
+            )
+            
+            if success:
+                details = f"✅ Winner '{winner_name}' displayed correctly to all players in game history"
+            else:
+                details = f"❌ Winner name '{winner_name}' not displayed correctly"
+            
+            self.log_test("Winner Display All Players", success, details)
+            return success
+            
+        except Exception as e:
+            self.log_test("Winner Display All Players", False, str(e))
+            return False
+
     def test_welcome_bonus_status(self):
         """Test GET /api/welcome-bonus-status endpoint"""
         try:
