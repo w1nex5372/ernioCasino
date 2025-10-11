@@ -172,9 +172,9 @@ function App() {
   // Authentication and data loading
   useEffect(() => {
     // Clear any cached data and force refresh for Telegram
-    // AGGRESSIVE CACHE CLEARING for Telegram Web App (but preserve user session)
-    console.log('🧹 Clearing caches...');
-    const savedSession = localStorage.getItem('casino_user'); // Save before clearing
+    // AGGRESSIVE CACHE CLEARING for Telegram Web App
+    console.log('🧹 Clearing ALL caches and sessions...');
+    localStorage.clear(); // Clear everything including old sessions
     sessionStorage.clear();
     
     // Clear Service Worker caches
