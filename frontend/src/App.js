@@ -727,17 +727,23 @@ function App() {
         }
         
         // Last resort fallback - create and save to backend
-        const fallbackUser = {
-          telegram_id: telegramUser?.id || Date.now(),
+        const fallbackTelegramData = {
+          id: telegramUser?.id || Date.now(),
           first_name: telegramUser?.first_name || 'Player',
           last_name: telegramUser?.last_name || '',
           username: telegramUser?.username || '',
-          photo_url: telegramUser?.photo_url || ''
+          photo_url: telegramUser?.photo_url || '',
+          auth_date: Math.floor(Date.now() / 1000), // Unix timestamp
+          hash: 'fallback-hash-' + Date.now() // Fallback hash
+        };
+        
+        const fallbackUserCreate = {
+          telegram_auth_data: fallbackTelegramData
         };
         
         try {
           // Save fallback user to backend database
-          const response = await axios.post(`${API}/auth/telegram`, fallbackUser);
+          const response = await axios.post(`${API}/auth/telegram`, fallbackUserCreate);
           if (response.data) {
             setUser(response.data);
             saveUserSession(response.data);
