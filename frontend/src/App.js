@@ -529,6 +529,15 @@ function App() {
         setUser({...user, token_balance: response.data.new_balance});
         setBetAmount('');
         setSelectedRoom(null);
+        
+        // Enter lobby mode
+        setInLobby(true);
+        setLobbyData({
+          room_type: roomType,
+          room_id: response.data.room_id,
+          bet_amount: parseInt(betAmount)
+        });
+        
         loadRooms();
       }
     } catch (error) {
