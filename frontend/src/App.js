@@ -405,8 +405,11 @@ function App() {
       }
     });
 
-    return () => newSocket.close();
-  }, []);
+    return () => {
+      console.log('🧹 Cleaning up WebSocket connection');
+      newSocket.close();
+    };
+  }, []); // Empty dependency array - only run once on mount
 
   // Authentication and data loading
   useEffect(() => {
