@@ -105,35 +105,52 @@ function App() {
 
   // POLL for room participants while in lobby (ensures both players see each other)
   useEffect(() => {
-    if (!inLobby || !lobbyData) return;
+    if (!inLobby || !lobbyData) {
+      console.log('⚠️ Polling NOT started - inLobby:', inLobby, 'lobbyData:', lobbyData);
+      return;
+    }
     
     console.log('🔄 Starting lobby participant polling for', lobbyData.room_type);
+    let pollCount = 0;
     
     const fetchParticipants = async () => {
+      pollCount++;
+      console.log(`📡 Poll #${pollCount} - Fetching participants for ${lobbyData.room_type}...`);
+      
       try {
         const response = await axios.get(`${API}/room-participants/${lobbyData.room_type}`);
-        console.log('📡 Fetched participants:', response.data);
+        console.log(`📊 Poll #${pollCount} - Response:`, response.data);
         
-        if (response.data.players && response.data.players.length > 0) {
-          setRoomParticipants(prev => ({
+        // ALWAYS update, even if empty (to clear old data)
+        const players = response.data.players || [];
+        console.log(`👥 Poll #${pollCount} - Players found:`, players.length, players);
+        
+        setRoomParticipants(prev => {
+          const updated = {
             ...prev,
-            [lobbyData.room_type]: response.data.players
-          }));
-          console.log('✅ Updated lobby with', response.data.players.length, 'players');
+            [lobbyData.room_type]: players
+          };
+          console.log(`✅ Poll #${pollCount} - State updated:`, updated[lobbyData.room_type]);
+          return updated;
+        });
+        
+        // Force a re-render trigger
+        if (players.length >= 2) {
+          console.log('🎉 2 PLAYERS FOUND! Game should start soon!');
         }
       } catch (error) {
-        console.error('Failed to fetch room participants:', error);
+        console.error(`❌ Poll #${pollCount} - Failed:`, error);
       }
     };
     
     // Fetch immediately
     fetchParticipants();
     
-    // Then poll every 500ms
-    const pollInterval = setInterval(fetchParticipants, 500);
+    // Then poll every 300ms (faster for better UX)
+    const pollInterval = setInterval(fetchParticipants, 300);
     
     return () => {
-      console.log('🛑 Stopping lobby participant polling');
+      console.log(`🛑 Stopping lobby participant polling after ${pollCount} polls`);
       clearInterval(pollInterval);
     };
   }, [inLobby, lobbyData]);
