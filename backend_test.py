@@ -411,8 +411,7 @@ class SolanaCasinoAPITester:
             
             # Step 1: Clear any existing games
             print("🧹 Clearing existing games...")
-            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database", 
-                                           json={"admin_key": "PRODUCTION_CLEANUP_2025"})
+            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database?admin_key=PRODUCTION_CLEANUP_2025")
             
             if cleanup_response.status_code != 200:
                 self.log_test("Room Participant Tracking - Database Cleanup", False, 
