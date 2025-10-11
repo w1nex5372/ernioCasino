@@ -1646,7 +1646,7 @@ function App() {
                                     </div>
                                   </div>
                                   <Badge className="bg-white/20 text-white font-bold">
-                                    {room.players_count}/2 players
+                                    {room.players_count}/3 players
                                   </Badge>
                                 </div>
                               </div>
