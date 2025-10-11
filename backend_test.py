@@ -43,8 +43,10 @@ class SolanaCasinoAPITester:
     def test_telegram_auth(self, user_number=1):
         """Test Telegram authentication"""
         try:
-            # Create mock Telegram auth data
-            telegram_id = 123456789 + user_number
+            # Use specific telegram_ids from review request for 3-player testing
+            telegram_ids = [123456789, 6168593741, 1793011013]
+            telegram_id = telegram_ids[user_number - 1] if user_number <= 3 else 123456789 + user_number
+            
             user_data = {
                 "telegram_auth_data": {
                     "id": telegram_id,
@@ -64,8 +66,10 @@ class SolanaCasinoAPITester:
                 user = response.json()
                 if user_number == 1:
                     self.test_user1 = user
-                else:
+                elif user_number == 2:
                     self.test_user2 = user
+                elif user_number == 3:
+                    self.test_user3 = user
                 details = f"Created user: {user['first_name']}, ID: {user['id']}, Balance: {user['token_balance']}, Telegram ID: {user['telegram_id']}"
             else:
                 details = f"Status: {response.status_code}, Response: {response.text}"
