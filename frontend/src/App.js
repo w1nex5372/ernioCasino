@@ -252,18 +252,25 @@ function App() {
     });
 
     newSocket.on('game_finished', (data) => {
-      console.log('🏆 Game finished:', data);
-      console.log('Current user:', user);
+      console.log('🏆 GAME FINISHED EVENT RECEIVED!');
+      console.log('📊 Game data:', data);
+      console.log('👤 Current user:', user);
+      console.log('🎯 User telegram_id:', user?.telegram_id);
+      console.log('🎯 Winner telegram_id:', data.winner?.telegram_id);
       
       // Show notification to ALL players about the winner
       const winnerName = data.winner_name || `${data.winner?.first_name} ${data.winner?.last_name || ''}`.trim();
-      toast.success(`🏆 ${ROOM_CONFIGS[data.room_type]?.icon} Game Finished! Winner: ${winnerName}`, {
-        duration: 4000,
+      const gameTime = new Date().toLocaleTimeString();
+      
+      // BIG TOAST for everyone
+      toast.success(`🏆 ${ROOM_CONFIGS[data.room_type]?.icon} Game Finished at ${gameTime}! Winner: ${winnerName}`, {
+        duration: 8000,
         style: {
           background: '#eab308',
           color: 'black',
-          fontSize: '16px',
-          fontWeight: 'bold'
+          fontSize: '18px',
+          fontWeight: 'bold',
+          padding: '20px'
         }
       });
       
@@ -277,8 +284,9 @@ function App() {
       
       // Check if current user is the winner
       const isWinner = user && (user.telegram_id === data.winner?.telegram_id || user.id === data.winner_id);
+      console.log('🤔 Am I the winner?', isWinner);
       
-      // Show winner screen to players who were in the game
+      // Show winner screen to ALL players
       const winnerInfo = {
         winner_name: winnerName,
         winner_telegram_id: data.winner?.telegram_id || data.winner_telegram_id,
@@ -286,13 +294,20 @@ function App() {
         winner_username: data.winner?.username || '',
         room_type: data.room_type,
         prize_link: data.prize_link,
-        is_winner: isWinner
+        is_winner: isWinner,
+        game_time: gameTime
       };
-      console.log('👑 Winner info:', winnerInfo);
+      console.log('👑 Setting winner info:', winnerInfo);
       
       setWinnerData(winnerInfo);
       setShowWinnerScreen(true);
-      console.log('✅ Winner screen should now be visible');
+      console.log('✅ Winner screen state set to TRUE');
+      
+      // Extra logging
+      setTimeout(() => {
+        console.log('⏱️ After 1 second - showWinnerScreen:', showWinnerScreen);
+        console.log('⏱️ After 1 second - winnerData:', winnerData);
+      }, 1000);
       
       // AUTO-CLOSE after 5 seconds and return to rooms
       setTimeout(() => {
