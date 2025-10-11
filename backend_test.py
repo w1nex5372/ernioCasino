@@ -443,10 +443,8 @@ class SolanaCasinoAPITester:
             player1 = auth_response1.json()
             player1_user_id = "6ce34121-7cc7-4cbf-bb4c-8f74a1c3cabd"  # Use specific user_id from request
             
-            # Update player1 with the specific user_id by updating database directly via admin endpoint
-            # First give player1 some tokens
-            token_response1 = requests.post(f"{self.api_url}/admin/add-tokens/{player1['telegram_id']}", 
-                                          json={"admin_key": "PRODUCTION_CLEANUP_2025", "tokens": 1000})
+            # Give player1 some tokens
+            token_response1 = requests.post(f"{self.api_url}/admin/add-tokens/{player1['telegram_id']}?admin_key=PRODUCTION_CLEANUP_2025&tokens=1000")
             
             print(f"✅ Player 1 created: {player1['first_name']} {player1['last_name']} (@{player1.get('telegram_username', 'cia_nera')})")
             
