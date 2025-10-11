@@ -559,6 +559,7 @@ function App() {
     
     loadRooms();
     loadGameHistory();
+    loadWelcomeBonusStatus();
     
     // Telegram authentication - REAL USERS ONLY
     const authenticateFromTelegram = async () => {
