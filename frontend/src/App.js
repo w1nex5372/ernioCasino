@@ -1296,7 +1296,7 @@ function App() {
 
             {/* LOBBY SCREEN - Show when player is waiting in room */}
             {!showWinnerScreen && !gameInProgress && inLobby && lobbyData && (
-              <Card key={`lobby-${lobbyRefreshKey}`} className="bg-slate-800/90 border-2 border-yellow-500/50">
+              <Card className="bg-slate-800/90 border-2 border-yellow-500/50">
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl text-yellow-400 flex items-center justify-center gap-2">
                     <Users className="w-6 h-6" />
@@ -1307,7 +1307,7 @@ function App() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4" key={`lobby-content-${lobbyRefreshKey}`}>
+                  <div className="space-y-4">
                     {/* Current room participants */}
                     <div>
                       <h3 className="text-white font-semibold mb-3 text-center">Players in Room:</h3>
