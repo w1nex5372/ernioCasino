@@ -1310,11 +1310,13 @@ function App() {
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <Badge className={`text-xs px-2 py-0.5 flex-shrink-0 ${
+                                    room.status === 'playing' || room.status === 'finished' ? 'bg-red-500 text-white animate-pulse' :
                                     room.players_count === 0 ? 'bg-slate-500 text-white' :
                                     room.players_count === 1 ? 'bg-yellow-500 text-black animate-pulse' :
                                     'bg-green-500 text-black'
                                   }`}>
-                                    {room.players_count === 0 ? '🎯 Empty' :
+                                    {room.status === 'playing' || room.status === 'finished' ? '🔒 FULL' :
+                                     room.players_count === 0 ? '🎯 Empty' :
                                      room.players_count === 1 ? '🔥 Filling' :
                                      '⚡ Ready'}
                                   </Badge>
