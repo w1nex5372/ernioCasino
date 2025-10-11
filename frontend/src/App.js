@@ -201,9 +201,7 @@ function App() {
     }
     
     // Check for saved user session first
-    const savedUser = savedSession; // Use the saved session
-    const savedUser = localStorage.getItem('casino_user');
-    if (savedUser) {
+    if (savedSession) {
       try {
         const userData = JSON.parse(savedUser);
         console.log('Found saved user session:', userData);
