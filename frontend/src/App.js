@@ -807,6 +807,15 @@ function App() {
     }
   };
 
+  const loadWelcomeBonusStatus = async () => {
+    try {
+      const response = await axios.get(`${API}/welcome-bonus-status`);
+      setWelcomeBonusStatus(response.data);
+    } catch (error) {
+      console.error('Failed to load welcome bonus status:', error);
+    }
+  };
+
   const loadDerivedWallet = async () => {
     try {
       if (!user || !user.id) return;
