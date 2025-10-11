@@ -757,7 +757,19 @@ function App() {
             {isMobile && (
               <div className="bg-gradient-to-r from-green-600/15 to-emerald-600/15 border border-green-500/20 rounded-lg p-3 mb-3">
                 <div className="text-center">
-                  <h3 className="text-base font-bold text-white mb-1">Welcome, {user.first_name}!</h3>
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <h3 className="text-base font-bold text-white">Welcome, {user.first_name}!</h3>
+                    {user.is_owner && (
+                      <span className="px-2 py-0.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold rounded-full">
+                        OWNER
+                      </span>
+                    )}
+                    {user.is_admin && !user.is_owner && (
+                      <span className="px-2 py-0.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs font-bold rounded-full">
+                        ADMIN
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center justify-center gap-2">
                     <p className="text-yellow-400 font-medium text-sm">Balance: {user.token_balance || 0} tokens</p>
                     <button 
