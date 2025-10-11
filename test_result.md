@@ -369,7 +369,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Critical 3-Player Winner Detection and Battlefield Flow Complete"
+    - "Enhanced Winner Detection & Broadcast System Complete"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
