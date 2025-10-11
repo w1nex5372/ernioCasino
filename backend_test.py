@@ -10,6 +10,7 @@ class SolanaCasinoAPITester:
         self.api_url = f"{base_url}/api"
         self.test_user1 = None
         self.test_user2 = None
+        self.test_user3 = None  # Added third user for 3-player testing
         self.tests_run = 0
         self.tests_passed = 0
         self.failed_tests = []
