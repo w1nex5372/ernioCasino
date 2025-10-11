@@ -1609,16 +1609,16 @@ function App() {
                                   await joinRoom(roomType);
                                   console.log('🔘 Join room function completed');
                                 }}
-                                disabled={room.status === 'playing' || room.status === 'finished' || room.players_count >= 2 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount)}
+                                disabled={room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount)}
                                 className={`w-full h-9 text-white font-semibold text-sm ${
-                                  (room.status === 'playing' || room.status === 'finished' || room.players_count >= 2 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount))
+                                  (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount))
                                     ? 'bg-slate-600 cursor-not-allowed' 
                                     : 'bg-green-600 hover:bg-green-700'
                                 }`}
                               >
                                 <Play className="w-3 h-3 mr-1" />
                                 {room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
-                                 room.players_count >= 2 ? 'Full' : 
+                                 room.players_count >= 3 ? 'Full' : 
                                  !betAmount ? 'Enter Bet' :
                                  parseInt(betAmount) < config.min || parseInt(betAmount) > config.max ? 'Invalid' :
                                  user.token_balance < parseInt(betAmount) ? 'Low Balance' : 'Join'}
@@ -1659,7 +1659,7 @@ function App() {
                                 {room.players_count === 1 && (
                                   <p className="text-yellow-400 text-sm text-center font-medium">1 player waiting. Join now!</p>
                                 )}
-                                {room.players_count >= 2 && (
+                                {room.players_count >= 3 && (
                                   <p className="text-red-400 text-sm text-center font-medium">Room full - game in progress</p>
                                 )}
                                 
@@ -1690,16 +1690,16 @@ function App() {
                                       await joinRoom(roomType);
                                       console.log('🖥️ Join room function completed');
                                     }}
-                                    disabled={room.status === 'playing' || room.status === 'finished' || room.players_count >= 2 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount)}
+                                    disabled={room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount)}
                                     className={`w-full ${
-                                      (room.status === 'playing' || room.status === 'finished' || room.players_count >= 2 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount))
+                                      (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount))
                                         ? 'bg-slate-600 cursor-not-allowed' 
                                         : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600'
                                     } text-white font-bold py-3`}
                                   >
                                     <Play className="w-4 h-4 mr-2" />
                                     {room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
-                                     room.players_count >= 2 ? 'Room Full' : 
+                                     room.players_count >= 3 ? 'Room Full' : 
                                      !betAmount ? 'Enter Bet Amount' :
                                      parseInt(betAmount) < config.min || parseInt(betAmount) > config.max ? 'Invalid Amount' :
                                      user.token_balance < parseInt(betAmount) ? 'Insufficient Tokens' : 'Join Battle'}
