@@ -116,9 +116,9 @@ class RoomJoiningTester:
     def test_2_player1_join_bronze(self):
         """Test 2: Player 1 joining bronze room"""
         try:
-            # Create Player 1 with the specific user_id from the request
+            # Create Player 1 - let system generate user_id
             player1 = self.create_test_user(
-                "6ce34121-7cc7-4cbf-bb4c-8f74a1c3cabd",
+                None,  # Let system generate ID
                 123456789,
                 "Player1"
             )
@@ -129,7 +129,7 @@ class RoomJoiningTester:
             
             # Join bronze room with valid bet amount (bronze range: 150-450)
             join_data = {
-                "user_id": "6ce34121-7cc7-4cbf-bb4c-8f74a1c3cabd",
+                "user_id": player1['id'],  # Use actual user ID from creation
                 "room_type": "bronze",
                 "bet_amount": 200  # Valid bet amount for bronze room
             }
