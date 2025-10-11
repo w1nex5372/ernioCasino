@@ -962,10 +962,13 @@ function App() {
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-1">
-                  <Coins className="w-4 h-4 text-yellow-400" />
-                  <span className="text-lg font-bold text-yellow-400">{user.token_balance || 0}</span>
-                  <span className="text-slate-400">tokens</span>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <Coins className="w-4 h-4 text-yellow-400" />
+                    <span className="text-lg font-bold text-yellow-400">{user.token_balance || 0}</span>
+                    <span className="text-slate-400">tokens</span>
+                  </div>
+                  <DailyTokensButton user={user} onClaim={(newBalance) => setUser({...user, token_balance: newBalance})} />
                 </div>
                 {userPrizes.length > 0 && (
                   <div className="flex items-center gap-1">
