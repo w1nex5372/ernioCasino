@@ -732,18 +732,6 @@ function App() {
               </button>
               
               <button
-                onClick={() => setActiveTab('leaderboard')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === 'leaderboard' 
-                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
-                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                }`}
-              >
-                <Crown className="w-5 h-5" />
-                <span>Leaderboard</span>
-              </button>
-              
-              <button
                 onClick={() => setActiveTab('history')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                   activeTab === 'history' 
