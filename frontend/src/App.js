@@ -1577,6 +1577,7 @@ function App() {
                                     {room.status === 'playing' || room.status === 'finished' ? '🔒 FULL' :
                                      room.players_count === 0 ? '🎯 Empty' :
                                      room.players_count === 1 ? '🔥 Filling' :
+                                     room.players_count === 2 ? '⏳ Nearly Ready' :
                                      '⚡ Ready'}
                                   </Badge>
                                   <span className="text-xs text-white/70">{room.players_count}/3</span>
