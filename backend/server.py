@@ -1385,7 +1385,7 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
     await broadcast_room_updates()
     
     # Start game if room is full
-    if len(target_room.players) == 2:
+    if len(target_room.players) == 3:
         background_tasks.add_task(start_game_round, target_room)
     
     return {
