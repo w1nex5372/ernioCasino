@@ -1275,6 +1275,20 @@ async def telegram_auth(user_data: UserCreate):
     
     return user
 
+@api_router.get("/welcome-bonus-status")
+async def get_welcome_bonus_status():
+    """Get current welcome bonus status"""
+    user_count = await db.users.count_documents({})
+    remaining_spots = max(0, 100 - user_count)
+    
+    return {
+        "total_users": user_count,
+        "remaining_spots": remaining_spots,
+        "bonus_active": remaining_spots > 0,
+        "bonus_amount": 1000,
+        "message": f"🎁 First 100 players get 1000 free tokens! {remaining_spots} spots left!" if remaining_spots > 0 else "🚫 Welcome bonus period has ended"
+    }
+
 @api_router.get("/users/{user_id}", response_model=User)
 async def get_user(user_id: str):
     user_doc = await db.users.find_one({"id": user_id}, {"_id": 0})
