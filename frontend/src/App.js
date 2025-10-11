@@ -217,7 +217,7 @@ function App() {
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
-      forceNew: true
+      forceNew: false
     });
     
     newSocket.on('connect', () => {
