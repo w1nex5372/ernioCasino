@@ -191,6 +191,9 @@ class User(BaseModel):
     personal_solana_address: Optional[str] = None
     token_balance: int = Field(default=0)  # Starting balance - users must purchase tokens
     is_verified: bool = Field(default=False)
+    is_admin: bool = Field(default=False)
+    is_owner: bool = Field(default=False)
+    role: str = Field(default="user")  # user, admin, owner
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_login: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
