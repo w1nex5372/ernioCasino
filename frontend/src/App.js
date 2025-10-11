@@ -150,7 +150,19 @@ function App() {
 
     newSocket.on('game_finished', (data) => {
       console.log('Game finished:', data);
-      toast.success(`🏆 Game finished! Winner: ${data.winner_name}`);
+      
+      // Show winner screen to all players
+      setWinnerData({
+        winner_name: data.winner_name,
+        winner_telegram_id: data.winner?.telegram_id || data.winner_telegram_id,
+        winner_photo: data.winner?.photo_url || '',
+        winner_username: data.winner?.username || '',
+        room_type: data.room_type,
+        prize_link: data.prize_link,
+        is_winner: user && (user.telegram_id === data.winner?.telegram_id || user.id === data.winner_id)
+      });
+      setShowWinnerScreen(true);
+      
       setActiveRoom(null);
       setInLobby(false);
       setLobbyData(null);
