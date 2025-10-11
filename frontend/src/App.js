@@ -1160,44 +1160,6 @@ function App() {
               )
             )}
 
-            {/* Leaderboard Tab */}
-            {activeTab === 'leaderboard' && (
-              <Card className="bg-slate-800/90 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-yellow-400">
-                    <Crown className="w-5 h-5" />
-                    Leaderboard
-                  </CardTitle>
-                  <CardDescription>Top players by total winnings</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {leaderboard.length === 0 ? (
-                    <p className="text-center text-slate-400 py-8">No games played yet. Be the first to compete!</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {leaderboard.map((player, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center font-bold text-slate-900">
-                              {index + 1}
-                            </div>
-                            <div>
-                              <div className="font-medium text-white">{player.first_name}</div>
-                              <div className="text-sm text-slate-400">{player.games_won} wins</div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-bold text-yellow-400">{player.total_winnings}</div>
-                            <div className="text-xs text-slate-400">tokens</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
             {/* History Tab */}
             {activeTab === 'history' && (
               <Card className="bg-slate-800/90 border-slate-700">
