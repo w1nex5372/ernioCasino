@@ -1379,110 +1379,137 @@ function App() {
               </Card>
             )}
 
-            {/* WINNER ANNOUNCEMENT SCREEN - Show to all players after game */}
+            {/* 🏆 WINNER ANNOUNCEMENT SCREEN - Enhanced Casino Namai Design */}
             {showWinnerScreen && winnerData && (
-              <Card className={`bg-slate-800/90 border-2 ${winnerData.is_winner ? 'border-green-500 shadow-lg shadow-green-500/50' : 'border-red-500 shadow-lg shadow-red-500/50'}`}>
-                <CardContent className="p-8">
-                  <div className="text-center space-y-6">
-                    {/* Trophy Animation */}
-                    <div className="flex justify-center">
-                      <div className="w-24 h-24 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center animate-bounce">
-                        <Trophy className="w-12 h-12 text-slate-900" />
-                      </div>
-                    </div>
+              <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 animate-fadeIn">
+                {/* Animated Confetti Background */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  {[...Array(20)].map((_, i) => (
+                    <div
+                      key={i}
+                      className={`absolute w-3 h-3 bg-gradient-to-r ${
+                        i % 3 === 0 ? 'from-yellow-400 to-gold-500' : 
+                        i % 3 === 1 ? 'from-purple-400 to-purple-600' : 
+                        'from-green-400 to-emerald-500'
+                      } rounded-full animate-confetti opacity-90`}
+                      style={{
+                        left: `${Math.random() * 100}%`,
+                        animationDelay: `${Math.random() * 3}s`,
+                        animationDuration: `${2 + Math.random() * 2}s`
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <Card className="w-full max-w-md bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-2 border-gold-500 shadow-2xl shadow-gold-500/50 relative animate-slideUp">
+                  <CardContent className="p-8 text-center space-y-6">
                     
-                    {/* Winner/Loser Announcement */}
-                    <div>
-                      {winnerData.is_winner ? (
-                        <>
-                          <h2 className="text-4xl font-bold text-green-400 mb-2 animate-pulse">
-                            🎉 YOU WON! 🎉
-                          </h2>
-                          <p className="text-white text-2xl font-bold mb-2">
-                            Congratulations!
-                          </p>
-                          <p className="text-slate-300 text-lg mb-2">
-                            {ROOM_CONFIGS[winnerData.room_type]?.icon} {ROOM_CONFIGS[winnerData.room_type]?.name} at {winnerData.game_time}
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <h2 className="text-3xl font-bold text-orange-400 mb-3">
-                            Room {ROOM_CONFIGS[winnerData.room_type]?.name} is Full
-                          </h2>
-                          <p className="text-white text-lg mb-2">
-                            This game at <span className="text-yellow-400 font-bold">{winnerData.game_time}</span> has ended.
-                          </p>
-                          <p className="text-white text-2xl font-bold mb-2">
-                            Winner: <span className="text-green-400">{winnerData.winner_name}</span>
-                          </p>
-                          <p className="text-slate-400 text-sm">
-                            Better luck next time!
-                          </p>
-                        </>
-                      )}
-                    </div>
-                    
-                    {/* Winner Profile */}
-                    <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded-lg border border-yellow-500/30">
-                      {/* Profile Picture */}
-                      <div className="w-24 h-24 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 flex items-center justify-center text-slate-900 font-bold text-3xl">
-                        {winnerData.winner_photo ? (
-                          <img 
-                            src={winnerData.winner_photo} 
-                            alt={winnerData.winner_name} 
-                            className="w-24 h-24 rounded-full"
-                          />
-                        ) : (
-                          winnerData.winner_name?.charAt(0).toUpperCase()
-                        )}
-                      </div>
+                    {/* 🏆 Winner Announcement Title */}
+                    <div className="space-y-4">
+                      <h1 className="text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 via-gold-500 to-yellow-600 bg-clip-text animate-pulse">
+                        🏆 Winner Announcement
+                      </h1>
                       
-                      {/* Winner Name */}
-                      <div>
-                        <p className="text-2xl font-bold text-white">
-                          {winnerData.winner_name}
-                        </p>
-                        {winnerData.winner_username && (
-                          <p className="text-slate-400">@{winnerData.winner_username}</p>
-                        )}
+                      {/* Animated Trophy */}
+                      <div className="flex justify-center">
+                        <div className="relative">
+                          <div className="w-20 h-20 bg-gradient-to-r from-yellow-400 to-gold-600 rounded-full flex items-center justify-center animate-bounce shadow-lg shadow-gold-500/50">
+                            <Trophy className="w-10 h-10 text-slate-900" />
+                          </div>
+                          <div className="absolute -inset-2 bg-gradient-to-r from-yellow-400/20 to-gold-600/20 rounded-full animate-ping"></div>
+                        </div>
                       </div>
-                      
-                      {/* Winner Badge */}
-                      {winnerData.is_winner && (
-                        <Badge className="bg-green-500 text-black text-lg px-4 py-2 animate-pulse">
-                          ✓ You Won!
-                        </Badge>
-                      )}
                     </div>
-                    
-                    {/* Claim Prize Button - ONLY FOR WINNER */}
-                    {winnerData.is_winner && winnerData.prize_link && (
-                      <div className="space-y-3">
-                        <Button
-                          onClick={() => {
-                            window.open(winnerData.prize_link, '_blank');
-                            toast.success('Prize link opened!');
-                          }}
-                          className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold text-lg py-6"
-                        >
-                          🎁 Claim Your Prize Now!
-                        </Button>
-                        <p className="text-sm text-slate-400">
-                          Click to claim your reward!
-                        </p>
+
+                    {/* Dynamic Winner Display */}
+                    <div className="space-y-3">
+                      <h2 className="text-2xl font-bold text-green-400 animate-pulse">
+                        Congratulations, @{winnerData.winner?.username || winnerData.winner_name}!
+                      </h2>
+                      
+                      {/* Winner Photo */}
+                      <div className="flex justify-center">
+                        <div className="relative">
+                          <div className="w-16 h-16 rounded-full overflow-hidden border-3 border-gold-500 shadow-lg">
+                            {winnerData.winner?.photo_url ? (
+                              <img 
+                                src={winnerData.winner.photo_url} 
+                                alt={winnerData.winner_name} 
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl">
+                                {(winnerData.winner_name || 'W').charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <div className="absolute -inset-1 bg-gradient-to-r from-gold-400/50 to-yellow-500/50 rounded-full animate-pulse -z-10"></div>
+                        </div>
                       </div>
-                    )}
-                    
-                    {/* Auto-close message */}
-                    <div className="text-center">
-                      <p className="text-slate-400 text-sm animate-pulse">
-                        Returning to rooms in 2 seconds...
+                    </div>
+
+                    {/* Prize Amount Display */}
+                    <div className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border border-purple-500/30 rounded-lg p-4 space-y-2">
+                      <p className="text-lg text-white font-semibold">You won</p>
+                      <p className="text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-gold-500 bg-clip-text">
+                        {winnerData.prize_pool || '600'} tokens!
+                      </p>
+                      <p className="text-sm text-slate-400">
+                        {ROOM_CONFIGS[winnerData.room_type]?.icon} {ROOM_CONFIGS[winnerData.room_type]?.name}
                       </p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+
+                    {/* Action Buttons */}
+                    <div className="space-y-3 pt-4">
+                      {/* Play Again Button */}
+                      <Button
+                        onClick={() => {
+                          setShowWinnerScreen(false);
+                          setWinnerData(null);
+                          setActiveTab('rooms');
+                          setInLobby(false);
+                          setGameInProgress(false);
+                          loadRooms();
+                          toast.success('🎮 Ready for another game!');
+                        }}
+                        className="w-full bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 hover:from-purple-700 hover:via-purple-800 hover:to-indigo-800 text-white font-bold text-lg py-4 rounded-lg border border-purple-500/50 shadow-lg shadow-purple-500/25 transition-all duration-300 hover:scale-105"
+                      >
+                        🎮 Play Again
+                      </Button>
+                      
+                      {/* View Game History Button */}
+                      <Button
+                        onClick={() => {
+                          setShowWinnerScreen(false);
+                          setWinnerData(null);
+                          setActiveTab('history');
+                          setInLobby(false);
+                          setGameInProgress(false);
+                          loadGameHistory();
+                          toast.info('📊 Viewing game history');
+                        }}
+                        variant="outline"
+                        className="w-full border-2 border-gold-500/50 bg-slate-800/50 hover:bg-gold-500/20 text-gold-400 hover:text-gold-300 font-semibold py-3 rounded-lg transition-all duration-300 hover:border-gold-400"
+                      >
+                        📊 View Game History
+                      </Button>
+                    </div>
+
+                    {/* Decorative Elements */}
+                    <div className="flex justify-center space-x-2 pt-2">
+                      {['🎉', '✨', '🏆', '✨', '🎉'].map((emoji, i) => (
+                        <span 
+                          key={i} 
+                          className="text-2xl animate-bounce" 
+                          style={{ animationDelay: `${i * 0.1}s` }}
+                        >
+                          {emoji}
+                        </span>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             )}
 
             {/* GAME IN PROGRESS SCREEN - Show countdown */}
