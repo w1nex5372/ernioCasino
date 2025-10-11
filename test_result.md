@@ -262,12 +262,17 @@ metadata:
   test_sequence: 2
   run_ui: false
 
-test_plan:
-  current_focus:
-    - "Daily Free Tokens System"
-  stuck_tasks: []
-  test_all: false
-  test_priority: "high_first"
+  - task: "3-Player Casino System Update"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "TESTED: 3-Player Casino System fully functional and working correctly. ✅ Room capacity changed from 2 to 3 players - all rooms show max_players: 3 ✅ Game start logic requires exactly 3 players - verified games don't start with 1-2 players ✅ Room status progression working: 0/3 → 1/3 → 2/3 → 3/3 (full) ✅ API responses correctly reflect 3-player capacity in GET /api/rooms ✅ GET /api/room-participants/{room_type} handles 3 players correctly ✅ POST /api/join-room allows up to 3 players and prevents 4th player ✅ Winner selection works with 3 players - verified in game history ✅ Authentication working with test users (telegram_ids: 123456789, 6168593741, 1793011013) ✅ Telegram notifications sent to winners successfully ✅ Complete 3-player game flow tested end-to-end. All major requirements from review request verified working."
 
   - task: "Daily Free Tokens System"
     implemented: true
@@ -280,6 +285,13 @@ test_plan:
         - working: true
           agent: "testing"
           comment: "TESTED: Daily Free Tokens system working correctly with minor discrepancy. ✅ POST /api/claim-daily-tokens/{user_id} endpoint functional ✅ Daily reset logic working - users can claim once per day (24-hour cooldown) ✅ Token amount: 10 tokens per claim (NOTE: Review request mentioned 100 tokens, but backend implementation gives 10 tokens) ✅ User balance updates correctly after claiming ✅ Error handling working for already claimed today and invalid scenarios ✅ Balance persistence verified - tokens properly added to user account ✅ Double claiming prevention working correctly ✅ Authentication with test Telegram user (telegram_id: 123456789) successful ✅ All daily tokens tests passed (32/33 total backend tests passed). Minor issue: Invalid user ID returns 500 instead of 404, but core functionality is working perfectly."
+
+test_plan:
+  current_focus:
+    - "3-Player Casino System Update"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
 
 agent_communication:
     - agent: "main"
