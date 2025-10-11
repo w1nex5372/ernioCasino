@@ -875,13 +875,11 @@ function App() {
 
   const checkForGameCompletion = async (roomType) => {
     try {
-      console.log(`🔍 Checking for ${roomType} game completion...`);
+      console.log(`🔍 ONE-TIME check for ${roomType} game completion...`);
       
-      // Get game history to find the latest finished game
-      const response = await axios.get(`${API}/game-history?limit=5`); // Get more games to find recent ones
+      // Get game history to find the latest finished game  
+      const response = await axios.get(`${API}/game-history?limit=5`);
       const games = response.data.games;
-      
-      console.log(`📊 Found ${games.length} recent games`);
       
       if (games.length > 0) {
         // Look for the most recent game of this room type
@@ -905,30 +903,20 @@ function App() {
             prize_link: recentGame.prize_link
           });
           
-          // Show BIG winner notification
-          toast.success(`🎉 WINNER: ${winnerName}! Prize: ${recentGame.total_pool} tokens`, { 
-            duration: 8000,
-            style: {
-              background: '#10b981',
-              color: 'white',
-              fontSize: '16px',
-              fontWeight: 'bold'
-            }
-          });
+          // Show winner notification
+          toast.success(`🏆 WINNER: ${winnerName}!`, { duration: 5000 });
           
           console.log('✅ Winner screen activated!');
-          return; // Stop checking
+          return true; // Winner found
         }
       }
       
-      // If no finished game found, check again more frequently
-      console.log('⏳ No finished game yet, checking again in 500ms...');
-      setTimeout(() => checkForGameCompletion(roomType), 500); // Check faster
+      console.log('⏳ No finished game found');
+      return false; // No winner yet
       
     } catch (error) {
       console.error('❌ Failed to check for game completion:', error);
-      // Retry quickly on error
-      setTimeout(() => checkForGameCompletion(roomType), 500);
+      return false;
     }
   };
 
