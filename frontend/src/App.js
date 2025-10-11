@@ -1539,7 +1539,7 @@ function App() {
                                 {player.username && (
                                   <p className="text-slate-400 text-sm">@{player.username}</p>
                                 )}
-                                <p className="text-yellow-400 text-sm font-medium">Bet: {player.bet_amount} tokens</p>
+                                <p className="text-green-400 text-sm font-medium">Ready to play</p>
                               </div>
                             </div>
                           ))
