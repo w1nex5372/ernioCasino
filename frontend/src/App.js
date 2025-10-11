@@ -172,8 +172,31 @@ function App() {
   // Authentication and data loading
   useEffect(() => {
     // Clear any cached data and force refresh for Telegram
+    // AGGRESSIVE CACHE CLEARING for Telegram Web App
+    console.log('🧹 Clearing all caches...');
     localStorage.clear();
     sessionStorage.clear();
+    
+    // Clear Service Worker caches
+    if ('caches' in window) {
+      caches.keys().then(cacheNames => {
+        cacheNames.forEach(cacheName => {
+          caches.delete(cacheName);
+          console.log('Deleted cache:', cacheName);
+        });
+      });
+    }
+    
+    // Force Telegram Web App to reload if available
+    if (window.Telegram && window.Telegram.WebApp) {
+      console.log('🔄 Forcing Telegram Web App refresh...');
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+      // Send reload message to service worker
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({type: 'CLEAR_CACHE'});
+      }
+    }
     
     // Check for saved user session first
     const savedUser = localStorage.getItem('casino_user');
