@@ -1197,7 +1197,7 @@ function App() {
                           🎁 Claim Your Prize Now!
                         </Button>
                         <p className="text-sm text-slate-400">
-                          Prize also saved in "My Prizes" tab
+                          Click to claim your reward!
                         </p>
                       </div>
                     )}
