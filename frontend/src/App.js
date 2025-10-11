@@ -1637,18 +1637,21 @@ function App() {
                         </div>
                       ) : (
                         <div className="py-4">
-                          <p className="text-green-400 font-semibold text-lg">✓ Room Full! Checking for winner...</p>
+                          <div className="animate-pulse">
+                            <p className="text-green-400 font-semibold text-lg">⚡ Battle in Progress...</p>
+                            <div className="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto my-2"></div>
+                            <p className="text-yellow-400 text-sm">Determining winner...</p>
+                          </div>
+                          
                           <button 
-                            onClick={async () => {
-                              console.log('🔴 MANUAL WINNER CHECK');
-                              const found = await checkForGameCompletion(lobbyData.room_type);
-                              if (!found) {
-                                toast.info('No winner yet, game still in progress...');
-                              }
+                            onClick={() => {
+                              console.log('🔴 MANUAL WINNER DETECTION RESTART');
+                              toast.info('Restarting winner detection...');
+                              startWinnerDetection(lobbyData.room_type);
                             }}
-                            className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold"
+                            className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold"
                           >
-                            🔍 Check Winner
+                            🏆 Force Check Winner
                           </button>
                         </div>
                       )}
