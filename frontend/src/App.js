@@ -1473,7 +1473,7 @@ function App() {
                               {player.username && (
                                 <p className="text-slate-400 text-sm">@{player.username}</p>
                               )}
-                              <p className="text-yellow-400 text-sm font-medium">Bet: {player.bet_amount} tokens</p>
+                              <p className="text-blue-400 text-sm font-medium">In Battle</p>
                             </div>
                             
                             {/* Battle indicator for 3-player games */}
