@@ -1321,7 +1321,8 @@ function App() {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {userPrizes.map((prize, index) => (
+                      {/* Show latest prize first */}
+                      {[...userPrizes].reverse().map((prize, index) => (
                         <div key={index} className="p-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-lg">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
