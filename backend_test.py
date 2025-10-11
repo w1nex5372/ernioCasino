@@ -966,6 +966,407 @@ class SolanaCasinoAPITester:
             self.log_test("Daily Tokens Already Claimed Direct", False, str(e))
             return False
 
+    def test_room_capacity_three_players(self):
+        """Test that rooms show max_players: 3 in API responses"""
+        try:
+            response = requests.get(f"{self.api_url}/rooms")
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                rooms = data.get('rooms', [])
+                
+                for room in rooms:
+                    max_players = room.get('max_players', 0)
+                    if max_players != 3:
+                        success = False
+                        details = f"Room {room['room_type']} has max_players={max_players}, expected 3"
+                        break
+                else:
+                    details = f"All {len(rooms)} rooms correctly show max_players=3"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test("Room Capacity 3 Players", success, details)
+            return success
+        except Exception as e:
+            self.log_test("Room Capacity 3 Players", False, str(e))
+            return False
+
+    def test_room_status_progression(self):
+        """Test room status progression: 0/3 → 1/3 → 2/3 → 3/3 (full)"""
+        try:
+            print("\n📊 Testing Room Status Progression (0/3 → 1/3 → 2/3 → 3/3)...")
+            
+            # Clean database first
+            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database?admin_key=PRODUCTION_CLEANUP_2025")
+            if cleanup_response.status_code != 200:
+                self.log_test("Room Status Progression - Cleanup", False, "Database cleanup failed")
+                return False
+            
+            time.sleep(1)  # Wait for rooms to be reinitialized
+            
+            # Check initial state (0/3)
+            rooms_response = requests.get(f"{self.api_url}/rooms")
+            if rooms_response.status_code != 200:
+                self.log_test("Room Status Progression", False, "Failed to get initial rooms")
+                return False
+            
+            initial_rooms = rooms_response.json().get('rooms', [])
+            bronze_room = next((r for r in initial_rooms if r['room_type'] == 'bronze'), None)
+            if not bronze_room or bronze_room['players_count'] != 0:
+                self.log_test("Room Status Progression", False, f"Initial Bronze room not empty: {bronze_room}")
+                return False
+            
+            print(f"✅ Initial state: Bronze room 0/3 players")
+            
+            # Create 3 test users and give them tokens
+            test_users = []
+            telegram_ids = [123456789, 6168593741, 1793011013]
+            
+            for i in range(3):
+                user_data = {
+                    "telegram_auth_data": {
+                        "id": telegram_ids[i],
+                        "first_name": f"Player{i+1}",
+                        "last_name": "Test",
+                        "username": f"player{i+1}test",
+                        "photo_url": f"https://example.com/player{i+1}.jpg",
+                        "auth_date": int(datetime.now().timestamp()),
+                        "hash": "telegram_auto"
+                    }
+                }
+                
+                auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+                if auth_response.status_code != 200:
+                    self.log_test("Room Status Progression", False, f"Failed to create user {i+1}")
+                    return False
+                
+                user = auth_response.json()
+                test_users.append(user)
+                
+                # Give tokens
+                requests.post(f"{self.api_url}/admin/add-tokens/{telegram_ids[i]}?admin_key=PRODUCTION_CLEANUP_2025&tokens=1000")
+            
+            # Test progression: Player 1 joins (1/3)
+            join_data1 = {"room_type": "bronze", "user_id": test_users[0]['id'], "bet_amount": 300}
+            join_response1 = requests.post(f"{self.api_url}/join-room", json=join_data1)
+            if join_response1.status_code != 200:
+                self.log_test("Room Status Progression", False, "Player 1 failed to join")
+                return False
+            
+            result1 = join_response1.json()
+            if result1.get('position') != 1 or result1.get('players_needed') != 2:
+                self.log_test("Room Status Progression", False, f"After player 1: position={result1.get('position')}, needed={result1.get('players_needed')}")
+                return False
+            
+            print(f"✅ After Player 1: 1/3 players, 2 needed")
+            
+            # Test progression: Player 2 joins (2/3)
+            join_data2 = {"room_type": "bronze", "user_id": test_users[1]['id'], "bet_amount": 300}
+            join_response2 = requests.post(f"{self.api_url}/join-room", json=join_data2)
+            if join_response2.status_code != 200:
+                self.log_test("Room Status Progression", False, "Player 2 failed to join")
+                return False
+            
+            result2 = join_response2.json()
+            if result2.get('position') != 2 or result2.get('players_needed') != 1:
+                self.log_test("Room Status Progression", False, f"After player 2: position={result2.get('position')}, needed={result2.get('players_needed')}")
+                return False
+            
+            print(f"✅ After Player 2: 2/3 players, 1 needed")
+            
+            # Test progression: Player 3 joins (3/3 - should trigger game)
+            join_data3 = {"room_type": "bronze", "user_id": test_users[2]['id'], "bet_amount": 300}
+            join_response3 = requests.post(f"{self.api_url}/join-room", json=join_data3)
+            if join_response3.status_code != 200:
+                self.log_test("Room Status Progression", False, "Player 3 failed to join")
+                return False
+            
+            result3 = join_response3.json()
+            if result3.get('position') != 3 or result3.get('players_needed') != 0:
+                self.log_test("Room Status Progression", False, f"After player 3: position={result3.get('position')}, needed={result3.get('players_needed')}")
+                return False
+            
+            print(f"✅ After Player 3: 3/3 players, 0 needed - Game should start")
+            
+            details = "Room status progression working correctly: 0/3 → 1/3 → 2/3 → 3/3 (game starts)"
+            self.log_test("Room Status Progression", True, details)
+            return True
+            
+        except Exception as e:
+            self.log_test("Room Status Progression", False, str(e))
+            return False
+
+    def test_fourth_player_prevention(self):
+        """Test that room prevents 4th player from joining"""
+        try:
+            print("\n🚫 Testing 4th Player Prevention...")
+            
+            # Clean database first
+            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database?admin_key=PRODUCTION_CLEANUP_2025")
+            if cleanup_response.status_code != 200:
+                self.log_test("4th Player Prevention - Cleanup", False, "Database cleanup failed")
+                return False
+            
+            time.sleep(1)
+            
+            # Create 4 test users
+            test_users = []
+            telegram_ids = [123456789, 6168593741, 1793011013, 999888777]
+            
+            for i in range(4):
+                user_data = {
+                    "telegram_auth_data": {
+                        "id": telegram_ids[i],
+                        "first_name": f"Player{i+1}",
+                        "last_name": "Test",
+                        "username": f"player{i+1}test",
+                        "photo_url": f"https://example.com/player{i+1}.jpg",
+                        "auth_date": int(datetime.now().timestamp()),
+                        "hash": "telegram_auto"
+                    }
+                }
+                
+                auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+                if auth_response.status_code != 200:
+                    self.log_test("4th Player Prevention", False, f"Failed to create user {i+1}")
+                    return False
+                
+                user = auth_response.json()
+                test_users.append(user)
+                
+                # Give tokens
+                requests.post(f"{self.api_url}/admin/add-tokens/{telegram_ids[i]}?admin_key=PRODUCTION_CLEANUP_2025&tokens=1000")
+            
+            # Fill room with 3 players first
+            for i in range(3):
+                join_data = {"room_type": "bronze", "user_id": test_users[i]['id'], "bet_amount": 300}
+                join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+                if join_response.status_code != 200:
+                    self.log_test("4th Player Prevention", False, f"Player {i+1} failed to join")
+                    return False
+            
+            print("✅ 3 players successfully joined Bronze room")
+            
+            # Wait a moment for game to potentially start
+            time.sleep(2)
+            
+            # Try to add 4th player - should fail
+            join_data4 = {"room_type": "bronze", "user_id": test_users[3]['id'], "bet_amount": 300}
+            join_response4 = requests.post(f"{self.api_url}/join-room", json=join_data4)
+            
+            # Should fail with 400 status (room full) or 404 (no available room)
+            success = join_response4.status_code in [400, 404]
+            
+            if success:
+                error_response = join_response4.json() if join_response4.status_code == 400 else {"detail": "No available room"}
+                details = f"Correctly prevented 4th player from joining. Status: {join_response4.status_code}, Error: {error_response.get('detail', 'Unknown error')}"
+            else:
+                details = f"4th player was allowed to join! Status: {join_response4.status_code}, Response: {join_response4.text}"
+            
+            self.log_test("4th Player Prevention", success, details)
+            return success
+            
+        except Exception as e:
+            self.log_test("4th Player Prevention", False, str(e))
+            return False
+
+    def test_game_start_logic_three_players(self):
+        """Test that game only starts when exactly 3 players join"""
+        try:
+            print("\n🎯 Testing Game Start Logic (Requires Exactly 3 Players)...")
+            
+            # Clean database
+            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database?admin_key=PRODUCTION_CLEANUP_2025")
+            if cleanup_response.status_code != 200:
+                self.log_test("Game Start Logic 3 Players - Cleanup", False, "Database cleanup failed")
+                return False
+            
+            time.sleep(1)
+            
+            # Create 3 test users
+            test_users = []
+            telegram_ids = [123456789, 6168593741, 1793011013]
+            
+            for i in range(3):
+                user_data = {
+                    "telegram_auth_data": {
+                        "id": telegram_ids[i],
+                        "first_name": f"GamePlayer{i+1}",
+                        "last_name": "Test",
+                        "username": f"gameplayer{i+1}",
+                        "photo_url": f"https://example.com/gameplayer{i+1}.jpg",
+                        "auth_date": int(datetime.now().timestamp()),
+                        "hash": "telegram_auto"
+                    }
+                }
+                
+                auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+                if auth_response.status_code != 200:
+                    self.log_test("Game Start Logic 3 Players", False, f"Failed to create user {i+1}")
+                    return False
+                
+                user = auth_response.json()
+                test_users.append(user)
+                
+                # Give tokens
+                requests.post(f"{self.api_url}/admin/add-tokens/{telegram_ids[i]}?admin_key=PRODUCTION_CLEANUP_2025&tokens=1000")
+            
+            # Test 1: Game doesn't start with 1 player
+            join_data1 = {"room_type": "bronze", "user_id": test_users[0]['id'], "bet_amount": 300}
+            requests.post(f"{self.api_url}/join-room", json=join_data1)
+            
+            time.sleep(1)  # Wait briefly
+            
+            rooms_response1 = requests.get(f"{self.api_url}/rooms")
+            rooms1 = rooms_response1.json().get('rooms', [])
+            bronze_room1 = next((r for r in rooms1 if r['room_type'] == 'bronze'), None)
+            
+            if not bronze_room1 or bronze_room1['status'] != 'waiting':
+                self.log_test("Game Start Logic 3 Players", False, f"Game started with 1 player! Room status: {bronze_room1['status'] if bronze_room1 else 'None'}")
+                return False
+            
+            print("✅ Game correctly did NOT start with 1 player")
+            
+            # Test 2: Game doesn't start with 2 players
+            join_data2 = {"room_type": "bronze", "user_id": test_users[1]['id'], "bet_amount": 300}
+            requests.post(f"{self.api_url}/join-room", json=join_data2)
+            
+            time.sleep(1)  # Wait briefly
+            
+            rooms_response2 = requests.get(f"{self.api_url}/rooms")
+            rooms2 = rooms_response2.json().get('rooms', [])
+            bronze_room2 = next((r for r in rooms2 if r['room_type'] == 'bronze'), None)
+            
+            if not bronze_room2 or bronze_room2['status'] != 'waiting':
+                self.log_test("Game Start Logic 3 Players", False, f"Game started with 2 players! Room status: {bronze_room2['status'] if bronze_room2 else 'None'}")
+                return False
+            
+            print("✅ Game correctly did NOT start with 2 players")
+            
+            # Test 3: Game starts with 3 players
+            join_data3 = {"room_type": "bronze", "user_id": test_users[2]['id'], "bet_amount": 300}
+            requests.post(f"{self.api_url}/join-room", json=join_data3)
+            
+            time.sleep(4)  # Wait for game to start and complete
+            
+            # Check if game started and completed (new room should be created)
+            rooms_response3 = requests.get(f"{self.api_url}/rooms")
+            rooms3 = rooms_response3.json().get('rooms', [])
+            bronze_room3 = next((r for r in rooms3 if r['room_type'] == 'bronze'), None)
+            
+            # After game completion, a new empty room should exist
+            if not bronze_room3 or bronze_room3['players_count'] != 0:
+                self.log_test("Game Start Logic 3 Players", False, f"Game did not complete properly. Room state: {bronze_room3}")
+                return False
+            
+            print("✅ Game correctly started and completed with 3 players")
+            
+            details = "Game start logic working correctly: No start with 1-2 players, starts with exactly 3 players"
+            self.log_test("Game Start Logic 3 Players", True, details)
+            return True
+            
+        except Exception as e:
+            self.log_test("Game Start Logic 3 Players", False, str(e))
+            return False
+
+    def test_room_participants_three_players(self):
+        """Test GET /api/room-participants/{room_type} handles 3 players"""
+        try:
+            print("\n👥 Testing Room Participants API with 3 Players...")
+            
+            # Clean database
+            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database?admin_key=PRODUCTION_CLEANUP_2025")
+            if cleanup_response.status_code != 200:
+                self.log_test("Room Participants 3 Players - Cleanup", False, "Database cleanup failed")
+                return False
+            
+            time.sleep(1)
+            
+            # Create 3 test users
+            test_users = []
+            telegram_ids = [123456789, 6168593741, 1793011013]
+            
+            for i in range(3):
+                user_data = {
+                    "telegram_auth_data": {
+                        "id": telegram_ids[i],
+                        "first_name": f"Participant{i+1}",
+                        "last_name": "Test",
+                        "username": f"participant{i+1}",
+                        "photo_url": f"https://example.com/participant{i+1}.jpg",
+                        "auth_date": int(datetime.now().timestamp()),
+                        "hash": "telegram_auto"
+                    }
+                }
+                
+                auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+                if auth_response.status_code != 200:
+                    self.log_test("Room Participants 3 Players", False, f"Failed to create user {i+1}")
+                    return False
+                
+                user = auth_response.json()
+                test_users.append(user)
+                
+                # Give tokens
+                requests.post(f"{self.api_url}/admin/add-tokens/{telegram_ids[i]}?admin_key=PRODUCTION_CLEANUP_2025&tokens=1000")
+            
+            # Test empty room first
+            participants_response0 = requests.get(f"{self.api_url}/room-participants/bronze")
+            if participants_response0.status_code != 200:
+                self.log_test("Room Participants 3 Players", False, "Failed to get initial participants")
+                return False
+            
+            participants0 = participants_response0.json()
+            if participants0.get('count') != 0:
+                self.log_test("Room Participants 3 Players", False, f"Expected 0 initial participants, got {participants0.get('count')}")
+                return False
+            
+            print("✅ Initial state: 0 participants")
+            
+            # Add players one by one and test participant API
+            for i in range(3):
+                join_data = {"room_type": "bronze", "user_id": test_users[i]['id'], "bet_amount": 300}
+                join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+                if join_response.status_code != 200:
+                    self.log_test("Room Participants 3 Players", False, f"Player {i+1} failed to join")
+                    return False
+                
+                # Check participants after each join
+                participants_response = requests.get(f"{self.api_url}/room-participants/bronze")
+                if participants_response.status_code != 200:
+                    self.log_test("Room Participants 3 Players", False, f"Failed to get participants after player {i+1}")
+                    return False
+                
+                participants = participants_response.json()
+                expected_count = i + 1
+                
+                if participants.get('count') != expected_count:
+                    # If count is 0, game might have started (expected after 3rd player)
+                    if i == 2 and participants.get('count') == 0:
+                        print("✅ After 3rd player: Game started, participants API returns 0 (expected)")
+                        break
+                    else:
+                        self.log_test("Room Participants 3 Players", False, f"After player {i+1}: expected {expected_count} participants, got {participants.get('count')}")
+                        return False
+                
+                print(f"✅ After Player {i+1}: {participants.get('count')} participants")
+                
+                # Verify player details
+                players = participants.get('players', [])
+                if len(players) != expected_count:
+                    self.log_test("Room Participants 3 Players", False, f"Player count mismatch: API count={participants.get('count')}, players array length={len(players)}")
+                    return False
+            
+            details = "Room participants API correctly handles 3-player progression and game start"
+            self.log_test("Room Participants 3 Players", True, details)
+            return True
+            
+        except Exception as e:
+            self.log_test("Room Participants 3 Players", False, str(e))
+            return False
+
     def test_daily_tokens_balance_persistence_direct(self, test_user):
         """Test that daily tokens are properly persisted in user balance with direct user object"""
         try:
