@@ -1481,15 +1481,17 @@ function App() {
                                   />
                                   
                                   <Button
-                                    onClick={() => {
-                                      console.log('Desktop join clicked!', {
+                                    onClick={async () => {
+                                      console.log('🖥️ DESKTOP Join button clicked!', {
                                         roomType,
                                         betAmount,
-                                        userBalance: user.token_balance,
+                                        selectedRoom,
+                                        userBalance: user?.token_balance,
                                         playersCount: room.players_count,
                                         roomStatus: room.status
                                       });
-                                      joinRoom(roomType);
+                                      await joinRoom(roomType);
+                                      console.log('🖥️ Join room function completed');
                                     }}
                                     disabled={room.status === 'playing' || room.status === 'finished' || room.players_count >= 2 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount)}
                                     className={`w-full ${
