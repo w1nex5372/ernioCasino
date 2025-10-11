@@ -988,6 +988,10 @@ function App() {
                     {/* Current room participants */}
                     <div>
                       <h3 className="text-white font-semibold mb-3 text-center">Players in Room:</h3>
+                      {/* Debug info */}
+                      {console.log('Lobby - lobbyData:', lobbyData)}
+                      {console.log('Lobby - roomParticipants:', roomParticipants)}
+                      {console.log('Lobby - Current room players:', roomParticipants[lobbyData?.room_type])}
                       <div className="space-y-3">
                         {roomParticipants[lobbyData.room_type]?.length > 0 ? (
                           roomParticipants[lobbyData.room_type].map((player, index) => (
