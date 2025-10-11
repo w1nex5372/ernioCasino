@@ -206,17 +206,32 @@ function App() {
 
     newSocket.on('game_starting', (data) => {
       console.log('🎮 Game starting:', data);
-      toast.info('Game starting! Good luck! 🎰');
       
-      // Transition from lobby to game screen
-      setInLobby(false);
-      setGameInProgress(true);
-      setCurrentGameData({
-        room_type: data.room_type,
-        players: roomParticipants[data.room_type] || [],
-        message: 'Game in progress...'
+      // Show BIG notification to ALL players (even those outside the room)
+      toast.success(`🎰 ${ROOM_CONFIGS[data.room_type]?.icon} ${ROOM_CONFIGS[data.room_type]?.name} ROOM IS FULL! Game starting!`, {
+        duration: 3000,
+        style: {
+          background: '#10b981',
+          color: 'white',
+          fontSize: '16px',
+          fontWeight: 'bold'
+        }
       });
-      setActiveRoom(data);
+      
+      // If user is in this room, show game screen
+      if (inLobby && lobbyData?.room_type === data.room_type) {
+        setInLobby(false);
+        setGameInProgress(true);
+        setCurrentGameData({
+          room_type: data.room_type,
+          players: roomParticipants[data.room_type] || data.players || [],
+          message: 'Game in progress...'
+        });
+        setActiveRoom(data);
+      }
+      
+      // Reload rooms for all players to see updated status
+      loadRooms();
     });
 
     newSocket.on('game_finished', (data) => {
