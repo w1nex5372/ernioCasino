@@ -221,9 +221,7 @@ function App() {
         toast.success('Room reset! Ready for new players 🎰');
       }, 5000);
       
-      setActiveRoom(null);
-      setInLobby(false);
-      setLobbyData(null);
+      // Refresh data
       loadRooms();
       loadGameHistory();
       if (user) loadUserPrizes();
