@@ -289,15 +289,12 @@ function App() {
             }
           }
           
-          // If still no user, create a fallback for testing
+          // If still no user, throw error - NO FALLBACK
           if (!telegramUser || !telegramUser.id) {
-            console.log('Creating fallback user for testing...');
-            telegramUser = {
-              id: 123456789,
-              first_name: 'Test',
-              last_name: 'User',
-              username: 'testuser'
-            };
+            console.error('❌ NO TELEGRAM USER DATA AVAILABLE!');
+            console.error('WebApp.initData:', webApp.initData);
+            console.error('WebApp.initDataUnsafe:', webApp.initDataUnsafe);
+            throw new Error('No Telegram user data - Bot might not be configured correctly');
           }
         }
         
