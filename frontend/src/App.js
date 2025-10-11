@@ -1518,7 +1518,7 @@ function App() {
                       </Button>
                     </div>
                     <p className="text-xs text-slate-400">
-                      2 players • Higher bet = better odds
+                      3 players • Higher bet = better odds
                     </p>
                   </div>
                 ) : (
