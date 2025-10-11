@@ -618,6 +618,203 @@ class SolanaCasinoAPITester:
             self.log_test("Room Participant Tracking - Complete Scenario", False, str(e))
             return False
 
+    def test_daily_tokens_claim(self, user_number=1):
+        """Test daily free tokens claiming functionality"""
+        test_user = self.test_user1 if user_number == 1 else self.test_user2
+        if not test_user:
+            self.log_test(f"Daily Tokens Claim User {user_number}", False, "No test user available")
+            return False
+        
+        try:
+            # Get user's current balance before claiming
+            user_response = requests.get(f"{self.api_url}/user/{test_user['id']}")
+            if user_response.status_code != 200:
+                self.log_test(f"Daily Tokens Claim User {user_number} - Get Balance", False, 
+                            f"Failed to get user balance: {user_response.status_code}")
+                return False
+            
+            user_data = user_response.json()
+            initial_balance = user_data.get('token_balance', 0)
+            
+            # Attempt to claim daily tokens
+            response = requests.post(f"{self.api_url}/claim-daily-tokens/{test_user['id']}")
+            success = response.status_code == 200
+            
+            if success:
+                result = response.json()
+                status = result.get('status', '')
+                tokens_claimed = result.get('tokens_claimed', 0)
+                new_balance = result.get('new_balance', 0)
+                message = result.get('message', '')
+                
+                if status == 'success':
+                    # Verify token amount (should be 10 tokens per day according to backend code)
+                    expected_tokens = 10
+                    if tokens_claimed != expected_tokens:
+                        success = False
+                        details = f"Expected {expected_tokens} tokens, got {tokens_claimed}"
+                    else:
+                        # Verify balance increased correctly
+                        expected_new_balance = initial_balance + tokens_claimed
+                        if new_balance != expected_new_balance:
+                            success = False
+                            details = f"Balance mismatch: expected {expected_new_balance}, got {new_balance}"
+                        else:
+                            details = f"Successfully claimed {tokens_claimed} tokens. Balance: {initial_balance} → {new_balance}"
+                elif status == 'already_claimed':
+                    # This is also a valid response if user already claimed today
+                    details = f"Already claimed today: {message}"
+                else:
+                    success = False
+                    details = f"Unexpected status: {status}, Message: {message}"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test(f"Daily Tokens Claim User {user_number}", success, details)
+            return success, result if success else None
+        except Exception as e:
+            self.log_test(f"Daily Tokens Claim User {user_number}", False, str(e))
+            return False, None
+
+    def test_daily_tokens_already_claimed(self, user_number=1):
+        """Test that user cannot claim daily tokens twice in the same day"""
+        test_user = self.test_user1 if user_number == 1 else self.test_user2
+        if not test_user:
+            self.log_test(f"Daily Tokens Already Claimed User {user_number}", False, "No test user available")
+            return False
+        
+        try:
+            # First claim should succeed (or already be claimed)
+            first_response = requests.post(f"{self.api_url}/claim-daily-tokens/{test_user['id']}")
+            
+            # Second claim should fail with "already_claimed" status
+            second_response = requests.post(f"{self.api_url}/claim-daily-tokens/{test_user['id']}")
+            
+            success = second_response.status_code == 200
+            if success:
+                result = second_response.json()
+                status = result.get('status', '')
+                can_claim = result.get('can_claim', True)
+                time_until_next = result.get('time_until_next_claim', 0)
+                
+                # Should return already_claimed status and can_claim should be False
+                if status == 'already_claimed' and not can_claim:
+                    details = f"Correctly prevented double claiming. Next claim in {int(time_until_next/3600)}h {int((time_until_next%3600)/60)}m"
+                else:
+                    success = False
+                    details = f"Expected already_claimed status with can_claim=False, got status={status}, can_claim={can_claim}"
+            else:
+                details = f"Status: {second_response.status_code}, Response: {second_response.text}"
+            
+            self.log_test(f"Daily Tokens Already Claimed User {user_number}", success, details)
+            return success
+        except Exception as e:
+            self.log_test(f"Daily Tokens Already Claimed User {user_number}", False, str(e))
+            return False
+
+    def test_daily_tokens_invalid_user(self):
+        """Test daily tokens claim with invalid user ID"""
+        try:
+            response = requests.post(f"{self.api_url}/claim-daily-tokens/invalid-user-id")
+            success = response.status_code == 404
+            
+            if success:
+                details = "Correctly returned 404 for invalid user ID"
+            else:
+                details = f"Expected 404, got {response.status_code}"
+            
+            self.log_test("Daily Tokens Invalid User", success, details)
+            return success
+        except Exception as e:
+            self.log_test("Daily Tokens Invalid User", False, str(e))
+            return False
+
+    def test_daily_tokens_balance_persistence(self, user_number=1):
+        """Test that daily tokens are properly persisted in user balance"""
+        test_user = self.test_user1 if user_number == 1 else self.test_user2
+        if not test_user:
+            self.log_test(f"Daily Tokens Balance Persistence User {user_number}", False, "No test user available")
+            return False
+        
+        try:
+            # Get balance before claiming
+            before_response = requests.get(f"{self.api_url}/user/{test_user['id']}")
+            if before_response.status_code != 200:
+                self.log_test(f"Daily Tokens Balance Persistence User {user_number}", False, 
+                            "Failed to get initial balance")
+                return False
+            
+            before_balance = before_response.json().get('token_balance', 0)
+            
+            # Claim daily tokens
+            claim_response = requests.post(f"{self.api_url}/claim-daily-tokens/{test_user['id']}")
+            if claim_response.status_code != 200:
+                self.log_test(f"Daily Tokens Balance Persistence User {user_number}", False, 
+                            "Failed to claim tokens")
+                return False
+            
+            claim_result = claim_response.json()
+            
+            # If already claimed, skip this test
+            if claim_result.get('status') == 'already_claimed':
+                self.log_test(f"Daily Tokens Balance Persistence User {user_number}", True, 
+                            "User already claimed today - balance persistence cannot be tested")
+                return True
+            
+            # Get balance after claiming
+            after_response = requests.get(f"{self.api_url}/user/{test_user['id']}")
+            if after_response.status_code != 200:
+                self.log_test(f"Daily Tokens Balance Persistence User {user_number}", False, 
+                            "Failed to get final balance")
+                return False
+            
+            after_balance = after_response.json().get('token_balance', 0)
+            tokens_claimed = claim_result.get('tokens_claimed', 0)
+            
+            # Verify balance increased by the claimed amount
+            expected_balance = before_balance + tokens_claimed
+            success = after_balance == expected_balance
+            
+            if success:
+                details = f"Balance correctly updated: {before_balance} + {tokens_claimed} = {after_balance}"
+            else:
+                details = f"Balance mismatch: expected {expected_balance}, got {after_balance}"
+            
+            self.log_test(f"Daily Tokens Balance Persistence User {user_number}", success, details)
+            return success
+        except Exception as e:
+            self.log_test(f"Daily Tokens Balance Persistence User {user_number}", False, str(e))
+            return False
+
+    def test_daily_tokens_comprehensive(self):
+        """Comprehensive test of daily tokens system"""
+        try:
+            print("\n🎁 Testing Daily Free Tokens System...")
+            
+            # Test with both users
+            for user_num in [1, 2]:
+                print(f"\n👤 Testing Daily Tokens for User {user_num}...")
+                
+                # Test basic claiming functionality
+                claim_success, claim_result = self.test_daily_tokens_claim(user_num)
+                
+                # Test double claiming prevention
+                self.test_daily_tokens_already_claimed(user_num)
+                
+                # Test balance persistence
+                self.test_daily_tokens_balance_persistence(user_num)
+            
+            # Test invalid user ID
+            self.test_daily_tokens_invalid_user()
+            
+            # Summary of daily tokens testing
+            print("✅ Daily tokens comprehensive testing completed")
+            return True
+            
+        except Exception as e:
+            self.log_test("Daily Tokens Comprehensive", False, str(e))
+            return False
+
     def test_invalid_endpoints(self):
         """Test error handling for invalid requests"""
         tests = [
