@@ -535,6 +535,21 @@ function App() {
         setBetAmount('');
         setSelectedRoom(null);
         
+        // Set initial room participants with current user
+        const currentPlayer = {
+          user_id: user.id,
+          first_name: user.first_name,
+          last_name: user.last_name || '',
+          username: user.telegram_username || user.username || '',
+          photo_url: user.photo_url || '',
+          bet_amount: parseInt(betAmount)
+        };
+        
+        setRoomParticipants(prev => ({
+          ...prev,
+          [roomType]: [currentPlayer]
+        }));
+        
         // Enter lobby mode
         setInLobby(true);
         setLobbyData({
