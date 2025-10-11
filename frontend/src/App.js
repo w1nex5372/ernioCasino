@@ -307,7 +307,7 @@ function App() {
     
     newSocket.on('connect_error', (error) => {
       console.error('❌❌❌ WebSocket connection error:', error);
-      toast.error('Connection error - retrying...', { duration: 3000 });
+      // Remove persistent error notifications - just log to console
     });
     
     newSocket.on('disconnect', (reason) => {
