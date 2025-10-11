@@ -65,6 +65,8 @@ function App() {
   const [lobbyData, setLobbyData] = useState(null); // Store lobby room data
   const [showWinnerScreen, setShowWinnerScreen] = useState(false); // Show winner announcement
   const [winnerData, setWinnerData] = useState(null); // Store winner information
+  const [gameInProgress, setGameInProgress] = useState(false); // Track if game is running
+  const [currentGameData, setCurrentGameData] = useState(null); // Store current game info
   
   // UI state
   const [activeTab, setActiveTab] = useState('rooms');
