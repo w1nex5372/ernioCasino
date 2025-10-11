@@ -1479,6 +1479,7 @@ async def get_user_by_telegram_id(telegram_id: int):
             "token_balance": user_doc.get('token_balance', 0),
             "created_at": user_doc.get('created_at'),
             "last_login": user_doc.get('last_login'),
+            "last_daily_claim": user_doc.get('last_daily_claim'),
             "is_verified": user_doc.get('is_verified', False),
             "is_admin": user_doc.get('is_admin', False),
             "is_owner": user_doc.get('is_owner', False),
@@ -1487,6 +1488,69 @@ async def get_user_by_telegram_id(telegram_id: int):
     except Exception as e:
         logging.error(f"Failed to find user by Telegram ID: {e}")
         raise HTTPException(status_code=500, detail="Failed to find user")
+
+@api_router.post("/claim-daily-tokens/{user_id}")
+async def claim_daily_tokens(user_id: str):
+    """Claim daily free tokens (10 tokens every 24 hours)"""
+    try:
+        user_doc = await db.users.find_one({"id": user_id})
+        if not user_doc:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        now = datetime.now(timezone.utc)
+        last_claim = user_doc.get('last_daily_claim')
+        
+        # Check if user can claim (24 hours passed or never claimed)
+        can_claim = True
+        time_until_next_claim = 0
+        
+        if last_claim:
+            try:
+                last_claim_dt = datetime.fromisoformat(last_claim)
+                time_since_claim = (now - last_claim_dt).total_seconds()
+                time_until_next_claim = max(0, 86400 - time_since_claim)  # 86400 seconds = 24 hours
+                can_claim = time_since_claim >= 86400
+            except:
+                can_claim = True
+        
+        if not can_claim:
+            hours_left = int(time_until_next_claim // 3600)
+            minutes_left = int((time_until_next_claim % 3600) // 60)
+            return {
+                "status": "already_claimed",
+                "message": f"Already claimed today. Next claim in {hours_left}h {minutes_left}m",
+                "time_until_next_claim": time_until_next_claim,
+                "can_claim": False
+            }
+        
+        # Give 10 tokens
+        daily_tokens = 10
+        new_balance = user_doc.get('token_balance', 0) + daily_tokens
+        
+        await db.users.update_one(
+            {"id": user_id},
+            {
+                "$set": {
+                    "last_daily_claim": now.isoformat(),
+                    "token_balance": new_balance
+                }
+            }
+        )
+        
+        logging.info(f"User {user_doc.get('first_name')} claimed {daily_tokens} daily tokens. New balance: {new_balance}")
+        
+        return {
+            "status": "success",
+            "message": f"Claimed {daily_tokens} tokens!",
+            "tokens_claimed": daily_tokens,
+            "new_balance": new_balance,
+            "can_claim": False,
+            "time_until_next_claim": 86400
+        }
+        
+    except Exception as e:
+        logging.error(f"Failed to claim daily tokens: {e}")
+        raise HTTPException(status_code=500, detail="Failed to claim daily tokens")
 
 @api_router.get("/user/{user_id}")
 async def get_user_data(user_id: str):
