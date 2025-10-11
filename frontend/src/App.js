@@ -226,15 +226,18 @@ function App() {
     });
     
     newSocket.on('connect', () => {
-      console.log('✅ WebSocket connected! ID:', newSocket.id);
+      console.log('✅✅✅ WebSocket CONNECTED! ID:', newSocket.id);
+      toast.success('Connected to server!', { duration: 2000 });
     });
     
     newSocket.on('connect_error', (error) => {
-      console.error('❌ WebSocket connection error:', error);
+      console.error('❌❌❌ WebSocket connection error:', error);
+      toast.error('Connection error - retrying...', { duration: 3000 });
     });
     
     newSocket.on('disconnect', (reason) => {
-      console.warn('⚠️ WebSocket disconnected:', reason);
+      console.warn('⚠️⚠️⚠️ WebSocket disconnected:', reason);
+      toast.warning('Disconnected from server', { duration: 2000 });
     });
 
     setSocket(newSocket);
