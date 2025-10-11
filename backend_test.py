@@ -143,7 +143,7 @@ class SolanaCasinoAPITester:
             return False
 
     def test_get_rooms(self):
-        """Test getting active rooms"""
+        """Test getting active rooms - Updated for 3-player system"""
         try:
             response = requests.get(f"{self.api_url}/rooms")
             success = response.status_code == 200
@@ -153,14 +153,20 @@ class SolanaCasinoAPITester:
                 rooms = data.get('rooms', [])
                 details = f"Found {len(rooms)} rooms: "
                 for room in rooms:
-                    details += f"{room['room_type']}({room['players_count']}/2) "
+                    max_players = room.get('max_players', 2)  # Check max_players field
+                    details += f"{room['room_type']}({room['players_count']}/{max_players}) "
+                    
+                    # Verify max_players is 3 for 3-player system
+                    if max_players != 3:
+                        success = False
+                        details += f"[ERROR: Expected max_players=3, got {max_players}] "
             else:
                 details = f"Status: {response.status_code}, Response: {response.text}"
             
-            self.log_test("Get Rooms", success, details)
+            self.log_test("Get Rooms (3-Player System)", success, details)
             return success, rooms if success else []
         except Exception as e:
-            self.log_test("Get Rooms", False, str(e))
+            self.log_test("Get Rooms (3-Player System)", False, str(e))
             return False, []
 
     def test_join_room(self, user_number=1, room_type="bronze", bet_amount=200):
