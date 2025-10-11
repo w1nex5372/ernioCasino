@@ -200,10 +200,11 @@ function App() {
       }
     }
     
-    // Check for saved user session first
-    if (savedSession) {
+    // Check for saved user session first (after clearing, this should be null on first load)
+    const savedUser = localStorage.getItem('casino_user');
+    if (savedUser) {
       try {
-        const userData = JSON.parse(savedSession);
+        const userData = JSON.parse(savedUser);
         console.log('Found saved user session:', userData);
         
         // Set cached user first for instant UI
