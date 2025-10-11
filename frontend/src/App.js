@@ -749,7 +749,16 @@ function App() {
           if (response.data) {
             setUser(response.data);
             saveUserSession(response.data);
-            toast.success('Account created successfully!');
+            
+            // Check if user got welcome bonus
+            if (response.data.token_balance >= 1000) {
+              toast.success('🎉 Welcome! You got 1000 FREE tokens!', { duration: 5000 });
+            } else {
+              toast.success('Account created successfully!');
+            }
+            
+            // Refresh welcome bonus status
+            loadWelcomeBonusStatus();
           }
         } catch (error) {
           // If backend save fails, use frontend-only fallback
