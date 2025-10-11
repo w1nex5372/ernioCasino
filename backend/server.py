@@ -1289,6 +1289,34 @@ async def get_welcome_bonus_status():
         "message": f"🎁 First 100 players get 1000 free tokens! {remaining_spots} spots left!" if remaining_spots > 0 else "🚫 Welcome bonus period has ended"
     }
 
+@api_router.post("/admin/update-user-name/{telegram_id}")
+async def update_user_name(telegram_id: int, first_name: str, username: str = "", admin_key: str = ""):
+    """Update user name and username"""
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Invalid admin key")
+    
+    # Update user data
+    update_data = {
+        "first_name": first_name,
+        "telegram_username": username
+    }
+    
+    result = await db.users.update_one(
+        {"telegram_id": telegram_id}, 
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {
+        "status": "success",
+        "message": f"Updated user {telegram_id} name to {first_name}",
+        "telegram_id": telegram_id,
+        "first_name": first_name,
+        "username": username
+    }
+
 @api_router.get("/users/{user_id}", response_model=User)
 async def get_user(user_id: str):
     user_doc = await db.users.find_one({"id": user_id}, {"_id": 0})
