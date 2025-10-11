@@ -726,17 +726,36 @@ function App() {
           }
         }
         
-        // Last resort fallback
-        setUser({
-          id: 'fallback-' + Date.now(),
+        // Last resort fallback - create and save to backend
+        const fallbackUser = {
+          telegram_id: telegramUser?.id || Date.now(),
           first_name: telegramUser?.first_name || 'Player',
           last_name: telegramUser?.last_name || '',
-          token_balance: 0,
-          telegram_id: telegramUser?.id || Date.now(),
-          username: telegramUser?.username || ''
-        });
+          username: telegramUser?.username || '',
+          photo_url: telegramUser?.photo_url || ''
+        };
+        
+        try {
+          // Save fallback user to backend database
+          const response = await axios.post(`${API}/auth/telegram`, fallbackUser);
+          if (response.data) {
+            setUser(response.data);
+            saveUserSession(response.data);
+            toast.success('Account created successfully!');
+          }
+        } catch (error) {
+          // If backend save fails, use frontend-only fallback
+          setUser({
+            id: 'fallback-' + Date.now(),
+            first_name: fallbackUser.first_name,
+            last_name: fallbackUser.last_name,
+            token_balance: 0,
+            telegram_id: fallbackUser.telegram_id,
+            username: fallbackUser.username
+          });
+          toast.warning('Using temporary account - limited functionality');
+        }
         setIsLoading(false);
-        toast.warning('Using temporary account - your tokens may not be available');
       }
     }, 5000);
     
