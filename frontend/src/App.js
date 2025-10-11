@@ -103,6 +103,22 @@ function App() {
     console.log('🚪 lobbyData:', lobbyData);
   }, [inLobby, lobbyData]);
 
+  // POLL for room updates while in lobby (fallback if WebSocket fails)
+  useEffect(() => {
+    if (!inLobby || !lobbyData) return;
+    
+    console.log('🔄 Starting lobby polling...');
+    const pollInterval = setInterval(() => {
+      console.log('📡 Polling room updates...');
+      loadRooms(); // This will refresh room data
+    }, 1000); // Poll every 1 second
+    
+    return () => {
+      console.log('🛑 Stopping lobby polling');
+      clearInterval(pollInterval);
+    };
+  }, [inLobby, lobbyData]);
+
   // Mobile detection - force mobile for Telegram WebApp
   useEffect(() => {
     const checkMobile = () => {
