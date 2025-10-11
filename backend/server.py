@@ -1349,7 +1349,7 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         raise HTTPException(status_code=400, detail="You are already in this room")
     
     # Check if room is full
-    if len(target_room.players) >= 2:
+    if len(target_room.players) >= 3:
         raise HTTPException(status_code=400, detail="Room is full")
     
     # Deduct tokens from user balance
