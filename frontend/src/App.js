@@ -1323,13 +1323,19 @@ function App() {
                     <div className="space-y-3">
                       {/* Show latest prize first */}
                       {[...userPrizes].reverse().map((prize, index) => (
-                        <div key={index} className="p-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-lg">
+                        <div key={index} className={`p-4 bg-gradient-to-r rounded-lg ${
+                          index === 0 
+                            ? 'from-yellow-600/30 to-orange-600/30 border-2 border-yellow-500/50' 
+                            : 'from-purple-600/20 to-pink-600/20 border border-purple-500/30'
+                        }`}>
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                               <span className="text-lg">{ROOM_CONFIGS[prize.room_type]?.icon}</span>
                               <span className="font-medium text-white capitalize">{prize.room_type} Room Win</span>
                             </div>
-                            <Badge className="bg-purple-500 text-white">Won</Badge>
+                            <Badge className={index === 0 ? "bg-yellow-500 text-black animate-pulse" : "bg-purple-500 text-white"}>
+                              {index === 0 ? "Latest!" : "Won"}
+                            </Badge>
                           </div>
                           <div className="text-sm text-slate-300 mb-3">
                             <div>Bet Amount: <span className="text-yellow-400">{prize.bet_amount} tokens</span></div>
