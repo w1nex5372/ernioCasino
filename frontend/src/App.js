@@ -211,6 +211,14 @@ function App() {
       loadRooms();
     });
 
+    newSocket.on('new_room_available', (data) => {
+      console.log('🆕 New room available:', data);
+      loadRooms();
+      toast.success(`${ROOM_CONFIGS[data.room_type]?.icon} New ${data.room_type} room ready! Round #${data.round_number}`, {
+        duration: 2000
+      });
+    });
+
     newSocket.on('token_balance_updated', (data) => {
       if (user && data.user_id === user.id) {
         setUser({...user, token_balance: data.new_balance});
