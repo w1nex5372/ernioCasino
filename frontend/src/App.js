@@ -974,23 +974,17 @@ function App() {
                           🎁 Claim Your Prize Now!
                         </Button>
                         <p className="text-sm text-slate-400">
-                          Your prize is also saved in "My Prizes" tab
+                          Prize also saved in "My Prizes" tab
                         </p>
                       </div>
                     )}
                     
-                    {/* Close Button */}
-                    <Button
-                      onClick={() => {
-                        setShowWinnerScreen(false);
-                        setWinnerData(null);
-                        setActiveTab('rooms');
-                      }}
-                      variant="outline"
-                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                    >
-                      {winnerData.is_winner ? 'Back to Rooms' : 'Close'}
-                    </Button>
+                    {/* Auto-close message */}
+                    <div className="text-center">
+                      <p className="text-slate-400 text-sm animate-pulse">
+                        Returning to rooms in 1 second...
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
