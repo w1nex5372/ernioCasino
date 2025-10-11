@@ -238,6 +238,18 @@ function App() {
       console.log('🏆 Game finished:', data);
       console.log('Current user:', user);
       
+      // Show notification to ALL players about the winner
+      const winnerName = data.winner_name || `${data.winner?.first_name} ${data.winner?.last_name || ''}`.trim();
+      toast.success(`🏆 ${ROOM_CONFIGS[data.room_type]?.icon} Game Finished! Winner: ${winnerName}`, {
+        duration: 4000,
+        style: {
+          background: '#eab308',
+          color: 'black',
+          fontSize: '16px',
+          fontWeight: 'bold'
+        }
+      });
+      
       // FORCE CLOSE ALL OTHER SCREENS
       setGameInProgress(false);
       setCurrentGameData(null);
@@ -246,15 +258,18 @@ function App() {
       setActiveRoom(null);
       console.log('✅ All game screens closed');
       
-      // Show winner screen to all players
+      // Check if current user is the winner
+      const isWinner = user && (user.telegram_id === data.winner?.telegram_id || user.id === data.winner_id);
+      
+      // Show winner screen to players who were in the game
       const winnerInfo = {
-        winner_name: data.winner_name,
+        winner_name: winnerName,
         winner_telegram_id: data.winner?.telegram_id || data.winner_telegram_id,
         winner_photo: data.winner?.photo_url || '',
         winner_username: data.winner?.username || '',
         room_type: data.room_type,
         prize_link: data.prize_link,
-        is_winner: user && (user.telegram_id === data.winner?.telegram_id || user.id === data.winner_id)
+        is_winner: isWinner
       };
       console.log('👑 Winner info:', winnerInfo);
       
