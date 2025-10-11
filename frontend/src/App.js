@@ -828,6 +828,84 @@ function App() {
     }
   };
 
+  const checkGameStatus = async (roomType) => {
+    try {
+      // Check if there's an active or finished game for this room
+      const response = await axios.get(`${API}/rooms`);
+      const rooms = response.data.rooms;
+      const room = rooms.find(r => r.room_type === roomType);
+      
+      if (!room) return;
+      
+      console.log(`🎮 Room ${roomType} status:`, room.status, `players: ${room.players_count}/3`);
+      
+      // If room status is 'playing' and we're still in lobby, transition to game
+      if (room.status === 'playing' && inLobby) {
+        console.log('🎮 GAME STARTED! Transitioning from lobby to game...');
+        setInLobby(false);
+        setGameInProgress(true);
+        setCurrentGameData({
+          room_type: roomType,
+          players: roomParticipants[roomType] || [],
+          message: 'Game in progress...'
+        });
+        toast.success(`🎰 Game Started! Determining winner...`, { duration: 3000 });
+        
+        // Start checking for game completion
+        setTimeout(() => checkForGameCompletion(roomType), 2000);
+      }
+      
+      // If room status is 'finished', show winner
+      if (room.status === 'finished') {
+        console.log('🏆 GAME FINISHED! Checking for winner...');
+        checkForGameCompletion(roomType);
+      }
+      
+    } catch (error) {
+      console.error('Failed to check game status:', error);
+    }
+  };
+
+  const checkForGameCompletion = async (roomType) => {
+    try {
+      // Get game history to find the latest finished game
+      const response = await axios.get(`${API}/game-history?limit=1`);
+      const games = response.data.games;
+      
+      if (games.length > 0) {
+        const latestGame = games[0];
+        if (latestGame.room_type === roomType && latestGame.status === 'finished') {
+          console.log('🏆 DISPLAYING WINNER:', latestGame.winner);
+          
+          // Transition to winner screen
+          setGameInProgress(false);
+          setShowWinnerScreen(true);
+          setWinnerData({
+            winner: latestGame.winner,
+            winner_name: `${latestGame.winner.first_name} ${latestGame.winner.last_name || ''}`.trim(),
+            room_type: roomType,
+            prize_pool: latestGame.total_pool,
+            prize_link: latestGame.prize_link
+          });
+          
+          // Show toast notification about winner
+          const winnerName = `${latestGame.winner.first_name} ${latestGame.winner.last_name || ''}`.trim();
+          toast.success(`🏆 Winner: ${winnerName}!`, { duration: 5000 });
+          
+          return;
+        }
+      }
+      
+      // If game not finished yet, check again in 1 second
+      setTimeout(() => checkForGameCompletion(roomType), 1000);
+      
+    } catch (error) {
+      console.error('Failed to check for game completion:', error);
+      // Retry in 1 second
+      setTimeout(() => checkForGameCompletion(roomType), 1000);
+    }
+  };
+
   const loadDerivedWallet = async () => {
     try {
       if (!user || !user.id) return;
