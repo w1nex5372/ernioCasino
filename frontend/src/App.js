@@ -60,8 +60,9 @@ function App() {
   const [activeRoom, setActiveRoom] = useState(null);
   const [roomParticipants, setRoomParticipants] = useState({}); // Track participants per room
   const [gameHistory, setGameHistory] = useState([]);
-  const [leaderboard, setLeaderboard] = useState([]);
   const [userPrizes, setUserPrizes] = useState([]);
+  const [inLobby, setInLobby] = useState(false); // Track if user is in lobby waiting
+  const [lobbyData, setLobbyData] = useState(null); // Store lobby room data
   
   // UI state
   const [activeTab, setActiveTab] = useState('rooms');
