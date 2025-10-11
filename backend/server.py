@@ -1393,7 +1393,7 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         "success": True,
         "room_id": target_room.id,
         "position": len(target_room.players),
-        "players_needed": 2 - len(target_room.players),
+        "players_needed": 3 - len(target_room.players),
         "new_balance": user_doc.get('token_balance', 0) - request.bet_amount
     }
 
