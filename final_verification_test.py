@@ -81,7 +81,7 @@ class FinalVerificationTester:
                 
                 print(f"✅ Created {config['first_name']} with unlimited tokens")
             
-            # Verify room shows max_players=3
+            # Verify room shows max_players=3 and is empty
             rooms_response = requests.get(f"{self.api_url}/rooms")
             if rooms_response.status_code != 200:
                 self.log_test("Complete 3-Player Scenario", False, "Failed to get rooms")
@@ -94,7 +94,11 @@ class FinalVerificationTester:
                 self.log_test("Complete 3-Player Scenario", False, f"Bronze room max_players not 3: {bronze_room}")
                 return False
             
-            print("✅ Room correctly shows max_players=3")
+            if bronze_room.get('players_count', 0) != 0:
+                self.log_test("Complete 3-Player Scenario", False, f"Bronze room not empty after cleanup: {bronze_room}")
+                return False
+            
+            print("✅ Room correctly shows max_players=3 and is empty")
             
             # Test 1: First player joins (should wait)
             join_data1 = {"room_type": "bronze", "user_id": created_users[0]['id'], "bet_amount": 300}
