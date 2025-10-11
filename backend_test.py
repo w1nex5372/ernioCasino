@@ -1443,8 +1443,8 @@ class SolanaCasinoAPITester:
                 self.log_test(test_name, False, str(e))
 
     def run_all_tests(self):
-        """Run all API tests"""
-        print("🎰 Starting Solana Casino 2-Player Game Tests...")
+        """Run all API tests - Updated for 3-Player System"""
+        print("🎰 Starting Solana Casino 3-Player Game Tests...")
         print("=" * 60)
         
         # Basic connectivity
@@ -1452,8 +1452,8 @@ class SolanaCasinoAPITester:
             print("❌ API is not accessible, stopping tests")
             return False
         
-        # Create two test users with Telegram authentication
-        print("\n👥 Creating Test Users...")
+        # Create three test users with Telegram authentication (using specific IDs from review request)
+        print("\n👥 Creating Test Users (3-Player System)...")
         if not self.test_telegram_auth(1):
             print("❌ User 1 creation failed, stopping tests")
             return False
@@ -1461,27 +1461,42 @@ class SolanaCasinoAPITester:
         if not self.test_telegram_auth(2):
             print("❌ User 2 creation failed, stopping tests")
             return False
+            
+        if not self.test_telegram_auth(3):
+            print("❌ User 3 creation failed, stopping tests")
+            return False
         
         # Verify user retrieval
         self.test_get_user(1)
         self.test_get_user(2)
+        self.test_get_user(3)
         
-        # Give both users tokens for betting
-        print("\n💰 Purchasing Tokens for Both Users...")
+        # Give all users tokens for betting
+        print("\n💰 Purchasing Tokens for All Users...")
         token_purchase_success1 = self.test_purchase_tokens(1)
         token_purchase_success2 = self.test_purchase_tokens(2)
+        token_purchase_success3 = self.test_purchase_tokens(3)
         
-        if not token_purchase_success1 or not token_purchase_success2:
-            print("⚠️  Token purchase failed for one or both users!")
+        if not token_purchase_success1 or not token_purchase_success2 or not token_purchase_success3:
+            print("⚠️  Token purchase failed for one or more users!")
         
-        # Test room system
-        print("\n🏠 Testing Room System...")
+        # Test 3-player room system
+        print("\n🏠 Testing 3-Player Room System...")
         rooms_success, rooms = self.test_get_rooms()
+        
+        # Test specific 3-player requirements
+        print("\n🎯 Testing 3-Player System Requirements...")
+        self.test_room_capacity_three_players()
+        self.test_room_status_progression()
+        self.test_fourth_player_prevention()
+        self.test_game_start_logic_three_players()
+        self.test_room_participants_three_players()
         
         # Test Solana address derivation system
         print("\n🔑 Testing Solana Address Derivation...")
         self.test_solana_address_derivation(1)
         self.test_solana_address_derivation(2)
+        self.test_solana_address_derivation(3)
         self.test_sol_eur_price()
         self.test_casino_wallet_info()
 
@@ -1489,31 +1504,31 @@ class SolanaCasinoAPITester:
         print("\n🏆 Testing Prize System (Before Game)...")
         self.test_user_prizes(1)
         self.test_user_prizes(2)
+        self.test_user_prizes(3)
         self.test_check_winner(1)
         self.test_check_winner(2)
+        self.test_check_winner(3)
         
-        # Test complete 2-player game flow
-        if (rooms_success and self.test_user1 and self.test_user2 and 
+        # Test complete 3-player game flow
+        if (rooms_success and self.test_user1 and self.test_user2 and self.test_user3 and
             self.test_user1.get('token_balance', 0) >= 300 and 
-            self.test_user2.get('token_balance', 0) >= 300):
-            print("\n🎮 Testing Complete 2-Player Game Flow...")
-            self.test_two_player_game_flow()
+            self.test_user2.get('token_balance', 0) >= 300 and
+            self.test_user3.get('token_balance', 0) >= 300):
+            print("\n🎮 Testing Complete 3-Player Game Flow...")
+            self.test_three_player_game_flow()
         else:
-            print("⚠️  Skipping 2-player game flow - insufficient setup")
+            print("⚠️  Skipping 3-player game flow - insufficient setup")
         
         # Test prize endpoints after game
         print("\n🏆 Testing Prize System (After Game)...")
         self.test_user_prizes(1)
         self.test_user_prizes(2)
+        self.test_user_prizes(3)
         
         # Additional endpoints
         print("\n📊 Testing Additional Endpoints...")
         self.test_leaderboard()
         self.test_game_history()
-        
-        # Test the specific room participant tracking scenario
-        print("\n🎯 Testing Room Participant Tracking Scenario...")
-        self.test_room_participant_tracking()
         
         # Test Daily Free Tokens system
         print("\n🎁 Testing Daily Free Tokens System...")
