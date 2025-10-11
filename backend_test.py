@@ -82,7 +82,14 @@ class SolanaCasinoAPITester:
 
     def test_get_user(self, user_number=1):
         """Test getting user by ID"""
-        test_user = self.test_user1 if user_number == 1 else self.test_user2
+        test_user = None
+        if user_number == 1:
+            test_user = self.test_user1
+        elif user_number == 2:
+            test_user = self.test_user2
+        elif user_number == 3:
+            test_user = self.test_user3
+        
         if not test_user:
             self.log_test(f"Get User {user_number}", False, "No test user available")
             return False
