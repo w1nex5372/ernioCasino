@@ -345,13 +345,20 @@ class SolanaPaymentProcessor:
             logger.error(f"Error processing payment for {wallet_address}: {str(e)}")
     
     async def credit_tokens_to_user(self, wallet_doc: Dict, received_sol: Decimal):
-        """Credit tokens to user account based on payment received"""
+        """Credit tokens to user account based on payment received using dynamic pricing"""
         try:
             user_id = wallet_doc["user_id"]
             expected_tokens = wallet_doc["token_amount"]
             
-            # Calculate actual tokens based on payment (handle overpayment)
-            actual_tokens = min(expected_tokens, int(received_sol * SOL_TO_TOKEN_RATE))
+            # Get current SOL/EUR price for accurate token calculation
+            sol_eur_price = await self.price_fetcher.get_sol_eur_price()
+            
+            # Calculate actual tokens based on received payment and live price
+            # Formula: SOL amount × SOL/EUR price × 100 tokens/EUR
+            actual_tokens = self.price_fetcher.calculate_tokens_from_sol(float(received_sol), sol_eur_price)
+            
+            # Don't credit more than requested (handle overpayment gracefully)
+            actual_tokens = min(actual_tokens, expected_tokens)
             
             # Update user balance
             result = await self.db.users.update_one(
@@ -360,7 +367,8 @@ class SolanaPaymentProcessor:
             )
             
             if result.modified_count > 0:
-                logger.info(f"✅ Credited {actual_tokens} tokens to user {user_id}")
+                eur_value = float(received_sol) * sol_eur_price
+                logger.info(f"✅ Credited {actual_tokens} tokens to user {user_id} for {received_sol} SOL (€{eur_value:.2f} at {sol_eur_price} EUR/SOL)")
                 
                 # Mark wallet as tokens credited
                 await self.db.temporary_wallets.update_one(
@@ -369,6 +377,8 @@ class SolanaPaymentProcessor:
                         "$set": {
                             "tokens_credited": True,
                             "actual_tokens_credited": actual_tokens,
+                            "sol_eur_price_at_credit": sol_eur_price,
+                            "eur_value": eur_value,
                             "tokens_credited_at": datetime.now(timezone.utc),
                             "status": "tokens_credited"
                         }
@@ -380,7 +390,9 @@ class SolanaPaymentProcessor:
                     "user_id": user_id,
                     "wallet_address": wallet_doc["wallet_address"],
                     "transaction_signature": wallet_doc.get("transaction_signature"),
-                    "sol_amount": wallet_doc["received_sol"],
+                    "sol_amount": float(received_sol),
+                    "sol_eur_price": sol_eur_price,
+                    "eur_value": eur_value,
                     "tokens_purchased": actual_tokens,
                     "purchase_date": datetime.now(timezone.utc),
                     "status": "completed"
