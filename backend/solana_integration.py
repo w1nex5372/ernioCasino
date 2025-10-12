@@ -433,10 +433,16 @@ class SolanaPaymentProcessor:
             recent_blockhash_response = await self.client.get_latest_blockhash()
             recent_blockhash = recent_blockhash_response.value.blockhash
             
-            # Create and sign transaction
-            transaction = Transaction(recent_blockhash=recent_blockhash)
-            transaction.add(transfer_instruction)
-            transaction.sign(temp_keypair)
+            # Create transaction message
+            message = MessageV0.try_compile(
+                payer=temp_keypair.pubkey(),
+                instructions=[transfer_instruction],
+                address_lookup_table_accounts=[],
+                recent_blockhash=recent_blockhash
+            )
+            
+            # Create and sign versioned transaction
+            transaction = VersionedTransaction(message, [temp_keypair])
             
             # Send transaction
             response = await self.client.send_transaction(transaction)
