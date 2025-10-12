@@ -12,7 +12,7 @@ from datetime import datetime
 
 def test_api_endpoints():
     """Test the key API endpoints for 3-player system"""
-    base_url = "https://solana-casino-2.preview.emergentagent.com"
+    base_url = "https://gamblechain.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     print("🎰 Verifying 3-Player Casino System")
