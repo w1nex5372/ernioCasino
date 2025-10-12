@@ -394,12 +394,17 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced Winner Detection & Broadcast System Complete"
+    - "Solana Automatic Token Purchase System"
+    - "Solana Token Purchase API Endpoints"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
+    - agent: "main"
+      message: "SOLANA AUTOMATIC TOKEN PURCHASE IMPLEMENTED: Complete integration with dynamic pricing and forwarding. 1) Updated .env with mainnet RPC and CASINO_WALLET_PRIVATE_KEY 2) Created PriceFetcher class for live SOL/EUR rates (CoinGecko API, 60s cache) 3) Enhanced SolanaPaymentProcessor: generates unique wallets per purchase, monitors blockchain for payments, calculates tokens dynamically (1 EUR = 100 tokens), credits user accounts, forwards SOL to main wallet EC2cPxi4VbyzGoWMucHQ6LwkWz1W9vZE7ZApcY9PFsMy 4) Full payment lifecycle automation: wallet → monitor → detect → credit → forward → cleanup 5) API endpoints integrated and ready. System ready for testing."
+    - agent: "main"
+      message: "MAINNET CONFIGURATION: Switched from devnet to mainnet. Using mainnet-beta.solana.com RPC. Private key configured for SOL forwarding. Live pricing active for dynamic token calculation."
     - agent: "main"
       message: "Implemented Telegram prize notifications and verified frontend prize claiming is already functional. Ready for backend testing to verify 2-player game flow, winner selection, Telegram messaging, and database operations."
     - agent: "main"  
