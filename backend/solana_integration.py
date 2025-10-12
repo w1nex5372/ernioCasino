@@ -404,14 +404,14 @@ class SolanaPaymentProcessor:
         except Exception as e:
             logger.error(f"Error crediting tokens to user: {str(e)}")
     
-    async def forward_sol_to_main_wallet(self, wallet_address: str, private_key_hex: str, amount_lamports: int):
+    async def forward_sol_to_main_wallet(self, wallet_address: str, private_key_bytes_list: list, amount_lamports: int):
         """Forward received SOL to the main project wallet"""
         try:
-            # Reconstruct keypair from private key
-            private_key_bytes = bytes.fromhex(private_key_hex)
-            keypair = Keypair.from_bytes(private_key_bytes)
+            # Reconstruct keypair from stored byte array
+            private_key_bytes = bytes(private_key_bytes_list)
+            temp_keypair = Keypair.from_bytes(private_key_bytes)
             
-            # Reserve some lamports for transaction fee (5000 lamports = 0.000005 SOL)
+            # Reserve lamports for transaction fee (5000 lamports = 0.000005 SOL)
             fee_lamports = 5000
             transfer_amount = amount_lamports - fee_lamports
             
@@ -422,7 +422,7 @@ class SolanaPaymentProcessor:
             # Create transfer instruction
             transfer_instruction = transfer(
                 TransferParams(
-                    from_pubkey=keypair.pubkey(),
+                    from_pubkey=temp_keypair.pubkey(),
                     to_pubkey=self.main_wallet,
                     lamports=transfer_amount
                 )
@@ -435,14 +435,15 @@ class SolanaPaymentProcessor:
             # Create and sign transaction
             transaction = Transaction(recent_blockhash=recent_blockhash)
             transaction.add(transfer_instruction)
-            transaction.sign(keypair)
+            transaction.sign(temp_keypair)
             
             # Send transaction
             response = await self.client.send_transaction(transaction)
             
             if response.value:
                 signature = str(response.value)
-                logger.info(f"🚀 SOL forwarded to main wallet. Signature: {signature}")
+                transfer_sol = transfer_amount / LAMPORTS_PER_SOL
+                logger.info(f"🚀 SOL forwarded to main wallet: {transfer_sol:.6f} SOL (tx: {signature})")
                 
                 # Update wallet record
                 await self.db.temporary_wallets.update_one(
@@ -451,6 +452,7 @@ class SolanaPaymentProcessor:
                         "$set": {
                             "sol_forwarded": True,
                             "forward_signature": signature,
+                            "forwarded_amount_lamports": transfer_amount,
                             "forwarded_at": datetime.now(timezone.utc),
                             "status": "completed"
                         }
