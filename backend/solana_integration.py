@@ -114,7 +114,7 @@ class SolanaPaymentProcessor:
         
     async def create_payment_wallet(self, user_id: str, token_amount: int) -> Dict[str, Any]:
         """
-        Generate a unique wallet address for a token purchase
+        Generate a unique wallet address for a token purchase with dynamic SOL/EUR pricing
         
         Args:
             user_id: ID of the user making the purchase
@@ -128,18 +128,26 @@ class SolanaPaymentProcessor:
             keypair = Keypair()
             wallet_address = str(keypair.pubkey())
             
-            # Calculate required SOL amount (with some buffer for fees)
-            required_sol = Decimal(token_amount) / Decimal(SOL_TO_TOKEN_RATE)
+            # Get current SOL/EUR price
+            sol_eur_price = await self.price_fetcher.get_sol_eur_price()
+            
+            # Calculate required EUR amount (1 EUR = 100 tokens)
+            required_eur = Decimal(token_amount) / Decimal(100)
+            
+            # Calculate required SOL amount using live price
+            required_sol = float(required_eur / Decimal(sol_eur_price))
             required_lamports = int(required_sol * LAMPORTS_PER_SOL)
             
-            # Store temporary wallet in database (encrypt private key in production)
+            # Store temporary wallet in database
             wallet_data = {
                 "wallet_address": wallet_address,
-                "private_key": keypair.secret().hex(),  # In production: encrypt this!
+                "private_key": list(bytes(keypair)),  # Store as byte array
                 "user_id": user_id,
                 "token_amount": token_amount,
-                "required_sol": float(required_sol),
+                "required_eur": float(required_eur),
+                "required_sol": required_sol,
                 "required_lamports": required_lamports,
+                "sol_eur_price_at_creation": sol_eur_price,
                 "status": "pending",
                 "created_at": datetime.now(timezone.utc),
                 "expires_at": datetime.now(timezone.utc).replace(hour=23, minute=59, second=59),  # Expires at end of day
@@ -154,14 +162,16 @@ class SolanaPaymentProcessor:
             # Start monitoring this wallet for payments
             asyncio.create_task(self.monitor_wallet_payments(wallet_address))
             
-            logger.info(f"Created payment wallet {wallet_address} for user {user_id} ({token_amount} tokens, {required_sol} SOL)")
+            logger.info(f"✅ Created payment wallet {wallet_address} for user {user_id} ({token_amount} tokens = {required_eur} EUR = {required_sol:.6f} SOL at {sol_eur_price} EUR/SOL)")
             
             return {
                 "wallet_address": wallet_address,
-                "required_sol": float(required_sol),
+                "required_sol": required_sol,
+                "required_eur": float(required_eur),
+                "sol_eur_price": sol_eur_price,
                 "token_amount": token_amount,
                 "expires_at": wallet_data["expires_at"].isoformat(),
-                "instructions": f"Send exactly {required_sol} SOL to address {wallet_address}. Tokens will be credited automatically within 1-2 minutes."
+                "instructions": f"Send {required_sol:.6f} SOL to address {wallet_address}. Current rate: 1 SOL = €{sol_eur_price:.2f}. Tokens will be credited automatically within 1-2 minutes."
             }
             
         except Exception as e:
