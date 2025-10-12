@@ -24,6 +24,7 @@ from solders.keypair import Keypair
 from solders.system_program import transfer, TransferParams
 import time
 import base58
+from solana_integration import get_processor
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
