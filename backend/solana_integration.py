@@ -18,7 +18,8 @@ from solders.pubkey import Pubkey
 from solana.rpc.async_api import AsyncClient
 from solana.rpc.commitment import Confirmed, Finalized
 from solana.rpc.types import TxOpts
-from solana.transaction import Transaction
+from solders.transaction import Transaction, VersionedTransaction
+from solders.message import MessageV0
 from solders.system_program import TransferParams, transfer
 from solders.hash import Hash
 from motor.motor_asyncio import AsyncIOMotorDatabase
