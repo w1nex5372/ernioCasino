@@ -1,6 +1,6 @@
 """
 Solana Blockchain Integration for Automatic Token Purchase System
-Handles wallet generation, payment monitoring, and SOL forwarding
+Handles wallet generation, payment monitoring, SOL forwarding, and live price fetching
 """
 
 import asyncio
@@ -11,6 +11,7 @@ from typing import Optional, Dict, Any
 import json
 import time
 from decimal import Decimal
+import aiohttp
 
 from solders.keypair import Keypair
 from solders.pubkey import Pubkey
@@ -21,12 +22,70 @@ from solana.transaction import Transaction
 from solders.system_program import TransferParams, transfer
 from solders.hash import Hash
 from motor.motor_asyncio import AsyncIOMotorDatabase
+import base58
 
 # Configuration
-SOLANA_RPC_URL = os.environ.get('SOLANA_RPC_URL', 'https://api.devnet.solana.com')
+SOLANA_RPC_URL = os.environ.get('SOLANA_RPC_URL', 'https://api.mainnet-beta.solana.com')
 MAIN_WALLET_ADDRESS = os.environ.get('MAIN_WALLET_ADDRESS', 'EC2cPxi4VbyzGoWMucHQ6LwkWz1W9vZE7ZApcY9PFsMy')
-SOL_TO_TOKEN_RATE = int(os.environ.get('SOL_TO_TOKEN_RATE', 100))  # 1 SOL = 100 tokens
+CASINO_WALLET_PRIVATE_KEY = os.environ.get('CASINO_WALLET_PRIVATE_KEY', '')
+SOL_TO_TOKEN_RATE = int(os.environ.get('SOL_TO_TOKEN_RATE', 100))  # 1 EUR = 100 tokens
 LAMPORTS_PER_SOL = 1_000_000_000  # 1 SOL = 1 billion lamports
+
+logger = logging.getLogger(__name__)
+
+class PriceFetcher:
+    """Fetches live SOL/EUR exchange rate"""
+    
+    def __init__(self):
+        self.cached_price = None
+        self.last_update = 0
+        self.cache_duration = 60  # Cache for 60 seconds
+        
+    async def get_sol_eur_price(self) -> float:
+        """Get current SOL price in EUR from CoinGecko API"""
+        try:
+            # Check cache first
+            current_time = time.time()
+            if self.cached_price and (current_time - self.last_update) < self.cache_duration:
+                return self.cached_price
+            
+            # Fetch from CoinGecko
+            url = "https://api.coingecko.com/api/v3/simple/price"
+            params = {
+                "ids": "solana",
+                "vs_currencies": "eur"
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        price = data["solana"]["eur"]
+                        
+                        # Update cache
+                        self.cached_price = float(price)
+                        self.last_update = current_time
+                        
+                        logger.info(f"💰 Updated SOL/EUR price: {price} EUR")
+                        return self.cached_price
+                    else:
+                        logger.error(f"CoinGecko API error: {response.status}")
+                        # Return cached price or fallback
+                        return self.cached_price or 180.0  # Realistic fallback rate
+                        
+        except Exception as e:
+            logger.error(f"Error fetching SOL price: {e}")
+            # Return cached price or fallback
+            return self.cached_price or 180.0
+    
+    def calculate_tokens_from_sol(self, sol_amount: float, sol_eur_price: float) -> int:
+        """Calculate tokens from SOL amount using real-time EUR price"""
+        # SOL → EUR → Tokens (1 EUR = 100 tokens)
+        eur_value = sol_amount * sol_eur_price
+        tokens = int(eur_value * 100)
+        
+        logger.info(f"💱 Conversion: {sol_amount} SOL × {sol_eur_price} EUR/SOL = {eur_value:.4f} EUR = {tokens} tokens")
+        return tokens
 
 logger = logging.getLogger(__name__)
 
