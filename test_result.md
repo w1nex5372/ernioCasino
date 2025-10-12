@@ -102,7 +102,32 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "User wants to see winner selection functionality after 2 players join a room, with Telegram messages sent to winners and a 'Claim Prize' button that directs to configurable websites. Using devnet (test environment) for Solana integration."
+user_problem_statement: "Implement Solana automatic token purchase system with dynamic wallet generation, blockchain monitoring, live SOL/EUR pricing (1 EUR = 100 tokens), and automatic forwarding to main wallet EC2cPxi4VbyzGoWMucHQ6LwkWz1W9vZE7ZApcY9PFsMy on mainnet."
+
+backend:
+  - task: "Solana Automatic Token Purchase System"
+    implemented: true
+    working: "NA"
+    file: "backend/solana_integration.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implemented complete Solana integration: 1) PriceFetcher class for live SOL/EUR rates from CoinGecko with 60s caching 2) SolanaPaymentProcessor with dynamic wallet generation per purchase 3) Real-time payment monitoring via WebSocket subscriptions 4) Dynamic token calculation: SOL → EUR → tokens (1 EUR = 100 tokens) 5) Automatic SOL forwarding to main wallet using provided private key 6) Complete payment lifecycle: wallet creation → monitoring → payment detection → token crediting → SOL forwarding → cleanup 7) Mainnet configuration with proper RPC endpoints 8) API endpoints for purchase initiation, status checking, and history"
+        
+  - task: "Solana Token Purchase API Endpoints"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "API endpoints already exist: 1) POST /api/purchase-tokens - Create unique wallet for purchase with dynamic pricing 2) GET /api/purchase-status/{user_id}/{wallet_address} - Check payment and forwarding status 3) GET /api/purchase-history/{user_id} - View transaction history 4) GET /api/sol-eur-price - Get current exchange rate. All integrated with solana_integration module."
 
 backend:
   - task: "Telegram Prize Notification System"
