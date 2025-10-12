@@ -97,6 +97,20 @@ class SolanaPaymentProcessor:
         self.client = AsyncClient(SOLANA_RPC_URL)
         self.main_wallet = Pubkey.from_string(MAIN_WALLET_ADDRESS)
         self.active_monitors = set()  # Track active payment monitors
+        self.price_fetcher = PriceFetcher()  # Initialize price fetcher
+        
+        # Load forwarding keypair from private key
+        if CASINO_WALLET_PRIVATE_KEY:
+            try:
+                private_key_bytes = base58.b58decode(CASINO_WALLET_PRIVATE_KEY)
+                self.forwarding_keypair = Keypair.from_bytes(private_key_bytes)
+                logger.info(f"🔑 Forwarding wallet initialized: {self.forwarding_keypair.pubkey()}")
+            except Exception as e:
+                logger.error(f"Failed to load forwarding keypair: {e}")
+                self.forwarding_keypair = None
+        else:
+            logger.warning("No CASINO_WALLET_PRIVATE_KEY configured!")
+            self.forwarding_keypair = None
         
     async def create_payment_wallet(self, user_id: str, token_amount: int) -> Dict[str, Any]:
         """
