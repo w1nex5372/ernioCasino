@@ -1290,6 +1290,95 @@ async def get_welcome_bonus_status():
         "message": f"🎁 First 100 players get 1000 free tokens! {remaining_spots} spots left!" if remaining_spots > 0 else "🚫 Welcome bonus period has ended"
     }
 
+# Solana Token Purchase Endpoints
+class TokenPurchaseRequest(BaseModel):
+    user_id: str
+    token_amount: int = Field(gt=0, description="Number of tokens to purchase")
+
+@api_router.post("/purchase-tokens")
+async def initiate_token_purchase(request: TokenPurchaseRequest):
+    """
+    Create a unique wallet address for token purchase
+    Returns wallet address and payment instructions
+    """
+    try:
+        # Validate user exists
+        user = await db.users.find_one({"id": request.user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Validate token amount (min 10, max 10000)
+        if request.token_amount < 10:
+            raise HTTPException(status_code=400, detail="Minimum purchase is 10 tokens")
+        if request.token_amount > 10000:
+            raise HTTPException(status_code=400, detail="Maximum purchase is 10,000 tokens")
+        
+        # Create payment wallet using Solana processor
+        processor = get_processor(db)
+        payment_info = await processor.create_payment_wallet(
+            user_id=request.user_id,
+            token_amount=request.token_amount
+        )
+        
+        logging.info(f"Token purchase initiated: {request.user_id} -> {request.token_amount} tokens")
+        
+        return {
+            "status": "success",
+            "message": "Payment wallet created successfully",
+            "payment_info": payment_info
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Failed to initiate token purchase: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create payment wallet: {str(e)}")
+
+@api_router.get("/purchase-status/{user_id}/{wallet_address}")
+async def get_purchase_status(user_id: str, wallet_address: str):
+    """
+    Get the status of a token purchase
+    Shows payment detection, token crediting, and forwarding status
+    """
+    try:
+        # Get purchase status from Solana processor
+        processor = get_processor(db)
+        status_info = await processor.get_purchase_status(user_id, wallet_address)
+        
+        return {
+            "status": "success",
+            "purchase_status": status_info
+        }
+        
+    except Exception as e:
+        logging.error(f"Failed to get purchase status: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get purchase status: {str(e)}")
+
+@api_router.get("/purchase-history/{user_id}")
+async def get_purchase_history(user_id: str, limit: int = 10):
+    """Get token purchase history for a user"""
+    try:
+        # Validate user exists
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Get purchase history from database
+        purchases = await db.token_purchases.find(
+            {"user_id": user_id}
+        ).sort("purchase_date", -1).limit(limit).to_list(limit)
+        
+        return {
+            "status": "success",
+            "purchases": purchases
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Failed to get purchase history: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get purchase history")
+
 @api_router.post("/admin/update-user-name/{telegram_id}")
 async def update_user_name(telegram_id: int, first_name: str, username: str = "", photo_url: str = "", admin_key: str = ""):
     """Update user name, username and photo"""
