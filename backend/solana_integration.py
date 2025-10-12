@@ -527,6 +527,10 @@ class SolanaPaymentProcessor:
         except Exception as e:
             logger.error(f"Error getting purchase status: {str(e)}")
             return {"status": "error", "message": str(e)}
+    
+    async def get_sol_eur_price(self) -> float:
+        """Get current SOL/EUR exchange rate"""
+        return await self.price_fetcher.get_sol_eur_price()
 
 # Global processor instance
 processor = None
