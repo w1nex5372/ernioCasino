@@ -2578,6 +2578,282 @@ class SolanaCasinoAPITester:
             self.log_test("CRITICAL Silver Room Lobby → Winner Flow", False, str(e))
             return False
 
+    def test_solana_sol_eur_price_endpoint(self):
+        """Test GET /api/sol-eur-price endpoint"""
+        try:
+            response = requests.get(f"{self.api_url}/sol-eur-price")
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                price = data.get('sol_eur_price', 0)
+                last_updated = data.get('last_updated', 0)
+                conversion_info = data.get('conversion_info', {})
+                
+                # Validate price is reasonable (between €50-€500)
+                if price < 50 or price > 500:
+                    success = False
+                    details = f"SOL/EUR Price: €{price} - PRICE OUT OF REASONABLE RANGE (50-500 EUR)"
+                else:
+                    details = f"SOL/EUR Price: €{price}, Last Updated: {last_updated}, Conversion: {conversion_info.get('description', 'N/A')}"
+                    
+                    # Verify conversion info structure
+                    if not conversion_info.get('1_eur') or not conversion_info.get('100_tokens'):
+                        success = False
+                        details += " - MISSING CONVERSION INFO"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test("Solana SOL/EUR Price Endpoint", success, details)
+            return success, data if success else None
+        except Exception as e:
+            self.log_test("Solana SOL/EUR Price Endpoint", False, str(e))
+            return False, None
+
+    def test_solana_purchase_tokens_endpoint(self):
+        """Test POST /api/purchase-tokens endpoint for Solana integration"""
+        if not self.test_user1:
+            self.log_test("Solana Purchase Tokens Endpoint", False, "No test user available")
+            return False, None
+        
+        try:
+            # Test purchasing 1000 tokens
+            purchase_data = {
+                "user_id": self.test_user1['id'],
+                "token_amount": 1000
+            }
+            
+            response = requests.post(f"{self.api_url}/purchase-tokens", json=purchase_data)
+            success = response.status_code == 200
+            
+            if success:
+                result = response.json()
+                status = result.get('status')
+                message = result.get('message')
+                payment_info = result.get('payment_info', {})
+                
+                # Validate response structure
+                if status != 'success' or not payment_info:
+                    success = False
+                    details = f"Invalid response structure: status={status}, payment_info={bool(payment_info)}"
+                else:
+                    wallet_address = payment_info.get('wallet_address', '')
+                    required_sol = payment_info.get('required_sol', 0)
+                    required_eur = payment_info.get('required_eur', 0)
+                    sol_eur_price = payment_info.get('sol_eur_price', 0)
+                    
+                    # Validate wallet address format (should be base58 encoded)
+                    address_valid = len(wallet_address) > 20 and len(wallet_address) < 50
+                    
+                    # Validate calculation: 1000 tokens = 10 EUR
+                    expected_eur = 10.0
+                    eur_valid = abs(required_eur - expected_eur) < 0.01
+                    
+                    # Validate SOL calculation
+                    expected_sol = expected_eur / sol_eur_price if sol_eur_price > 0 else 0
+                    sol_valid = abs(required_sol - expected_sol) < 0.000001
+                    
+                    if not address_valid:
+                        success = False
+                        details = f"Invalid wallet address format: {wallet_address}"
+                    elif not eur_valid:
+                        success = False
+                        details = f"EUR calculation error: expected {expected_eur}, got {required_eur}"
+                    elif not sol_valid:
+                        success = False
+                        details = f"SOL calculation error: expected {expected_sol:.6f}, got {required_sol:.6f}"
+                    else:
+                        details = f"Purchase initiated: {wallet_address[:8]}...{wallet_address[-8:]} for {required_sol:.6f} SOL (€{required_eur} at €{sol_eur_price}/SOL)"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test("Solana Purchase Tokens Endpoint", success, details)
+            return success, result if success else None
+        except Exception as e:
+            self.log_test("Solana Purchase Tokens Endpoint", False, str(e))
+            return False, None
+
+    def test_solana_purchase_status_endpoint(self):
+        """Test GET /api/purchase-status/{user_id}/{wallet_address} endpoint"""
+        if not self.test_user1:
+            self.log_test("Solana Purchase Status Endpoint", False, "No test user available")
+            return False
+        
+        try:
+            # First create a purchase to get a wallet address
+            purchase_success, purchase_data = self.test_solana_purchase_tokens_endpoint()
+            if not purchase_success or not purchase_data:
+                self.log_test("Solana Purchase Status Endpoint", False, "Failed to create test purchase")
+                return False
+            
+            payment_info = purchase_data.get('payment_info', {})
+            wallet_address = payment_info.get('wallet_address')
+            
+            if not wallet_address:
+                self.log_test("Solana Purchase Status Endpoint", False, "No wallet address from purchase")
+                return False
+            
+            # Check purchase status
+            response = requests.get(f"{self.api_url}/purchase-status/{self.test_user1['id']}/{wallet_address}")
+            success = response.status_code == 200
+            
+            if success:
+                result = response.json()
+                status = result.get('status')
+                purchase_status = result.get('purchase_status', {})
+                
+                if status != 'success' or not purchase_status:
+                    success = False
+                    details = f"Invalid response: status={status}, purchase_status={bool(purchase_status)}"
+                else:
+                    purchase_status_value = purchase_status.get('status', 'unknown')
+                    payment_detected = purchase_status.get('payment_detected', False)
+                    tokens_credited = purchase_status.get('tokens_credited', False)
+                    sol_forwarded = purchase_status.get('sol_forwarded', False)
+                    
+                    details = f"Status: {purchase_status_value}, Payment: {payment_detected}, Tokens: {tokens_credited}, Forwarded: {sol_forwarded}"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test("Solana Purchase Status Endpoint", success, details)
+            return success
+        except Exception as e:
+            self.log_test("Solana Purchase Status Endpoint", False, str(e))
+            return False
+
+    def test_solana_purchase_history_endpoint(self):
+        """Test GET /api/purchase-history/{user_id} endpoint"""
+        if not self.test_user1:
+            self.log_test("Solana Purchase History Endpoint", False, "No test user available")
+            return False
+        
+        try:
+            response = requests.get(f"{self.api_url}/purchase-history/{self.test_user1['id']}")
+            success = response.status_code == 200
+            
+            if success:
+                result = response.json()
+                status = result.get('status')
+                purchases = result.get('purchases', [])
+                
+                if status != 'success':
+                    success = False
+                    details = f"Invalid status: {status}"
+                else:
+                    details = f"Purchase history retrieved: {len(purchases)} purchases found"
+                    
+                    # Validate purchase structure if any exist
+                    if purchases:
+                        first_purchase = purchases[0]
+                        required_fields = ['user_id', 'wallet_address', 'sol_amount', 'tokens_purchased', 'purchase_date']
+                        missing_fields = [field for field in required_fields if field not in first_purchase]
+                        
+                        if missing_fields:
+                            success = False
+                            details += f" - Missing fields: {missing_fields}"
+                        else:
+                            details += f" - Latest: {first_purchase.get('tokens_purchased', 0)} tokens for {first_purchase.get('sol_amount', 0)} SOL"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test("Solana Purchase History Endpoint", success, details)
+            return success
+        except Exception as e:
+            self.log_test("Solana Purchase History Endpoint", False, str(e))
+            return False
+
+    def test_solana_integration_comprehensive(self):
+        """Comprehensive test of Solana automatic token purchase system"""
+        try:
+            print("\n💎 Testing Solana Automatic Token Purchase System...")
+            
+            # Test 1: Get current SOL/EUR price
+            print("💰 Testing SOL/EUR price fetching...")
+            price_success, price_data = self.test_solana_sol_eur_price_endpoint()
+            
+            if not price_success:
+                self.log_test("Solana Integration Comprehensive", False, "SOL/EUR price test failed")
+                return False
+            
+            sol_eur_price = price_data.get('sol_eur_price', 0)
+            print(f"✅ Current SOL/EUR price: €{sol_eur_price}")
+            
+            # Test 2: Create token purchase
+            print("🛒 Testing token purchase creation...")
+            purchase_success, purchase_data = self.test_solana_purchase_tokens_endpoint()
+            
+            if not purchase_success:
+                self.log_test("Solana Integration Comprehensive", False, "Token purchase creation failed")
+                return False
+            
+            payment_info = purchase_data.get('payment_info', {})
+            wallet_address = payment_info.get('wallet_address')
+            required_sol = payment_info.get('required_sol', 0)
+            
+            print(f"✅ Purchase created: {wallet_address[:8]}...{wallet_address[-8:]} for {required_sol:.6f} SOL")
+            
+            # Test 3: Check purchase status
+            print("📊 Testing purchase status checking...")
+            status_success = self.test_solana_purchase_status_endpoint()
+            
+            if not status_success:
+                self.log_test("Solana Integration Comprehensive", False, "Purchase status check failed")
+                return False
+            
+            print("✅ Purchase status check working")
+            
+            # Test 4: Check purchase history
+            print("📜 Testing purchase history...")
+            history_success = self.test_solana_purchase_history_endpoint()
+            
+            if not history_success:
+                self.log_test("Solana Integration Comprehensive", False, "Purchase history check failed")
+                return False
+            
+            print("✅ Purchase history working")
+            
+            # Test 5: Validate wallet address format
+            print("🔍 Validating wallet address format...")
+            if len(wallet_address) < 32 or len(wallet_address) > 44:
+                self.log_test("Solana Integration Comprehensive", False, f"Invalid wallet address length: {len(wallet_address)}")
+                return False
+            
+            # Test 6: Validate token calculation (1000 tokens = 10 EUR)
+            print("🧮 Validating token calculation...")
+            expected_eur = 10.0
+            actual_eur = payment_info.get('required_eur', 0)
+            
+            if abs(actual_eur - expected_eur) > 0.01:
+                self.log_test("Solana Integration Comprehensive", False, f"Token calculation error: expected €{expected_eur}, got €{actual_eur}")
+                return False
+            
+            # Test 7: Validate SOL calculation matches price
+            print("💱 Validating SOL calculation...")
+            expected_sol = expected_eur / sol_eur_price
+            
+            if abs(required_sol - expected_sol) > 0.000001:
+                self.log_test("Solana Integration Comprehensive", False, f"SOL calculation error: expected {expected_sol:.6f}, got {required_sol:.6f}")
+                return False
+            
+            print("✅ All calculations correct")
+            
+            details = (
+                f"Solana integration working correctly:\n"
+                f"   - SOL/EUR price: €{sol_eur_price}\n"
+                f"   - Wallet generation: {wallet_address[:8]}...{wallet_address[-8:]}\n"
+                f"   - Token calculation: 1000 tokens = €{actual_eur} = {required_sol:.6f} SOL\n"
+                f"   - Payment monitoring: Active\n"
+                f"   - Status tracking: Working\n"
+                f"   - Purchase history: Working"
+            )
+            
+            self.log_test("Solana Integration Comprehensive", True, details)
+            return True
+            
+        except Exception as e:
+            self.log_test("Solana Integration Comprehensive", False, str(e))
+            return False
+
     def run_all_tests(self):
         """Run all API tests - Updated for 3-Player System"""
         print("🎰 Starting Solana Casino 3-Player Game Tests...")
