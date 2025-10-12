@@ -2855,18 +2855,50 @@ class SolanaCasinoAPITester:
             return False
 
     def run_all_tests(self):
-        """Run all API tests - Updated for 3-Player System"""
-        print("🎰 Starting Solana Casino 3-Player Game Tests...")
+        """Run all API tests - Updated for Solana Integration and 3-Player System"""
+        print("🚀 Starting Solana Casino Backend API Tests...")
+        print(f"🌐 Testing against: {self.base_url}")
         print("=" * 60)
-        
-        # PRIORITY 1: Test the critical issue first
-        print("🚨 PRIORITY TEST: Critical Silver Room Lobby → Winner Flow")
-        self.test_critical_silver_room_lobby_to_winner_flow()
         
         # Basic connectivity
         if not self.test_api_root():
             print("❌ API is not accessible, stopping tests")
             return False
+        
+        # Create test users first
+        print("\n👥 Creating Test Users...")
+        if not self.test_telegram_auth(1):
+            print("❌ User 1 creation failed, stopping tests")
+            return False
+        
+        if not self.test_telegram_auth(2):
+            print("❌ User 2 creation failed, stopping tests")
+            return False
+            
+        if not self.test_telegram_auth(3):
+            print("❌ User 3 creation failed, stopping tests")
+            return False
+        
+        # CRITICAL: Solana Automatic Token Purchase System Tests
+        print("\n" + "="*60)
+        print("💎 SOLANA AUTOMATIC TOKEN PURCHASE SYSTEM TESTS")
+        print("="*60)
+        
+        self.test_solana_integration_comprehensive()
+        
+        # Individual Solana endpoint tests
+        self.test_solana_sol_eur_price_endpoint()
+        self.test_solana_purchase_tokens_endpoint()
+        self.test_solana_purchase_status_endpoint()
+        self.test_solana_purchase_history_endpoint()
+        
+        print("\n" + "="*60)
+        print("🎰 CASINO GAME SYSTEM TESTS")
+        print("="*60)
+        
+        # PRIORITY 1: Test the critical issue first
+        print("🚨 PRIORITY TEST: Critical Silver Room Lobby → Winner Flow")
+        self.test_critical_silver_room_lobby_to_winner_flow()
         
         # Create three test users with Telegram authentication (using specific IDs from review request)
         print("\n👥 Creating Test Users (3-Player System)...")
