@@ -2427,9 +2427,9 @@ function App() {
                           <button
                             key={amount}
                             onClick={() => {
-                              setIsPaymentModalOpen(true);
+                              setShowPaymentModal(true);
                               // Calculate EUR from tokens
-                              setSelectedEurAmount(amount / 100);
+                              setPaymentEurAmount(amount / 100);
                             }}
                             className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-6 rounded-xl shadow-lg transition-all duration-200 hover:scale-105"
                           >
