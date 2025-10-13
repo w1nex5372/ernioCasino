@@ -793,9 +793,9 @@ function App() {
           }
         }
         
-        // If all else fails, let fallback timeout handle it
-        console.log('⚠️ Auth failed - waiting for fallback timeout to create account...');
-        // Don't set isLoading to false here - let the fallback timeout handle it
+        // If all else fails, fallback will handle user creation
+        console.log('⚠️ Auth failed - fallback will create user in 2 seconds...');
+        // Note: isLoading stays true so fallback can detect and handle it
       }
     };
 
