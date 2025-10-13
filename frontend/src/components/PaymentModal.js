@@ -372,27 +372,37 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
 
             {/* Status */}
             {paymentStatus !== 'pending' && (
-              <div className={`p-4 rounded-lg border ${
+              <div className={`p-4 rounded-lg border transition-all duration-500 ${
                 paymentStatus === 'processing' ? 'bg-yellow-500/10 border-yellow-500/30' :
                 paymentStatus === 'crediting' ? 'bg-blue-500/10 border-blue-500/30' :
-                'bg-green-500/10 border-green-500/30'
+                paymentStatus === 'completed' ? 'bg-green-500/10 border-green-500/30' :
+                paymentStatus === 'timeout' ? 'bg-red-500/10 border-red-500/30' :
+                'bg-gray-500/10 border-gray-500/30'
               }`}>
                 <div className="flex items-center gap-3">
-                  <Loader2 className={`w-5 h-5 animate-spin ${
-                    paymentStatus === 'processing' ? 'text-yellow-400' :
-                    paymentStatus === 'crediting' ? 'text-blue-400' :
-                    'text-green-400'
-                  }`} />
+                  {paymentStatus !== 'timeout' && paymentStatus !== 'failed' ? (
+                    <Loader2 className={`w-5 h-5 animate-spin ${
+                      paymentStatus === 'processing' ? 'text-yellow-400' :
+                      paymentStatus === 'crediting' ? 'text-blue-400' :
+                      'text-green-400'
+                    }`} />
+                  ) : (
+                    <X className="w-5 h-5 text-red-400" />
+                  )}
                   <div>
                     <div className="font-semibold text-white">
-                      {paymentStatus === 'processing' && 'Payment Detected'}
-                      {paymentStatus === 'crediting' && 'Crediting Tokens'}
-                      {paymentStatus === 'completed' && 'Payment Complete!'}
+                      {paymentStatus === 'processing' && '💰 Payment Detected'}
+                      {paymentStatus === 'crediting' && '💫 Crediting Tokens'}
+                      {paymentStatus === 'completed' && '✅ Payment Complete!'}
+                      {paymentStatus === 'timeout' && '⚠️ Payment Timeout'}
+                      {paymentStatus === 'failed' && '❌ Payment Failed'}
                     </div>
                     <div className="text-sm text-slate-400">
                       {paymentStatus === 'processing' && 'Processing your payment...'}
                       {paymentStatus === 'crediting' && 'Adding tokens to your account...'}
-                      {paymentStatus === 'completed' && 'Tokens added successfully!'}
+                      {paymentStatus === 'completed' && 'Tokens added successfully! Closing...'}
+                      {paymentStatus === 'timeout' && 'Payment not detected. Please try again or check your transaction.'}
+                      {paymentStatus === 'failed' && 'Something went wrong. Please try again.'}
                     </div>
                   </div>
                 </div>
