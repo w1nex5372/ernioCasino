@@ -745,6 +745,17 @@ function App() {
       } catch (error) {
         console.error('❌ Telegram authentication failed:', error);
         
+        // Show user-friendly error message
+        if (error.response?.status === 401) {
+          toast.error('Invalid credentials. Please try again.');
+        } else if (error.response?.status === 500) {
+          toast.error('Server error. Please try again later.');
+        } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+          toast.error('Network timeout. Please check your connection.');
+        } else {
+          toast.error('Authentication failed. Retrying...');
+        }
+        
         // If we have Telegram user data, try to find existing account
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
           const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
@@ -768,6 +779,7 @@ function App() {
               }
             } catch (lookupError) {
               console.log('User not found by Telegram ID:', lookupError);
+              toast.error('Account not found. Creating new account...');
             }
           }
         }
@@ -775,6 +787,7 @@ function App() {
         // If all else fails, create temporary account
         console.log('Creating temporary account as last resort');
         setIsLoading(false);
+        toast.warning('Using temporary account. Please log in via Telegram for full access.');
       }
     };
 
