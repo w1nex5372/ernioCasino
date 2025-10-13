@@ -204,28 +204,61 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
 
             {/* Amount Info - DYNAMIC */}
             <div className="space-y-3">
-              {/* Editable EUR Amount */}
+              {/* Editable EUR Amount - FULLY MANUAL */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-white">Amount in EUR (Editable)</label>
+                <label className="text-sm font-semibold text-white">Amount in EUR (Any amount ≥ 0.1)</label>
                 <div className="flex items-center gap-2">
                   <span className="text-slate-400 text-lg">€</span>
                   <input
                     type="number"
-                    min="1"
+                    min="0.1"
                     step="0.01"
-                    value={eurAmount}
+                    inputMode="decimal"
+                    value={eurInput}
                     onChange={(e) => {
-                      const newEur = parseFloat(e.target.value) || 1;
+                      const value = e.target.value;
+                      setEurInput(value);
+                      
+                      const newEur = parseFloat(value);
+                      
+                      // Validation
+                      if (isNaN(newEur) || value === '') {
+                        setValidationError('Please enter a valid amount');
+                        return;
+                      }
+                      
+                      if (newEur < 0.1) {
+                        setValidationError('Minimum amount is 0.1 EUR');
+                        setEurAmount(0.1);
+                        setEurInput('0.1');
+                        localStorage.setItem('casino_last_eur_amount', '0.1');
+                        return;
+                      }
+                      
+                      // Valid amount
+                      setValidationError('');
                       setEurAmount(newEur);
+                      localStorage.setItem('casino_last_eur_amount', newEur.toString());
                       setRecalculating(true);
-                      // Reinitialize payment with new amount
-                      setTimeout(() => setRecalculating(false), 1000);
+                      setTimeout(() => setRecalculating(false), 500);
+                    }}
+                    onBlur={() => {
+                      // Format on blur
+                      if (eurAmount >= 0.1) {
+                        setEurInput(eurAmount.toFixed(2));
+                      }
                     }}
                     className="flex-1 bg-slate-900 border border-slate-700 text-white text-xl font-bold rounded-lg px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none"
                     disabled={loading || paymentStatus !== 'pending'}
+                    placeholder="0.10"
                   />
                 </div>
-                <p className="text-xs text-slate-500">Change this amount to recalculate tokens and SOL</p>
+                {validationError && (
+                  <p className="text-xs text-red-400">⚠️ {validationError}</p>
+                )}
+                <p className="text-xs text-slate-500">
+                  Type any amount ≥ 0.1 EUR • Your last amount is remembered
+                </p>
               </div>
 
               {/* Calculated Tokens (updates automatically) */}
