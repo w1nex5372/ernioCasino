@@ -189,6 +189,10 @@ function App() {
   // Form state
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [betAmount, setBetAmount] = useState('');
+  
+  // Payment modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentTokenAmount, setPaymentTokenAmount] = useState(1000);
 
   // Debug roomParticipants changes
   useEffect(() => {
