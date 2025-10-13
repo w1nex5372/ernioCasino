@@ -373,22 +373,28 @@ class SolanaPaymentProcessor:
                 }
             )
             
-            # Check if payment is sufficient
-            if received_sol >= required_sol:
+            # Check if payment is sufficient (with 0.001 SOL tolerance)
+            tolerance = Decimal("0.001")
+            if received_sol >= (required_sol - tolerance):
+                logger.info(f"✅ [{wallet_address[:8]}...] Payment sufficient! Crediting tokens...")
                 # Credit tokens to user
                 await self.credit_tokens_to_user(wallet_doc, received_sol)
                 
+                logger.info(f"💸 [{wallet_address[:8]}...] Forwarding SOL to main wallet...")
                 # Forward SOL to main wallet
                 await self.forward_sol_to_main_wallet(wallet_address, wallet_doc["private_key"], received_lamports)
             else:
-                logger.warning(f"Insufficient payment: {received_sol} SOL < {required_sol} SOL required")
+                logger.warning(f"❌ [{wallet_address[:8]}...] Insufficient payment: {received_sol} SOL < {required_sol} SOL required (tolerance: {tolerance} SOL)")
                 await self.db.temporary_wallets.update_one(
                     {"wallet_address": wallet_address},
                     {"$set": {"status": "insufficient_payment"}}
                 )
                 
         except Exception as e:
-            logger.error(f"Error processing payment for {wallet_address}: {str(e)}")
+            import traceback
+            logger.error(f"❌ Error processing payment for {wallet_address}:")
+            logger.error(f"   {str(e)}")
+            logger.error(f"   Traceback:\n{traceback.format_exc()}")
     
     async def credit_tokens_to_user(self, wallet_doc: Dict, received_sol: Decimal):
         """Credit tokens to user account based on payment received using dynamic pricing"""
