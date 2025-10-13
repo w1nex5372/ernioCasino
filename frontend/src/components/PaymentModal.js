@@ -255,9 +255,21 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
                       setTimeout(() => setRecalculating(false), 500);
                     }}
                     onBlur={() => {
-                      // Format on blur
-                      if (eurAmount >= 0.1) {
-                        setEurInput(eurAmount.toFixed(2));
+                      // FIXED: Format on blur, ensuring minimum
+                      const value = parseFloat(eurInput);
+                      
+                      if (isNaN(value) || value < 0.1) {
+                        // Reset to minimum if invalid
+                        setEurAmount(0.1);
+                        setEurInput('0.10');
+                        setValidationError('');
+                        localStorage.setItem('casino_last_eur_amount', '0.1');
+                        toast.info('Amount set to minimum: €0.10');
+                      } else {
+                        // Format to 2 decimals
+                        setEurInput(value.toFixed(2));
+                        setEurAmount(value);
+                        localStorage.setItem('casino_last_eur_amount', value.toString());
                       }
                     }}
                     className="flex-1 bg-slate-900 border border-slate-700 text-white text-xl font-bold rounded-lg px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none"
