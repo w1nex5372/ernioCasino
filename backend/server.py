@@ -1930,14 +1930,14 @@ async def redundant_payment_scanner():
     """
     Background task that periodically rescans all pending payments
     This catches payments missed by the real-time monitoring system
-    Runs every 30 seconds
+    Runs every 15 seconds for fast detection
     """
     from solana_integration import get_processor
     
     # Wait a bit before starting to ensure DB is ready
     await asyncio.sleep(10)
     
-    logging.info("🔍 [Scanner] Redundant payment scanner started")
+    logging.info("🔍 [Scanner] Redundant payment scanner started (15s interval)")
     
     while True:
         try:
@@ -1948,8 +1948,8 @@ async def redundant_payment_scanner():
             import traceback
             logging.error(traceback.format_exc())
         
-        # Wait 30 seconds before next scan
-        await asyncio.sleep(30)
+        # Wait 15 seconds before next scan (faster detection)
+        await asyncio.sleep(15)
     
 @app.on_event("shutdown")
 async def shutdown_event():
