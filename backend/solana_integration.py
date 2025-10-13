@@ -495,7 +495,7 @@ class SolanaPaymentProcessor:
     
     async def forward_sol_to_main_wallet(self, wallet_address: str, private_key_bytes_list: list, amount_lamports: int):
         """
-        Forward received SOL to the main project wallet with retry logic
+        Forward received SOL to the main project wallet with comprehensive logging and verification
         
         Args:
             wallet_address: Source wallet address
@@ -507,34 +507,54 @@ class SolanaPaymentProcessor:
         
         for attempt in range(1, max_retries + 1):
             try:
-                logger.info(f"💸 [Sweep] Attempt {attempt}/{max_retries} - Forwarding from {wallet_address[:8]}...")
-                logger.info(f"💸 [Sweep] Amount: {amount_lamports} lamports ({amount_lamports/LAMPORTS_PER_SOL:.6f} SOL)")
+                logger.info(f"💸 [Sweep] ========== ATTEMPT {attempt}/{max_retries} ==========")
+                logger.info(f"💸 [Sweep] Source Wallet: {wallet_address}")
                 logger.info(f"💸 [Sweep] Destination: {self.main_wallet}")
-                logger.info(f"💸 [Sweep] RPC: {self.client._provider.endpoint_uri}")
+                logger.info(f"💸 [Sweep] Amount: {amount_lamports} lamports ({amount_lamports/LAMPORTS_PER_SOL:.6f} SOL)")
+                logger.info(f"🌐 [Sweep] Using RPC: {self.client._provider.endpoint_uri}")
                 
                 # Reconstruct keypair from stored byte array
+                logger.info(f"🔑 [Sweep] Reconstructing keypair from private key...")
                 private_key_bytes = bytes(private_key_bytes_list)
                 temp_keypair = Keypair.from_bytes(private_key_bytes)
                 
                 source_wallet = str(temp_keypair.pubkey())
-                logger.info(f"💸 [Sweep] Source wallet (reconstructed): {source_wallet}")
+                logger.info(f"🔑 [Sweep] Keypair reconstructed: {source_wallet}")
                 
-                # Verify it matches
+                # Verify wallet address matches
                 if source_wallet != wallet_address:
-                    logger.error(f"❌ [Sweep] Wallet mismatch! Expected {wallet_address}, got {source_wallet}")
-                    raise ValueError("Wallet address mismatch")
+                    logger.error(f"❌ [Sweep] CRITICAL: Wallet mismatch!")
+                    logger.error(f"   Expected: {wallet_address}")
+                    logger.error(f"   Got: {source_wallet}")
+                    raise ValueError("Wallet address mismatch - cannot proceed")
                 
-                # Reserve lamports for transaction fee (5000 lamports = 0.000005 SOL)
-                fee_lamports = 5000
-                transfer_amount = amount_lamports - fee_lamports
+                logger.info(f"✅ [Sweep] Wallet verification passed")
+                
+                # Check current balance before sweep
+                logger.info(f"🔍 [Sweep] Checking pre-sweep balance...")
+                try:
+                    pre_balance_response = await self.client.get_balance(temp_keypair.pubkey())
+                    pre_balance = pre_balance_response.value if pre_balance_response.value else 0
+                    logger.info(f"💰 [Pre-Sweep Balance] {pre_balance} lamports ({pre_balance/LAMPORTS_PER_SOL:.6f} SOL)")
+                except Exception as balance_error:
+                    logger.warning(f"⚠️  [Sweep] Could not check pre-balance: {balance_error}")
+                    pre_balance = amount_lamports  # Use provided amount as fallback
+                
+                # Reserve lamports for transaction fee
+                fee_lamports = 5000  # 0.000005 SOL
+                transfer_amount = pre_balance - fee_lamports
                 
                 if transfer_amount <= 0:
-                    logger.warning(f"💸 [Sweep] Insufficient balance after fees: {amount_lamports} lamports")
+                    logger.warning(f"⚠️  [Sweep Skip] Insufficient balance after fees")
+                    logger.warning(f"   Balance: {pre_balance} lamports")
+                    logger.warning(f"   Fee: {fee_lamports} lamports")
                     return
                 
                 logger.info(f"💸 [Sweep] Transfer amount (after fee): {transfer_amount} lamports ({transfer_amount/LAMPORTS_PER_SOL:.6f} SOL)")
+                logger.info(f"💸 [Sweep] Fee reserved: {fee_lamports} lamports")
                 
                 # Create transfer instruction
+                logger.info(f"📝 [Sweep] Creating transfer instruction...")
                 transfer_instruction = transfer(
                     TransferParams(
                         from_pubkey=temp_keypair.pubkey(),
@@ -542,62 +562,169 @@ class SolanaPaymentProcessor:
                         lamports=transfer_amount
                     )
                 )
+                logger.info(f"✅ [Sweep] Transfer instruction created")
                 
-                logger.info(f"💸 [Sweep] Getting recent blockhash...")
                 # Get recent blockhash
-                recent_blockhash_response = await self.client.get_latest_blockhash()
-                recent_blockhash = recent_blockhash_response.value.blockhash
-                logger.info(f"💸 [Sweep] Blockhash obtained: {recent_blockhash}")
+                logger.info(f"🔗 [Sweep] Fetching recent blockhash...")
+                try:
+                    recent_blockhash_response = await self.client.get_latest_blockhash()
+                    recent_blockhash = recent_blockhash_response.value.blockhash
+                    logger.info(f"✅ [Sweep] Blockhash: {recent_blockhash}")
+                except Exception as blockhash_error:
+                    logger.error(f"❌ [Sweep] Failed to get blockhash: {blockhash_error}")
+                    raise
                 
                 # Create transaction message
+                logger.info(f"📦 [Sweep] Compiling transaction message...")
                 message = MessageV0.try_compile(
                     payer=temp_keypair.pubkey(),
                     instructions=[transfer_instruction],
                     address_lookup_table_accounts=[],
                     recent_blockhash=recent_blockhash
                 )
+                logger.info(f"✅ [Sweep] Message compiled")
                 
                 # Create and sign versioned transaction
+                logger.info(f"✍️  [Sweep] Signing transaction...")
                 transaction = VersionedTransaction(message, [temp_keypair])
-                logger.info(f"💸 [Sweep] Transaction created and signed")
+                logger.info(f"✅ [Sweep] Transaction signed")
                 
-                # Send transaction
-                logger.info(f"💸 [Sweep] Sending transaction to network...")
-                response = await self.client.send_transaction(transaction)
+                # Send transaction to network
+                logger.info(f"📡 [Sweep] Sending transaction to Solana network...")
+                try:
+                    response = await self.client.send_transaction(transaction)
+                    logger.info(f"📡 [Sweep] Send response received")
+                    
+                    if response.value:
+                        signature = str(response.value)
+                        logger.info(f"💸 [Sweep Submitted] Transaction signature: {signature}")
+                        logger.info(f"🔗 [Sweep] Explorer: https://explorer.solana.com/tx/{signature}?cluster=mainnet")
+                        
+                        # Wait for confirmation
+                        logger.info(f"⏳ [Sweep] Waiting for transaction confirmation...")
+                        try:
+                            # Wait up to 30 seconds for confirmation
+                            from solana.rpc.commitment import Confirmed
+                            confirmation_response = await self.client.confirm_transaction(signature, commitment=Confirmed)
+                            
+                            if confirmation_response.value:
+                                logger.info(f"✅ [Sweep Success] Transaction confirmed on-chain!")
+                            else:
+                                logger.warning(f"⚠️  [Sweep] Confirmation response: {confirmation_response}")
+                                
+                        except Exception as confirm_error:
+                            logger.warning(f"⚠️  [Sweep] Could not confirm transaction: {confirm_error}")
+                            logger.warning(f"   Transaction may still succeed - check explorer")
+                        
+                        # Verify post-sweep balance
+                        logger.info(f"🔍 [Sweep] Verifying post-sweep balance...")
+                        try:
+                            await asyncio.sleep(2)  # Give network time to update
+                            post_balance_response = await self.client.get_balance(temp_keypair.pubkey())
+                            post_balance = post_balance_response.value if post_balance_response.value else 0
+                            logger.info(f"🔍 [Post-Sweep Balance] {post_balance} lamports remaining")
+                            
+                            if post_balance < fee_lamports * 2:
+                                logger.info(f"✅ [Sweep] Wallet successfully emptied (only dust/fees remain)")
+                            else:
+                                logger.warning(f"⚠️  [Sweep] Unexpected remaining balance: {post_balance} lamports")
+                                
+                        except Exception as balance_error:
+                            logger.warning(f"⚠️  [Sweep] Could not verify post-balance: {balance_error}")
+                        
+                        # Log final success
+                        transfer_sol = transfer_amount / LAMPORTS_PER_SOL
+                        logger.info(f"✅ [Sweep Success] ========== COMPLETED ==========")
+                        logger.info(f"✅ [Sweep Success] From: {wallet_address}")
+                        logger.info(f"✅ [Sweep Success] To: {self.main_wallet}")
+                        logger.info(f"✅ [Sweep Success] Amount: {transfer_sol:.6f} SOL")
+                        logger.info(f"✅ [Sweep Success] Tx: {signature}")
+                        logger.info(f"✅ [Sweep Success] Network: Mainnet")
+                        logger.info(f"✅ [Sweep Success] ===============================")
+                        
+                        # Update wallet record in database
+                        await self.db.temporary_wallets.update_one(
+                            {"wallet_address": wallet_address},
+                            {
+                                "$set": {
+                                    "sol_forwarded": True,
+                                    "forward_signature": signature,
+                                    "forwarded_amount_lamports": transfer_amount,
+                                    "forwarded_at": datetime.now(timezone.utc),
+                                    "status": "completed",
+                                    "sweep_attempts": attempt,
+                                    "network": "mainnet"
+                                }
+                            }
+                        )
+                        
+                        # Clean up wallet data after successful forwarding
+                        await asyncio.sleep(60)  # Wait 1 minute before cleanup
+                        await self.cleanup_wallet_data(wallet_address)
+                        
+                        return signature  # Success! Exit retry loop
+                        
+                    else:
+                        logger.error(f"❌ [Sweep] No transaction signature returned")
+                        logger.error(f"   Response: {response}")
+                        if attempt < max_retries:
+                            logger.info(f"⏳ [Sweep] Retrying in {retry_delay} seconds...")
+                            await asyncio.sleep(retry_delay)
+                        else:
+                            raise Exception("Failed to get transaction signature after all retries")
+                            
+                except Exception as send_error:
+                    logger.error(f"❌ [Sweep] Transaction send failed")
+                    logger.error(f"   Error type: {type(send_error).__name__}")
+                    logger.error(f"   Error message: {str(send_error)}")
+                    
+                    # Check for specific error types
+                    error_str = str(send_error).lower()
+                    if "429" in error_str or "too many requests" in error_str:
+                        logger.error(f"   Cause: RPC rate limit exceeded")
+                    elif "blockhash not found" in error_str:
+                        logger.error(f"   Cause: Blockhash expired - transaction took too long")
+                    elif "simulation failed" in error_str:
+                        logger.error(f"   Cause: Transaction simulation failed - check balance/fees")
+                    elif "insufficient" in error_str:
+                        logger.error(f"   Cause: Insufficient funds")
+                    
+                    import traceback
+                    logger.error(f"   Full traceback:\n{traceback.format_exc()}")
+                    
+                    if attempt < max_retries:
+                        logger.info(f"⏳ [Sweep] Retrying in {retry_delay} seconds...")
+                        await asyncio.sleep(retry_delay)
+                    else:
+                        raise
+                    
+            except Exception as e:
+                logger.error(f"❌ [Sweep] Attempt {attempt} failed")
+                logger.error(f"   Error: {type(e).__name__}: {str(e)}")
+                import traceback
+                logger.error(traceback.format_exc())
                 
-                if response.value:
-                    signature = str(response.value)
-                    transfer_sol = transfer_amount / LAMPORTS_PER_SOL
+                if attempt < max_retries:
+                    logger.info(f"⏳ [Sweep] Retrying in {retry_delay} seconds...")
+                    await asyncio.sleep(retry_delay)
+                else:
+                    logger.error(f"❌ [Sweep] All {max_retries} attempts exhausted!")
+                    logger.error(f"   Wallet: {wallet_address}")
+                    logger.error(f"   This requires manual intervention")
                     
-                    logger.info(f"✅ [Sweep] SUCCESS!")
-                    logger.info(f"✅ [Sweep] From: {wallet_address}")
-                    logger.info(f"✅ [Sweep] To: {self.main_wallet}")
-                    logger.info(f"✅ [Sweep] Amount: {transfer_sol:.6f} SOL")
-                    logger.info(f"✅ [Sweep] TxSig: {signature}")
-                    logger.info(f"✅ [Sweep] Explorer: https://explorer.solana.com/tx/{signature}?cluster=devnet")
-                    
-                    # Update wallet record
+                    # Mark for manual review
                     await self.db.temporary_wallets.update_one(
                         {"wallet_address": wallet_address},
                         {
                             "$set": {
-                                "sol_forwarded": True,
-                                "forward_signature": signature,
-                                "forwarded_amount_lamports": transfer_amount,
-                                "forwarded_at": datetime.now(timezone.utc),
-                                "status": "completed",
-                                "sweep_attempts": attempt
+                                "status": "forward_failed",
+                                "forward_error": str(e),
+                                "sweep_attempts": attempt,
+                                "failed_at": datetime.now(timezone.utc)
                             }
                         }
                     )
-                    
-                    # Clean up wallet data after successful forwarding
-                    await asyncio.sleep(60)  # Wait 1 minute before cleanup
-                    await self.cleanup_wallet_data(wallet_address)
-                    
-                    return  # Success! Exit retry loop
-                    
-                else:
+                    raise
                     logger.error(f"❌ [Sweep] No transaction signature returned on attempt {attempt}")
                     if attempt < max_retries:
                         logger.info(f"⏳ [Sweep] Retrying in {retry_delay} seconds...")
