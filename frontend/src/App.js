@@ -203,6 +203,7 @@ function App() {
   // Payment modal state
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentTokenAmount, setPaymentTokenAmount] = useState(1000);
+  const [paymentEurAmount, setPaymentEurAmount] = useState(null); // EUR amount for payment modal
 
   // Debug roomParticipants changes
   useEffect(() => {
