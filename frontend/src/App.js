@@ -2340,9 +2340,9 @@ function App() {
                       </button>
                     ))}
                   </div>
-                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2 mt-2">
-                    <p className="text-xs text-red-400 text-center">
-                      ⚠️ Payments temporarily disabled for system maintenance
+                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2 mt-2">
+                    <p className="text-xs text-blue-400 text-center">
+                      💎 Testing on Solana Devnet - Free SOL from faucets
                     </p>
                   </div>
                 </div>
