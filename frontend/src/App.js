@@ -2403,22 +2403,46 @@ function App() {
                     <p className="text-center text-slate-400 py-8">No games completed yet. Start playing!</p>
                   ) : (
                     <div className="space-y-3">
-                      {gameHistory.map((game, index) => (
-                        <div key={index} className="p-4 bg-slate-700/50 rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">{ROOM_CONFIGS[game.room_type]?.icon}</span>
-                              <span className="font-medium text-white capitalize">{game.room_type} Room</span>
+                      {gameHistory.map((game, index) => {
+                        const isUserWinner = user && (
+                          game.winner?.telegram_id === user.telegram_id || 
+                          game.winner?.id === user.id
+                        );
+                        
+                        return (
+                          <div key={index} className={`p-4 rounded-lg ${
+                            isUserWinner 
+                              ? 'bg-gradient-to-r from-gold-900/30 to-yellow-900/30 border border-gold-500/30' 
+                              : 'bg-slate-700/50 border border-slate-600/30'
+                          }`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg">{ROOM_CONFIGS[game.room_type]?.icon}</span>
+                                <span className="font-medium text-white capitalize">{game.room_type} Room</span>
+                              </div>
+                              <Badge className={isUserWinner ? 'bg-gold-500 text-slate-900' : 'bg-slate-500 text-white'}>
+                                {isUserWinner ? '🏆 Won' : 'Lost'}
+                              </Badge>
                             </div>
-                            <Badge className="bg-green-500 text-white">Completed</Badge>
+                            <div className="text-sm text-slate-300 space-y-1">
+                              {isUserWinner ? (
+                                <>
+                                  <div className="text-green-400 font-semibold">🎉 You won this game!</div>
+                                  <div>Prize: <span className="text-gold-400 font-bold">{game.prize_pool} tokens</span></div>
+                                </>
+                              ) : (
+                                <>
+                                  <div>Winner: <span className="text-yellow-400 font-medium">
+                                    {game.winner?.first_name || 'Unknown'}
+                                  </span></div>
+                                  <div className="text-slate-500">You did not win this round</div>
+                                </>
+                              )}
+                              <div>Date: {new Date(game.finished_at).toLocaleDateString()}</div>
+                            </div>
                           </div>
-                          <div className="text-sm text-slate-300 space-y-1">
-                            <div>Winner: <span className="text-yellow-400 font-medium">{game.winner?.first_name || 'Unknown'}</span></div>
-                            <div>Prize Pool: <span className="text-green-400">{game.prize_pool} tokens</span></div>
-                            <div>Date: {new Date(game.finished_at).toLocaleDateString()}</div>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </CardContent>
