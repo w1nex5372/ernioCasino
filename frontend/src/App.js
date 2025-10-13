@@ -17,7 +17,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 // App version for cache busting
-const APP_VERSION = 'v7.0-DEVNET-PAYMENT-20241013131800';
+const APP_VERSION = 'v7.0-MAINNET-PRODUCTION-20241013';
 
 // Check and clear old version cache
 const storedVersion = localStorage.getItem('app_version');
