@@ -280,17 +280,25 @@ class SolanaPaymentProcessor:
         
         Args:
             wallet_address: The wallet that received payment
-            signature: The transaction signature to analyze
+            signature: The transaction signature to analyze (string)
         """
         try:
+            logger.info(f"💳 [{wallet_address[:8]}...] Processing payment signature: {signature[:16]}...")
+            
+            # Convert string signature to Signature object
+            sig_obj = Signature.from_string(signature)
+            
             # Get transaction details
             transaction = await self.client.get_transaction(
-                signature, 
+                sig_obj, 
                 commitment=Finalized,
                 max_supported_transaction_version=0
             )
             
+            logger.info(f"📦 [{wallet_address[:8]}...] Transaction fetched: {transaction.value is not None}")
+            
             if not transaction.value:
+                logger.warning(f"⚠️  [{wallet_address[:8]}...] Transaction not found or not finalized yet")
                 return
                 
             # Get wallet record from database
