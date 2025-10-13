@@ -295,10 +295,13 @@ class SolanaPaymentProcessor:
                 max_supported_transaction_version=0
             )
             
-            logger.info(f"📦 [{wallet_address[:8]}...] Transaction fetched: {transaction.value is not None}")
+            logger.info(f"📦 [{wallet_address[:8]}...] Raw response: {type(transaction)}")
+            logger.info(f"📦 [{wallet_address[:8]}...] Has value: {hasattr(transaction, 'value')}")
+            logger.info(f"📦 [{wallet_address[:8]}...] Value is not None: {transaction.value is not None}")
+            logger.info(f"📦 [{wallet_address[:8]}...] Transaction value: {transaction.value if hasattr(transaction, 'value') else 'N/A'}")
             
             if not transaction.value:
-                logger.warning(f"⚠️  [{wallet_address[:8]}...] Transaction not found or not finalized yet")
+                logger.warning(f"⚠️  [{wallet_address[:8]}...] Transaction not found or not confirmed yet")
                 return
                 
             # Get wallet record from database
