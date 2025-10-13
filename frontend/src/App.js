@@ -1616,7 +1616,25 @@ function App() {
                       
                       {/* 🏆 Winner Announcement Title - PERSONALIZED */}
                       <div className="space-y-3 md:space-y-4">
-                        {winnerData.is_winner || (user && winnerData.winner_telegram_id === user.telegram_id) ? (
+                        {(() => {
+                          // FIXED: Robust winner detection
+                          const isCurrentUserWinner = winnerData.is_winner || (user && (
+                            String(winnerData.winner_telegram_id) === String(user.telegram_id) ||
+                            String(winnerData.winner?.telegram_id) === String(user.telegram_id) ||
+                            String(winnerData.winner?.id) === String(user.id) ||
+                            String(winnerData.winner_user_id) === String(user.id)
+                          ));
+                          
+                          console.log('Winner screen check:', {
+                            user_id: user?.id,
+                            user_telegram_id: user?.telegram_id,
+                            winner_telegram_id: winnerData.winner_telegram_id,
+                            is_winner_flag: winnerData.is_winner,
+                            isCurrentUserWinner
+                          });
+                          
+                          return isCurrentUserWinner;
+                        })() ? (
                           <h1 className="text-2xl md:text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 via-gold-500 to-yellow-600 bg-clip-text animate-pulse">
                             🎉 You Won!
                           </h1>
