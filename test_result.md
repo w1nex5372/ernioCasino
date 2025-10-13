@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Implement Solana automatic token purchase system with dynamic wallet generation, blockchain monitoring, live SOL/EUR pricing (1 EUR = 100 tokens), and automatic forwarding to main wallet EC2cPxi4VbyzGoWMucHQ6LwkWz1W9vZE7ZApcY9PFsMy on mainnet."
+user_problem_statement: "Fix Casino Namai app issues: 1) Players not loading in lobby 2) Login failures 3) Bonus claim not working 4) Token balances not visible. Add complete Solana wallet integration with payment invoice modal, countdown timer, and automatic token crediting."
 
 backend:
   - task: "Solana Automatic Token Purchase System"
