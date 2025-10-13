@@ -2282,18 +2282,17 @@ function App() {
                     </CardContent>
                   </Card>
                   
-                  {/* Add Tokens Button */}
+                  {/* Add Tokens Button - TEMPORARILY DISABLED */}
                   <Button
-                    onClick={() => {
-                      setPaymentTokenAmount(1000);
-                      setPaymentEurAmount(10); // 1000 tokens = €10
-                      setShowPaymentModal(true);
-                    }}
-                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 text-lg rounded-xl shadow-lg"
+                    disabled
+                    className="w-full bg-slate-600 text-slate-400 font-bold py-4 text-lg rounded-xl shadow-lg cursor-not-allowed"
                   >
                     <Zap className="w-5 h-5 mr-2" />
-                    + Add Tokens
+                    + Add Tokens (Temporarily Unavailable)
                   </Button>
+                  <p className="text-xs text-red-400 text-center mt-2">
+                    ⚠️ Payment system under maintenance. Do not send SOL until further notice.
+                  </p>
 
                   {/* Wallet Address Card */}
                   <Card className="bg-slate-800/90 border-slate-700 max-w-full overflow-hidden">
