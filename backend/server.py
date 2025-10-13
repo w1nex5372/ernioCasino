@@ -1449,6 +1449,97 @@ async def manually_process_payment(wallet_address: str, signature: str, admin_ke
         logging.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Failed to process payment: {str(e)}")
 
+@api_router.post("/admin/rescan-payments")
+async def rescan_payments(admin_key: str = "", wallet_address: Optional[str] = None):
+    """
+    ADMIN ONLY: Manually trigger payment rescan
+    If wallet_address provided, scans only that wallet
+    Otherwise scans all pending wallets
+    """
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Invalid admin key")
+    
+    try:
+        from solana_integration import get_processor
+        processor = get_processor(db)
+        
+        if wallet_address:
+            logging.info(f"🔧 [Admin] Manual rescan for wallet: {wallet_address}")
+            
+            # Get specific wallet
+            wallet_doc = await db.temporary_wallets.find_one({"wallet_address": wallet_address})
+            if not wallet_doc:
+                raise HTTPException(status_code=404, detail=f"Wallet {wallet_address} not found")
+            
+            # Check balance
+            from solders.pubkey import Pubkey
+            from decimal import Decimal
+            from solana.rpc.commitment import Confirmed
+            
+            pubkey = Pubkey.from_string(wallet_address)
+            balance_response = await processor.client.get_balance(pubkey, commitment=Confirmed)
+            balance_lamports = balance_response.value if balance_response.value else 0
+            balance_sol = Decimal(balance_lamports) / Decimal(1000000000)
+            
+            expected_sol = Decimal(str(wallet_doc["required_sol"]))
+            
+            result = {
+                "wallet_address": wallet_address,
+                "current_balance": str(balance_sol),
+                "expected_amount": str(expected_sol),
+                "status": wallet_doc.get("status"),
+                "payment_detected": wallet_doc.get("payment_detected", False),
+                "tokens_credited": wallet_doc.get("tokens_credited", False),
+                "user_id": wallet_doc.get("user_id")
+            }
+            
+            # If payment found, process it
+            tolerance = Decimal("0.001")
+            if balance_sol >= (expected_sol - tolerance) and not wallet_doc.get("tokens_credited"):
+                logging.info(f"💰 [Admin] Processing payment for wallet {wallet_address}")
+                
+                # Mark as detected
+                await db.temporary_wallets.update_one(
+                    {"wallet_address": wallet_address, "payment_detected": False},
+                    {"$set": {"payment_detected": True, "status": "manual_rescan", "detected_at": datetime.now(timezone.utc)}}
+                )
+                
+                # Credit tokens
+                await processor.credit_tokens_to_user(wallet_doc, balance_sol)
+                
+                # Forward SOL
+                await processor.forward_sol_to_main_wallet(wallet_address, wallet_doc["private_key"], balance_lamports)
+                
+                result["action"] = "payment_processed"
+            else:
+                result["action"] = "no_action_needed"
+            
+            return result
+        else:
+            # Scan all pending wallets
+            logging.info("🔧 [Admin] Manual rescan of all pending payments")
+            await processor.rescan_pending_payments()
+            
+            # Get stats
+            pending_count = await db.temporary_wallets.count_documents({
+                "status": {"$in": ["pending", "monitoring"]},
+                "payment_detected": False
+            })
+            
+            return {
+                "status": "success",
+                "message": "Rescan completed",
+                "pending_wallets_checked": pending_count
+            }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error in payment rescan: {str(e)}")
+        import traceback
+        logging.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to rescan payments: {str(e)}")
+
 @api_router.get("/users/{user_id}", response_model=User)
 async def get_user(user_id: str):
     user_doc = await db.users.find_one({"id": user_id}, {"_id": 0})
