@@ -2445,9 +2445,13 @@ function App() {
       {/* Payment Modal */}
       <PaymentModal
         isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
+        onClose={() => {
+          setShowPaymentModal(false);
+          setPaymentEurAmount(null);
+        }}
         userId={user?.id}
         tokenAmount={paymentTokenAmount}
+        initialEurAmount={paymentEurAmount}
       />
     </div>
   );
