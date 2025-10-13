@@ -108,9 +108,12 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
     return () => clearInterval(timer);
   }, [isOpen, paymentData, onClose]);
 
-  // Poll for payment status
+  // Poll for payment status with timeout
   useEffect(() => {
-    if (!isOpen || !paymentData || paymentStatus !== 'pending') return;
+    if (!isOpen || !paymentData) return;
+    
+    // Don't poll if already completed or failed
+    if (paymentStatus === 'completed' || paymentStatus === 'failed' || paymentStatus === 'timeout') return;
 
     const checkPaymentStatus = async () => {
       if (checking) return;
@@ -123,18 +126,39 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
 
         const status = response.data.purchase_status;
         
+        console.log('💳 Payment status check:', status);
+        
         if (status.payment_detected && !status.tokens_credited) {
-          setPaymentStatus('processing');
-          toast.success('💰 Payment detected! Processing...');
+          if (paymentStatus !== 'processing') {
+            setPaymentStatus('processing');
+            toast.success('💰 Payment detected! Processing...');
+          }
         } else if (status.tokens_credited && !status.sol_forwarded) {
-          setPaymentStatus('crediting');
-          toast.success('✅ Tokens credited! Finalizing...');
-        } else if (status.sol_forwarded) {
+          if (paymentStatus !== 'crediting') {
+            setPaymentStatus('crediting');
+            toast.success('✅ Tokens credited! Finalizing...');
+          }
+        } else if (status.sol_forwarded || (status.tokens_credited && status.payment_detected)) {
+          // Payment complete!
           setPaymentStatus('completed');
-          toast.success('🎉 Payment complete!');
+          toast.success('🎉 Payment successful! Tokens credited.');
+          
+          // Close modal after 2 seconds with animation
           setTimeout(() => {
             onClose();
-            window.location.reload(); // Refresh to show new balance
+            
+            // Refresh user data without full page reload
+            if (window.location.hash !== '#tokens') {
+              window.location.hash = '#tokens';
+            }
+            
+            // Trigger app to reload user data
+            window.dispatchEvent(new CustomEvent('payment-completed'));
+            
+            // Fallback: full reload if no event listener
+            setTimeout(() => {
+              window.location.reload();
+            }, 500);
           }, 2000);
         }
       } catch (error) {
@@ -144,14 +168,28 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
       }
     };
 
-    // Check every 5 seconds
-    const interval = setInterval(checkPaymentStatus, 5000);
+    // Check every 3 seconds for faster updates
+    const interval = setInterval(checkPaymentStatus, 3000);
     
     // Check immediately
     checkPaymentStatus();
 
     return () => clearInterval(interval);
-  }, [isOpen, paymentData, paymentStatus, userId, checking]);
+  }, [isOpen, paymentData, paymentStatus, userId, checking, onClose]);
+  
+  // Timeout handler - 5 minutes
+  useEffect(() => {
+    if (!isOpen || !paymentData) return;
+    
+    const timeout = setTimeout(() => {
+      if (paymentStatus === 'pending' || paymentStatus === 'processing') {
+        setPaymentStatus('timeout');
+        toast.error('⚠️ Payment not detected. Please check your transaction or try again.');
+      }
+    }, 300000); // 5 minutes
+    
+    return () => clearTimeout(timeout);
+  }, [isOpen, paymentData, paymentStatus]);
 
   const copyToClipboard = async (text) => {
     try {
