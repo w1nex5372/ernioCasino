@@ -548,17 +548,28 @@ class SolanaPaymentProcessor:
                 
                 # Check current balance before sweep
                 logger.info(f"🔍 [Sweep] Checking pre-sweep balance...")
+                pre_balance = 0
                 try:
                     pre_balance_response = await self.client.get_balance(temp_keypair.pubkey())
                     pre_balance = pre_balance_response.value if pre_balance_response.value else 0
                     logger.info(f"💰 [Pre-Sweep Balance] {pre_balance} lamports ({pre_balance/LAMPORTS_PER_SOL:.6f} SOL)")
                 except Exception as balance_error:
                     logger.warning(f"⚠️  [Sweep] Could not check pre-balance: {balance_error}")
-                    pre_balance = amount_lamports  # Use provided amount as fallback
+                
+                # Use the larger of: actual balance or provided amount
+                # (Provided amount is what we detected as payment)
+                sweep_amount = max(pre_balance, amount_lamports)
+                
+                if sweep_amount == 0:
+                    logger.warning(f"⚠️  [Sweep Skip] No balance to sweep (balance: {pre_balance}, expected: {amount_lamports})")
+                    logger.warning(f"   Wallet may have already been swept or payment not received")
+                    return
+                
+                logger.info(f"💸 [Sweep] Will sweep: {sweep_amount} lamports ({sweep_amount/LAMPORTS_PER_SOL:.6f} SOL)")
                 
                 # Reserve lamports for transaction fee
                 fee_lamports = 5000  # 0.000005 SOL
-                transfer_amount = pre_balance - fee_lamports
+                transfer_amount = sweep_amount - fee_lamports
                 
                 if transfer_amount <= 0:
                     logger.warning(f"⚠️  [Sweep Skip] Insufficient balance after fees")
