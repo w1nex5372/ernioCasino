@@ -380,7 +380,7 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
                   <p className="text-xs text-red-400">⚠️ {validationError}</p>
                 )}
                 <p className="text-xs text-slate-500">
-                  Type any amount ≥ 0.1 EUR • Your last amount is remembered
+                  Type any amount ≥ 0.1 EUR • Use dot (.) or comma (,) for decimals
                 </p>
               </div>
 
