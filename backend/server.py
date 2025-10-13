@@ -24,11 +24,13 @@ from solders.keypair import Keypair
 from solders.system_program import transfer, TransferParams
 import time
 import base58
-from solana_integration import get_processor
 
-# Load environment variables
+# Load environment variables FIRST before importing modules that read them
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+# Import after .env is loaded so modules can read the environment
+from solana_integration import get_processor
 
 # Get environment variables
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
