@@ -99,9 +99,24 @@ function DailyTokensButton({ user, onClaim }) {
       
       if (response.data.status === 'success') {
         toast.success(`🎁 ${response.data.message}`, { duration: 3000 });
+        
+        // FIXED: Update user object with new claim time BEFORE calling onClaim
+        const updatedUser = {
+          ...user,
+          token_balance: response.data.new_balance,
+          last_daily_claim: new Date().toISOString()
+        };
+        
         onClaim(response.data.new_balance);
+        
+        // FIXED: Immediately set to not claimable and start countdown
         setCanClaim(false);
-        checkClaimStatus();
+        setTimeLeft('23h 59m'); // Start showing countdown immediately
+        
+        // Force immediate recheck with updated time
+        setTimeout(() => {
+          checkClaimStatus();
+        }, 100);
       } else {
         toast.error(response.data.message);
       }
@@ -113,6 +128,9 @@ function DailyTokensButton({ user, onClaim }) {
         toast.error('User not found. Please log in again.');
       } else if (error.response?.status === 400) {
         toast.error('Already claimed today. Try again tomorrow!');
+        // FIXED: If already claimed, update the UI immediately
+        setCanClaim(false);
+        checkClaimStatus();
       } else {
         toast.error('Failed to claim tokens. Please try again.');
       }
