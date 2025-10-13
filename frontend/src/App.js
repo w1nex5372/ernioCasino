@@ -910,13 +910,16 @@ function App() {
   };
 
   // Data loading functions
-  const loadRooms = async () => {
+  const loadRooms = async (showError = false) => {
     try {
       const response = await axios.get(`${API}/rooms`);
       setRooms(response.data.rooms);
     } catch (error) {
       console.error('Failed to load rooms:', error);
-      toast.error('Failed to load rooms');
+      // Only show error toast if explicitly requested (not on initial load)
+      if (showError) {
+        toast.error('Failed to load rooms. Please refresh.');
+      }
     }
   };
 
