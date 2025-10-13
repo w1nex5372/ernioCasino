@@ -2382,24 +2382,6 @@ function App() {
                           <div className="text-5xl font-bold text-yellow-400">{user.token_balance || 0}</div>
                           <div className="text-sm text-slate-400 mt-1">tokens</div>
                         </div>
-                        <div className="flex flex-col justify-center">
-                          <h3 className="text-sm text-slate-400 mb-2">Connected Wallet</h3>
-                          <div className="bg-slate-900 p-3 rounded-lg font-mono text-green-400 text-sm break-all">
-                            {casinoWalletAddress && casinoWalletAddress !== 'Loading...' 
-                              ? `${casinoWalletAddress.substring(0, 12)}...${casinoWalletAddress.substring(casinoWalletAddress.length - 8)}`
-                              : 'Loading...'}
-                          </div>
-                          <Button
-                            onClick={() => {
-                              navigator.clipboard.writeText(casinoWalletAddress);
-                              toast.success('Address copied!');
-                            }}
-                            disabled={!casinoWalletAddress || casinoWalletAddress === 'Loading...'}
-                            className="mt-2 bg-slate-700 hover:bg-slate-600 text-white text-sm"
-                          >
-                            📋 Copy Full Address
-                          </Button>
-                        </div>
                       </div>
                     </CardContent>
                   </Card>
