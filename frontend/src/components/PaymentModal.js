@@ -28,6 +28,22 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
   const [recalculating, setRecalculating] = useState(false);
   const [validationError, setValidationError] = useState('');
 
+  // Prevent body scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   // Fetch live SOL/EUR price with auto-refresh every 3 minutes
   useEffect(() => {
     if (!isOpen) return;
