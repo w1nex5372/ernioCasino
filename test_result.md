@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Fix Casino Namai app issues: 1) Players not loading in lobby 2) Login failures 3) Bonus claim not working 4) Token balances not visible. Add complete Solana wallet integration with payment invoice modal, countdown timer, and automatic token crediting."
+user_problem_statement: "Fix Telegram connection issues: 1) Users cannot successfully connect Telegram accounts 2) Telegram usernames/avatars not loading 3) Connection handling and API callbacks broken 4) Session persistence issues 5) Data sync problems. Repair existing integration without rebuilding."
 
 frontend:
   - task: "Payment Modal Integration"
