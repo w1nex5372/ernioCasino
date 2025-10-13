@@ -305,18 +305,24 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
                 <div className="flex items-center gap-2">
                   <span className="text-slate-400 text-lg">€</span>
                   <input
-                    type="number"
-                    min="0.1"
-                    step="0.01"
+                    type="text"
                     inputMode="decimal"
                     value={eurInput}
                     onChange={(e) => {
-                      const value = e.target.value;
+                      let value = e.target.value;
                       
-                      // FIXED: Allow typing freely without immediate validation
+                      // Replace comma with dot for decimal
+                      value = value.replace(',', '.');
+                      
+                      // Allow only numbers and one decimal point
+                      if (value !== '' && !/^\d*\.?\d*$/.test(value)) {
+                        return; // Reject invalid characters
+                      }
+                      
+                      // Allow typing freely
                       setEurInput(value);
                       
-                      // Only validate if value is not empty
+                      // Only validate if value is not empty and not just a dot
                       if (value === '' || value === '.') {
                         setValidationError('');
                         return;
@@ -344,10 +350,11 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
                       setTimeout(() => setRecalculating(false), 500);
                     }}
                     onBlur={() => {
-                      // FIXED: Format on blur, ensuring minimum
-                      const value = parseFloat(eurInput);
+                      // Format on blur, ensuring minimum
+                      let value = eurInput.replace(',', '.');
+                      const numValue = parseFloat(value);
                       
-                      if (isNaN(value) || value < 0.1) {
+                      if (isNaN(numValue) || numValue < 0.1) {
                         // Reset to minimum if invalid
                         setEurAmount(0.1);
                         setEurInput('0.10');
@@ -356,8 +363,11 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
                         toast.info('Amount set to minimum: €0.10');
                       } else {
                         // Format to 2 decimals
-                        setEurInput(value.toFixed(2));
-                        setEurAmount(value);
+                        setEurInput(numValue.toFixed(2));
+                        setEurAmount(numValue);
+                        localStorage.setItem('casino_last_eur_amount', numValue.toString());
+                      }
+                    }}
                         localStorage.setItem('casino_last_eur_amount', value.toString());
                       }
                     }}
