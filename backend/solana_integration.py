@@ -101,6 +101,9 @@ class SolanaPaymentProcessor:
         self.active_monitors = set()  # Track active payment monitors
         self.price_fetcher = PriceFetcher()  # Initialize price fetcher
         
+        logger.info(f"🔧 Solana RPC URL: {SOLANA_RPC_URL}")
+        logger.info(f"🔧 Main wallet: {MAIN_WALLET_ADDRESS}")
+        
         # Load forwarding keypair from private key
         if CASINO_WALLET_PRIVATE_KEY:
             try:
