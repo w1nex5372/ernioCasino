@@ -753,6 +753,11 @@ function App() {
         
       } catch (error) {
         console.error('❌ Telegram authentication failed:', error);
+        console.error('Error details:', {
+          status: error.response?.status,
+          message: error.message,
+          data: error.response?.data
+        });
         
         // Show user-friendly error message
         if (error.response?.status === 401) {
@@ -761,8 +766,10 @@ function App() {
           toast.error('Server error. Please try again later.');
         } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
           toast.error('Network timeout. Please check your connection.');
+        } else if (error.message.includes('Network Error')) {
+          toast.error('Cannot reach server. Please check your internet connection.');
         } else {
-          toast.error('Authentication failed. Retrying...');
+          toast.error('Authentication failed. Creating account...');
         }
         
         // If we have Telegram user data, try to find existing account
