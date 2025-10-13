@@ -101,8 +101,24 @@ class SolanaPaymentProcessor:
         self.active_monitors = set()  # Track active payment monitors
         self.price_fetcher = PriceFetcher()  # Initialize price fetcher
         
-        logger.info(f"🔧 Solana RPC URL: {SOLANA_RPC_URL}")
-        logger.info(f"🔧 Main wallet: {MAIN_WALLET_ADDRESS}")
+        # Log RPC configuration prominently
+        logger.info("=" * 80)
+        logger.info("🚀 SOLANA PAYMENT PROCESSOR INITIALIZED")
+        logger.info(f"🌐 Using RPC: {SOLANA_RPC_URL}")
+        logger.info(f"💼 Main Wallet: {MAIN_WALLET_ADDRESS}")
+        logger.info(f"📊 Network: Mainnet-Beta")
+        
+        # Detect RPC provider
+        if "helius" in SOLANA_RPC_URL.lower():
+            logger.info("✅ Provider: Helius (Production)")
+        elif "quicknode" in SOLANA_RPC_URL.lower():
+            logger.info("✅ Provider: QuickNode (Production)")
+        elif "alchemy" in SOLANA_RPC_URL.lower():
+            logger.info("✅ Provider: Alchemy (Production)")
+        else:
+            logger.warning("⚠️  Provider: Public RPC (Rate Limited)")
+        
+        logger.info("=" * 80)
         
         # Load forwarding keypair from private key
         if CASINO_WALLET_PRIVATE_KEY:
