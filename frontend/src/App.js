@@ -106,7 +106,16 @@ function DailyTokensButton({ user, onClaim }) {
         toast.error(response.data.message);
       }
     } catch (error) {
-      toast.error('Failed to claim tokens');
+      console.error('Bonus claim error:', error);
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.response?.status === 404) {
+        toast.error('User not found. Please log in again.');
+      } else if (error.response?.status === 400) {
+        toast.error('Already claimed today. Try again tomorrow!');
+      } else {
+        toast.error('Failed to claim tokens. Please try again.');
+      }
     } finally {
       setClaiming(false);
     }
