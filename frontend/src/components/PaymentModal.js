@@ -6,13 +6,16 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-export default function PaymentModal({ isOpen, onClose, userId, tokenAmount }) {
+export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: initialTokenAmount }) {
   const [paymentData, setPaymentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(1200); // 20 minutes in seconds
   const [paymentStatus, setPaymentStatus] = useState('pending');
   const [checking, setChecking] = useState(false);
+  const [eurAmount, setEurAmount] = useState((initialTokenAmount || 1000) / 100); // Dynamic EUR amount
+  const [solPrice, setSolPrice] = useState(null); // Live SOL/EUR price
+  const [recalculating, setRecalculating] = useState(false);
 
   // Initialize payment
   useEffect(() => {
