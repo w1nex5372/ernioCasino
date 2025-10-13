@@ -1,12 +1,12 @@
-# Solana Casino - Devnet Testing Guide
+# Solana Casino - Mainnet Production Guide
 
-## ✅ What Was Changed
+## ✅ Current Configuration
 
-### 1. Network Switch
-- **Changed:** `SOLANA_RPC_URL` in `/app/backend/.env`
-- **From:** `https://api.mainnet-beta.solana.com` (Mainnet)
-- **To:** `https://api.devnet.solana.com` (Devnet)
-- **Backend:** Restarted to apply changes
+### Network Settings
+- **Network:** Solana Mainnet-Beta
+- **RPC URL:** `https://api.mainnet-beta.solana.com`
+- **Main Wallet:** `EC2cPxi4VbyzGoWMucHQ6LwkWz1W9vZE7ZApcY9PFsMy`
+- **Status:** Production - Real SOL transactions
 
 ### 2. Payment Features Re-enabled
 - **File:** `/app/frontend/src/App.js`
