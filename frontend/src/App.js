@@ -1691,20 +1691,21 @@ function App() {
                         </Button>
                       </div>
 
-                    {/* Decorative Elements */}
-                    <div className="flex justify-center space-x-2 pt-2">
-                      {['🎉', '✨', '🏆', '✨', '🎉'].map((emoji, i) => (
-                        <span 
-                          key={i} 
-                          className="text-2xl animate-bounce" 
-                          style={{ animationDelay: `${i * 0.1}s` }}
-                        >
-                          {emoji}
-                        </span>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                      {/* Decorative Elements */}
+                      <div className="flex justify-center space-x-1 md:space-x-2 pt-2">
+                        {['🎉', '✨', '🏆', '✨', '🎉'].map((emoji, i) => (
+                          <span 
+                            key={i} 
+                            className="text-xl md:text-2xl animate-bounce" 
+                            style={{ animationDelay: `${i * 0.1}s` }}
+                          >
+                            {emoji}
+                          </span>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             )}
 
