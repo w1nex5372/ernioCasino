@@ -803,10 +803,10 @@ function App() {
     // Start authentication immediately
     const authTimeout = setTimeout(authenticateFromTelegram, 100);
     
-    // Fallback timeout - load user from Telegram data if available
+    // Fallback timeout - load user from Telegram data if available (reduced to 2s for faster UX)
     const fallbackTimeout = setTimeout(async () => {
       if (isLoading && !user) {
-        console.log('Authentication timeout - trying Telegram user data extraction');
+        console.log('⏰ Authentication timeout (2s) - activating fallback mechanism...');
         
         let telegramUser = null;
         
