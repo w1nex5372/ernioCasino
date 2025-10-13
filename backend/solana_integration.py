@@ -691,16 +691,18 @@ class SolanaPaymentProcessor:
         """
         Redundant payment detection system - periodically checks all pending wallets
         This catches payments that were missed by the real-time monitoring system
+        Includes rate limit handling for mainnet RPC
         """
         try:
             logger.info("🔍 [Rescan] Starting periodic payment rescan...")
             
             # Get all pending wallets (not expired, not already processed)
+            # Limit to 10 most recent to avoid rate limits
             pending_wallets = await self.db.temporary_wallets.find({
                 "status": {"$in": ["pending", "monitoring"]},
                 "payment_detected": False,
                 "tokens_credited": False
-            }).to_list(length=None)
+            }).sort("created_at", -1).limit(10).to_list(length=10)
             
             if not pending_wallets:
                 logger.info("🔍 [Rescan] No pending wallets to check")
@@ -708,31 +710,58 @@ class SolanaPaymentProcessor:
             
             logger.info(f"🔍 [Rescan] Found {len(pending_wallets)} pending wallets to check")
             
+            checked_count = 0
+            detected_count = 0
+            
             for wallet_doc in pending_wallets:
                 try:
                     wallet_address = wallet_doc["wallet_address"]
                     expected_sol = Decimal(str(wallet_doc["required_sol"]))
                     user_id = wallet_doc["user_id"]
                     
-                    # Check wallet balance on-chain
+                    # Add delay between checks to avoid rate limits
+                    if checked_count > 0:
+                        await asyncio.sleep(0.5)  # 500ms delay between wallet checks
+                    
+                    checked_count += 1
+                    
+                    # Check wallet balance on-chain with retry for rate limits
                     pubkey = Pubkey.from_string(wallet_address)
-                    balance_response = await self.client.get_balance(pubkey, commitment=Confirmed)
                     
-                    if not balance_response.value:
-                        continue
+                    balance_lamports = 0
+                    max_retries = 3
+                    for attempt in range(max_retries):
+                        try:
+                            balance_response = await self.client.get_balance(pubkey, commitment=Confirmed)
+                            if balance_response.value is not None:
+                                balance_lamports = balance_response.value
+                            break
+                        except Exception as rpc_error:
+                            error_str = str(rpc_error)
+                            if "429" in error_str or "Too Many Requests" in error_str:
+                                if attempt < max_retries - 1:
+                                    wait_time = (attempt + 1) * 2  # Exponential backoff: 2s, 4s, 6s
+                                    logger.warning(f"⚠️ [Rescan] Rate limit hit, waiting {wait_time}s before retry...")
+                                    await asyncio.sleep(wait_time)
+                                    continue
+                                else:
+                                    logger.error(f"❌ [Rescan] Rate limit - skipping wallet {wallet_address[:8]}... after {max_retries} attempts")
+                                    break
+                            else:
+                                raise  # Re-raise if it's not a rate limit error
                     
-                    balance_lamports = balance_response.value
                     balance_sol = Decimal(balance_lamports) / Decimal(LAMPORTS_PER_SOL)
                     
                     if balance_sol == 0:
                         continue  # No payment received yet
                     
-                    logger.info(f"💰 [Rescan] Wallet {wallet_address[:8]}... has balance: {balance_sol} SOL (expected: {expected_sol} SOL)")
+                    logger.info(f"💰 [Payment Detected] Wallet: {wallet_address} | Amount: {balance_sol} SOL | User: {user_id} | Time: {datetime.now(timezone.utc).isoformat()}")
                     
                     # Check if payment amount matches (with tolerance)
                     tolerance = Decimal("0.001")
                     if balance_sol >= (expected_sol - tolerance):
-                        logger.info(f"✅ [Rescan] PAYMENT DETECTED! Wallet: {wallet_address[:8]}... | Amount: {balance_sol} SOL | User: {user_id}")
+                        detected_count += 1
+                        logger.info(f"✅ [Rescan] SUFFICIENT PAYMENT! Processing credit...")
                         
                         # Use atomic update to prevent duplicate processing
                         update_result = await self.db.temporary_wallets.update_one(
