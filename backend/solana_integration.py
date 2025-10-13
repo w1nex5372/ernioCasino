@@ -960,10 +960,21 @@ class SolanaPaymentProcessor:
 
 # Global processor instance
 processor = None
+processor_rpc_url = None  # Track RPC URL used for processor
 
 def get_processor(db: AsyncIOMotorDatabase) -> SolanaPaymentProcessor:
     """Get or create the global payment processor instance"""
-    global processor
+    global processor, processor_rpc_url
+    
+    # Reinitialize if RPC URL changed
+    if processor is not None and processor_rpc_url != SOLANA_RPC_URL:
+        logger.info(f"🔄 RPC URL changed, reinitializing processor...")
+        logger.info(f"   Old: {processor_rpc_url}")
+        logger.info(f"   New: {SOLANA_RPC_URL}")
+        processor = None
+    
     if processor is None:
         processor = SolanaPaymentProcessor(db)
+        processor_rpc_url = SOLANA_RPC_URL
+    
     return processor
