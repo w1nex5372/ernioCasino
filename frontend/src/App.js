@@ -16,6 +16,34 @@ import './App.css';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// App version for cache busting
+const APP_VERSION = 'v7.0-DEVNET-PAYMENT-20241013131800';
+
+// Check and clear old version cache
+const storedVersion = localStorage.getItem('app_version');
+if (storedVersion !== APP_VERSION) {
+  console.log(`🔄 Version changed from ${storedVersion} to ${APP_VERSION} - Clearing cache`);
+  
+  // Clear specific cached data that might be stale
+  const keysToKeep = ['casino_last_eur_amount', 'casino_last_sol_eur_price'];
+  const allKeys = Object.keys(localStorage);
+  
+  allKeys.forEach(key => {
+    if (!keysToKeep.includes(key)) {
+      localStorage.removeItem(key);
+    }
+  });
+  
+  // Set new version
+  localStorage.setItem('app_version', APP_VERSION);
+  
+  // Force reload to clear any in-memory cache
+  if (storedVersion) {
+    console.log('🔄 Reloading page with new version...');
+    window.location.reload(true);
+  }
+}
+
 // Prize links configuration
 const PRIZE_LINKS = {
   bronze: "https://your-prize-link-1.com",
