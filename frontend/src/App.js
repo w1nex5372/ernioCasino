@@ -877,7 +877,7 @@ function App() {
         }
         setIsLoading(false);
       }
-    }, 5000);
+    }, 2000); // Reduced from 5s to 2s for better UX
     
     return () => {
       clearTimeout(authTimeout);
