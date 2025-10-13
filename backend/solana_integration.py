@@ -290,18 +290,31 @@ class SolanaPaymentProcessor:
             
             # Convert string signature to Signature object
             logger.info(f"🔐 [{wallet_address[:8]}...] Converting signature string to Signature object...")
-            sig_obj = Signature.from_string(signature)
-            logger.info(f"✅ [{wallet_address[:8]}...] Signature object created: {sig_obj}")
+            try:
+                sig_obj = Signature.from_string(signature)
+                logger.info(f"✅ [{wallet_address[:8]}...] Signature object created successfully")
+            except Exception as sig_error:
+                logger.error(f"❌ [{wallet_address[:8]}...] Failed to create Signature object: {sig_error}")
+                import traceback
+                logger.error(traceback.format_exc())
+                raise
             
             # Get transaction details
             logger.info(f"🌐 [{wallet_address[:8]}...] Fetching transaction from RPC...")
             logger.info(f"🌐 [{wallet_address[:8]}...] RPC URL: {self.client._provider.endpoint_uri}")
             
-            transaction = await self.client.get_transaction(
-                sig_obj, 
-                commitment=Confirmed,
-                max_supported_transaction_version=0
-            )
+            try:
+                transaction = await self.client.get_transaction(
+                    sig_obj, 
+                    commitment=Confirmed,
+                    max_supported_transaction_version=0
+                )
+                logger.info(f"✅ [{wallet_address[:8]}...] RPC call successful")
+            except Exception as rpc_error:
+                logger.error(f"❌ [{wallet_address[:8]}...] RPC call failed: {rpc_error}")
+                import traceback
+                logger.error(traceback.format_exc())
+                raise
             
             logger.info(f"📦 [{wallet_address[:8]}...] Raw response type: {type(transaction)}")
             logger.info(f"📦 [{wallet_address[:8]}...] Response: {str(transaction)[:200]}...")
