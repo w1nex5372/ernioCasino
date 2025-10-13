@@ -1412,6 +1412,43 @@ async def update_user_name(telegram_id: int, first_name: str, username: str = ""
         "photo_url": photo_url
     }
 
+@api_router.post("/admin/process-payment")
+async def manually_process_payment(wallet_address: str, signature: str, admin_key: str = ""):
+    """ADMIN ONLY: Manually trigger payment processing for a specific transaction"""
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Invalid admin key")
+    
+    try:
+        # Get Solana processor
+        from solana_integration import get_processor
+        processor = get_processor(db)
+        
+        logging.info(f"🔧 [Admin] Manually processing payment for wallet {wallet_address}")
+        logging.info(f"🔧 [Admin] Transaction signature: {signature}")
+        
+        # Trigger payment processing
+        await processor.process_detected_payment(wallet_address, signature)
+        
+        # Check result
+        wallet_doc = await db.temporary_wallets.find_one({"wallet_address": wallet_address})
+        
+        return {
+            "status": "success",
+            "message": "Payment processing triggered",
+            "wallet_address": wallet_address,
+            "signature": signature,
+            "payment_detected": wallet_doc.get("payment_detected") if wallet_doc else False,
+            "tokens_credited": wallet_doc.get("tokens_credited") if wallet_doc else False,
+            "sol_forwarded": wallet_doc.get("sol_forwarded") if wallet_doc else False,
+            "wallet_status": wallet_doc.get("status") if wallet_doc else "not_found"
+        }
+        
+    except Exception as e:
+        logging.error(f"Error manually processing payment: {str(e)}")
+        import traceback
+        logging.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to process payment: {str(e)}")
+
 @api_router.get("/users/{user_id}", response_model=User)
 async def get_user(user_id: str):
     user_doc = await db.users.find_one({"id": user_id}, {"_id": 0})
