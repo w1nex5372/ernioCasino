@@ -191,22 +191,52 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
               </div>
             </div>
 
-            {/* Amount Info */}
+            {/* Amount Info - DYNAMIC */}
             <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
-                <span className="text-slate-400">Tokens</span>
-                <span className="text-white font-bold">{tokenAmount} tokens</span>
+              {/* Editable EUR Amount */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-white">Amount in EUR (Editable)</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-400 text-lg">€</span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    value={eurAmount}
+                    onChange={(e) => {
+                      const newEur = parseFloat(e.target.value) || 1;
+                      setEurAmount(newEur);
+                      setRecalculating(true);
+                      // Reinitialize payment with new amount
+                      setTimeout(() => setRecalculating(false), 1000);
+                    }}
+                    className="flex-1 bg-slate-900 border border-slate-700 text-white text-xl font-bold rounded-lg px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none"
+                    disabled={loading || paymentStatus !== 'pending'}
+                  />
+                </div>
+                <p className="text-xs text-slate-500">Change this amount to recalculate tokens and SOL</p>
               </div>
-              <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg">
-                <span className="text-slate-400">Amount in EUR</span>
-                <span className="text-white font-bold">€{paymentData.required_eur?.toFixed(2)}</span>
+
+              {/* Calculated Tokens (updates automatically) */}
+              <div className="flex justify-between items-center p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                <span className="text-purple-300">Tokens You'll Get</span>
+                <span className="text-purple-400 font-bold">
+                  {recalculating ? '...' : Math.floor(eurAmount * 100)} tokens
+                </span>
               </div>
+
+              {/* Calculated SOL Amount (updates automatically) */}
               <div className="flex justify-between items-center p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
                 <span className="text-green-300">Amount in SOL</span>
-                <span className="text-green-400 font-bold">{paymentData.required_sol?.toFixed(6)} SOL</span>
+                <span className="text-green-400 font-bold">
+                  {recalculating ? '...' : solPrice ? (eurAmount / solPrice).toFixed(6) : paymentData?.required_sol?.toFixed(6)} SOL
+                </span>
               </div>
-              <div className="text-xs text-slate-500 text-center">
-                Rate: 1 SOL = €{paymentData.sol_eur_price?.toFixed(2)} | 1 EUR = 100 tokens
+
+              {/* Exchange Rate */}
+              <div className="text-xs text-slate-500 text-center space-y-1">
+                <div>Rate: 1 SOL = €{solPrice?.toFixed(2) || paymentData?.sol_eur_price?.toFixed(2)} | 1 EUR = 100 tokens</div>
+                {recalculating && <div className="text-yellow-400">⚡ Recalculating...</div>}
               </div>
             </div>
 
