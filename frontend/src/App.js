@@ -1026,12 +1026,20 @@ function App() {
     
     const winnerName = `${gameResult.winner.first_name} ${gameResult.winner.last_name || ''}`.trim();
     
+    // PREVENT DUPLICATE: Check if we already showed winner for this game
+    const gameId = gameResult.id;
+    if (winnerDisplayedForGame === gameId) {
+      console.log('⏭️ Winner already displayed for game:', gameId);
+      return;
+    }
+    
     // Force exit ALL states for consistent experience across devices
     console.log('🔄 Setting winner screen state - Before:', { inLobby, gameInProgress, showWinnerScreen });
     
     setInLobby(false);
     setGameInProgress(false);
     setShowWinnerScreen(true);
+    setWinnerDisplayedForGame(gameId); // Mark this game as displayed
     
     // Set comprehensive winner data with Telegram info
     const winnerDisplayData = {
@@ -1049,7 +1057,7 @@ function App() {
     
     setWinnerData(winnerDisplayData);
     
-    console.log('✅ Winner data set:', winnerDisplayData);
+    console.log('✅ Winner data set for game:', gameId, winnerDisplayData);
     console.log('🔄 Setting winner screen state - After:', { 
       inLobby: false, 
       gameInProgress: false, 
