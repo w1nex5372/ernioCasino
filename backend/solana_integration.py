@@ -307,14 +307,19 @@ class SolanaPaymentProcessor:
             )
             
             if not wallet_doc:
-                logger.warning(f"No wallet record found for {wallet_address}")
+                logger.error(f"❌ [{wallet_address[:8]}...] No wallet record found in database!")
                 return
+            
+            logger.info(f"📄 [{wallet_address[:8]}...] Wallet record found. User: {wallet_doc['user_id']}, Required: {wallet_doc['required_sol']} SOL")
                 
             if wallet_doc.get("payment_detected"):
+                logger.info(f"⏭️  [{wallet_address[:8]}...] Payment already detected and processed")
                 return  # Already processed this wallet
             
             # Calculate received amount
             tx_data = transaction.value
+            
+            logger.info(f"🔍 [{wallet_address[:8]}...] Parsing transaction data...")
             
             # Check if this is an incoming transfer to our wallet
             wallet_pubkey = Pubkey.from_string(wallet_address)
@@ -325,23 +330,33 @@ class SolanaPaymentProcessor:
                 # Find our wallet in the account keys
                 account_keys = tx_data.transaction.transaction.message.account_keys
                 
+                logger.info(f"🔑 [{wallet_address[:8]}...] Transaction has {len(account_keys)} accounts")
+                
                 for i, account_key in enumerate(account_keys):
                     if account_key == wallet_pubkey:
                         # This is our wallet, check balance change
                         pre_balance = tx_data.transaction.meta.pre_balances[i] if i < len(tx_data.transaction.meta.pre_balances) else 0
                         post_balance = tx_data.transaction.meta.post_balances[i] if i < len(tx_data.transaction.meta.post_balances) else 0
                         
+                        logger.info(f"💵 [{wallet_address[:8]}...] Balance change: {pre_balance} → {post_balance} lamports")
+                        
                         if post_balance > pre_balance:
                             received_lamports = post_balance - pre_balance
+                            logger.info(f"✅ [{wallet_address[:8]}...] Received {received_lamports} lamports!")
                             break
+                else:
+                    logger.warning(f"⚠️  [{wallet_address[:8]}...] Wallet not found in transaction accounts")
+            else:
+                logger.warning(f"⚠️  [{wallet_address[:8]}...] No transaction metadata or balance data")
             
             if received_lamports == 0:
+                logger.warning(f"⚠️  [{wallet_address[:8]}...] No SOL received in this transaction")
                 return  # No SOL received in this transaction
             
             received_sol = Decimal(received_lamports) / Decimal(LAMPORTS_PER_SOL)
             required_sol = Decimal(wallet_doc["required_sol"])
             
-            logger.info(f"💰 Payment detected: {received_sol} SOL received (required: {required_sol} SOL)")
+            logger.info(f"💰 [{wallet_address[:8]}...] Payment detected: {received_sol} SOL received (required: {required_sol} SOL)")
             
             # Update wallet record
             await self.db.temporary_wallets.update_one(
