@@ -211,8 +211,38 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-purple-500/30 shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div 
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
+      style={{
+        animation: 'fadeIn 0.3s ease-out',
+        overflow: 'hidden' // Prevent background scrolling
+      }}
+      onClick={(e) => {
+        // Close on backdrop click (only if not processing)
+        if (e.target === e.currentTarget && paymentStatus !== 'processing' && paymentStatus !== 'crediting') {
+          onClose();
+        }
+      }}
+    >
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        body.modal-open {
+          overflow: hidden;
+        }
+      `}</style>
+      <div 
+        className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-purple-500/30 shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+        style={{
+          animation: 'slideUp 0.3s ease-out'
+        }}
+      >
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-purple-800 p-4 rounded-t-2xl flex items-center justify-between">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
