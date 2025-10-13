@@ -1567,24 +1567,38 @@ function App() {
                 {/* Scrollable Container */}
                 <div className="min-h-full flex items-center justify-center p-3 md:p-6 py-8">
                   <Card className="w-full max-w-[95vw] md:max-w-lg mx-auto bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-2 border-gold-500 shadow-2xl shadow-gold-500/50 relative animate-slideUp my-4">
-                  <CardContent className="p-8 text-center space-y-6">
-                    
-                    {/* 🏆 Winner Announcement Title */}
-                    <div className="space-y-4">
-                      <h1 className="text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 via-gold-500 to-yellow-600 bg-clip-text animate-pulse">
-                        🏆 Winner Announcement
-                      </h1>
+                    <CardContent className="p-4 md:p-8 text-center space-y-4 md:space-y-6">
+                      {/* Close Button */}
+                      <button
+                        onClick={() => {
+                          setShowWinnerScreen(false);
+                          setWinnerData(null);
+                          setActiveTab('rooms');
+                          setInLobby(false);
+                          setGameInProgress(false);
+                        }}
+                        className="absolute top-2 right-2 md:top-4 md:right-4 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-slate-700/80 hover:bg-slate-600 text-white transition-colors z-10"
+                        aria-label="Close"
+                      >
+                        ✕
+                      </button>
                       
-                      {/* Animated Trophy */}
-                      <div className="flex justify-center">
-                        <div className="relative">
-                          <div className="w-20 h-20 bg-gradient-to-r from-yellow-400 to-gold-600 rounded-full flex items-center justify-center animate-bounce shadow-lg shadow-gold-500/50">
-                            <Trophy className="w-10 h-10 text-slate-900" />
+                      {/* 🏆 Winner Announcement Title */}
+                      <div className="space-y-3 md:space-y-4">
+                        <h1 className="text-2xl md:text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 via-gold-500 to-yellow-600 bg-clip-text animate-pulse">
+                          🏆 Winner Announcement
+                        </h1>
+                        
+                        {/* Animated Trophy */}
+                        <div className="flex justify-center">
+                          <div className="relative">
+                            <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-r from-yellow-400 to-gold-600 rounded-full flex items-center justify-center animate-bounce shadow-lg shadow-gold-500/50">
+                              <Trophy className="w-8 h-8 md:w-10 md:h-10 text-slate-900" />
+                            </div>
+                            <div className="absolute -inset-2 bg-gradient-to-r from-yellow-400/20 to-gold-600/20 rounded-full animate-ping"></div>
                           </div>
-                          <div className="absolute -inset-2 bg-gradient-to-r from-yellow-400/20 to-gold-600/20 rounded-full animate-ping"></div>
                         </div>
                       </div>
-                    </div>
 
                     {/* Dynamic Winner Display with Telegram Integration */}
                     <div className="space-y-4">
