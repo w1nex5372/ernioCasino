@@ -289,19 +289,28 @@ class SolanaPaymentProcessor:
             logger.info(f"💳 [{wallet_address[:8]}...] Processing payment signature: {signature[:16]}...")
             
             # Convert string signature to Signature object
+            logger.info(f"🔐 [{wallet_address[:8]}...] Converting signature string to Signature object...")
             sig_obj = Signature.from_string(signature)
+            logger.info(f"✅ [{wallet_address[:8]}...] Signature object created: {sig_obj}")
             
             # Get transaction details
+            logger.info(f"🌐 [{wallet_address[:8]}...] Fetching transaction from RPC...")
+            logger.info(f"🌐 [{wallet_address[:8]}...] RPC URL: {self.client._provider.endpoint_uri}")
+            
             transaction = await self.client.get_transaction(
                 sig_obj, 
                 commitment=Confirmed,
                 max_supported_transaction_version=0
             )
             
-            logger.info(f"📦 [{wallet_address[:8]}...] Raw response: {type(transaction)}")
-            logger.info(f"📦 [{wallet_address[:8]}...] Has value: {hasattr(transaction, 'value')}")
-            logger.info(f"📦 [{wallet_address[:8]}...] Value is not None: {transaction.value is not None}")
-            logger.info(f"📦 [{wallet_address[:8]}...] Transaction value: {transaction.value if hasattr(transaction, 'value') else 'N/A'}")
+            logger.info(f"📦 [{wallet_address[:8]}...] Raw response type: {type(transaction)}")
+            logger.info(f"📦 [{wallet_address[:8]}...] Response: {str(transaction)[:200]}...")
+            logger.info(f"📦 [{wallet_address[:8]}...] Has value attr: {hasattr(transaction, 'value')}")
+            
+            if hasattr(transaction, 'value'):
+                logger.info(f"📦 [{wallet_address[:8]}...] Value type: {type(transaction.value)}")
+                logger.info(f"📦 [{wallet_address[:8]}...] Value is None: {transaction.value is None}")
+                logger.info(f"📦 [{wallet_address[:8]}...] Value bool: {bool(transaction.value)}")
             
             if not transaction.value:
                 logger.warning(f"⚠️  [{wallet_address[:8]}...] Transaction not found or not confirmed yet")
