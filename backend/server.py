@@ -1945,10 +1945,14 @@ async def startup_event():
     # Start redundant payment scanner (backup detection system)
     asyncio.create_task(redundant_payment_scanner())
     
+    # Start wallet cleanup scheduler with grace period
+    asyncio.create_task(wallet_cleanup_scheduler())
+    
     logging.info("🎰 Casino Battle Royale API started!")
     logging.info(f"🏠 Active rooms: {len(active_rooms)}")
     logging.info(f"💳 Solana monitoring: {'Enabled' if CASINO_WALLET_ADDRESS != 'YourWalletAddressHere12345678901234567890123456789' else 'Disabled (set CASINO_WALLET_ADDRESS)'}")
     logging.info("🔍 Redundant payment scanner: Enabled (15s interval - FAST detection)")
+    logging.info("🧹 Wallet cleanup scheduler: Enabled (72h grace period)")
 
 async def redundant_payment_scanner():
     """
@@ -1974,6 +1978,37 @@ async def redundant_payment_scanner():
         
         # Wait 15 seconds before next scan (faster detection)
         await asyncio.sleep(15)
+
+async def wallet_cleanup_scheduler():
+    """
+    Background task that periodically cleans up old completed wallets
+    Runs every 24 hours with 72-hour grace period
+    SAFETY: Only removes private keys from wallets that have been successfully swept
+    """
+    from solana_integration import get_processor
+    
+    # Wait 1 hour after startup before first cleanup
+    await asyncio.sleep(3600)
+    
+    logging.info("🧹 [Cleanup Scheduler] Wallet cleanup scheduler started (24h interval, 72h grace period)")
+    
+    while True:
+        try:
+            processor = get_processor(db)
+            result = await processor.cleanup_old_wallets_with_grace_period(grace_period_hours=72)
+            
+            logging.info(f"🧹 [Cleanup Scheduler] Cleanup complete:")
+            logging.info(f"   Cleaned: {result.get('cleaned', 0)} wallets")
+            logging.info(f"   Blocked: {result.get('blocked', 0)} wallets (funds still present)")
+            logging.info(f"   Flagged: {result.get('flagged_for_review', 0)} wallets need manual review")
+            
+        except Exception as e:
+            logging.error(f"❌ [Cleanup Scheduler] Error: {e}")
+            import traceback
+            logging.error(traceback.format_exc())
+        
+        # Wait 24 hours before next cleanup
+        await asyncio.sleep(86400)
     
 @app.on_event("shutdown")
 async def shutdown_event():
