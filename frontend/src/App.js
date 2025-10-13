@@ -2355,6 +2355,10 @@ function App() {
                         key={amount}
                         onClick={() => {
                           console.log(`🛒 Buy button clicked: ${amount} tokens (€${amount / 100})`);
+                          // Telegram haptic feedback
+                          if (window.Telegram?.WebApp?.HapticFeedback) {
+                            window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+                          }
                           setShowPaymentModal(true);
                           setPaymentEurAmount(amount / 100);
                         }}
