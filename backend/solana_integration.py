@@ -245,8 +245,8 @@ class SolanaPaymentProcessor:
                         logger.info(f"✅ Wallet {wallet_address} successfully processed, stopping monitor")
                         break
                         
-                    # Wait 10 seconds before next check
-                    await asyncio.sleep(10)
+                    # Wait 5 seconds before next check (faster detection)
+                    await asyncio.sleep(5)
                     
                 except Exception as e:
                     import traceback
@@ -255,7 +255,7 @@ class SolanaPaymentProcessor:
                     logger.error(f"   Error type: {type(e).__name__}")
                     logger.error(f"   Error message: {str(e)}")
                     logger.error(f"   Traceback:\n{error_details}")
-                    await asyncio.sleep(10)
+                    await asyncio.sleep(5)
                     continue
             
             if check_count >= max_checks:
