@@ -631,6 +631,103 @@ class SolanaPaymentProcessor:
     async def get_sol_eur_price(self) -> float:
         """Get current SOL/EUR exchange rate"""
         return await self.price_fetcher.get_sol_eur_price()
+    
+    async def rescan_pending_payments(self):
+        """
+        Redundant payment detection system - periodically checks all pending wallets
+        This catches payments that were missed by the real-time monitoring system
+        """
+        try:
+            logger.info("🔍 [Rescan] Starting periodic payment rescan...")
+            
+            # Get all pending wallets (not expired, not already processed)
+            pending_wallets = await self.db.temporary_wallets.find({
+                "status": {"$in": ["pending", "monitoring"]},
+                "payment_detected": False,
+                "tokens_credited": False
+            }).to_list(length=None)
+            
+            if not pending_wallets:
+                logger.info("🔍 [Rescan] No pending wallets to check")
+                return
+            
+            logger.info(f"🔍 [Rescan] Found {len(pending_wallets)} pending wallets to check")
+            
+            for wallet_doc in pending_wallets:
+                try:
+                    wallet_address = wallet_doc["wallet_address"]
+                    expected_sol = Decimal(str(wallet_doc["required_sol"]))
+                    user_id = wallet_doc["user_id"]
+                    
+                    # Check wallet balance on-chain
+                    pubkey = Pubkey.from_string(wallet_address)
+                    balance_response = await self.client.get_balance(pubkey, commitment=Confirmed)
+                    
+                    if not balance_response.value:
+                        continue
+                    
+                    balance_lamports = balance_response.value
+                    balance_sol = Decimal(balance_lamports) / Decimal(LAMPORTS_PER_SOL)
+                    
+                    if balance_sol == 0:
+                        continue  # No payment received yet
+                    
+                    logger.info(f"💰 [Rescan] Wallet {wallet_address[:8]}... has balance: {balance_sol} SOL (expected: {expected_sol} SOL)")
+                    
+                    # Check if payment amount matches (with tolerance)
+                    tolerance = Decimal("0.001")
+                    if balance_sol >= (expected_sol - tolerance):
+                        logger.info(f"✅ [Rescan] PAYMENT DETECTED! Wallet: {wallet_address[:8]}... | Amount: {balance_sol} SOL | User: {user_id}")
+                        
+                        # Use atomic update to prevent duplicate processing
+                        update_result = await self.db.temporary_wallets.update_one(
+                            {
+                                "wallet_address": wallet_address,
+                                "payment_detected": False,  # Only update if not already processed
+                                "tokens_credited": False
+                            },
+                            {
+                                "$set": {
+                                    "payment_detected": True,
+                                    "status": "detected_by_rescan",
+                                    "detected_at": datetime.now(timezone.utc)
+                                }
+                            }
+                        )
+                        
+                        # If we successfully marked it as detected, process the payment
+                        if update_result.modified_count > 0:
+                            logger.info(f"🎁 [Rescan] Processing payment for user {user_id}...")
+                            
+                            # Credit tokens to user
+                            await self.credit_tokens_to_user(wallet_doc, balance_sol)
+                            
+                            # Forward SOL to main wallet
+                            logger.info(f"💸 [Rescan] Forwarding {balance_lamports} lamports to main wallet...")
+                            await self.forward_sol_to_main_wallet(
+                                wallet_address,
+                                wallet_doc["private_key"],
+                                balance_lamports
+                            )
+                            
+                            logger.info(f"✅ [Rescan] Payment processing complete for wallet {wallet_address[:8]}...")
+                        else:
+                            logger.info(f"⏭️  [Rescan] Wallet {wallet_address[:8]}... already being processed by another task")
+                    else:
+                        logger.info(f"⚠️  [Rescan] Insufficient payment: {balance_sol} SOL < {expected_sol} SOL (tolerance: {tolerance})")
+                        
+                except Exception as wallet_error:
+                    logger.error(f"❌ [Rescan] Error checking wallet {wallet_doc.get('wallet_address', 'unknown')}: {wallet_error}")
+                    import traceback
+                    logger.error(traceback.format_exc())
+                    continue
+            
+            logger.info(f"🔍 [Rescan] Scan complete")
+            
+        except Exception as e:
+            logger.error(f"❌ [Rescan] Error in payment rescan: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
 
 # Global processor instance
 processor = None
