@@ -1116,12 +1116,21 @@ function App() {
         const recentGame = games.find(game => game.room_type === roomType);
         
         if (recentGame && recentGame.status === 'finished') {
+          const gameId = recentGame.id;
+          
+          // PREVENT DUPLICATE: Check if we already showed winner for this game
+          if (winnerDisplayedForGame === gameId) {
+            console.log('⏭️ Winner already displayed for game:', gameId);
+            return true; // Already shown
+          }
+          
           console.log('🏆 FOUND FINISHED GAME! Showing winner:', recentGame.winner);
           
           // FORCE exit from lobby state
           setInLobby(false);
           setGameInProgress(false);
           setShowWinnerScreen(true);
+          setWinnerDisplayedForGame(gameId); // Mark this game as displayed
           
           const winnerName = `${recentGame.winner.first_name} ${recentGame.winner.last_name || ''}`.trim();
           
@@ -1130,13 +1139,14 @@ function App() {
             winner_name: winnerName,
             room_type: roomType,
             prize_pool: recentGame.total_pool,
-            prize_link: recentGame.prize_link
+            prize_link: recentGame.prize_link,
+            game_id: gameId
           });
           
           // Show winner notification
           toast.success(`🏆 WINNER: ${winnerName}!`, { duration: 5000 });
           
-          console.log('✅ Winner screen activated!');
+          console.log('✅ Winner screen activated for game:', gameId);
           return true; // Winner found
         }
       }
