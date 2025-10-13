@@ -10,6 +10,7 @@ import { Separator } from './components/ui/separator';
 import { toast } from 'sonner';
 import { Toaster } from './components/ui/sonner';
 import { Crown, Coins, Users, Trophy, Zap, Wallet, Play, Timer } from 'lucide-react';
+import PaymentModal from './components/PaymentModal';
 import './App.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
