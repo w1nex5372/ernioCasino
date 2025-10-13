@@ -1475,10 +1475,18 @@ async def rescan_payments(admin_key: str = "", wallet_address: Optional[str] = N
             from solders.pubkey import Pubkey
             from decimal import Decimal
             from solana.rpc.commitment import Confirmed
+            from solana_integration import SOLANA_RPC_URL
+            
+            logging.info(f"🔧 [Admin] Using RPC URL: {SOLANA_RPC_URL}")
+            logging.info(f"🔧 [Admin] Processor client: {processor.client._provider.endpoint_uri}")
             
             pubkey = Pubkey.from_string(wallet_address)
             balance_response = await processor.client.get_balance(pubkey, commitment=Confirmed)
             balance_lamports = balance_response.value if balance_response.value else 0
+            
+            logging.info(f"🔧 [Admin] Balance response: {balance_response}")
+            logging.info(f"🔧 [Admin] Balance lamports: {balance_lamports}")
+            
             balance_sol = Decimal(balance_lamports) / Decimal(1000000000)
             
             expected_sol = Decimal(str(wallet_doc["required_sol"]))
