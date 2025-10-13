@@ -400,7 +400,10 @@ class SolanaPaymentProcessor:
         """Credit tokens to user account based on payment received using dynamic pricing"""
         try:
             user_id = wallet_doc["user_id"]
+            wallet_address = wallet_doc["wallet_address"]
             expected_tokens = wallet_doc["token_amount"]
+            
+            logger.info(f"🎁 [Credit] User: {user_id}, Expected tokens: {expected_tokens}")
             
             # Get current SOL/EUR price for accurate token calculation
             sol_eur_price = await self.price_fetcher.get_sol_eur_price()
