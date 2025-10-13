@@ -45,6 +45,11 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
     } else {
       document.body.classList.remove('modal-open');
       document.body.style.overflow = '';
+      // Reset state when modal closes
+      setPaymentData(null);
+      setLoading(true);
+      setPaymentStatus('pending');
+      setValidationError('');
     }
     
     return () => {
