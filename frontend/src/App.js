@@ -804,8 +804,9 @@ function App() {
     
     // Fallback timeout - load user from Telegram data if available (reduced to 2s for faster UX)
     const fallbackTimeout = setTimeout(async () => {
+      console.log(`⏰ Fallback timeout triggered! isLoading=${isLoading}, user=${user ? 'exists' : 'null'}`);
       if (isLoading && !user) {
-        console.log('⏰ Authentication timeout (2s) - activating fallback mechanism...');
+        console.log('✅ Condition met - activating fallback mechanism...');
         
         let telegramUser = null;
         
