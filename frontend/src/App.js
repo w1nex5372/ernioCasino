@@ -2417,10 +2417,10 @@ function App() {
                         ))}
                       </div>
                       
-                      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-6">
-                        <h3 className="text-blue-400 font-bold mb-2">💎 Testing on Devnet</h3>
-                        <p className="text-sm text-blue-300">
-                          The app is currently on Solana Devnet for safe testing. Get free devnet SOL from faucets to test the payment system.
+                      <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-6">
+                        <h3 className="text-green-400 font-bold mb-2">💰 Live on Mainnet</h3>
+                        <p className="text-sm text-green-300">
+                          The app is now live on Solana Mainnet. All payments use real SOL and are processed on the live blockchain.
                         </p>
                       </div>
                       
