@@ -1541,21 +1541,22 @@ function App() {
               </Card>
             )}
 
-            {/* 🏆 WINNER ANNOUNCEMENT SCREEN - Enhanced Casino Namai Design */}
+            {/* 🏆 WINNER ANNOUNCEMENT SCREEN - Responsive & Scrollable */}
             {showWinnerScreen && winnerData && (
-              <div className="winner-screen-overlay fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 animate-fadeIn desktop-winner-screen">
+              <div className="winner-screen-overlay fixed inset-0 z-50 bg-black/90 backdrop-blur-sm overflow-y-auto overflow-x-hidden animate-fadeIn">
                 {/* Animated Confetti Background */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  {[...Array(20)].map((_, i) => (
+                  {[...Array(15)].map((_, i) => (
                     <div
                       key={i}
-                      className={`absolute w-3 h-3 bg-gradient-to-r ${
+                      className={`absolute w-2 h-2 md:w-3 md:h-3 bg-gradient-to-r ${
                         i % 3 === 0 ? 'from-yellow-400 to-gold-500' : 
                         i % 3 === 1 ? 'from-purple-400 to-purple-600' : 
                         'from-green-400 to-emerald-500'
-                      } rounded-full animate-confetti opacity-90`}
+                      } rounded-full animate-confetti opacity-80`}
                       style={{
                         left: `${Math.random() * 100}%`,
+                        top: `-${Math.random() * 20}%`,
                         animationDelay: `${Math.random() * 3}s`,
                         animationDuration: `${2 + Math.random() * 2}s`
                       }}
@@ -1563,7 +1564,9 @@ function App() {
                   ))}
                 </div>
 
-                <Card className="w-full max-w-lg desktop-winner-card bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-2 border-gold-500 shadow-2xl shadow-gold-500/50 relative animate-slideUp">
+                {/* Scrollable Container */}
+                <div className="min-h-full flex items-center justify-center p-3 md:p-6 py-8">
+                  <Card className="w-full max-w-[95vw] md:max-w-lg mx-auto bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-2 border-gold-500 shadow-2xl shadow-gold-500/50 relative animate-slideUp my-4">
                   <CardContent className="p-8 text-center space-y-6">
                     
                     {/* 🏆 Winner Announcement Title */}
