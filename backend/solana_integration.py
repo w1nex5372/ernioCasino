@@ -468,16 +468,21 @@ class SolanaPaymentProcessor:
     async def forward_sol_to_main_wallet(self, wallet_address: str, private_key_bytes_list: list, amount_lamports: int):
         """Forward received SOL to the main project wallet"""
         try:
+            logger.info(f"💸 [Sweep] Starting SOL forward from {wallet_address[:8]}...")
+            logger.info(f"💸 [Sweep] Amount: {amount_lamports} lamports ({amount_lamports/LAMPORTS_PER_SOL:.6f} SOL)")
+            
             # Reconstruct keypair from stored byte array
             private_key_bytes = bytes(private_key_bytes_list)
             temp_keypair = Keypair.from_bytes(private_key_bytes)
+            
+            logger.info(f"💸 [Sweep] Keypair reconstructed: {temp_keypair.pubkey()}")
             
             # Reserve lamports for transaction fee (5000 lamports = 0.000005 SOL)
             fee_lamports = 5000
             transfer_amount = amount_lamports - fee_lamports
             
             if transfer_amount <= 0:
-                logger.warning(f"Insufficient balance to forward after fees: {amount_lamports} lamports")
+                logger.warning(f"💸 [Sweep] Insufficient balance to forward after fees: {amount_lamports} lamports")
                 return
             
             # Create transfer instruction
