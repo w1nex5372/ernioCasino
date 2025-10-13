@@ -291,7 +291,7 @@ class SolanaPaymentProcessor:
             # Get transaction details
             transaction = await self.client.get_transaction(
                 sig_obj, 
-                commitment=Finalized,
+                commitment=Confirmed,
                 max_supported_transaction_version=0
             )
             
