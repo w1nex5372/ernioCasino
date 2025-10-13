@@ -1037,6 +1037,103 @@ class SolanaPaymentProcessor:
             import traceback
             logger.error(traceback.format_exc())
 
+
+    async def cleanup_old_wallets_with_grace_period(self, grace_period_hours: int = 72):
+        """
+        Clean up old wallet records that have been successfully processed
+        Implements grace period (default 72 hours) before removing private keys
+        
+        Args:
+            grace_period_hours: Hours to wait after completion before cleanup (default: 72)
+        """
+        try:
+            from datetime import timedelta
+            
+            logger.info(f"🧹 [Scheduled Cleanup] Starting cleanup (grace period: {grace_period_hours}h)...")
+            
+            cutoff_time = datetime.now(timezone.utc) - timedelta(hours=grace_period_hours)
+            
+            # Find completed wallets past grace period that haven't been cleaned up
+            old_completed_wallets = await self.db.temporary_wallets.find({
+                "status": "completed",
+                "sol_forwarded": True,
+                "cleaned_up": {"$ne": True},
+                "forwarded_at": {"$lt": cutoff_time}
+            }).to_list(length=100)
+            
+            logger.info(f"🧹 [Scheduled Cleanup] Found {len(old_completed_wallets)} wallets eligible for cleanup")
+            
+            cleaned_count = 0
+            blocked_count = 0
+            
+            for wallet_doc in old_completed_wallets:
+                wallet_address = wallet_doc["wallet_address"]
+                
+                # Double-check on-chain balance before cleanup
+                try:
+                    from solders.pubkey import Pubkey
+                    pubkey = Pubkey.from_string(wallet_address)
+                    balance_response = await self.client.get_balance(pubkey)
+                    balance_lamports = balance_response.value if balance_response.value else 0
+                    
+                    if balance_lamports > 10000:  # More than dust
+                        logger.warning(f"⚠️  [Scheduled Cleanup] BLOCKED: {wallet_address[:8]}... has {balance_lamports} lamports")
+                        blocked_count += 1
+                        
+                        await self.db.temporary_wallets.update_one(
+                            {"wallet_address": wallet_address},
+                            {
+                                "$set": {
+                                    "needs_manual_review": True,
+                                    "review_reason": "scheduled_cleanup_blocked_balance",
+                                    "flagged_at": datetime.now(timezone.utc),
+                                    "flagged_balance_lamports": balance_lamports
+                                }
+                            }
+                        )
+                        continue
+                    
+                    # Safe to cleanup
+                    await self.db.temporary_wallets.update_one(
+                        {"wallet_address": wallet_address},
+                        {
+                            "$unset": {"private_key": ""},
+                            "$set": {
+                                "cleaned_up": True,
+                                "cleaned_up_at": datetime.now(timezone.utc),
+                                "cleanup_method": "scheduled_grace_period"
+                            }
+                        }
+                    )
+                    
+                    cleaned_count += 1
+                    logger.info(f"✅ [Scheduled Cleanup] Cleaned {wallet_address[:8]}...")
+                    
+                except Exception as wallet_error:
+                    logger.error(f"❌ [Scheduled Cleanup] Error processing {wallet_address[:8]}...: {wallet_error}")
+                    continue
+            
+            # Also find wallets flagged for manual review (older than 7 days)
+            old_flagged_time = datetime.now(timezone.utc) - timedelta(days=7)
+            flagged_count = await self.db.temporary_wallets.count_documents({
+                "needs_manual_review": True,
+                "flagged_at": {"$lt": old_flagged_time}
+            })
+            
+            logger.info(f"🧹 [Scheduled Cleanup] Complete: cleaned {cleaned_count}, blocked {blocked_count}, flagged for review: {flagged_count}")
+            
+            return {
+                "cleaned": cleaned_count,
+                "blocked": blocked_count,
+                "flagged_for_review": flagged_count
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ [Scheduled Cleanup] Error: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return {"error": str(e)}
+
 # Global processor instance
 processor = None
 processor_rpc_url = None  # Track RPC URL used for processor
