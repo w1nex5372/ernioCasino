@@ -2404,10 +2404,21 @@ function App() {
                   ) : (
                     <div className="space-y-3">
                       {gameHistory.map((game, index) => {
-                        const isUserWinner = user && (
-                          game.winner?.telegram_id === user.telegram_id || 
-                          game.winner?.id === user.id
+                        // FIXED: More robust winner detection with multiple checks
+                        const isUserWinner = user && game.winner && (
+                          String(game.winner.telegram_id) === String(user.telegram_id) || 
+                          String(game.winner.id) === String(user.id) ||
+                          game.winner.user_id === user.id ||
+                          game.winner_user_id === user.id
                         );
+                        
+                        console.log('History winner check:', {
+                          user_id: user?.id,
+                          user_telegram_id: user?.telegram_id,
+                          winner_id: game.winner?.id,
+                          winner_telegram_id: game.winner?.telegram_id,
+                          isUserWinner
+                        });
                         
                         return (
                           <div key={index} className={`p-4 rounded-lg ${
