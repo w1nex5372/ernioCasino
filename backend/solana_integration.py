@@ -202,12 +202,16 @@ class SolanaPaymentProcessor:
                 try:
                     check_count += 1
                     
+                    logger.info(f"🔍 [{wallet_address[:8]}...] Check #{check_count}/{max_checks}")
+                    
                     # Get recent signatures for this address
                     response = await self.client.get_signatures_for_address(
                         pubkey, 
                         commitment=Confirmed,
                         limit=10
                     )
+                    
+                    logger.info(f"📡 [{wallet_address[:8]}...] RPC response: {response.value is not None}, signatures: {len(response.value) if response.value else 0}")
                     
                     if response.value:
                         signatures = response.value
@@ -216,10 +220,17 @@ class SolanaPaymentProcessor:
                         for sig_info in signatures:
                             signature = str(sig_info.signature)
                             
+                            logger.info(f"🔔 [{wallet_address[:8]}...] Found signature: {signature[:16]}...")
+                            
                             if signature != last_signature:
+                                logger.info(f"✨ [{wallet_address[:8]}...] NEW transaction detected! Processing...")
                                 # New transaction detected, check if it's an incoming payment
                                 await self.process_detected_payment(wallet_address, signature)
                                 last_signature = signature
+                            else:
+                                logger.info(f"⏭️  [{wallet_address[:8]}...] Already processed this signature")
+                    else:
+                        logger.info(f"💤 [{wallet_address[:8]}...] No transactions found yet")
                     
                     # Check if wallet has been processed (payment found and handled)
                     wallet_doc = await self.db.temporary_wallets.find_one(
