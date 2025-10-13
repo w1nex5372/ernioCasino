@@ -1692,6 +1692,7 @@ function App() {
                           onClick={() => {
                             setShowWinnerScreen(false);
                             setWinnerData(null);
+                            setWinnerDisplayedForGame(null); // Reset guard for next game
                             setActiveTab('rooms');
                             setInLobby(false);
                             setGameInProgress(false);
