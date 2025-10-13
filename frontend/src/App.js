@@ -686,12 +686,12 @@ function App() {
             }
           }
           
-          // If still no user, throw error - NO FALLBACK
+          // If still no user, throw error to trigger fallback
           if (!telegramUser || !telegramUser.id) {
-            console.error('❌ NO TELEGRAM USER DATA AVAILABLE!');
-            console.error('WebApp.initData:', webApp.initData);
-            console.error('WebApp.initDataUnsafe:', webApp.initDataUnsafe);
-            throw new Error('No Telegram user data - Bot might not be configured correctly');
+            console.warn('⚠️ NO TELEGRAM USER DATA AVAILABLE - Will use fallback');
+            console.log('WebApp.initData:', webApp.initData);
+            console.log('WebApp.initDataUnsafe:', webApp.initDataUnsafe);
+            throw new Error('No Telegram user data - using fallback authentication');
           }
         }
         
