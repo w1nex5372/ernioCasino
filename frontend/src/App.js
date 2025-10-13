@@ -802,11 +802,19 @@ function App() {
     // Start authentication immediately
     const authTimeout = setTimeout(authenticateFromTelegram, 100);
     
-    // Fallback timeout - load user from Telegram data if available (reduced to 2s for faster UX)
+    // Fallback timeout - ALWAYS ensures loading completes (reduced to 3s for better UX)
     const fallbackTimeout = setTimeout(async () => {
-      console.log(`⏰ Fallback timeout triggered! user=${user ? 'exists' : 'null'}`);
-      if (!user) {
-        console.log('✅ No user found - activating fallback mechanism...');
+      console.log(`⏰ Fallback timeout triggered! user=${user ? 'exists' : 'null'}, isLoading=${isLoading}`);
+      
+      // If user already exists, just stop loading
+      if (user) {
+        console.log('✅ User already exists - just stopping loading state');
+        setIsLoading(false);
+        return;
+      }
+      
+      // No user found - create one
+      console.log('✅ No user found - activating fallback mechanism...');
         
         let telegramUser = null;
         
