@@ -2364,7 +2364,7 @@ function App() {
                   </div>
                   <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2 mt-2">
                     <p className="text-xs text-blue-400 text-center">
-                      💎 Testing on Solana Devnet - Free SOL from faucets
+                      💰 Live on Solana Mainnet - Real SOL transactions
                     </p>
                   </div>
                 </div>
