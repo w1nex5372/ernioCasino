@@ -2345,7 +2345,7 @@ function App() {
                     + Add Tokens
                   </Button>
                   <p className="text-xs text-green-400 text-center mt-2">
-                    💎 Testing on Solana Devnet - Free SOL available from faucets
+                    💰 Live on Solana Mainnet - Real SOL payments
                   </p>
 
                   {/* Quick Amount Buttons - TEMPORARILY DISABLED */}
