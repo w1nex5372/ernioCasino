@@ -105,6 +105,18 @@
 user_problem_statement: "Fix Telegram connection issues: 1) Users cannot successfully connect Telegram accounts 2) Telegram usernames/avatars not loading 3) Connection handling and API callbacks broken 4) Session persistence issues 5) Data sync problems. Repair existing integration without rebuilding."
 
 frontend:
+  - task: "Telegram Connection Fixes"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Fixed Telegram integration: 1) REMOVED AGGRESSIVE CACHE CLEARING that prevented session persistence 2) ENHANCED SESSION VALIDATION: Verifies saved sessions with backend, auto-clears invalid sessions, triggers re-auth 3) IMPROVED AUTH DATA: Changed null to empty strings for better backend compatibility, added proper validation 4) BETTER ERROR HANDLING: Network timeout detection, specific error messages, fallback to user lookup by Telegram ID 5) ENHANCED WELCOME MESSAGES: Conditional based on balance with emojis 6) FASTER DATA LOADING: Reduced timeout to 500ms, added loadWelcomeBonusStatus 7) PROPER FALLBACK: If auth fails, tries to find existing user by telegram_id before creating new account."
+
   - task: "Payment Modal Integration"
     implemented: true
     working: "NA"
