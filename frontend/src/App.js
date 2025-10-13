@@ -1722,7 +1722,15 @@ function App() {
                       </div>
 
                       {/* Prize Amount Display - PERSONALIZED */}
-                      {winnerData.is_winner || (user && winnerData.winner_telegram_id === user.telegram_id) ? (
+                      {(() => {
+                        const isCurrentUserWinner = winnerData.is_winner || (user && (
+                          String(winnerData.winner_telegram_id) === String(user.telegram_id) ||
+                          String(winnerData.winner?.telegram_id) === String(user.telegram_id) ||
+                          String(winnerData.winner?.id) === String(user.id) ||
+                          String(winnerData.winner_user_id) === String(user.id)
+                        ));
+                        return isCurrentUserWinner;
+                      })() ? (
                         <div className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border border-purple-500/30 rounded-lg p-3 md:p-4 space-y-2 mx-2">
                           <p className="text-base md:text-lg text-white font-semibold">You won</p>
                           <p className="text-2xl md:text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-gold-500 bg-clip-text">
