@@ -368,9 +368,6 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
                         localStorage.setItem('casino_last_eur_amount', numValue.toString());
                       }
                     }}
-                        localStorage.setItem('casino_last_eur_amount', value.toString());
-                      }
-                    }}
                     className="flex-1 bg-slate-900 border border-slate-700 text-white text-xl font-bold rounded-lg px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none"
                     disabled={loading || paymentStatus !== 'pending'}
                     placeholder="0.10"
