@@ -382,12 +382,23 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
                 </span>
               </div>
 
-              {/* Calculated SOL Amount (updates automatically) */}
-              <div className="flex justify-between items-center p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+              {/* Calculated SOL Amount (updates automatically) - COPYABLE */}
+              <div 
+                className="flex justify-between items-center p-3 bg-green-500/10 border border-green-500/30 rounded-lg cursor-pointer hover:bg-green-500/20 transition-colors group"
+                onClick={() => {
+                  const solAmount = recalculating ? '0' : solPrice ? (eurAmount / solPrice).toFixed(6) : paymentData?.required_sol?.toFixed(6);
+                  navigator.clipboard.writeText(solAmount);
+                  toast.success('✅ SOL amount copied to clipboard!');
+                }}
+                title="Click to copy SOL amount"
+              >
                 <span className="text-green-300">Amount in SOL</span>
-                <span className="text-green-400 font-bold">
-                  {recalculating ? '...' : solPrice ? (eurAmount / solPrice).toFixed(6) : paymentData?.required_sol?.toFixed(6)} SOL
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-green-400 font-bold select-all">
+                    {recalculating ? '...' : solPrice ? (eurAmount / solPrice).toFixed(6) : paymentData?.required_sol?.toFixed(6)} SOL
+                  </span>
+                  <Copy className="w-4 h-4 text-green-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
               </div>
 
               {/* Exchange Rate */}
