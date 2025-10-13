@@ -1,62 +1,37 @@
-// Casino Battle Royale Service Worker - FORCE REFRESH v5
-const CACHE_NAME = 'casino-battle-FORCE-REFRESH-v5-' + Date.now();
-const urlsToCache = [
-  '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
-  '/manifest.json'
-];
+// Service Worker - DISABLED - NO CACHING
+console.log('SW: DISABLED - Unregistering all service workers');
 
-// Install Service Worker - FORCE UPDATE
+// Immediately unregister this service worker
 self.addEventListener('install', (event) => {
-  // Force immediate activation
+  console.log('SW: Installing DISABLED service worker');
   self.skipWaiting();
-  
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('SW: Installing new cache version:', CACHE_NAME);
-        return cache.addAll(urlsToCache);
-      })
-  );
 });
 
-// Activate - DELETE ALL OLD CACHES
 self.addEventListener('activate', (event) => {
-  console.log('SW: Activating and clearing old caches');
+  console.log('SW: Activating DISABLED service worker - DELETING ALL CACHES');
   
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('SW: Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
+          console.log('SW: DELETING cache:', cacheName);
+          return caches.delete(cacheName);
         })
       );
     }).then(() => {
-      // Take control immediately
+      console.log('SW: ALL CACHES DELETED');
       return self.clients.claim();
+    }).then(() => {
+      // Unregister self
+      return self.registration.unregister();
     })
   );
 });
 
-// EMERGENCY - NO CACHE AT ALL
+// NO FETCH HANDLING - Just let browser handle everything
 self.addEventListener('fetch', (event) => {
-  console.log('SW: EMERGENCY MODE - Bypassing cache for:', event.request.url);
-  
-  // BYPASS ALL CACHE - Always fetch from network
-  event.respondWith(
-    fetch(event.request.clone()).then(response => {
-      console.log('SW: Fresh response for:', event.request.url);
-      return response;
-    }).catch(error => {
-      console.log('SW: Network failed for:', event.request.url, error);
-      // Only for critical failures, try cache
-      return caches.match(event.request);
-    })
-  );
+  // Do nothing - let browser fetch directly
+  return;
 });
 
 // Message handler for manual cache refresh
