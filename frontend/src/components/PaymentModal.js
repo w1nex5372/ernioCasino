@@ -17,13 +17,37 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
   const [solPrice, setSolPrice] = useState(null); // Live SOL/EUR price
   const [recalculating, setRecalculating] = useState(false);
 
-  // Initialize payment
+  // Fetch live SOL/EUR price
   useEffect(() => {
-    if (!isOpen || !userId || !tokenAmount) return;
+    if (!isOpen) return;
+
+    const fetchPrice = async () => {
+      try {
+        const response = await axios.get(`${API}/sol-eur-price`);
+        if (response.data && response.data.sol_eur_price) {
+          setSolPrice(response.data.sol_eur_price);
+        }
+      } catch (error) {
+        console.error('Failed to fetch SOL price:', error);
+        // Use fallback price if fetch fails
+        setSolPrice(180);
+      }
+    };
+
+    fetchPrice();
+    // Refresh price every 30 seconds
+    const interval = setInterval(fetchPrice, 30000);
+    return () => clearInterval(interval);
+  }, [isOpen]);
+
+  // Initialize payment with dynamic EUR amount
+  useEffect(() => {
+    if (!isOpen || !userId || !eurAmount || !solPrice) return;
 
     const initializePayment = async () => {
       setLoading(true);
       try {
+        const tokenAmount = Math.floor(eurAmount * 100); // 1 EUR = 100 tokens
         const response = await axios.post(`${API}/purchase-tokens`, {
           user_id: userId,
           token_amount: tokenAmount
@@ -46,7 +70,7 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
     };
 
     initializePayment();
-  }, [isOpen, userId, tokenAmount]);
+  }, [isOpen, userId, eurAmount, solPrice]);
 
   // Countdown timer
   useEffect(() => {
