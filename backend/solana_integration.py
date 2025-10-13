@@ -252,7 +252,12 @@ class SolanaPaymentProcessor:
                 )
                 
         except Exception as e:
-            logger.error(f"Error in payment monitoring for {wallet_address}: {str(e)}")
+            import traceback
+            error_details = traceback.format_exc()
+            logger.error(f"❌ FATAL: Error in payment monitoring for {wallet_address}:")
+            logger.error(f"   Error type: {type(e).__name__}")
+            logger.error(f"   Error message: {str(e)}")
+            logger.error(f"   Traceback:\n{error_details}")
         finally:
             self.active_monitors.discard(wallet_address)
             logger.info(f"🛑 Stopped monitoring wallet: {wallet_address}")
