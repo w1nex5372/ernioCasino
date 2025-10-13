@@ -2194,6 +2194,7 @@ function App() {
                   <Button
                     onClick={() => {
                       setPaymentTokenAmount(1000);
+                      setPaymentEurAmount(10); // 1000 tokens = €10
                       setShowPaymentModal(true);
                     }}
                     className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 text-lg rounded-xl shadow-lg"
