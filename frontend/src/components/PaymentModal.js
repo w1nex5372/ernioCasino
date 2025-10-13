@@ -28,7 +28,7 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
   const [recalculating, setRecalculating] = useState(false);
   const [validationError, setValidationError] = useState('');
 
-  // Fetch live SOL/EUR price
+  // Fetch live SOL/EUR price with auto-refresh every 3 minutes
   useEffect(() => {
     if (!isOpen) return;
 
@@ -36,18 +36,24 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
       try {
         const response = await axios.get(`${API}/sol-eur-price`);
         if (response.data && response.data.sol_eur_price) {
-          setSolPrice(response.data.sol_eur_price);
+          const newPrice = response.data.sol_eur_price;
+          setSolPrice(newPrice);
+          // Store as fallback
+          localStorage.setItem('casino_last_sol_eur_price', newPrice.toString());
+          console.log('💰 Updated SOL/EUR price:', newPrice);
         }
       } catch (error) {
         console.error('Failed to fetch SOL price:', error);
-        // Use fallback price if fetch fails
-        setSolPrice(180);
+        // Use fallback from localStorage or default
+        const fallback = parseFloat(localStorage.getItem('casino_last_sol_eur_price')) || 180;
+        setSolPrice(fallback);
+        console.log('Using fallback price:', fallback);
       }
     };
 
-    fetchPrice();
-    // Refresh price every 30 seconds
-    const interval = setInterval(fetchPrice, 30000);
+    fetchPrice(); // Immediate fetch
+    // Refresh price every 3 minutes (180000ms)
+    const interval = setInterval(fetchPrice, 180000);
     return () => clearInterval(interval);
   }, [isOpen]);
 
