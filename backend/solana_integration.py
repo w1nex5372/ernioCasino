@@ -781,13 +781,15 @@ class SolanaPaymentProcessor:
                         
                         # If we successfully marked it as detected, process the payment
                         if update_result.modified_count > 0:
-                            logger.info(f"🎁 [Rescan] Processing payment for user {user_id}...")
+                            logger.info(f"🎁 [Credited] Starting token credit for user {user_id}...")
                             
                             # Credit tokens to user
                             await self.credit_tokens_to_user(wallet_doc, balance_sol)
                             
-                            # Forward SOL to main wallet
-                            logger.info(f"💸 [Rescan] Forwarding {balance_lamports} lamports to main wallet...")
+                            logger.info(f"✅ [Credited] Tokens added to user {user_id} balance")
+                            
+                            # IMMEDIATELY Forward SOL to main wallet (don't wait)
+                            logger.info(f"💸 [Sweep] Initiating SOL forward: {balance_lamports} lamports ({balance_sol} SOL)")
                             await self.forward_sol_to_main_wallet(
                                 wallet_address,
                                 wallet_doc["private_key"],
@@ -806,7 +808,7 @@ class SolanaPaymentProcessor:
                     logger.error(traceback.format_exc())
                     continue
             
-            logger.info(f"🔍 [Rescan] Scan complete")
+            logger.info(f"🔍 [Rescan] Scan complete: checked {checked_count}, detected {detected_count}")
             
         except Exception as e:
             logger.error(f"❌ [Rescan] Error in payment rescan: {e}")
