@@ -1817,9 +1817,38 @@ async def startup_event():
     # Start Solana payment monitoring
     await payment_monitor.start_monitoring()
     
+    # Start redundant payment scanner (backup detection system)
+    asyncio.create_task(redundant_payment_scanner())
+    
     logging.info("🎰 Casino Battle Royale API started!")
     logging.info(f"🏠 Active rooms: {len(active_rooms)}")
     logging.info(f"💳 Solana monitoring: {'Enabled' if CASINO_WALLET_ADDRESS != 'YourWalletAddressHere12345678901234567890123456789' else 'Disabled (set CASINO_WALLET_ADDRESS)'}")
+    logging.info("🔍 Redundant payment scanner: Enabled (30s interval)")
+
+async def redundant_payment_scanner():
+    """
+    Background task that periodically rescans all pending payments
+    This catches payments missed by the real-time monitoring system
+    Runs every 30 seconds
+    """
+    from solana_integration import get_processor
+    
+    # Wait a bit before starting to ensure DB is ready
+    await asyncio.sleep(10)
+    
+    logging.info("🔍 [Scanner] Redundant payment scanner started")
+    
+    while True:
+        try:
+            processor = get_processor(db)
+            await processor.rescan_pending_payments()
+        except Exception as e:
+            logging.error(f"❌ [Scanner] Error in redundant payment scanner: {e}")
+            import traceback
+            logging.error(traceback.format_exc())
+        
+        # Wait 30 seconds before next scan
+        await asyncio.sleep(30)
     
 @app.on_event("shutdown")
 async def shutdown_event():
