@@ -92,6 +92,7 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
     if (!isOpen || !userId || !eurAmount || !solPrice) return;
 
     const initializePayment = async () => {
+      console.log('💳 Initializing payment:', { eurAmount, tokenAmount: Math.floor(eurAmount * 100), solPrice, userId });
       setLoading(true);
       try {
         const tokenAmount = Math.floor(eurAmount * 100); // 1 EUR = 100 tokens
@@ -101,6 +102,7 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
         });
 
         if (response.data.status === 'success') {
+          console.log('✅ Payment wallet created:', response.data.payment_info);
           setPaymentData(response.data.payment_info);
           toast.success('Payment wallet created!');
         } else {
@@ -108,7 +110,7 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
           onClose();
         }
       } catch (error) {
-        console.error('Payment initialization error:', error);
+        console.error('❌ Payment initialization error:', error);
         toast.error(error.response?.data?.detail || 'Failed to initialize payment');
         onClose();
       } finally {
