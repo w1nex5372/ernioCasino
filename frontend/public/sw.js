@@ -83,4 +83,4 @@ self.addEventListener('push', (event) => {
   );
 });
 
-console.log('SW: Casino Battle Service Worker v5 loaded - TELEGRAM CACHE FIX ' + Date.now());
+console.log('SW: Casino Battle Service Worker v7 loaded - DEVNET-PAYMENT-ACTIVE ' + Date.now());
