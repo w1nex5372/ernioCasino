@@ -145,18 +145,14 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
         console.log('💳 Payment status check:', status);
         
         if (status.payment_detected && !status.tokens_credited) {
+          // State 1: Payment detected, waiting for token credit
           if (paymentStatus !== 'processing') {
             setPaymentStatus('processing');
             toast.success('💰 Payment detected! Processing...');
           }
-        } else if (status.tokens_credited && !status.sol_forwarded) {
-          if (paymentStatus !== 'crediting') {
-            setPaymentStatus('crediting');
-            toast.success('✅ Tokens credited! Finalizing...');
-          }
         } else if (status.tokens_credited) {
-          // Payment complete! (Close even if sweep is pending/failed)
-          // User has their tokens, sweep will happen in background
+          // State 2: Tokens credited - close modal (sweep happens in background)
+          // User has their tokens, sweep will complete independently
           setPaymentStatus('completed');
           toast.success('🎉 Payment successful! Tokens credited.');
           
