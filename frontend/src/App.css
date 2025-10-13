@@ -596,7 +596,7 @@ input[type="number"] {
   }
 }
 
-/* Force display for winner screen overlay */
+/* Winner screen overlay - Scrollable and responsive */
 .winner-screen-overlay {
   position: fixed !important;
   top: 0 !important;
@@ -604,8 +604,14 @@ input[type="number"] {
   right: 0 !important;
   bottom: 0 !important;
   z-index: 9999 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background-color: rgba(0, 0, 0, 0.8) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* Ensure body allows scrolling when winner screen is shown */
+body:has(.winner-screen-overlay) {
+  overflow: auto !important;
 }
