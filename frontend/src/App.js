@@ -2370,6 +2370,14 @@ function App() {
       )}
 
       <Toaster richColors position={isMobile ? "top-center" : "top-right"} />
+      
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        userId={user?.id}
+        tokenAmount={paymentTokenAmount}
+      />
     </div>
   );
 }
