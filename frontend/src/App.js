@@ -271,6 +271,11 @@ function App() {
         
       } catch (error) {
         console.error('Error fetching participants:', error);
+        // Don't show error toast for every poll failure, just log it
+        if (pollCount === 1) {
+          // Only show error on first failure
+          toast.error('Failed to load players. Retrying...');
+        }
       }
     };
 
