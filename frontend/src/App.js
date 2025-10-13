@@ -584,33 +584,11 @@ function App() {
 
   // Authentication and data loading
   useEffect(() => {
-    // Clear any cached data and force refresh for Telegram
-    // AGGRESSIVE CACHE CLEARING for Telegram Web App
-    console.log('🧹 Clearing ALL caches and sessions...');
-    localStorage.clear(); // Clear everything including old sessions
-    sessionStorage.clear();
-    
-    // Clear Service Worker caches
-    if ('caches' in window) {
-      caches.keys().then(cacheNames => {
-        cacheNames.forEach(cacheName => {
-          if (cacheName.includes('casino')) {
-            caches.delete(cacheName);
-            console.log('Deleted cache:', cacheName);
-          }
-        });
-      });
-    }
-    
-    // Force Telegram Web App to reload if available
+    // Initialize Telegram Web App early
     if (window.Telegram && window.Telegram.WebApp) {
-      console.log('🔄 Forcing Telegram Web App refresh...');
+      console.log('🔄 Initializing Telegram Web App...');
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
-      // Send reload message to service worker
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({type: 'CLEAR_CACHE'});
-      }
     }
     
     // Check for saved user session first (after clearing, this should be null on first load)
