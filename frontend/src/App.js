@@ -1709,6 +1709,7 @@ function App() {
                           onClick={() => {
                             setShowWinnerScreen(false);
                             setWinnerData(null);
+                            setWinnerDisplayedForGame(null); // Reset guard for next game
                             setActiveTab('history');
                             setInLobby(false);
                             setGameInProgress(false);
