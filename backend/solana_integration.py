@@ -234,7 +234,12 @@ class SolanaPaymentProcessor:
                     await asyncio.sleep(10)
                     
                 except Exception as e:
-                    logger.warning(f"Error checking wallet {wallet_address}: {str(e)}")
+                    import traceback
+                    error_details = traceback.format_exc()
+                    logger.error(f"❌ Error checking wallet {wallet_address}:")
+                    logger.error(f"   Error type: {type(e).__name__}")
+                    logger.error(f"   Error message: {str(e)}")
+                    logger.error(f"   Traceback:\n{error_details}")
                     await asyncio.sleep(10)
                     continue
             
