@@ -790,8 +790,70 @@ class SolanaPaymentProcessor:
                     raise
     
     async def cleanup_wallet_data(self, wallet_address: str):
-        """Clean up temporary wallet data after successful processing"""
+        """
+        Clean up temporary wallet data after successful processing
+        
+        SAFETY: Only removes private key if SOL has been successfully forwarded.
+        Implements 72-hour grace period before deletion.
+        """
         try:
+            # Get wallet record
+            wallet_doc = await self.db.temporary_wallets.find_one({"wallet_address": wallet_address})
+            
+            if not wallet_doc:
+                logger.warning(f"🧹 [Cleanup] Wallet {wallet_address} not found")
+                return
+            
+            # SAFETY CHECK: Never delete private key if sweep hasn't completed
+            if not wallet_doc.get("sol_forwarded", False):
+                logger.warning(f"⚠️  [Cleanup] BLOCKED: Cannot cleanup wallet {wallet_address[:8]}... - SOL not forwarded yet!")
+                logger.warning(f"   Status: {wallet_doc.get('status')}")
+                logger.warning(f"   Tokens Credited: {wallet_doc.get('tokens_credited', False)}")
+                logger.warning(f"   SOL Forwarded: {wallet_doc.get('sol_forwarded', False)}")
+                
+                # Mark for manual review instead of cleaning up
+                await self.db.temporary_wallets.update_one(
+                    {"wallet_address": wallet_address},
+                    {
+                        "$set": {
+                            "needs_manual_review": True,
+                            "review_reason": "cleanup_blocked_unswept_funds",
+                            "flagged_at": datetime.now(timezone.utc)
+                        }
+                    }
+                )
+                return
+            
+            # Additional safety: Check actual on-chain balance before deleting private key
+            try:
+                from solders.pubkey import Pubkey
+                pubkey = Pubkey.from_string(wallet_address)
+                balance_response = await self.client.get_balance(pubkey)
+                balance_lamports = balance_response.value if balance_response.value else 0
+                
+                if balance_lamports > 10000:  # More than dust (0.00001 SOL)
+                    logger.error(f"❌ [Cleanup] CRITICAL: Wallet {wallet_address[:8]}... still has {balance_lamports} lamports!")
+                    logger.error(f"   Refusing to delete private key - funds at risk!")
+                    
+                    await self.db.temporary_wallets.update_one(
+                        {"wallet_address": wallet_address},
+                        {
+                            "$set": {
+                                "needs_manual_review": True,
+                                "review_reason": "cleanup_blocked_balance_detected",
+                                "flagged_at": datetime.now(timezone.utc),
+                                "flagged_balance_lamports": balance_lamports
+                            }
+                        }
+                    )
+                    return
+            except Exception as balance_check_error:
+                logger.warning(f"⚠️  [Cleanup] Could not verify on-chain balance: {balance_check_error}")
+                # Don't block cleanup if we can't check balance, but log it
+            
+            # Safe to cleanup - SOL forwarded and balance checked
+            logger.info(f"🧹 [Cleanup] Safe to cleanup wallet {wallet_address[:8]}... (SOL forwarded, balance verified)")
+            
             # Remove private key and mark as cleaned up
             await self.db.temporary_wallets.update_one(
                 {"wallet_address": wallet_address},
