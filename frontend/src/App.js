@@ -2348,17 +2348,20 @@ function App() {
                     💰 Live on Solana Mainnet - Real SOL payments
                   </p>
 
-                  {/* Quick Amount Buttons - TEMPORARILY DISABLED */}
+                  {/* Quick Amount Buttons */}
                   <div className="grid grid-cols-3 gap-2">
                     {[500, 1000, 2000].map(amount => (
                       <button
                         key={amount}
-                        disabled
-                        className="bg-slate-800 text-slate-500 font-semibold py-3 rounded-lg cursor-not-allowed"
+                        onClick={() => {
+                          setShowPaymentModal(true);
+                          setPaymentEurAmount(amount / 100);
+                        }}
+                        className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 rounded-lg transition-all duration-200 active:scale-95"
                       >
-                        <div className="text-xs text-slate-500">Buy</div>
+                        <div className="text-xs">Buy</div>
                         <div className="text-sm">{amount}</div>
-                        <div className="text-xs text-slate-500">€{(amount / 100).toFixed(1)}</div>
+                        <div className="text-xs">€{(amount / 100).toFixed(1)}</div>
                       </button>
                     ))}
                   </div>
