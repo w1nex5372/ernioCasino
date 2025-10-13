@@ -1626,13 +1626,21 @@ function App() {
                           </h1>
                         )}
                         
-                        {/* Animated Trophy */}
+                        {/* Animated Trophy - Conditional */}
                         <div className="flex justify-center">
                           <div className="relative">
-                            <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-r from-yellow-400 to-gold-600 rounded-full flex items-center justify-center animate-bounce shadow-lg shadow-gold-500/50">
-                              <Trophy className="w-8 h-8 md:w-10 md:h-10 text-slate-900" />
-                            </div>
-                            <div className="absolute -inset-2 bg-gradient-to-r from-yellow-400/20 to-gold-600/20 rounded-full animate-ping"></div>
+                            {winnerData.is_winner || (user && winnerData.winner_telegram_id === user.telegram_id) ? (
+                              <>
+                                <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-r from-yellow-400 to-gold-600 rounded-full flex items-center justify-center animate-bounce shadow-lg shadow-gold-500/50">
+                                  <Trophy className="w-8 h-8 md:w-10 md:h-10 text-slate-900" />
+                                </div>
+                                <div className="absolute -inset-2 bg-gradient-to-r from-yellow-400/20 to-gold-600/20 rounded-full animate-ping"></div>
+                              </>
+                            ) : (
+                              <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-r from-slate-600 to-slate-700 rounded-full flex items-center justify-center shadow-lg">
+                                <Trophy className="w-8 h-8 md:w-10 md:h-10 text-slate-400" />
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
