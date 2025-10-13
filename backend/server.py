@@ -1550,6 +1550,30 @@ async def rescan_payments(admin_key: str = "", wallet_address: Optional[str] = N
         logging.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Failed to rescan payments: {str(e)}")
 
+@api_router.post("/admin/reset-processor")
+async def reset_solana_processor(admin_key: str = ""):
+    """ADMIN ONLY: Force reset Solana processor (for RPC URL changes)"""
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Invalid admin key")
+    
+    try:
+        from solana_integration import reset_processor, SOLANA_RPC_URL
+        
+        logging.info("🔄 [Admin] Forcing processor reset...")
+        reset_processor()
+        logging.info(f"✅ [Admin] Processor reset complete")
+        logging.info(f"🌐 [Admin] Current RPC URL: {SOLANA_RPC_URL}")
+        
+        return {
+            "status": "success",
+            "message": "Processor reset successfully",
+            "rpc_url": SOLANA_RPC_URL
+        }
+        
+    except Exception as e:
+        logging.error(f"Error resetting processor: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to reset processor: {str(e)}")
+
 @api_router.get("/users/{user_id}", response_model=User)
 async def get_user(user_id: str):
     user_doc = await db.users.find_one({"id": user_id}, {"_id": 0})
