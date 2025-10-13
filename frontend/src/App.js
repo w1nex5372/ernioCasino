@@ -2398,22 +2398,25 @@ function App() {
                         {[500, 1000, 2000, 5000].map(amount => (
                           <button
                             key={amount}
-                            disabled
-                            className="bg-slate-700 text-slate-400 font-bold py-6 rounded-xl shadow-lg cursor-not-allowed"
+                            onClick={() => {
+                              setIsPaymentModalOpen(true);
+                              // Calculate EUR from tokens
+                              setSelectedEurAmount(amount / 100);
+                            }}
+                            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-6 rounded-xl shadow-lg transition-all duration-200 hover:scale-105"
                           >
-                            <div className="text-sm text-slate-500">Buy</div>
+                            <div className="text-sm">Buy</div>
                             <div className="text-2xl">{amount}</div>
-                            <div className="text-xs text-slate-500">tokens</div>
-                            <div className="text-sm text-slate-500 mt-1">€{(amount / 100).toFixed(0)}</div>
+                            <div className="text-xs">tokens</div>
+                            <div className="text-sm mt-1">€{(amount / 100).toFixed(0)}</div>
                           </button>
                         ))}
                       </div>
                       
-                      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
-                        <h3 className="text-red-400 font-bold mb-2">⚠️ Payment System Temporarily Unavailable</h3>
-                        <p className="text-sm text-red-300">
-                          Solana payments are currently under maintenance. Please do not send SOL to any addresses.
-                          We are investigating payment crediting issues and will restore service soon.
+                      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-6">
+                        <h3 className="text-blue-400 font-bold mb-2">💎 Testing on Devnet</h3>
+                        <p className="text-sm text-blue-300">
+                          The app is currently on Solana Devnet for safe testing. Get free devnet SOL from faucets to test the payment system.
                         </p>
                       </div>
                       
