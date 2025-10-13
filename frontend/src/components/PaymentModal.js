@@ -6,16 +6,27 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: initialTokenAmount }) {
+export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: initialTokenAmount, initialEurAmount }) {
   const [paymentData, setPaymentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(1200); // 20 minutes in seconds
   const [paymentStatus, setPaymentStatus] = useState('pending');
   const [checking, setChecking] = useState(false);
-  const [eurAmount, setEurAmount] = useState((initialTokenAmount || 1000) / 100); // Dynamic EUR amount
+  
+  // Load EUR amount from localStorage or use provided/calculated value
+  const getInitialEurAmount = () => {
+    if (initialEurAmount) return initialEurAmount;
+    const saved = localStorage.getItem('casino_last_eur_amount');
+    if (saved) return parseFloat(saved);
+    return (initialTokenAmount || 1000) / 100;
+  };
+  
+  const [eurAmount, setEurAmount] = useState(getInitialEurAmount()); // Dynamic EUR amount
+  const [eurInput, setEurInput] = useState(getInitialEurAmount().toString()); // Input field value
   const [solPrice, setSolPrice] = useState(null); // Live SOL/EUR price
   const [recalculating, setRecalculating] = useState(false);
+  const [validationError, setValidationError] = useState('');
 
   // Fetch live SOL/EUR price
   useEffect(() => {
