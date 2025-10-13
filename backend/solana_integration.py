@@ -200,7 +200,7 @@ class SolanaPaymentProcessor:
             pubkey = Pubkey.from_string(wallet_address)
             last_signature = None
             check_count = 0
-            max_checks = 180  # Monitor for 30 minutes (180 * 10 seconds)
+            max_checks = 360  # Monitor for 30 minutes (360 * 5 seconds)
             
             while check_count < max_checks:
                 try:
