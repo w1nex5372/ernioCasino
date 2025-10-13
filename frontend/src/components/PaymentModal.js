@@ -221,8 +221,13 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
           </h2>
           <button
             onClick={onClose}
-            className="text-white/80 hover:text-white transition-colors"
+            className={`transition-colors ${
+              paymentStatus === 'processing' || paymentStatus === 'crediting' 
+                ? 'text-white/40 cursor-not-allowed' 
+                : 'text-white/80 hover:text-white'
+            }`}
             disabled={paymentStatus === 'processing' || paymentStatus === 'crediting'}
+            title={paymentStatus === 'processing' || paymentStatus === 'crediting' ? 'Please wait...' : 'Close'}
           >
             <X className="w-6 h-6" />
           </button>
