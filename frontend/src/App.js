@@ -2312,7 +2312,7 @@ function App() {
                   
                   {/* Add Tokens Button */}
                   <Button
-                    onClick={() => setIsPaymentModalOpen(true)}
+                    onClick={() => setShowPaymentModal(true)}
                     className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 text-lg rounded-xl shadow-lg transition-all duration-200"
                   >
                     <Zap className="w-5 h-5 mr-2" />
