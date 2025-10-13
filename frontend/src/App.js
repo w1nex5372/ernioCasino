@@ -1644,52 +1644,52 @@ function App() {
                         </div>
                       </div>
 
-                    {/* Prize Amount Display */}
-                    <div className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border border-purple-500/30 rounded-lg p-4 space-y-2">
-                      <p className="text-lg text-white font-semibold">You won</p>
-                      <p className="text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-gold-500 bg-clip-text">
-                        {winnerData.prize_pool || '600'} tokens!
-                      </p>
-                      <p className="text-sm text-slate-400">
-                        {ROOM_CONFIGS[winnerData.room_type]?.icon} {ROOM_CONFIGS[winnerData.room_type]?.name}
-                      </p>
-                    </div>
+                      {/* Prize Amount Display */}
+                      <div className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border border-purple-500/30 rounded-lg p-3 md:p-4 space-y-2 mx-2">
+                        <p className="text-base md:text-lg text-white font-semibold">You won</p>
+                        <p className="text-2xl md:text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-gold-500 bg-clip-text">
+                          {winnerData.prize_pool || '600'} tokens!
+                        </p>
+                        <p className="text-xs md:text-sm text-slate-400">
+                          {ROOM_CONFIGS[winnerData.room_type]?.icon} {ROOM_CONFIGS[winnerData.room_type]?.name}
+                        </p>
+                      </div>
 
-                    {/* Action Buttons */}
-                    <div className="space-y-3 pt-4">
-                      {/* Play Again Button */}
-                      <Button
-                        onClick={() => {
-                          setShowWinnerScreen(false);
-                          setWinnerData(null);
-                          setActiveTab('rooms');
-                          setInLobby(false);
-                          setGameInProgress(false);
-                          loadRooms();
-                          toast.success('🎮 Ready for another game!');
-                        }}
-                        className="w-full bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 hover:from-purple-700 hover:via-purple-800 hover:to-indigo-800 text-white font-bold text-lg py-4 rounded-lg border border-purple-500/50 shadow-lg shadow-purple-500/25 transition-all duration-300 hover:scale-105"
-                      >
-                        🎮 Play Again
-                      </Button>
-                      
-                      {/* View Game History Button */}
-                      <Button
-                        onClick={() => {
-                          setShowWinnerScreen(false);
-                          setWinnerData(null);
-                          setActiveTab('history');
-                          setInLobby(false);
-                          setGameInProgress(false);
-                          loadGameHistory();
-                          toast.info('📊 Viewing game history');
-                        }}
-                        variant="outline"
-                        className="w-full border-2 border-gold-500/50 bg-slate-800/50 hover:bg-gold-500/20 text-gold-400 hover:text-gold-300 font-semibold py-3 rounded-lg transition-all duration-300 hover:border-gold-400"
-                      >
-                        📊 View Game History
-                      </Button>
-                    </div>
+                      {/* Action Buttons */}
+                      <div className="space-y-2 md:space-y-3 pt-2 md:pt-4 px-2">
+                        {/* Play Again Button */}
+                        <Button
+                          onClick={() => {
+                            setShowWinnerScreen(false);
+                            setWinnerData(null);
+                            setActiveTab('rooms');
+                            setInLobby(false);
+                            setGameInProgress(false);
+                            loadRooms();
+                            toast.success('🎮 Ready for another game!');
+                          }}
+                          className="w-full bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 hover:from-purple-700 hover:via-purple-800 hover:to-indigo-800 text-white font-bold text-base md:text-lg py-3 md:py-4 rounded-lg border border-purple-500/50 shadow-lg shadow-purple-500/25 transition-all duration-300 active:scale-95"
+                        >
+                          🎮 Play Again
+                        </Button>
+                        
+                        {/* View Game History Button */}
+                        <Button
+                          onClick={() => {
+                            setShowWinnerScreen(false);
+                            setWinnerData(null);
+                            setActiveTab('history');
+                            setInLobby(false);
+                            setGameInProgress(false);
+                            loadGameHistory();
+                            toast.info('📊 Viewing game history');
+                          }}
+                          variant="outline"
+                          className="w-full border-2 border-gold-500/50 bg-slate-800/50 hover:bg-gold-500/20 text-gold-400 hover:text-gold-300 font-semibold py-2 md:py-3 rounded-lg transition-all duration-300 active:scale-95"
+                        >
+                          📊 View Game History
+                        </Button>
+                      </div>
 
                     {/* Decorative Elements */}
                     <div className="flex justify-center space-x-2 pt-2">
