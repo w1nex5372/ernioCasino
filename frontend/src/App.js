@@ -514,7 +514,15 @@ function App() {
       const isWinner = user && (user.telegram_id === data.winner?.telegram_id || user.id === data.winner_id);
       console.log('🤔 Am I the winner?', isWinner);
       
-      // Show winner screen to ALL players
+      // Show winner screen to ALL players - WITH DUPLICATE GUARD
+      const gameId = data.game_id || data.id || `${data.room_type}-${Date.now()}`;
+      
+      // PREVENT DUPLICATE: Check if we already showed winner for this game
+      if (winnerDisplayedForGame === gameId) {
+        console.log('⏭️ Winner already displayed for game:', gameId);
+        return;
+      }
+      
       const winnerInfo = {
         winner_name: winnerName,
         winner_telegram_id: data.winner?.telegram_id || data.winner_telegram_id,
@@ -523,13 +531,15 @@ function App() {
         room_type: data.room_type,
         prize_link: data.prize_link,
         is_winner: isWinner,
-        game_time: gameTime
+        game_time: gameTime,
+        game_id: gameId
       };
-      console.log('👑 Setting winner info:', winnerInfo);
+      console.log('👑 Setting winner info for game:', gameId, winnerInfo);
       
       setWinnerData(winnerInfo);
       setShowWinnerScreen(true);
-      console.log('✅ Winner screen state set to TRUE');
+      setWinnerDisplayedForGame(gameId); // Mark this game as displayed
+      console.log('✅ Winner screen state set to TRUE for game:', gameId);
       
       // Extra logging
       setTimeout(() => {
