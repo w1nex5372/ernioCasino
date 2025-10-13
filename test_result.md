@@ -104,6 +104,33 @@
 
 user_problem_statement: "Optimize Solana transaction commitment from 'finalized' to 'confirmed' to reduce payment sweep confirmation delay from 3-5 minutes to ~10-30 seconds. Fix payment modal to close immediately after tokens are credited without waiting for sweep completion."
 
+backend:
+  - task: "Optimize Solana Transaction Confirmation with last_valid_block_height"
+    implemented: true
+    working: "NA"
+    file: "backend/solana_integration.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "OPTIMIZATION IMPLEMENTED: 1) Removed unused 'Finalized' import (line 20) 2) System was ALREADY using 'Confirmed' commitment everywhere - no change needed there 3) Captured last_valid_block_height from blockhash response (line 599) 4) Updated confirm_transaction to pass last_valid_block_height parameter (line 637) for proper timeout behavior. This ensures sweep confirmation properly times out after blockhash expiry (~60-90s) instead of waiting indefinitely. Expected impact: Faster sweep confirmation, proper timeout handling."
+
+frontend:
+  - task: "Fix Payment Modal Auto-Close Logic"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/PaymentModal.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "MODAL CLOSING LOGIC FIXED: Removed problematic 'else if' chain that prevented modal from closing. Previous logic had 3 states: 1) payment_detected && !tokens_credited (processing) 2) tokens_credited && !sol_forwarded (crediting - STUCK STATE) 3) tokens_credited (complete - never reached due to #2). New simplified logic has 2 states: 1) payment_detected && !tokens_credited (processing) 2) tokens_credited (complete - closes modal). Modal now closes immediately after tokens are credited, regardless of sweep status. Sweep happens in background transparently to user."
+
+
 frontend:
   - task: "Remove Aggressive Error Toast"
     implemented: true
