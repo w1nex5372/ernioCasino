@@ -793,10 +793,9 @@ function App() {
           }
         }
         
-        // If all else fails, create temporary account
-        console.log('Creating temporary account as last resort');
-        setIsLoading(false);
-        toast.warning('Using temporary account. Please log in via Telegram for full access.');
+        // If all else fails, let fallback timeout handle it
+        console.log('⚠️ Auth failed - waiting for fallback timeout to create account...');
+        // Don't set isLoading to false here - let the fallback timeout handle it
       }
     };
 
