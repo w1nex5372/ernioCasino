@@ -2398,20 +2398,23 @@ function App() {
                         {[500, 1000, 2000, 5000].map(amount => (
                           <button
                             key={amount}
-                            onClick={() => {
-                              const eurAmount = amount / 100; // 1 EUR = 100 tokens
-                              setPaymentTokenAmount(amount);
-                              setPaymentEurAmount(eurAmount);
-                              setShowPaymentModal(true);
-                            }}
-                            className="bg-gradient-to-br from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white font-bold py-6 rounded-xl shadow-lg transition-all transform hover:scale-105"
+                            disabled
+                            className="bg-slate-700 text-slate-400 font-bold py-6 rounded-xl shadow-lg cursor-not-allowed"
                           >
-                            <div className="text-sm text-purple-200">Buy</div>
+                            <div className="text-sm text-slate-500">Buy</div>
                             <div className="text-2xl">{amount}</div>
-                            <div className="text-xs text-purple-300">tokens</div>
-                            <div className="text-sm text-green-400 mt-1">€{(amount / 100).toFixed(0)}</div>
+                            <div className="text-xs text-slate-500">tokens</div>
+                            <div className="text-sm text-slate-500 mt-1">€{(amount / 100).toFixed(0)}</div>
                           </button>
                         ))}
+                      </div>
+                      
+                      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
+                        <h3 className="text-red-400 font-bold mb-2">⚠️ Payment System Temporarily Unavailable</h3>
+                        <p className="text-sm text-red-300">
+                          Solana payments are currently under maintenance. Please do not send SOL to any addresses.
+                          We are investigating payment crediting issues and will restore service soon.
+                        </p>
                       </div>
                       
                       <div className="flex gap-4">
