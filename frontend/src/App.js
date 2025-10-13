@@ -2282,16 +2282,16 @@ function App() {
                     </CardContent>
                   </Card>
                   
-                  {/* Add Tokens Button - TEMPORARILY DISABLED */}
+                  {/* Add Tokens Button */}
                   <Button
-                    disabled
-                    className="w-full bg-slate-600 text-slate-400 font-bold py-4 text-lg rounded-xl shadow-lg cursor-not-allowed"
+                    onClick={() => setIsPaymentModalOpen(true)}
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 text-lg rounded-xl shadow-lg transition-all duration-200"
                   >
                     <Zap className="w-5 h-5 mr-2" />
-                    + Add Tokens (Temporarily Unavailable)
+                    + Add Tokens
                   </Button>
-                  <p className="text-xs text-red-400 text-center mt-2">
-                    ⚠️ Payment system under maintenance. Do not send SOL until further notice.
+                  <p className="text-xs text-green-400 text-center mt-2">
+                    💎 Testing on Solana Devnet - Free SOL available from faucets
                   </p>
 
                   {/* Wallet Address Card */}
