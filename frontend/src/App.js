@@ -1637,11 +1637,17 @@ function App() {
                         </div>
                       </div>
 
-                      {/* Dynamic Winner Display with Telegram Integration */}
+                      {/* Dynamic Winner Display - PERSONALIZED */}
                       <div className="space-y-3 md:space-y-4">
-                        <h2 className="text-xl md:text-2xl font-bold text-green-400 animate-pulse px-2">
-                          🏆 Winner: @{winnerData.winner_username || winnerData.winner?.username || winnerData.winner_name}
-                        </h2>
+                        {winnerData.is_winner || (user && winnerData.winner_telegram_id === user.telegram_id) ? (
+                          <h2 className="text-xl md:text-2xl font-bold text-green-400 animate-pulse px-2">
+                            🎉 Congratulations, @{user.telegram_username || user.first_name}!
+                          </h2>
+                        ) : (
+                          <h2 className="text-xl md:text-2xl font-bold text-slate-300 px-2">
+                            🏆 The winner was @{winnerData.winner_username || winnerData.winner?.username || winnerData.winner_name}
+                          </h2>
+                        )}
                         
                         {/* Winner Photo with Enhanced Display */}
                         <div className="flex justify-center">
