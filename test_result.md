@@ -130,6 +130,25 @@ frontend:
           agent: "main"
           comment: "MODAL CLOSING LOGIC FIXED: Removed problematic 'else if' chain that prevented modal from closing. Previous logic had 3 states: 1) payment_detected && !tokens_credited (processing) 2) tokens_credited && !sol_forwarded (crediting - STUCK STATE) 3) tokens_credited (complete - never reached due to #2). New simplified logic has 2 states: 1) payment_detected && !tokens_credited (processing) 2) tokens_credited (complete - closes modal). Modal now closes immediately after tokens are credited, regardless of sweep status. Sweep happens in background transparently to user."
 
+metadata:
+  created_by: "main_agent"
+  version: "2.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Optimize Solana Transaction Confirmation with last_valid_block_height"
+    - "Fix Payment Modal Auto-Close Logic"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: "CRITICAL OPTIMIZATION COMPLETED: Fixed 3-5 minute payment modal delay issue. Root cause analysis revealed system was already using 'Confirmed' commitment (not 'finalized' as suspected). Real issues were: 1) Backend confirm_transaction not using last_valid_block_height for proper timeout 2) Frontend modal had faulty else-if logic preventing closure. Both issues now fixed. TESTING NOTE: There's a separate RPC authentication error (401 with Helius API key 'casinosol') that needs user attention - not related to these changes but may affect live testing. Please test: 1) Payment modal closes within 2 seconds after tokens credited 2) Sweep confirmation behaves properly with timeout 3) No hanging payment states."
+
+
 
 frontend:
   - task: "Remove Aggressive Error Toast"
