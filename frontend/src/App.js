@@ -1614,11 +1614,17 @@ function App() {
                         ✕
                       </button>
                       
-                      {/* 🏆 Winner Announcement Title */}
+                      {/* 🏆 Winner Announcement Title - PERSONALIZED */}
                       <div className="space-y-3 md:space-y-4">
-                        <h1 className="text-2xl md:text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 via-gold-500 to-yellow-600 bg-clip-text animate-pulse">
-                          🏆 Winner Announcement
-                        </h1>
+                        {winnerData.is_winner || (user && winnerData.winner_telegram_id === user.telegram_id) ? (
+                          <h1 className="text-2xl md:text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 via-gold-500 to-yellow-600 bg-clip-text animate-pulse">
+                            🎉 You Won!
+                          </h1>
+                        ) : (
+                          <h1 className="text-2xl md:text-3xl font-bold text-transparent bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600 bg-clip-text">
+                            Better Luck Next Time!
+                          </h1>
+                        )}
                         
                         {/* Animated Trophy */}
                         <div className="flex justify-center">
