@@ -697,45 +697,59 @@ function App() {
         
         console.log('Final telegramUser:', telegramUser);
         
-        // Prepare authentication data
+        // Prepare authentication data with proper validation
         const authData = {
           id: parseInt(telegramUser.id),
           first_name: telegramUser.first_name || 'Telegram User',
-          last_name: telegramUser.last_name || null,
-          username: telegramUser.username || null,
-          photo_url: telegramUser.photo_url || null,
+          last_name: telegramUser.last_name || '',
+          username: telegramUser.username || '',
+          photo_url: telegramUser.photo_url || '',
           auth_date: Math.floor(Date.now() / 1000),
           hash: webApp.initData || 'telegram_webapp',
           telegram_id: parseInt(telegramUser.id)
         };
 
-        console.log('Sending authentication request with data:', authData);
+        console.log('📤 Sending authentication data to backend:', authData);
         
+        // Call API with user data
         const response = await axios.post(`${API}/auth/telegram`, {
           telegram_auth_data: authData
         }, {
-          timeout: 15000,
-          headers: { 'Content-Type': 'application/json' }
+          timeout: 10000, // 10 second timeout
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
         
-        console.log('Authentication response:', response.data);
-        
-        // Update with real Telegram user data and save session
-        setUser(response.data);
-        saveUserSession(response.data);
-        setIsLoading(false);
-        toast.success(`Welcome back, ${telegramUser.first_name}!`);
-        
-        // Configure WebApp
-        webApp.enableClosingConfirmation();
-        if (webApp.setHeaderColor) webApp.setHeaderColor('#1e293b');
-        if (webApp.setBackgroundColor) webApp.setBackgroundColor('#0f172a');
-        
-        // Load user data
-        setTimeout(() => {
-          loadUserPrizes();
-          loadDerivedWallet();
-        }, 1000);
+        if (response.data) {
+          console.log('✅ Telegram authentication successful:', response.data);
+          setUser(response.data);
+          saveUserSession(response.data);
+          setIsLoading(false);
+          
+          // Welcome message based on balance
+          if (response.data.token_balance >= 1000) {
+            toast.success(`🎉 Welcome back, ${response.data.first_name}! Balance: ${response.data.token_balance} tokens`);
+          } else if (response.data.token_balance > 0) {
+            toast.success(`Welcome, ${response.data.first_name}! Balance: ${response.data.token_balance} tokens`);
+          } else {
+            toast.success(`👋 Welcome, ${response.data.first_name}! Claim your daily tokens to get started.`);
+          }
+          
+          // Configure WebApp
+          webApp.enableClosingConfirmation();
+          if (webApp.setHeaderColor) webApp.setHeaderColor('#1e293b');
+          if (webApp.setBackgroundColor) webApp.setBackgroundColor('#0f172a');
+          
+          // Load additional data after successful auth
+          setTimeout(() => {
+            loadUserPrizes();
+            loadDerivedWallet();
+            loadWelcomeBonusStatus();
+          }, 500);
+          
+          return; // Exit successfully
+        }
         
       } catch (error) {
         console.error('❌ Telegram authentication failed:', error);
