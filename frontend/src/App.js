@@ -2354,6 +2354,7 @@ function App() {
                       <button
                         key={amount}
                         onClick={() => {
+                          console.log(`🛒 Buy button clicked: ${amount} tokens (€${amount / 100})`);
                           setShowPaymentModal(true);
                           setPaymentEurAmount(amount / 100);
                         }}
