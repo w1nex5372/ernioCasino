@@ -105,7 +105,7 @@
 user_problem_statement: "FINAL FIX: Remove 'Failed to load rooms' error toast that appears on initial app load before authentication completes. The error was too aggressive and confusing users."
 
 frontend:
-  - task: "Telegram Connection Fixes"
+  - task: "Remove Aggressive Error Toast"
     implemented: true
     working: "NA"
     file: "frontend/src/App.js"
@@ -115,7 +115,7 @@ frontend:
     status_history:
         - working: "NA"
           agent: "main"
-          comment: "Fixed Telegram integration: 1) REMOVED AGGRESSIVE CACHE CLEARING that prevented session persistence 2) ENHANCED SESSION VALIDATION: Verifies saved sessions with backend, auto-clears invalid sessions, triggers re-auth 3) IMPROVED AUTH DATA: Changed null to empty strings for better backend compatibility, added proper validation 4) BETTER ERROR HANDLING: Network timeout detection, specific error messages, fallback to user lookup by Telegram ID 5) ENHANCED WELCOME MESSAGES: Conditional based on balance with emojis 6) FASTER DATA LOADING: Reduced timeout to 500ms, added loadWelcomeBonusStatus 7) PROPER FALLBACK: If auth fails, tries to find existing user by telegram_id before creating new account."
+          comment: "FINAL FIX: Modified loadRooms() function to accept optional showError parameter (default false). Error toast now only displays when explicitly requested, not on initial load. This prevents 'Failed to load rooms' error from appearing before authentication completes. Backend API working correctly - issue was aggressive error handling in frontend. Users will now see clean loading experience without confusing error messages."
 
   - task: "Payment Modal Integration"
     implemented: true
