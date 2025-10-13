@@ -2326,24 +2326,24 @@ function App() {
                     </CardContent>
                   </Card>
 
-                  {/* Quick Amount Buttons - Synced with EUR */}
+                  {/* Quick Amount Buttons - TEMPORARILY DISABLED */}
                   <div className="grid grid-cols-3 gap-2">
                     {[500, 1000, 2000].map(amount => (
                       <button
                         key={amount}
-                        onClick={() => {
-                          const eurAmount = amount / 100; // 1 EUR = 100 tokens
-                          setPaymentTokenAmount(amount);
-                          setPaymentEurAmount(eurAmount);
-                          setShowPaymentModal(true);
-                        }}
-                        className="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 rounded-lg transition-all"
+                        disabled
+                        className="bg-slate-800 text-slate-500 font-semibold py-3 rounded-lg cursor-not-allowed"
                       >
-                        <div className="text-xs text-slate-400">Buy</div>
+                        <div className="text-xs text-slate-500">Buy</div>
                         <div className="text-sm">{amount}</div>
-                        <div className="text-xs text-green-400">€{(amount / 100).toFixed(1)}</div>
+                        <div className="text-xs text-slate-500">€{(amount / 100).toFixed(1)}</div>
                       </button>
                     ))}
+                  </div>
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2 mt-2">
+                    <p className="text-xs text-red-400 text-center">
+                      ⚠️ Payments temporarily disabled for system maintenance
+                    </p>
                   </div>
                 </div>
               ) : (
