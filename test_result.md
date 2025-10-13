@@ -104,6 +104,43 @@
 
 user_problem_statement: "Fix Casino Namai app issues: 1) Players not loading in lobby 2) Login failures 3) Bonus claim not working 4) Token balances not visible. Add complete Solana wallet integration with payment invoice modal, countdown timer, and automatic token crediting."
 
+frontend:
+  - task: "Payment Modal Integration"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/PaymentModal.js, frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Created PaymentModal.js component with: 1) Payment invoice screen with 20-minute countdown 2) Live payment status polling every 5s 3) Copy wallet address functionality 4) EUR to SOL conversion display 5) Payment status tracking (pending→processing→crediting→completed) 6) Automatic page refresh on completion. Integrated into App.js Tokens tab with '+ Add Tokens' button and quick amount buttons (500, 1000, 2000 tokens)."
+
+  - task: "Enhanced Error Handling & User Feedback"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Fixed authentication with better error messages: 1) Network timeout detection 2) Invalid credentials message 3) Server error handling 4) Fallback authentication 5) Temporary account warning. Enhanced bonus claim error handling: Shows specific error messages for already claimed, user not found, and generic failures. Improved participant loading: Error toast only on first failure to avoid spam."
+
+  - task: "Wallet Integration in Tokens Tab"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Redesigned Tokens tab with: MOBILE: 1) Balance card with purple gradient 2) Large '+ Add Tokens' button 3) Connected wallet display (shortened address) 4) Quick amount buttons (500, 1000, 2000) 5) Copy address button. DESKTOP: 1) Split view - balance + wallet address 2) Quick purchase packages (500, 1000, 2000, 5000) 3) Custom amount input 4) 'Buy Now' button 5) Instructions section explaining the process. Both include rate display: 1 EUR = 100 tokens."
+
 backend:
   - task: "Solana Automatic Token Purchase System"
     implemented: true
