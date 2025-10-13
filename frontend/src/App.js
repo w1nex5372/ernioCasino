@@ -2114,52 +2114,78 @@ function App() {
             {activeTab === 'tokens' && (
               isMobile ? (
                 <div className="space-y-3 max-w-full">
-                  <Card className="bg-slate-800/90 border-slate-700">
-                    <CardContent className="p-3 text-center">
-                      <h2 className="text-sm font-bold text-white mb-1">Current Balance</h2>
-                      <div className="text-xl font-bold text-yellow-400">{user.token_balance || 0}</div>
+                  {/* Balance Card */}
+                  <Card className="bg-gradient-to-r from-purple-900/50 to-purple-800/50 border-purple-500/30">
+                    <CardContent className="p-4 text-center">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <Wallet className="w-5 h-5 text-purple-400" />
+                        <h2 className="text-sm font-bold text-white">Your Balance</h2>
+                      </div>
+                      <div className="text-3xl font-bold text-yellow-400">{user.token_balance || 0}</div>
                       <div className="text-xs text-slate-400">tokens</div>
                     </CardContent>
                   </Card>
                   
+                  {/* Add Tokens Button */}
+                  <Button
+                    onClick={() => {
+                      setPaymentTokenAmount(1000);
+                      setShowPaymentModal(true);
+                    }}
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 text-lg rounded-xl shadow-lg"
+                  >
+                    <Zap className="w-5 h-5 mr-2" />
+                    + Add Tokens
+                  </Button>
+
+                  {/* Wallet Address Card */}
                   <Card className="bg-slate-800/90 border-slate-700 max-w-full overflow-hidden">
                     <CardContent className="p-3">
-                      <h3 className="text-center text-white font-semibold mb-2 text-sm">Send SOL Here</h3>
+                      <h3 className="text-center text-white font-semibold mb-2 text-sm">Connected Wallet</h3>
                       <div className="bg-slate-900 p-2 rounded-lg mb-2 overflow-hidden">
                         <code className="text-green-400 text-xs font-mono break-all block text-center leading-relaxed">
-                          {casinoWalletAddress && casinoWalletAddress !== 'Loading...' ? casinoWalletAddress : 'Loading...'}
+                          {casinoWalletAddress && casinoWalletAddress !== 'Loading...' 
+                            ? `${casinoWalletAddress.substring(0, 8)}...${casinoWalletAddress.substring(casinoWalletAddress.length - 6)}`
+                            : 'Loading...'}
                         </code>
                       </div>
-                      <div className="flex gap-2 mb-2">
-                        <Button
-                          onClick={() => {
-                            navigator.clipboard.writeText(casinoWalletAddress);
-                            toast.success('Address copied!');
-                          }}
-                          disabled={!casinoWalletAddress || casinoWalletAddress === 'Loading...'}
-                          className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 text-sm"
-                        >
-                          📋 Copy
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            toast.info('Send SOL to get tokens automatically!');
-                          }}
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 text-sm"
-                        >
-                          ℹ️ Help
-                        </Button>
-                      </div>
-                      <div className="p-2 bg-green-500/10 border border-green-500/20 rounded text-center">
-                        <p className="text-xs text-green-300 font-medium">
-                          Auto Conversion Active
+                      <Button
+                        onClick={() => {
+                          navigator.clipboard.writeText(casinoWalletAddress);
+                          toast.success('Address copied!');
+                        }}
+                        disabled={!casinoWalletAddress || casinoWalletAddress === 'Loading...'}
+                        className="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 text-sm"
+                      >
+                        📋 Copy Full Address
+                      </Button>
+                      <div className="mt-3 p-2 bg-purple-500/10 border border-purple-500/20 rounded text-center">
+                        <p className="text-xs text-purple-300 font-medium">
+                          💎 1 EUR = 100 tokens
                         </p>
                         <p className="text-xs text-slate-400">
-                          SOL → EUR → Tokens (1 EUR = 100 tokens)
+                          Live SOL/EUR conversion
                         </p>
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* Quick Amount Buttons */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {[500, 1000, 2000].map(amount => (
+                      <button
+                        key={amount}
+                        onClick={() => {
+                          setPaymentTokenAmount(amount);
+                          setShowPaymentModal(true);
+                        }}
+                        className="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 rounded-lg transition-all"
+                      >
+                        <div className="text-xs text-slate-400">Buy</div>
+                        <div className="text-sm">{amount}</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <Card className="bg-slate-800/90 border-slate-700">
