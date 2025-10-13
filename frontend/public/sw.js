@@ -108,4 +108,4 @@ self.addEventListener('push', (event) => {
   );
 });
 
-console.log('SW: Casino Battle Service Worker v3 loaded - FORCE UPDATE');
+console.log('SW: Casino Battle Service Worker v5 loaded - TELEGRAM CACHE FIX ' + Date.now());
