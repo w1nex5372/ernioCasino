@@ -223,25 +223,31 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
                     value={eurInput}
                     onChange={(e) => {
                       const value = e.target.value;
+                      
+                      // FIXED: Allow typing freely without immediate validation
                       setEurInput(value);
+                      
+                      // Only validate if value is not empty
+                      if (value === '' || value === '.') {
+                        setValidationError('');
+                        return;
+                      }
                       
                       const newEur = parseFloat(value);
                       
-                      // Validation
-                      if (isNaN(newEur) || value === '') {
-                        setValidationError('Please enter a valid amount');
+                      // Check if it's a valid number
+                      if (isNaN(newEur)) {
+                        setValidationError('Please enter a valid number');
                         return;
                       }
                       
+                      // Check minimum only, NO MAXIMUM
                       if (newEur < 0.1) {
                         setValidationError('Minimum amount is 0.1 EUR');
-                        setEurAmount(0.1);
-                        setEurInput('0.1');
-                        localStorage.setItem('casino_last_eur_amount', '0.1');
                         return;
                       }
                       
-                      // Valid amount
+                      // Valid amount - accept ANY value >= 0.1
                       setValidationError('');
                       setEurAmount(newEur);
                       localStorage.setItem('casino_last_eur_amount', newEur.toString());
