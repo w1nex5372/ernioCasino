@@ -883,9 +883,9 @@ function App() {
           });
           toast.warning('Using temporary account - limited functionality');
         }
-        setIsLoading(false);
-      }
-    }, 2000); // Reduced from 5s to 2s for better UX
+      // Always ensure loading is stopped
+      setIsLoading(false);
+    }, 3000); // 3 seconds - gives real auth time to complete, but not too long
     
     return () => {
       clearTimeout(authTimeout);
