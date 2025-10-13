@@ -2407,6 +2407,7 @@ function App() {
                           <button
                             key={amount}
                             onClick={() => {
+                              console.log(`🛒 Desktop Buy button clicked: ${amount} tokens (€${amount / 100})`);
                               setShowPaymentModal(true);
                               // Calculate EUR from tokens
                               setPaymentEurAmount(amount / 100);
