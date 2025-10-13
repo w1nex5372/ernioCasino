@@ -449,12 +449,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Payment Modal Integration"
-    - "Enhanced Error Handling & User Feedback"
-    - "Wallet Integration in Tokens Tab"
+    - "Telegram Connection Fixes"
   stuck_tasks: []
   test_all: false
-  test_priority: "high_first"
+  test_priority: "critical_first"
 
 agent_communication:
     - agent: "main"
