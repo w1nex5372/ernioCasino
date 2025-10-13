@@ -412,8 +412,12 @@ class SolanaPaymentProcessor:
             # Formula: SOL amount × SOL/EUR price × 100 tokens/EUR
             actual_tokens = self.price_fetcher.calculate_tokens_from_sol(float(received_sol), sol_eur_price)
             
+            logger.info(f"💎 [Credit] Calculated tokens: {actual_tokens} (at {sol_eur_price} EUR/SOL)")
+            
             # Don't credit more than requested (handle overpayment gracefully)
             actual_tokens = min(actual_tokens, expected_tokens)
+            
+            logger.info(f"💳 [Credit] Updating user balance: +{actual_tokens} tokens")
             
             # Update user balance
             result = await self.db.users.update_one(
@@ -421,9 +425,11 @@ class SolanaPaymentProcessor:
                 {"$inc": {"token_balance": actual_tokens}}
             )
             
+            logger.info(f"📊 [Credit] Database update result: modified={result.modified_count}, matched={result.matched_count}")
+            
             if result.modified_count > 0:
                 eur_value = float(received_sol) * sol_eur_price
-                logger.info(f"✅ Credited {actual_tokens} tokens to user {user_id} for {received_sol} SOL (€{eur_value:.2f} at {sol_eur_price} EUR/SOL)")
+                logger.info(f"✅ [Credit] SUCCESS! Credited {actual_tokens} tokens to user {user_id} for {received_sol} SOL (€{eur_value:.2f} at {sol_eur_price} EUR/SOL)")
                 
                 # Mark wallet as tokens credited
                 await self.db.temporary_wallets.update_one(
