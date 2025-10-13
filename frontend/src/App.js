@@ -2348,38 +2348,6 @@ function App() {
                     💎 Testing on Solana Devnet - Free SOL available from faucets
                   </p>
 
-                  {/* Wallet Address Card */}
-                  <Card className="bg-slate-800/90 border-slate-700 max-w-full overflow-hidden">
-                    <CardContent className="p-3">
-                      <h3 className="text-center text-white font-semibold mb-2 text-sm">Connected Wallet</h3>
-                      <div className="bg-slate-900 p-2 rounded-lg mb-2 overflow-hidden">
-                        <code className="text-green-400 text-xs font-mono break-all block text-center leading-relaxed">
-                          {casinoWalletAddress && casinoWalletAddress !== 'Loading...' 
-                            ? `${casinoWalletAddress.substring(0, 8)}...${casinoWalletAddress.substring(casinoWalletAddress.length - 6)}`
-                            : 'Loading...'}
-                        </code>
-                      </div>
-                      <Button
-                        onClick={() => {
-                          navigator.clipboard.writeText(casinoWalletAddress);
-                          toast.success('Address copied!');
-                        }}
-                        disabled={!casinoWalletAddress || casinoWalletAddress === 'Loading...'}
-                        className="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 text-sm"
-                      >
-                        📋 Copy Full Address
-                      </Button>
-                      <div className="mt-3 p-2 bg-purple-500/10 border border-purple-500/20 rounded text-center">
-                        <p className="text-xs text-purple-300 font-medium">
-                          💎 1 EUR = 100 tokens
-                        </p>
-                        <p className="text-xs text-slate-400">
-                          Live SOL/EUR conversion
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-
                   {/* Quick Amount Buttons - TEMPORARILY DISABLED */}
                   <div className="grid grid-cols-3 gap-2">
                     {[500, 1000, 2000].map(amount => (
