@@ -1924,7 +1924,7 @@ async def startup_event():
     logging.info("🎰 Casino Battle Royale API started!")
     logging.info(f"🏠 Active rooms: {len(active_rooms)}")
     logging.info(f"💳 Solana monitoring: {'Enabled' if CASINO_WALLET_ADDRESS != 'YourWalletAddressHere12345678901234567890123456789' else 'Disabled (set CASINO_WALLET_ADDRESS)'}")
-    logging.info("🔍 Redundant payment scanner: Enabled (30s interval)")
+    logging.info("🔍 Redundant payment scanner: Enabled (15s interval - FAST detection)")
 
 async def redundant_payment_scanner():
     """
