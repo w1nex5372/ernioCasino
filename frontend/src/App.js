@@ -1647,7 +1647,15 @@ function App() {
                         {/* Animated Trophy - Conditional */}
                         <div className="flex justify-center">
                           <div className="relative">
-                            {winnerData.is_winner || (user && winnerData.winner_telegram_id === user.telegram_id) ? (
+                            {(() => {
+                              const isCurrentUserWinner = winnerData.is_winner || (user && (
+                                String(winnerData.winner_telegram_id) === String(user.telegram_id) ||
+                                String(winnerData.winner?.telegram_id) === String(user.telegram_id) ||
+                                String(winnerData.winner?.id) === String(user.id) ||
+                                String(winnerData.winner_user_id) === String(user.id)
+                              ));
+                              return isCurrentUserWinner;
+                            })() ? (
                               <>
                                 <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-r from-yellow-400 to-gold-600 rounded-full flex items-center justify-center animate-bounce shadow-lg shadow-gold-500/50">
                                   <Trophy className="w-8 h-8 md:w-10 md:h-10 text-slate-900" />
