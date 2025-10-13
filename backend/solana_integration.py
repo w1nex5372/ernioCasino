@@ -962,6 +962,13 @@ class SolanaPaymentProcessor:
 processor = None
 processor_rpc_url = None  # Track RPC URL used for processor
 
+def reset_processor():
+    """Force reset the global processor (for RPC URL changes)"""
+    global processor, processor_rpc_url
+    logger.info("🔄 Forcefully resetting Solana processor...")
+    processor = None
+    processor_rpc_url = None
+
 def get_processor(db: AsyncIOMotorDatabase) -> SolanaPaymentProcessor:
     """Get or create the global payment processor instance"""
     global processor, processor_rpc_url
