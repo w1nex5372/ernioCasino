@@ -154,8 +154,9 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
             setPaymentStatus('crediting');
             toast.success('✅ Tokens credited! Finalizing...');
           }
-        } else if (status.sol_forwarded || (status.tokens_credited && status.payment_detected)) {
-          // Payment complete!
+        } else if (status.tokens_credited) {
+          // Payment complete! (Close even if sweep is pending/failed)
+          // User has their tokens, sweep will happen in background
           setPaymentStatus('completed');
           toast.success('🎉 Payment successful! Tokens credited.');
           
