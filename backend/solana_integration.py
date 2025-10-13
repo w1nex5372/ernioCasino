@@ -591,12 +591,14 @@ class SolanaPaymentProcessor:
                 )
                 logger.info(f"✅ [Sweep] Transfer instruction created")
                 
-                # Get recent blockhash
+                # Get recent blockhash and last valid block height
                 logger.info(f"🔗 [Sweep] Fetching recent blockhash...")
                 try:
                     recent_blockhash_response = await self.client.get_latest_blockhash()
                     recent_blockhash = recent_blockhash_response.value.blockhash
+                    last_valid_block_height = recent_blockhash_response.value.last_valid_block_height
                     logger.info(f"✅ [Sweep] Blockhash: {recent_blockhash}")
+                    logger.info(f"✅ [Sweep] Last valid block height: {last_valid_block_height}")
                 except Exception as blockhash_error:
                     logger.error(f"❌ [Sweep] Failed to get blockhash: {blockhash_error}")
                     raise
