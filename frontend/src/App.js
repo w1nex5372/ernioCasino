@@ -2307,7 +2307,9 @@ function App() {
                           <button
                             key={amount}
                             onClick={() => {
+                              const eurAmount = amount / 100; // 1 EUR = 100 tokens
                               setPaymentTokenAmount(amount);
+                              setPaymentEurAmount(eurAmount);
                               setShowPaymentModal(true);
                             }}
                             className="bg-gradient-to-br from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white font-bold py-6 rounded-xl shadow-lg transition-all transform hover:scale-105"
@@ -2315,6 +2317,7 @@ function App() {
                             <div className="text-sm text-purple-200">Buy</div>
                             <div className="text-2xl">{amount}</div>
                             <div className="text-xs text-purple-300">tokens</div>
+                            <div className="text-sm text-green-400 mt-1">€{(amount / 100).toFixed(0)}</div>
                           </button>
                         ))}
                       </div>
