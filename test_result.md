@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "FINAL FIX: Remove 'Failed to load rooms' error toast that appears on initial app load before authentication completes. The error was too aggressive and confusing users."
+user_problem_statement: "Optimize Solana transaction commitment from 'finalized' to 'confirmed' to reduce payment sweep confirmation delay from 3-5 minutes to ~10-30 seconds. Fix payment modal to close immediately after tokens are credited without waiting for sweep completion."
 
 frontend:
   - task: "Remove Aggressive Error Toast"
