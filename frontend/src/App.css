@@ -586,13 +586,9 @@ input[type="number"] {
 /* Ensure winner screen displays on all screen sizes */
 @media (min-width: 769px) {
   /* Desktop specific winner screen adjustments */
-  .desktop-winner-screen {
-    padding: 2rem;
-  }
-  
-  .desktop-winner-card {
-    max-width: 600px;
-    min-width: 500px;
+  /* Winner screen stays scrollable on desktop too */
+  .winner-screen-overlay {
+    padding: 2rem 1rem;
   }
 }
 
