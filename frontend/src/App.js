@@ -591,41 +591,44 @@ function App() {
       window.Telegram.WebApp.expand();
     }
     
-    // Check for saved user session first (after clearing, this should be null on first load)
+    // Check for saved user session first
     const savedUser = localStorage.getItem('casino_user');
     if (savedUser) {
       try {
         const userData = JSON.parse(savedUser);
-        console.log('Found saved user session:', userData);
+        console.log('✅ Found saved user session:', userData);
         
         // Set cached user first for instant UI
         setUser(userData);
-        setIsLoading(false);
-        toast.success('Welcome back! Session restored.');
         
         // Load fresh data
         loadRooms();
         loadGameHistory();
         loadUserPrizes();
         
-        // IMMEDIATELY refresh from server to get latest balance (async)
+        // IMMEDIATELY refresh from server to get latest balance and verify session (async)
         (async () => {
           try {
             const response = await axios.get(`${API}/user/${userData.id}`);
             if (response.data) {
-              console.log('✅ Refreshed user data from server:', response.data);
+              console.log('✅ Session verified. Refreshed user data:', response.data);
               setUser(response.data);
               saveUserSession(response.data);
-              toast.success(`Balance updated: ${response.data.token_balance} tokens`);
+              toast.success(`Welcome back, ${response.data.first_name}!`);
             }
           } catch (refreshError) {
-            console.log('Failed to refresh from server:', refreshError);
+            console.error('❌ Session validation failed:', refreshError);
+            // If session is invalid, clear it and try Telegram auth
+            localStorage.removeItem('casino_user');
+            toast.warning('Session expired. Please log in again.');
+            authenticateFromTelegram();
           }
         })();
         
+        setIsLoading(false);
         return;
       } catch (e) {
-        console.log('Failed to parse saved user, continuing with auth');
+        console.error('Failed to parse saved user:', e);
         localStorage.removeItem('casino_user');
       }
     }
