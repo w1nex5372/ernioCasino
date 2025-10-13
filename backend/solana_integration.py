@@ -629,12 +629,16 @@ class SolanaPaymentProcessor:
                         logger.info(f"💸 [Sweep Submitted] Transaction signature: {signature}")
                         logger.info(f"🔗 [Sweep] Explorer: https://explorer.solana.com/tx/{signature}?cluster=mainnet")
                         
-                        # Wait for confirmation
+                        # Wait for confirmation with proper timeout
                         logger.info(f"⏳ [Sweep] Waiting for transaction confirmation...")
                         try:
-                            # Wait up to 30 seconds for confirmation
+                            # Use last_valid_block_height for proper timeout behavior
                             from solana.rpc.commitment import Confirmed
-                            confirmation_response = await self.client.confirm_transaction(signature, commitment=Confirmed)
+                            confirmation_response = await self.client.confirm_transaction(
+                                signature, 
+                                commitment=Confirmed,
+                                last_valid_block_height=last_valid_block_height
+                            )
                             
                             if confirmation_response.value:
                                 logger.info(f"✅ [Sweep Success] Transaction confirmed on-chain!")
