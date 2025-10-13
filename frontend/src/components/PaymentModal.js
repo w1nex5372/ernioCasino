@@ -28,6 +28,15 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
   const [recalculating, setRecalculating] = useState(false);
   const [validationError, setValidationError] = useState('');
 
+  // Update EUR amount when initialEurAmount prop changes
+  useEffect(() => {
+    if (isOpen && initialEurAmount !== null && initialEurAmount !== undefined) {
+      console.log('💶 PaymentModal: Updating EUR amount from prop:', initialEurAmount);
+      setEurAmount(initialEurAmount);
+      setEurInput(initialEurAmount.toString());
+    }
+  }, [isOpen, initialEurAmount]);
+
   // Prevent body scrolling when modal is open
   useEffect(() => {
     if (isOpen) {
