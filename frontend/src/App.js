@@ -1328,6 +1328,32 @@ function App() {
     }
   };
 
+  // Listen for payment completion events to refresh user balance
+  useEffect(() => {
+    const handlePaymentCompleted = async () => {
+      console.log('💰 Payment completed event received - refreshing user data...');
+      if (user && user.id) {
+        try {
+          const response = await axios.get(`${API}/user/${user.id}`);
+          if (response.data) {
+            console.log('✅ User balance refreshed:', response.data.token_balance);
+            setUser(response.data);
+            saveUserSession(response.data);
+            toast.success(`Balance updated: ${response.data.token_balance} tokens`);
+          }
+        } catch (error) {
+          console.error('Failed to refresh user data:', error);
+        }
+      }
+    };
+
+    window.addEventListener('payment-completed', handlePaymentCompleted);
+    
+    return () => {
+      window.removeEventListener('payment-completed', handlePaymentCompleted);
+    };
+  }, [user]);
+
   // Error screen for non-Telegram access
   if (telegramError) {
     return (
