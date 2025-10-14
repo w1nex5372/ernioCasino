@@ -741,7 +741,13 @@ function App() {
     });
 
     newSocket.on('rooms_updated', () => {
-      loadRooms();
+      console.log('📥 EVENT: rooms_updated - reloading room list');
+      // DON'T reload if GET READY is showing - prevents state reset
+      if (!showGetReady) {
+        loadRooms();
+      } else {
+        console.log('⏭️ Skipping rooms reload - GET READY animation in progress');
+      }
     });
 
     newSocket.on('new_room_available', (data) => {
