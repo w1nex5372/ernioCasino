@@ -581,11 +581,12 @@ function App() {
         game_id: gameId
       };
       
-      // Set winner screen state
+      // Set winner screen state and persist to sessionStorage
       setWinnerData(winnerInfo);
       setShowWinnerScreen(true);
       setWinnerDisplayedForGame(gameId);
-      console.log('✅ Winner screen displayed for game:', gameId);
+      sessionStorage.setItem('last_winner_game_id', gameId);
+      console.log('✅ Winner screen displayed for game:', gameId, '(stored in sessionStorage)');
       
       // Toast notification for everyone
       if (isWinner) {
