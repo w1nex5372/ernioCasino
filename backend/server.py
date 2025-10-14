@@ -866,6 +866,8 @@ async def register_user(sid, data):
         logging.info(f"Data: {data}")
         
         user_id = data.get('user_id')
+        platform = data.get('platform', 'unknown')
+        
         if not user_id:
             logging.error(f"❌ No user_id provided in register_user event")
             return
@@ -875,10 +877,15 @@ async def register_user(sid, data):
         socket_to_user[sid] = user_id
         
         logging.info(f"✅ Registered user {user_id} to socket {sid[:8]}")
+        logging.info(f"📱 Platform: {platform}")
         logging.info(f"📊 Total user mappings: {len(user_to_socket)}")
         
         # Send confirmation
-        await sio.emit('user_registered', {'user_id': user_id, 'status': 'registered'}, room=sid)
+        await sio.emit('user_registered', {
+            'user_id': user_id,
+            'status': 'registered',
+            'platform': platform
+        }, room=sid)
         
     except Exception as e:
         logging.error(f"❌ Error in register_user: {e}")
