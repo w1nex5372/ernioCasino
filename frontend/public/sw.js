@@ -123,4 +123,4 @@ self.addEventListener('push', (event) => {
   );
 });
 
-console.log(`SW v8.0: Casino Battle Service Worker ${SW_VERSION} loaded at ${Date.now()}`);
+console.log(`🚀 SW v9.0: Casino Battle Service Worker ${SW_VERSION} loaded - BUILD: ${BUILD_TIMESTAMP}`);
