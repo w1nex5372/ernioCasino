@@ -562,6 +562,7 @@ function App() {
       // Show GET READY! animation
       console.log('🎬 Setting showGetReady = true');
       setShowGetReady(true);
+      showGetReadyRef.current = true; // Update ref for socket listeners
       setGetReadyCountdown(data.countdown || 3);
       
       // Start countdown
