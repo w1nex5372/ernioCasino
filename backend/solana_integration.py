@@ -721,53 +721,27 @@ class SolanaPaymentProcessor:
                 logger.info(f"✅ [Sweep Success] Tx: {signature}")
                 logger.info(f"✅ [Sweep Success] Network: Mainnet")
                 logger.info(f"✅ [Sweep Success] ===============================")
-                        
-                        # Update wallet record in database
-                        await self.db.temporary_wallets.update_one(
-                            {"wallet_address": wallet_address},
-                            {
-                                "$set": {
-                                    "sol_forwarded": True,
-                                    "forward_signature": signature,
-                                    "forwarded_amount_lamports": transfer_amount,
-                                    "forwarded_at": datetime.now(timezone.utc),
-                                    "status": "completed",
-                                    "sweep_attempts": attempt,
-                                    "network": "mainnet"
-                                }
-                            }
-                        )
-                        
-                        # Clean up wallet data after successful forwarding
-                        await asyncio.sleep(60)  # Wait 1 minute before cleanup
-                        await self.cleanup_wallet_data(wallet_address)
-                        
-                        return signature  # Success! Exit retry loop
-                        
-                    else:
-                        logger.error(f"❌ [Sweep] No transaction signature returned")
-                        logger.error(f"   Response: {response}")
-                        if attempt < max_retries:
-                            logger.info(f"⏳ [Sweep] Retrying in {retry_delay} seconds...")
-                            await asyncio.sleep(retry_delay)
-                        else:
-                            raise Exception("Failed to get transaction signature after all retries")
-                            
-                except Exception as send_error:
-                    logger.error(f"❌ [Sweep] Transaction send failed")
-                    logger.error(f"   Error type: {type(send_error).__name__}")
-                    logger.error(f"   Error message: {str(send_error)}")
-                    
-                    # Check for specific error types
-                    error_str = str(send_error).lower()
-                    if "429" in error_str or "too many requests" in error_str:
-                        logger.error(f"   Cause: RPC rate limit exceeded")
-                    elif "blockhash not found" in error_str:
-                        logger.error(f"   Cause: Blockhash expired - transaction took too long")
-                    elif "simulation failed" in error_str:
-                        logger.error(f"   Cause: Transaction simulation failed - check balance/fees")
-                    elif "insufficient" in error_str:
-                        logger.error(f"   Cause: Insufficient funds")
+                
+                # Update wallet record in database
+                await self.db.temporary_wallets.update_one(
+                    {"wallet_address": wallet_address},
+                    {
+                        "$set": {
+                            "sol_forwarded": True,
+                            "forward_signature": signature,
+                            "forwarded_amount_lamports": transfer_amount,
+                            "forwarded_at": datetime.now(timezone.utc),
+                            "status": "completed",
+                            "network": "mainnet"
+                        }
+                    }
+                )
+                
+                # Clean up wallet data after successful forwarding
+                await asyncio.sleep(60)  # Wait 1 minute before cleanup
+                await self.cleanup_wallet_data(wallet_address)
+                
+                return signature  # Success!
                     
                     import traceback
                     logger.error(f"   Full traceback:\n{traceback.format_exc()}")
