@@ -1596,6 +1596,7 @@ function App() {
         setUser({...user, token_balance: response.data.new_balance});
         setBetAmount('');
         setSelectedRoom(null);
+        setForceHideLobby(false);  // Reset flag when joining new room
         
         // DON'T manually set roomParticipants here - let the player_joined socket event handle it
         // The backend will emit player_joined with all_players array which is the source of truth
