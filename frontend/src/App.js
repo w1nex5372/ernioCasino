@@ -504,7 +504,9 @@ function App() {
     });
 
     newSocket.on('room_joined_confirmed', (data) => {
-      console.log('✅ Room joined confirmed via Socket.IO:', data.room_id);
+      console.log('✅✅✅ ROOM JOINED CONFIRMED VIA SOCKET.IO ✅✅✅');
+      console.log('Room ID:', data.room_id);
+      console.log('Socket count in room:', data.socket_count);
     });
 
     newSocket.on('room_full', (data) => {
