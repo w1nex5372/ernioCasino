@@ -1157,7 +1157,7 @@ async def start_game_round(room: GameRoom):
     })
     logging.info(f"✅ Emitted redirect_home to room {room.id}")
     
-    # EVENT 4: prize_won - Send prize link privately to the winner (using socket ID)
+    # EVENT 5: prize_won - Send prize link privately to the winner (using socket ID)
     winner_sid = user_to_socket.get(winner.user_id)
     if winner_sid:
         await sio.emit('prize_won', {
