@@ -527,25 +527,31 @@ function App() {
         player: data.player.first_name,
         count: data.players_count,
         status: data.room_status,
-        timestamp: data.timestamp
+        timestamp: data.timestamp,
+        get_ready_active: showGetReadyRef.current
       });
       
-      // REPLACE (not append) room participants with full list from server
-      setRoomParticipants(prev => ({
-        ...prev,
-        [data.room_type]: data.all_players || []  // FULL list replacement
-      }));
-      
-      console.log(`✅ Participant list REPLACED for ${data.room_type}: ${data.all_players?.map(p => p.first_name).join(', ')}`);
-      
-      // Show notification for new player
-      toast.success(
-        `👤 ${data.player.first_name} joined! (${data.players_count}/3)`,
-        { duration: 2000 }
-      );
-      
-      // Reload rooms to update lobby counts
-      loadRooms();
+      // Don't update participant list if GET READY is showing (prevents visual glitches)
+      if (!showGetReadyRef.current) {
+        // REPLACE (not append) room participants with full list from server
+        setRoomParticipants(prev => ({
+          ...prev,
+          [data.room_type]: data.all_players || []  // FULL list replacement
+        }));
+        
+        console.log(`✅ Participant list REPLACED for ${data.room_type}: ${data.all_players?.map(p => p.first_name).join(', ')}`);
+        
+        // Show notification for new player
+        toast.success(
+          `👤 ${data.player.first_name} joined! (${data.players_count}/3)`,
+          { duration: 2000 }
+        );
+        
+        // Reload rooms to update lobby counts
+        loadRooms();
+      } else {
+        console.log('⏭️ Skipping participant update - GET READY animation in progress');
+      }
     });
 
     // NEW EVENT: room_ready - Show "GET READY!" full-screen animation
