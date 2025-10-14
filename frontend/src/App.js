@@ -877,9 +877,10 @@ function App() {
       }
     }
     
+    // Load bonus first to ensure it's visible ASAP
+    loadWelcomeBonusStatus();
     loadRooms();
     loadGameHistory();
-    loadWelcomeBonusStatus();
     
     // Telegram authentication - REAL USERS ONLY
     const authenticateFromTelegram = async () => {
