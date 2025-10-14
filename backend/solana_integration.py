@@ -58,10 +58,34 @@ class RPCManager:
             return self.primary_url
         return self.fallback_urls[self.current_index % len(self.fallback_urls)]
     
-    def mark_failure(self, url: str):
+    def mark_failure(self, url: str, error: Exception = None):
         """Mark an RPC endpoint as failed"""
         self.failure_count[url] = self.failure_count.get(url, 0) + 1
         logger.warning(f"⚠️  RPC failure marked for {url[:50]}... (count: {self.failure_count[url]})")
+        
+        # Report to RPC alert system
+        try:
+            from rpc_monitor import rpc_alert_system
+            error_code = None
+            error_type = "unknown"
+            error_msg = str(error) if error else "Unknown error"
+            
+            # Extract error code and type
+            if '401' in error_msg or 'Unauthorized' in error_msg:
+                error_code = 401
+                error_type = "auth"
+            elif '403' in error_msg or 'Forbidden' in error_msg:
+                error_code = 403
+                error_type = "auth"
+            elif '429' in error_msg or 'rate limit' in error_msg.lower():
+                error_code = 429
+                error_type = "rate_limit"
+            elif 'connection' in error_msg.lower() or 'timeout' in error_msg.lower():
+                error_type = "connection"
+            
+            rpc_alert_system.report_failure(url, error_code, error_msg, error_type)
+        except Exception as e:
+            logger.error(f"Failed to report RPC failure to alert system: {e}")
     
     def should_fallback(self, error: Exception) -> bool:
         """Determine if we should switch to fallback RPC"""
