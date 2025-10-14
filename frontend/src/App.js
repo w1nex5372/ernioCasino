@@ -1899,6 +1899,8 @@ function App() {
                           setActiveTab('rooms');
                           setInLobby(false);
                           setGameInProgress(false);
+                          // Reload bonus to ensure it's visible
+                          loadWelcomeBonusStatus();
                         }}
                         className="absolute top-2 right-2 md:top-4 md:right-4 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-slate-700/80 hover:bg-slate-600 text-white transition-colors z-10"
                         aria-label="Close"
