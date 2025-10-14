@@ -29,15 +29,38 @@ self.addEventListener('activate', (event) => {
       self.clients.claim()
     ]).then(() => {
       console.log(`SW v8.0: ${SW_VERSION} is now active and controlling all pages`);
-      // Refresh all clients to load new version
-      return self.clients.matchAll({ type: 'window' }).then(clients => {
-        clients.forEach(client => {
-          console.log('SW v8.0: Refreshing client:', client.url);
-          client.postMessage({ 
-            type: 'SW_UPDATED', 
-            version: SW_VERSION 
-          });
+      // Get all window clients
+      return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    }).then(clients => {
+      console.log(`SW v8.0: Found ${clients.length} clients to update`);
+      
+      // Send message to all clients first
+      clients.forEach(client => {
+        console.log('SW v8.0: Notifying client:', client.url);
+        client.postMessage({ 
+          type: 'SW_UPDATED', 
+          version: SW_VERSION,
+          forceReload: true
         });
+      });
+      
+      // For Telegram WebView, also try to navigate to force reload
+      // This is more aggressive and works even if message handler isn't set up
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          clients.forEach(client => {
+            if (client.url && client.url.includes('?')) {
+              // Add/update timestamp to force reload
+              const url = new URL(client.url);
+              url.searchParams.set('_sw_refresh', Date.now());
+              console.log('SW v8.0: Navigating client to:', url.href);
+              client.navigate(url.href).catch(err => {
+                console.log('SW v8.0: Navigate failed (expected in some contexts):', err.message);
+              });
+            }
+          });
+          resolve();
+        }, 1000);
       });
     })
   );
