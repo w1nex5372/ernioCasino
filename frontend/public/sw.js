@@ -83,4 +83,4 @@ self.addEventListener('push', (event) => {
   );
 });
 
-console.log('SW: Casino Battle Service Worker v7 loaded - DEVNET-PAYMENT-ACTIVE ' + Date.now());
+console.log('SW: Casino Battle Service Worker v8 loaded - WINNER-FIX-ACTIVE ' + Date.now());
