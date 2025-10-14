@@ -618,11 +618,59 @@ class SolanaPaymentProcessor:
                 transaction = VersionedTransaction(message, [temp_keypair])
                 logger.info(f"✅ [Sweep] Transaction signed")
                 
-                # Send transaction to network
+                # Send transaction to network (with retry for account not found errors)
                 logger.info(f"📡 [Sweep] Sending transaction to Solana network...")
-                try:
-                    response = await self.client.send_transaction(transaction)
-                    logger.info(f"📡 [Sweep] Send response received")
+                max_retries = 3
+                retry_delay = 2  # seconds
+                
+                for attempt in range(1, max_retries + 1):
+                    try:
+                        if attempt > 1:
+                            logger.info(f"🔄 [Sweep] Retry attempt {attempt}/{max_retries}...")
+                            await asyncio.sleep(retry_delay)
+                            # Refresh balance before retry
+                            balance_check = await self.client.get_balance(temp_keypair.pubkey())
+                            current_balance = balance_check.value if balance_check.value else 0
+                            logger.info(f"💰 [Retry] Current balance: {current_balance} lamports")
+                            if current_balance == 0:
+                                logger.warning(f"⚠️  [Sweep] Wallet already empty on retry - aborting")
+                                return
+                        
+                        response = await self.client.send_transaction(transaction)
+                        logger.info(f"📡 [Sweep] Send response received")
+                        
+                        if response.value:
+                            signature = str(response.value)
+                            logger.info(f"💸 [Sweep Submitted] Transaction signature: {signature}")
+                            logger.info(f"🔗 [Sweep] Explorer: https://explorer.solana.com/tx/{signature}?cluster=mainnet")
+                            
+                            # Success! Break retry loop
+                            break
+                        else:
+                            logger.warning(f"⚠️  [Sweep] No signature returned on attempt {attempt}")
+                            if attempt == max_retries:
+                                raise Exception("Failed to get transaction signature after all retries")
+                            
+                    except Exception as send_error:
+                        error_str = str(send_error)
+                        logger.error(f"❌ [Sweep Attempt {attempt}/{max_retries}] Send error: {error_str}")
+                        
+                        # Check if this is the "no record of prior credit" error
+                        if "no record of a prior credit" in error_str.lower() or "account not found" in error_str.lower():
+                            if attempt < max_retries:
+                                logger.warning(f"⚠️  [Sweep] Account state issue detected - waiting {retry_delay}s before retry...")
+                                continue
+                            else:
+                                logger.error(f"❌ [Sweep] Account state issue persists after {max_retries} attempts")
+                                raise
+                        else:
+                            # Different error, don't retry
+                            logger.error(f"❌ [Sweep] Non-retryable error: {error_str}")
+                            raise
+                
+                # If we got here without a signature, something went wrong
+                if not signature:
+                    raise Exception("Sweep transaction failed - no signature obtained")
                     
                     if response.value:
                         signature = str(response.value)
