@@ -709,6 +709,30 @@ function App() {
       if (user) loadUserPrizes();
     });
 
+    // NEW EVENT: player_left - Handle player disconnection
+    newSocket.on('player_left', (data) => {
+      console.log('📥 EVENT: player_left', {
+        room: data.room_type,
+        player: data.player?.first_name,
+        remaining: data.players_count
+      });
+      
+      // REPLACE participant list with updated full list
+      setRoomParticipants(prev => ({
+        ...prev,
+        [data.room_type]: data.all_players || []  // FULL list replacement
+      }));
+      
+      console.log(`✅ Participant list updated after ${data.player?.first_name} left`);
+      
+      toast.warning(
+        `👋 ${data.player?.first_name || 'Player'} left the room (${data.players_count}/3)`,
+        { duration: 2000 }
+      );
+      
+      loadRooms();
+    });
+
     newSocket.on('rooms_updated', () => {
       loadRooms();
     });
