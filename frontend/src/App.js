@@ -1354,20 +1354,9 @@ function App() {
         setBetAmount('');
         setSelectedRoom(null);
         
-        // Set initial room participants with current user
-        const currentPlayer = {
-          user_id: user.id,
-          first_name: user.first_name,
-          last_name: user.last_name || '',
-          username: user.telegram_username || user.username || '',
-          photo_url: user.photo_url || '',
-          bet_amount: parseInt(betAmount)
-        };
-        
-        setRoomParticipants(prev => ({
-          ...prev,
-          [roomType]: [currentPlayer]
-        }));
+        // DON'T manually set roomParticipants here - let the player_joined socket event handle it
+        // The backend will emit player_joined with all_players array which is the source of truth
+        console.log('✅ Joined room, waiting for player_joined socket event...');
         
         // Enter lobby mode
         setInLobby(true);
