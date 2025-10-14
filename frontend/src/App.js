@@ -492,6 +492,28 @@ function App() {
       setIsConnected(false);
     });
 
+    // Room management events
+    newSocket.on('user_registered', (data) => {
+      console.log('✅ User registered to socket:', data);
+    });
+
+    newSocket.on('room_joined_confirmed', (data) => {
+      console.log('✅ Room joined confirmed via Socket.IO:', data.room_id);
+    });
+
+    newSocket.on('room_full', (data) => {
+      console.log('🚀 ROOM FULL event received:', data);
+      toast.success(data.message || '🚀 ROOM IS FULL! GET READY FOR THE BATTLE!', {
+        duration: 3000,
+        style: { 
+          background: 'linear-gradient(to right, #22c55e, #10b981)',
+          color: 'white',
+          fontSize: '18px',
+          fontWeight: 'bold'
+        }
+      });
+    });
+
     // Game events
     newSocket.on('player_joined', (data) => {
       console.log('👤 Player joined:', data);
