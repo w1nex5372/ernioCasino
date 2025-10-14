@@ -1979,6 +1979,15 @@ async def startup_event():
     # Start Solana payment monitoring
     await payment_monitor.start_monitoring()
     
+    # Run payment auto-recovery system (scans last 24 hours for missed payments)
+    logger.info("🔄 Running payment auto-recovery on startup...")
+    try:
+        processor = get_processor(db)
+        recovery_result = await run_startup_recovery(db, processor)
+        logger.info(f"✅ Auto-recovery complete: {recovery_result}")
+    except Exception as e:
+        logger.error(f"❌ Auto-recovery failed: {e}")
+    
     # Start redundant payment scanner (backup detection system)
     asyncio.create_task(redundant_payment_scanner())
     
