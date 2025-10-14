@@ -779,15 +779,80 @@ class PaymentMonitor:
 # Initialize payment monitor
 payment_monitor = PaymentMonitor()
 
+# Track user_id to socket_id mapping for room management
+user_to_socket: Dict[str, str] = {}  # user_id -> sid
+socket_to_user: Dict[str, str] = {}  # sid -> user_id
+
 # Socket.IO events
 @sio.event
 async def connect(sid, environ):
-    logging.info(f"Client {sid} connected")
+    logging.info(f"🔌 Client {sid} connected")
     await sio.emit('connected', {'status': 'Connected to casino!'}, room=sid)
 
 @sio.event
 async def disconnect(sid):
-    logging.info(f"Client {sid} disconnected")
+    logging.info(f"🔌 Client {sid} disconnected")
+    
+    # Clean up socket from rooms
+    socket_rooms.cleanup_socket(sid)
+    
+    # Clean up user mapping
+    if sid in socket_to_user:
+        user_id = socket_to_user[sid]
+        if user_id in user_to_socket:
+            del user_to_socket[user_id]
+        del socket_to_user[sid]
+        logging.info(f"🧹 Cleaned up user {user_id} socket mapping")
+    
+    # TODO: Notify room participants about player disconnect
+    # This will be implemented in a future update for proper reconnection handling
+
+@sio.event
+async def register_user(sid, data):
+    """Register user_id to socket_id mapping for room-specific events"""
+    try:
+        user_id = data.get('user_id')
+        if not user_id:
+            logging.error(f"❌ No user_id provided in register_user event")
+            return
+        
+        # Update mappings
+        user_to_socket[user_id] = sid
+        socket_to_user[sid] = user_id
+        
+        logging.info(f"✅ Registered user {user_id} to socket {sid[:8]}")
+        
+        # Send confirmation
+        await sio.emit('user_registered', {'user_id': user_id, 'status': 'registered'}, room=sid)
+        
+    except Exception as e:
+        logging.error(f"❌ Error in register_user: {e}")
+
+@sio.event
+async def join_game_room(sid, data):
+    """Join a game room via Socket.IO (called after successful REST API join)"""
+    try:
+        room_id = data.get('room_id')
+        user_id = data.get('user_id')
+        
+        if not room_id or not user_id:
+            logging.error(f"❌ Missing room_id or user_id in join_game_room event")
+            return
+        
+        # Join the Socket.IO room
+        await socket_rooms.join_socket_room(sio, sid, room_id)
+        
+        # Update user mapping
+        user_to_socket[user_id] = sid
+        socket_to_user[sid] = user_id
+        
+        logging.info(f"🎮 User {user_id} joined game room {room_id} via socket {sid[:8]}")
+        
+        # Send confirmation
+        await sio.emit('room_joined_confirmed', {'room_id': room_id}, room=sid)
+        
+    except Exception as e:
+        logging.error(f"❌ Error in join_game_room: {e}")
 
 # Game logic functions
 def calculate_win_probability(player_bet: int, total_pool: int) -> float:
