@@ -430,6 +430,50 @@ function App() {
       window.removeEventListener('orientationchange', checkMobile);
     };
   }, []);
+  // Listen for Service Worker updates and force reload
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      // Listen for messages from service worker
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'SW_UPDATED') {
+          console.log('🔄 SW UPDATE DETECTED:', event.data.version);
+          console.log('🔄 Force reloading page to get new version...');
+          
+          // Show toast notification
+          toast.info('🔄 New version available! Reloading...', {
+            duration: 2000
+          });
+          
+          // Force reload after short delay
+          setTimeout(() => {
+            window.location.reload(true);
+          }, 2000);
+        }
+      });
+
+      // Also check for waiting service worker on page load
+      navigator.serviceWorker.ready.then((registration) => {
+        if (registration.waiting) {
+          console.log('⚠️ New SW is waiting, sending SKIP_WAITING');
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+
+        // Listen for updates
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          console.log('🔄 SW update found, installing...');
+          
+          newWorker?.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('✅ New SW installed, will activate on next load');
+              // Tell it to skip waiting
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
+        });
+      });
+    }
+  }, []);
 
   // Socket connection
   useEffect(() => {
