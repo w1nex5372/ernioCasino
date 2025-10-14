@@ -485,14 +485,24 @@ function App() {
     });
     
     newSocket.on('connect', () => {
-      console.log('✅✅✅ WebSocket CONNECTED! ID:', newSocket.id);
-      toast.success('Connected to server!', { duration: 2000 });
+      console.log('✅✅✅ WebSocket CONNECTED! ✅✅✅');
+      console.log('Socket ID:', newSocket.id);
+      console.log('Platform:', platform);
+      console.log('Connected:', newSocket.connected);
+      console.log('Transport:', newSocket.io.engine.transport.name);
+      
+      toast.success(`Connected! (${platform})`, { duration: 2000 });
       
       // Register user to socket mapping if user is logged in
       const storedUser = JSON.parse(localStorage.getItem('casino_user_session') || '{}');
       if (storedUser && storedUser.id) {
-        console.log('📝 Registering user to socket:', storedUser.id);
-        newSocket.emit('register_user', { user_id: storedUser.id });
+        console.log('📝 Registering user to socket:', storedUser.id, platform);
+        newSocket.emit('register_user', {
+          user_id: storedUser.id,
+          platform: platform
+        });
+      } else {
+        console.warn('⚠️ No user in localStorage to register');
       }
     });
     
