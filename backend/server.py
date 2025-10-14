@@ -992,13 +992,18 @@ async def start_game_round(room: GameRoom):
         'has_prize': True
     })
     
-    # Send prize link privately to the winner
-    await sio.emit('prize_won', {
-        'prize_link': prize_link,
-        'room_type': room.room_type,
-        'bet_amount': winner.bet_amount,
-        'total_pool': room.prize_pool
-    }, room=winner.user_id)  # Send only to winner
+    # Send prize link privately to the winner (using socket ID)
+    winner_sid = user_to_socket.get(winner.user_id)
+    if winner_sid:
+        await sio.emit('prize_won', {
+            'prize_link': prize_link,
+            'room_type': room.room_type,
+            'bet_amount': winner.bet_amount,
+            'total_pool': room.prize_pool
+        }, room=winner_sid)
+        logging.info(f"🏆 Sent private prize_won event to winner {winner.username}")
+    else:
+        logging.warning(f"⚠️ Could not find socket for winner {winner.user_id} to send prize_won event")
     
     # Save completed game to database
     try:
