@@ -235,6 +235,11 @@ function App() {
   const [gameInProgress, setGameInProgress] = useState(false); // Track if game is running
   const [currentGameData, setCurrentGameData] = useState(null); // Store current game info
   
+  // New synchronization states
+  const [showGetReady, setShowGetReady] = useState(false); // Show "GET READY!" animation
+  const [shownMatchIds, setShownMatchIds] = useState(new Set()); // Track shown match IDs to prevent duplicates
+  const [getReadyCountdown, setGetReadyCountdown] = useState(3); // Countdown for GET READY screen
+  
   // UI state
   const [activeTab, setActiveTab] = useState('rooms');
   const [isMobile, setIsMobile] = useState(false);
