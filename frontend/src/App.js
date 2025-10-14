@@ -16,8 +16,8 @@ import './App.css';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// App version for cache busting - NO SERVICE WORKER
-const APP_VERSION = '8.0-WINNER-FIX-v5-20250114';
+// App version for cache busting - WITH SERVICE WORKER v9.0
+const APP_VERSION = '9.0-SYNC-FIX-GET-READY-20250114182000';
 
 // Check and clear old version cache
 const storedVersion = localStorage.getItem('app_version');
