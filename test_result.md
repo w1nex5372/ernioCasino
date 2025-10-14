@@ -500,7 +500,22 @@ test_plan:
   test_all: false
   test_priority: "critical_first"
 
+frontend:
+  - task: "Fix Win/Loss Badge Display in Game History"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "ISSUE IDENTIFIED: The game history badge was incorrectly showing 'Lost' even for winners because the isUserWinner logic was checking for fields that don't exist in the RoomPlayer model (telegram_id, id). The RoomPlayer model only has user_id field. FIXED: Updated winner detection logic to correctly check String(game.winner.user_id) === String(user.id) as primary check, with fallback checks for game.winner_id and game.winner_user_id fields. This ensures the badge correctly displays '🏆 Won' for winners and 'Lost' for losers based on matching the current user's ID with the winner's user_id from the game data."
+
 agent_communication:
+    - agent: "main"
+      message: "WIN/LOSS BADGE FIX IMPLEMENTED: Fixed the incorrect 'Lost' badge display in game history. The issue was in the isUserWinner logic checking for non-existent fields (telegram_id, id) in the RoomPlayer model. Updated to correctly check game.winner.user_id which actually exists in the backend data structure. Badge now properly shows '🏆 Won' for winners and 'Lost' for losers. Ready for visual testing and user verification."
     - agent: "main"
       message: "SOLANA AUTOMATIC TOKEN PURCHASE IMPLEMENTED: Complete integration with dynamic pricing and forwarding. 1) Updated .env with mainnet RPC and CASINO_WALLET_PRIVATE_KEY 2) Created PriceFetcher class for live SOL/EUR rates (CoinGecko API, 60s cache) 3) Enhanced SolanaPaymentProcessor: generates unique wallets per purchase, monitors blockchain for payments, calculates tokens dynamically (1 EUR = 100 tokens), credits user accounts, forwards SOL to main wallet EC2cPxi4VbyzGoWMucHQ6LwkWz1W9vZE7ZApcY9PFsMy 4) Full payment lifecycle automation: wallet → monitor → detect → credit → forward → cleanup 5) API endpoints integrated and ready. System ready for testing."
     - agent: "main"
