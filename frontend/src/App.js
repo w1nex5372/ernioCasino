@@ -1727,10 +1727,9 @@ function App() {
                         <div className="flex justify-center">
                           <div className="relative">
                             {(() => {
-                              const isCurrentUserWinner = winnerData.is_winner || (user && (
-                                String(winnerData.winner_telegram_id) === String(user.telegram_id) ||
-                                String(winnerData.winner?.telegram_id) === String(user.telegram_id) ||
-                                String(winnerData.winner?.id) === String(user.id) ||
+                              const isCurrentUserWinner = winnerData.is_winner || (user && winnerData.winner && (
+                                String(winnerData.winner.user_id) === String(user.id) ||
+                                String(winnerData.winner_id) === String(user.id) ||
                                 String(winnerData.winner_user_id) === String(user.id)
                               ));
                               return isCurrentUserWinner;
