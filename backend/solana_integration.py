@@ -28,12 +28,67 @@ import base58
 
 # Configuration
 SOLANA_RPC_URL = os.environ.get('SOLANA_RPC_URL', 'https://api.mainnet-beta.solana.com')
+# RPC Fallback endpoints for high availability
+SOLANA_RPC_FALLBACKS = [
+    os.environ.get('SOLANA_RPC_FALLBACK_1', 'https://api.mainnet-beta.solana.com'),
+    os.environ.get('SOLANA_RPC_FALLBACK_2', 'https://solana-api.projectserum.com'),
+]
 MAIN_WALLET_ADDRESS = os.environ.get('MAIN_WALLET_ADDRESS', 'EC2cPxi4VbyzGoWMucHQ6LwkWz1W9vZE7ZApcY9PFsMy')
 CASINO_WALLET_PRIVATE_KEY = os.environ.get('CASINO_WALLET_PRIVATE_KEY', '')
 SOL_TO_TOKEN_RATE = int(os.environ.get('SOL_TO_TOKEN_RATE', 100))  # 1 EUR = 100 tokens
 LAMPORTS_PER_SOL = 1_000_000_000  # 1 SOL = 1 billion lamports
 
 logger = logging.getLogger(__name__)
+
+
+class RPCManager:
+    """Manages RPC endpoints with automatic fallback and rate limit handling"""
+    
+    def __init__(self, primary_url: str, fallback_urls: list):
+        self.primary_url = primary_url
+        self.fallback_urls = fallback_urls
+        self.current_index = -1  # -1 means using primary
+        self.failure_count = {}
+        self.last_switch_time = 0
+        self.switch_cooldown = 60  # Don't switch back for 60 seconds
+        
+    def get_current_url(self) -> str:
+        """Get the current active RPC URL"""
+        if self.current_index == -1:
+            return self.primary_url
+        return self.fallback_urls[self.current_index % len(self.fallback_urls)]
+    
+    def mark_failure(self, url: str):
+        """Mark an RPC endpoint as failed"""
+        self.failure_count[url] = self.failure_count.get(url, 0) + 1
+        logger.warning(f"⚠️  RPC failure marked for {url[:50]}... (count: {self.failure_count[url]})")
+    
+    def should_fallback(self, error: Exception) -> bool:
+        """Determine if we should switch to fallback RPC"""
+        error_str = str(error).lower()
+        # Rate limit or connection errors trigger fallback
+        return any(keyword in error_str for keyword in [
+            '429', 'too many requests', 'rate limit',
+            'connection', 'timeout', 'unavailable'
+        ])
+    
+    def switch_to_fallback(self):
+        """Switch to next fallback RPC endpoint"""
+        current_time = time.time()
+        if current_time - self.last_switch_time < self.switch_cooldown:
+            return  # Don't switch too frequently
+        
+        self.current_index += 1
+        self.last_switch_time = current_time
+        new_url = self.get_current_url()
+        logger.warning(f"🔄 Switching to fallback RPC: {new_url[:50]}...")
+    
+    def try_reset_to_primary(self):
+        """Try to reset to primary RPC after cooldown"""
+        current_time = time.time()
+        if self.current_index != -1 and current_time - self.last_switch_time > 300:  # 5 minutes
+            logger.info(f"🔄 Attempting to reset to primary RPC")
+            self.current_index = -1
 
 class PriceFetcher:
     """Fetches live SOL/EUR exchange rate"""
