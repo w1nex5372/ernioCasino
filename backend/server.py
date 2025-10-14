@@ -788,9 +788,27 @@ socket_to_user: Dict[str, str] = {}  # sid -> user_id
 async def connect(sid, environ):
     logging.info(f"🔌🔌🔌 NEW CLIENT CONNECTED 🔌🔌🔌")
     logging.info(f"Socket ID: {sid}")
-    logging.info(f"Client info: {environ.get('REMOTE_ADDR', 'unknown')}")
-    await sio.emit('connected', {'status': 'Connected to casino!'}, room=sid)
-    logging.info(f"✅ Sent 'connected' confirmation to {sid}")
+    logging.info(f"Remote Address: {environ.get('REMOTE_ADDR', 'unknown')}")
+    logging.info(f"User Agent: {environ.get('HTTP_USER_AGENT', 'unknown')}")
+    
+    # Detect platform
+    user_agent = environ.get('HTTP_USER_AGENT', '').lower()
+    if 'telegram' in user_agent:
+        platform = 'Telegram WebView'
+    elif 'mobile' in user_agent or 'android' in user_agent or 'iphone' in user_agent:
+        platform = 'Mobile Browser'
+    else:
+        platform = 'Desktop Browser'
+    
+    logging.info(f"Platform: {platform}")
+    logging.info(f"Total active connections: {len(user_to_socket) + 1}")
+    
+    await sio.emit('connected', {
+        'status': 'Connected to casino!',
+        'socket_id': sid,
+        'platform': platform
+    }, room=sid)
+    logging.info(f"✅ Sent 'connected' confirmation to {sid} ({platform})")
 
 @sio.event
 async def disconnect(sid):
