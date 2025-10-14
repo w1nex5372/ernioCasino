@@ -537,9 +537,20 @@ function App() {
       
       // PREVENT DUPLICATE: Check if we already showed winner for this game
       const gameId = data.game_id || data.id || `${data.room_type}-${Date.now()}`;
-      if (winnerDisplayedForGame === gameId) {
+      const lastDisplayedId = sessionStorage.getItem('last_winner_game_id');
+      
+      if (winnerDisplayedForGame === gameId || lastDisplayedId === gameId) {
         console.log('⏭️ Winner already displayed for game:', gameId, '- SKIPPING');
         return;
+      }
+      
+      // Additional time-based check: ignore old game results (> 2 minutes old)
+      if (data.finished_at) {
+        const gameAge = Date.now() - new Date(data.finished_at).getTime();
+        if (gameAge > 120000) { // 2 minutes
+          console.log('⏭️ Game result too old:', gameAge/1000, 'seconds - SKIPPING');
+          return;
+        }
       }
       
       const winnerName = data.winner_name || `${data.winner?.first_name} ${data.winner?.last_name || ''}`.trim();
