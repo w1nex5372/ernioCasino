@@ -676,6 +676,9 @@ function App() {
       setLobbyData(null);
       setActiveRoom(null);
       
+      // Reload bonus status to ensure it's visible on return to main screen
+      loadWelcomeBonusStatus();
+      
       // Prepare winner data with ALL needed fields
       const winnerInfo = {
         winner: data.winner,
