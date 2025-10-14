@@ -513,6 +513,18 @@ frontend:
           agent: "main"
           comment: "ISSUE IDENTIFIED: The game history badge was incorrectly showing 'Lost' even for winners because the isUserWinner logic was checking for fields that don't exist in the RoomPlayer model (telegram_id, id). The RoomPlayer model only has user_id field. FIXED: Updated winner detection logic to correctly check String(game.winner.user_id) === String(user.id) as primary check, with fallback checks for game.winner_id and game.winner_user_id fields. This ensures the badge correctly displays '🏆 Won' for winners and 'Lost' for losers based on matching the current user's ID with the winner's user_id from the game data."
 
+  - task: "Fix Winner Screen UI Issues"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "MULTIPLE UI FIXES IMPLEMENTED: 1) WRONG RESULT MESSAGE: Fixed winner detection logic throughout winner screen - was checking non-existent fields (telegram_id, id) instead of winner.user_id. Now correctly shows 'Congratulations, You Won!' for winners and 'Better Luck Next Time!' for losers. Updated 4 instances of winner detection logic (title, trophy, name display, prize section). 2) VERSION LABEL REMOVED: Completely removed 'v7.0-MAINNET-PRODUCTION...' text from bottom-right corner of UI. 3) PRIZE POOL VISIBILITY: Prize Pool section now only displays for winners - losers no longer see it. Changed from conditional content to conditional rendering (returns null for losers). 4) CROSS-DEVICE STABILITY: All responsive classes (text-2xl md:text-3xl, p-3 md:p-4, space-y-3 md:space-y-4) maintained for proper display on both mobile and PC."
+
 agent_communication:
     - agent: "main"
       message: "WIN/LOSS BADGE FIX IMPLEMENTED: Fixed the incorrect 'Lost' badge display in game history. The issue was in the isUserWinner logic checking for non-existent fields (telegram_id, id) in the RoomPlayer model. Updated to correctly check game.winner.user_id which actually exists in the backend data structure. Badge now properly shows '🏆 Won' for winners and 'Lost' for losers. Ready for visual testing and user verification."
