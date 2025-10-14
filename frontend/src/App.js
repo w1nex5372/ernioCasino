@@ -549,33 +549,40 @@ function App() {
 
     // NEW EVENT: room_ready - Show "GET READY!" full-screen animation
     newSocket.on('room_ready', (data) => {
-      console.log('📥 EVENT: room_ready', {
+      console.log('🚀🚀🚀 EVENT: room_ready RECEIVED 🚀🚀🚀');
+      console.log('📥 room_ready data:', {
         room: data.room_type,
         match_id: data.match_id,
         players: data.players?.length,
-        countdown: data.countdown
+        countdown: data.countdown,
+        message: data.message
       });
       
       // Show GET READY! animation
+      console.log('🎬 Setting showGetReady = true');
       setShowGetReady(true);
       setGetReadyCountdown(data.countdown || 3);
       
       // Start countdown
       let count = data.countdown || 3;
+      console.log(`⏱️ Starting countdown from ${count}`);
       const countdownInterval = setInterval(() => {
         count--;
+        console.log(`⏱️ Countdown: ${count}`);
         setGetReadyCountdown(count);
         if (count <= 0) {
           clearInterval(countdownInterval);
+          console.log('⏱️ Countdown complete');
         }
       }, 1000);
       
       // Hide after countdown
       setTimeout(() => {
+        console.log('🎬 Hiding GET READY animation');
         setShowGetReady(false);
       }, (data.countdown || 3) * 1000);
       
-      console.log('✅ GET READY animation started');
+      console.log('✅ GET READY animation started successfully');
     });
 
     newSocket.on('game_starting', (data) => {
