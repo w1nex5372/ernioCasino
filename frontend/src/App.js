@@ -1690,9 +1690,11 @@ function App() {
                       {/* Close Button */}
                       <button
                         onClick={() => {
+                          console.log('❌ Closing winner screen');
                           setShowWinnerScreen(false);
                           setWinnerData(null);
-                          setWinnerDisplayedForGame(null); // Reset guard for next game
+                          // Keep the game ID in sessionStorage to prevent re-display on reconnect
+                          // It will be cleared on page reload
                           setActiveTab('rooms');
                           setInLobby(false);
                           setGameInProgress(false);
