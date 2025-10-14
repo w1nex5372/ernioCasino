@@ -1806,36 +1806,29 @@ function App() {
                         </div>
                       </div>
 
-                      {/* Prize Amount Display - PERSONALIZED */}
+                      {/* Prize Amount Display - ONLY FOR WINNERS */}
                       {(() => {
-                        const isCurrentUserWinner = winnerData.is_winner || (user && (
-                          String(winnerData.winner_telegram_id) === String(user.telegram_id) ||
-                          String(winnerData.winner?.telegram_id) === String(user.telegram_id) ||
-                          String(winnerData.winner?.id) === String(user.id) ||
+                        const isCurrentUserWinner = winnerData.is_winner || (user && winnerData.winner && (
+                          String(winnerData.winner.user_id) === String(user.id) ||
+                          String(winnerData.winner_id) === String(user.id) ||
                           String(winnerData.winner_user_id) === String(user.id)
                         ));
-                        return isCurrentUserWinner;
-                      })() ? (
-                        <div className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border border-purple-500/30 rounded-lg p-3 md:p-4 space-y-2 mx-2">
-                          <p className="text-base md:text-lg text-white font-semibold">You won</p>
-                          <p className="text-2xl md:text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-gold-500 bg-clip-text">
-                            {winnerData.prize_pool || '600'} tokens!
-                          </p>
-                          <p className="text-xs md:text-sm text-slate-400">
-                            {ROOM_CONFIGS[winnerData.room_type]?.icon} {ROOM_CONFIGS[winnerData.room_type]?.name}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="bg-gradient-to-r from-slate-900/50 to-slate-800/50 border border-slate-600/30 rounded-lg p-3 md:p-4 space-y-2 mx-2">
-                          <p className="text-base md:text-lg text-slate-400 font-semibold">Prize Pool</p>
-                          <p className="text-2xl md:text-3xl font-bold text-slate-300">
-                            {winnerData.prize_pool || '600'} tokens
-                          </p>
-                          <p className="text-xs md:text-sm text-slate-500">
-                            {ROOM_CONFIGS[winnerData.room_type]?.icon} {ROOM_CONFIGS[winnerData.room_type]?.name}
-                          </p>
-                        </div>
-                      )}
+                        
+                        // Only show prize pool section if current user is the winner
+                        if (!isCurrentUserWinner) return null;
+                        
+                        return (
+                          <div className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border border-purple-500/30 rounded-lg p-3 md:p-4 space-y-2 mx-2">
+                            <p className="text-base md:text-lg text-white font-semibold">You won</p>
+                            <p className="text-2xl md:text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-gold-500 bg-clip-text">
+                              {winnerData.prize_pool || '600'} tokens!
+                            </p>
+                            <p className="text-xs md:text-sm text-slate-400">
+                              {ROOM_CONFIGS[winnerData.room_type]?.icon} {ROOM_CONFIGS[winnerData.room_type]?.name}
+                            </p>
+                          </div>
+                        );
+                      })()}
 
                       {/* Action Buttons */}
                       <div className="space-y-2 md:space-y-3 pt-2 md:pt-4 px-2">
