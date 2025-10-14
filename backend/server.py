@@ -136,6 +136,8 @@ wallet_derivation = SolanaWalletDerivation(CASINO_WALLET_PRIVATE_KEY)
 # MongoDB connection
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
+logging.info(f"🗄️  MongoDB: Connected to database '{DB_NAME}' at {MONGO_URL}")
+logging.info(f"🔍 Database config: DB_NAME from env = {os.environ.get('DB_NAME', 'NOT SET')}")
 
 # Socket.IO setup
 sio = socketio.AsyncServer(
