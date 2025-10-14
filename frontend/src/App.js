@@ -613,27 +613,29 @@ function App() {
     });
 
     newSocket.on('game_finished', (data) => {
-      console.log('🏆 GAME FINISHED EVENT RECEIVED!');
-      console.log('📊 Game data:', data);
-      console.log('👤 Current user:', user);
+      console.log('📥 EVENT: game_finished', {
+        room: data.room_type,
+        match_id: data.match_id,
+        winner: data.winner_name,
+        timestamp: data.finished_at
+      });
       
-      // PREVENT DUPLICATE: Check if we already showed winner for this game
-      const gameId = data.game_id || data.id || `${data.room_type}-${Date.now()}`;
-      const lastDisplayedId = sessionStorage.getItem('last_winner_game_id');
-      
-      if (winnerDisplayedForGame === gameId || lastDisplayedId === gameId) {
-        console.log('⏭️ Winner already displayed for game:', gameId, '- SKIPPING');
+      // CRITICAL: Use match_id to prevent duplicates
+      const matchId = data.match_id;
+      if (!matchId) {
+        console.error('❌ No match_id in game_finished event - cannot track duplicates');
         return;
       }
       
-      // Additional time-based check: ignore old game results (> 2 minutes old)
-      if (data.finished_at) {
-        const gameAge = Date.now() - new Date(data.finished_at).getTime();
-        if (gameAge > 120000) { // 2 minutes
-          console.log('⏭️ Game result too old:', gameAge/1000, 'seconds - SKIPPING');
-          return;
-        }
+      // Check if we already showed this match
+      if (shownMatchIds.has(matchId)) {
+        console.log('⏭️ Winner already displayed for match:', matchId, '- SKIPPING');
+        return;
       }
+      
+      // Mark this match as shown
+      setShownMatchIds(prev => new Set([...prev, matchId]));
+      console.log('✅ Match marked as shown:', matchId);
       
       const winnerName = data.winner_name || `${data.winner?.first_name} ${data.winner?.last_name || ''}`.trim();
       const gameTime = new Date().toLocaleTimeString();
