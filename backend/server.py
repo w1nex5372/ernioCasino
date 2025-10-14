@@ -34,6 +34,7 @@ from solana_integration import SolanaPaymentProcessor, get_processor, PriceFetch
 from payment_recovery import run_startup_recovery
 from rpc_monitor import rpc_alert_system
 from manual_credit_logger import credit_tokens_manually, ManualCreditLogger
+import socket_rooms
 
 # Get environment variables
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
