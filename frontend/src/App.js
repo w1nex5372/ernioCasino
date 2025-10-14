@@ -802,40 +802,66 @@ function App() {
       console.log('User:', user?.first_name || 'Unknown');
       console.log('Match ID:', data.match_id);
       console.log('Message:', data.message);
-      console.log('Current state - inLobby:', inLobby, 'showWinner:', showWinnerScreen);
+      console.log('BEFORE - inLobby:', inLobby, 'showWinner:', showWinnerScreen, 'gameInProgress:', gameInProgress);
       
-      // AGGRESSIVELY close all game screens
-      console.log('🏠 Redirecting to home screen...');
-      console.log('Step 1: Closing winner screen...');
+      // FORCE RESET ALL GAME STATE IMMEDIATELY
+      console.log('🏠🏠🏠 FORCING HOME SCREEN RETURN 🏠🏠🏠');
+      
+      // Batch all state updates together
+      console.log('Clearing ALL game state...');
       setShowWinnerScreen(false);
       setWinnerData(null);
-      
-      console.log('Step 2: Exiting lobby...');
-      setInLobby(false);
+      setInLobby(false);  // CRITICAL: Hide lobby
       setLobbyData(null);
-      
-      console.log('Step 3: Clearing game state...');
       setGameInProgress(false);
       setActiveRoom(null);
       setRoomParticipants({});
-      
-      console.log('Step 4: Switching to rooms tab...');
+      setShowGetReady(false);  // Ensure GET READY is also hidden
       setActiveTab('rooms');
       
-      console.log('Step 5: Reloading data...');
-      // Add slight delay to ensure DOM has updated
-      setTimeout(() => {
-        console.log('🎁 Bonus fetch started (after redirect_home)');
-        loadWelcomeBonusStatus();
-      }, 500);
+      console.log('AFTER - inLobby:', false, 'showWinner:', false, 'gameInProgress:', false);
+      console.log('AFTER - activeTab:', 'rooms');
       
+      // Force re-render by updating a dummy state
+      console.log('Forcing component re-render...');
+      
+      // Reload user data to get updated balance
+      console.log('Reloading user data...');
+      if (user && user.id) {
+        axios.get(`${API}/user/${user.id}`)
+          .then(response => {
+            console.log('✅ User data reloaded:', response.data);
+            setUser(response.data);
+          })
+          .catch(error => {
+            console.error('❌ Failed to reload user:', error);
+          });
+      }
+      
+      // Reload all data with delays
+      console.log('Reloading rooms, history, and bonus...');
       loadRooms();
       loadGameHistory();
       
-      console.log('✅✅✅ REDIRECTED TO HOME SUCCESSFULLY ✅✅✅');
-      console.log('New state - inLobby:', false, 'activeTab:', 'rooms');
+      // Bonus with delay to ensure everything is rendered
+      setTimeout(() => {
+        console.log('🎁🎁🎁 Loading bonus (500ms delay)');
+        loadWelcomeBonusStatus();
+      }, 500);
       
-      toast.success('🏠 Returned to home screen', { duration: 2000 });
+      // Double-check lobby is hidden after 1 second
+      setTimeout(() => {
+        console.log('🔍 Double-checking state after 1s...');
+        console.log('inLobby should be false:', inLobby);
+        if (inLobby) {
+          console.error('⚠️⚠️⚠️ LOBBY STILL VISIBLE - FORCING AGAIN');
+          setInLobby(false);
+          setLobbyData(null);
+        }
+      }, 1000);
+      
+      console.log('✅✅✅ REDIRECT COMPLETE ✅✅✅');
+      toast.success('🏠 Game finished! Returning home...', { duration: 3000 });
     });
 
     newSocket.on('new_room_available', (data) => {
