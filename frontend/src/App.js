@@ -245,7 +245,11 @@ function App() {
   const [activeTab, setActiveTab] = useState('rooms');
   const [isMobile, setIsMobile] = useState(false);
   const [casinoWalletAddress, setCasinoWalletAddress] = useState('Loading...');
-  const [welcomeBonusStatus, setWelcomeBonusStatus] = useState(null);
+  // ALWAYS default to showing bonus to ensure it's visible
+  const [welcomeBonusStatus, setWelcomeBonusStatus] = useState({
+    bonus_active: true,
+    remaining_spots: 100
+  });
   const [isRefreshingHistory, setIsRefreshingHistory] = useState(false);
 
   // Form state
