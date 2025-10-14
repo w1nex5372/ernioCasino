@@ -128,13 +128,41 @@
             // EXTREME CACHE CLEARING - v8.0 WINNER FIX
             console.log('🔥 NUCLEAR CACHE CLEAR v8.0: Starting...');
             
-            // Disable service worker completely
+            // Register service worker v9.0 - SYNC FIX BUILD
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    registrations.forEach(function(registration) {
-                        console.log('🗑️ Unregistering SW:', registration.scope);
-                        registration.unregister();
+                navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                    .then(function(registration) {
+                        console.log('✅ SW v9.0 registered:', registration.scope);
+                        
+                        // Listen for updates
+                        registration.addEventListener('updatefound', () => {
+                            console.log('🔄 SW v9.0: Update found!');
+                            const newWorker = registration.installing;
+                            
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'activated') {
+                                    console.log('🎉 SW v9.0: New version activated!');
+                                }
+                            });
+                        });
+                        
+                        // Check for updates every 60 seconds
+                        setInterval(() => {
+                            registration.update();
+                        }, 60000);
+                    })
+                    .catch(function(error) {
+                        console.error('❌ SW registration failed:', error);
                     });
+                
+                // Listen for SW messages
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    console.log('📨 Message from SW:', event.data);
+                    
+                    if (event.data && event.data.type === 'SW_UPDATED') {
+                        console.log(`🔄 SW v9.0 UPDATE: ${event.data.version} (${event.data.timestamp})`);
+                        console.log('♻️ New version available - Telegram will reload on next visit');
+                    }
                 });
             }
             
