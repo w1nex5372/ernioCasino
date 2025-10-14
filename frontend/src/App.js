@@ -1846,9 +1846,10 @@ function App() {
                         {/* Play Again Button */}
                         <Button
                           onClick={() => {
+                            console.log('🔄 Play Again clicked');
                             setShowWinnerScreen(false);
                             setWinnerData(null);
-                            setWinnerDisplayedForGame(null); // Reset guard for next game
+                            // Keep game ID to prevent re-display
                             setActiveTab('rooms');
                             setInLobby(false);
                             setGameInProgress(false);
