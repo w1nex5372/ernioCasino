@@ -600,9 +600,9 @@ function App() {
       sessionStorage.setItem('last_winner_game_id', gameId);
       console.log('✅ Winner screen displayed for game:', gameId, '(stored in sessionStorage)');
       
-      // Toast notification for everyone
+      // Toast notification for everyone (no token amounts)
       if (isWinner) {
-        toast.success(`🎉 You Won ${data.prize_pool} tokens!`, {
+        toast.success(`🎉 Congratulations, You Won!`, {
           duration: 5000,
           style: { background: '#22c55e', color: 'white', fontSize: '18px', fontWeight: 'bold' }
         });
