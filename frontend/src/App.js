@@ -676,11 +676,12 @@ function App() {
         match_id: matchId  // Use match_id instead of game_id
       };
       
-      // Set winner screen state and persist to sessionStorage
+      // Set winner screen state
       setWinnerData(winnerInfo);
       setShowWinnerScreen(true);
-      setWinnerDisplayedForGame(gameId);
-      sessionStorage.setItem('last_winner_game_id', gameId);
+      setWinnerDisplayedForGame(matchId);  // Use match_id
+      
+      console.log('✅ Winner screen displayed for match:', matchId);
       console.log('✅ Winner screen displayed for game:', gameId, '(stored in sessionStorage)');
       
       // Toast notification for everyone (no token amounts)
