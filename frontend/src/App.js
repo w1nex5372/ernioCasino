@@ -799,24 +799,43 @@ function App() {
     // NEW EVENT: redirect_home - Backend signals all players to return to home
     newSocket.on('redirect_home', (data) => {
       console.log('🟢🟢🟢 EVENT: redirect_home RECEIVED 🟢🟢🟢');
+      console.log('User:', user?.first_name || 'Unknown');
       console.log('Match ID:', data.match_id);
       console.log('Message:', data.message);
+      console.log('Current state - inLobby:', inLobby, 'showWinner:', showWinnerScreen);
       
-      // Close all game screens
+      // AGGRESSIVELY close all game screens
       console.log('🏠 Redirecting to home screen...');
+      console.log('Step 1: Closing winner screen...');
       setShowWinnerScreen(false);
       setWinnerData(null);
+      
+      console.log('Step 2: Exiting lobby...');
       setInLobby(false);
       setLobbyData(null);
+      
+      console.log('Step 3: Clearing game state...');
       setGameInProgress(false);
+      setActiveRoom(null);
+      setRoomParticipants({});
+      
+      console.log('Step 4: Switching to rooms tab...');
       setActiveTab('rooms');
       
-      // Reload data
+      console.log('Step 5: Reloading data...');
+      // Add slight delay to ensure DOM has updated
+      setTimeout(() => {
+        console.log('🎁 Bonus fetch started (after redirect_home)');
+        loadWelcomeBonusStatus();
+      }, 500);
+      
       loadRooms();
       loadGameHistory();
-      loadWelcomeBonusStatus();
       
-      console.log('✅ Redirected to home successfully');
+      console.log('✅✅✅ REDIRECTED TO HOME SUCCESSFULLY ✅✅✅');
+      console.log('New state - inLobby:', false, 'activeTab:', 'rooms');
+      
+      toast.success('🏠 Returned to home screen', { duration: 2000 });
     });
 
     newSocket.on('new_room_available', (data) => {
