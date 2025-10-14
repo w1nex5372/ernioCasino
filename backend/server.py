@@ -30,7 +30,10 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # Import after .env is loaded so modules can read the environment
-from solana_integration import get_processor
+from solana_integration import SolanaPaymentProcessor, get_processor, PriceFetcher
+from payment_recovery import run_startup_recovery
+from rpc_monitor import rpc_alert_system
+from manual_credit_logger import credit_tokens_manually, ManualCreditLogger
 
 # Get environment variables
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
