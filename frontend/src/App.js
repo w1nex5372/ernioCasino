@@ -661,7 +661,7 @@ function App() {
       
       // Prepare winner data with ALL needed fields
       const winnerInfo = {
-        winner: data.winner, // Full winner object with user_id
+        winner: data.winner,
         winner_name: winnerName,
         winner_id: data.winner_id,
         winner_user_id: data.winner?.user_id,
@@ -673,7 +673,7 @@ function App() {
         prize_link: data.prize_link,
         is_winner: isWinner,
         game_time: gameTime,
-        game_id: gameId
+        match_id: matchId  // Use match_id instead of game_id
       };
       
       // Set winner screen state and persist to sessionStorage
