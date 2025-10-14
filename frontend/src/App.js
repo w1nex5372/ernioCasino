@@ -312,9 +312,8 @@ function App() {
           // Show "Game Starting" message
           toast.success(`🎰 Room Full! Game starting...`, { duration: 3000 });
           
-          // Start aggressive winner detection for this specific room
-          console.log('🚀 STARTING WINNER DETECTION FOR:', lobbyData.room_type);
-          startWinnerDetection(lobbyData.room_type);
+          // Socket event 'game_finished' will handle winner display - no need for polling
+          console.log('🚀 Waiting for game_finished socket event from server...');
         }
         
       } catch (error) {
