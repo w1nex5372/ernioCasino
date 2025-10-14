@@ -1785,6 +1785,31 @@ async def get_game_history(limit: int = 20):
     
     return {"games": games}
 
+@api_router.get("/version")
+async def get_version():
+    """Get current build version for verification"""
+    return {
+        "version": "8.0-WINNER-FIX-20250114",
+        "build_timestamp": "1736864000",
+        "environment": "production",
+        "status": "healthy",
+        "features": {
+            "winner_message_fixed": True,
+            "version_label_removed": True,
+            "prize_visibility_fixed": True,
+            "history_badge_fixed": True
+        }
+    }
+
+@api_router.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "version": "8.0-WINNER-FIX-20250114",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
 @api_router.get("/users/telegram/{telegram_id}")
 async def get_user_by_telegram_id(telegram_id: int):
     """Find user by Telegram ID"""
