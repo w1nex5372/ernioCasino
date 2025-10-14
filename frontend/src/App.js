@@ -1239,12 +1239,23 @@ function App() {
     }
   };
 
-  const loadGameHistory = async () => {
+  const loadGameHistory = async (showLoading = false) => {
     try {
+      if (showLoading) setIsRefreshingHistory(true);
       const response = await axios.get(`${API}/game-history?limit=10`);
       setGameHistory(response.data.games);
+      if (showLoading) {
+        toast.success('✅ History refreshed!', { duration: 2000 });
+      }
     } catch (error) {
       console.error('Failed to load game history:', error);
+      if (showLoading) {
+        toast.error('Failed to refresh history');
+      }
+    } finally {
+      if (showLoading) {
+        setTimeout(() => setIsRefreshingHistory(false), 500);
+      }
     }
   };
 
