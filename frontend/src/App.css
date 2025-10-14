@@ -211,6 +211,16 @@ h1, h2, h3, .heading {
   100% { transform: scale(1); }
 }
 
+/* Explosive room full animation */
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 1.5s ease-in-out infinite;
+}
+
 /* Coin animation */
 @keyframes coinSpin {
   0% { transform: rotateY(0deg); }
