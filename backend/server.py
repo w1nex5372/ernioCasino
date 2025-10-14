@@ -1149,13 +1149,21 @@ async def start_game_round(room: GameRoom):
     await asyncio.sleep(3)
     
     # EVENT 4: redirect_home - Redirect all players back to home screen
-    logging.info(f"📤 Broadcasting redirect_home to room {room.id}")
+    final_sockets = socket_rooms.room_to_sockets.get(room.id, set())
+    socket_count = len(final_sockets)
+    
+    logging.info(f"📤📤📤 BROADCASTING redirect_home to room {room.id}")
+    logging.info(f"🧩 Target sockets: {[sid[:8] for sid in final_sockets]}")
+    logging.info(f"📊 Socket count: {socket_count}")
+    
     await socket_rooms.broadcast_to_room(sio, room.id, 'redirect_home', {
         'room_id': room.id,
         'match_id': match_id,
         'message': 'Returning to home screen...'
     })
+    
     logging.info(f"✅ Emitted redirect_home to room {room.id}")
+    logging.info(f"📤 Delivered redirect_home to {socket_count} clients")
     
     # EVENT 5: prize_won - Send prize link privately to the winner (using socket ID)
     winner_sid = user_to_socket.get(winner.user_id)
