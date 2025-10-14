@@ -433,11 +433,35 @@ function App() {
   // Listen for Service Worker updates and force reload
   useEffect(() => {
     if ('serviceWorker' in navigator) {
+      // Track if we've already reloaded to prevent infinite loop
+      const hasReloadedKey = 'sw_reloaded_at';
+      const reloadCooldown = 10000; // 10 seconds cooldown
+      
       // Listen for messages from service worker
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data && event.data.type === 'SW_UPDATED') {
           console.log('🔄 SW UPDATE DETECTED:', event.data.version);
+          
+          // Check if we recently reloaded to prevent infinite loop
+          const lastReload = localStorage.getItem(hasReloadedKey);
+          const now = Date.now();
+          
+          if (lastReload && (now - parseInt(lastReload)) < reloadCooldown) {
+            console.log('⏸️ Reload skipped - recently reloaded', (now - parseInt(lastReload)) + 'ms ago');
+            return;
+          }
+          
+          // Check if we're already on the target version
+          const currentVersion = localStorage.getItem('app_version');
+          if (currentVersion === event.data.version) {
+            console.log('✅ Already on version', event.data.version, '- no reload needed');
+            return;
+          }
+          
           console.log('🔄 Force reloading page to get new version...');
+          
+          // Mark that we're about to reload
+          localStorage.setItem(hasReloadedKey, now.toString());
           
           // Show toast notification
           toast.info('🔄 New version available! Reloading...', {
