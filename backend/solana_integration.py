@@ -717,10 +717,10 @@ class SolanaPaymentProcessor:
                 logger.info(f"✅ [Sweep Success] ========== COMPLETED ==========")
                 logger.info(f"✅ [Sweep Success] From: {wallet_address}")
                 logger.info(f"✅ [Sweep Success] To: {self.main_wallet}")
-                        logger.info(f"✅ [Sweep Success] Amount: {transfer_sol:.6f} SOL")
-                        logger.info(f"✅ [Sweep Success] Tx: {signature}")
-                        logger.info(f"✅ [Sweep Success] Network: Mainnet")
-                        logger.info(f"✅ [Sweep Success] ===============================")
+                logger.info(f"✅ [Sweep Success] Amount: {transfer_sol:.6f} SOL")
+                logger.info(f"✅ [Sweep Success] Tx: {signature}")
+                logger.info(f"✅ [Sweep Success] Network: Mainnet")
+                logger.info(f"✅ [Sweep Success] ===============================")
                         
                         # Update wallet record in database
                         await self.db.temporary_wallets.update_one(
