@@ -1042,8 +1042,7 @@ async def start_game_round(room: GameRoom):
     room.prize_pool = sum(p.bet_amount for p in room.players)
     
     # EVENT 1: room_ready - Trigger "GET READY!" animation (2-3 seconds)
-    logging.info(f"📤📤📤 BROADCASTING room_ready to room {room.id} with {final_socket_count} socket(s)")
-    await socket_rooms.broadcast_to_room(sio, room.id, 'room_ready', {
+    room_ready_data = {
         'room_id': room.id,
         'room_type': room.room_type,
         'match_id': match_id,
@@ -1051,8 +1050,16 @@ async def start_game_round(room: GameRoom):
         'prize_pool': room.prize_pool,
         'message': '🚀 GET READY FOR BATTLE!',
         'countdown': 3
-    })
+    }
+    
+    logging.info(f"📤📤📤 BROADCASTING room_ready to room {room.id}")
+    logging.info(f"🧩 Target sockets: {[sid[:8] for sid in final_sockets]}")
+    logging.info(f"📊 Socket count: {final_socket_count}")
+    
+    await socket_rooms.broadcast_to_room(sio, room.id, 'room_ready', room_ready_data)
+    
     logging.info(f"✅ Emitted room_ready to room {room.id} with match_id {match_id}")
+    logging.info(f"📤 Delivered room_ready to {final_socket_count} clients successfully")
     
     # Wait for "GET READY!" animation (3 seconds)
     await asyncio.sleep(3)
