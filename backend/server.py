@@ -912,25 +912,49 @@ async def broadcast_room_updates():
         logging.error(f"Error broadcasting room updates: {e}")
 
 async def start_game_round(room: GameRoom):
-    """Start a game round when room is full"""
+    """Start a game round when room is full - with strict event sequence"""
     if len(room.players) != 3:
         return
     
-    room.status = "playing"
-    room.started_at = datetime.now(timezone.utc)
+    # Generate unique match ID for this game
+    match_id = str(uuid.uuid4())[:12]  # Short unique ID
+    logging.info(f"🎮 Starting game round for room {room.id}, match_id: {match_id}")
+    
+    room.status = "ready"
     
     # Calculate prize pool (total bets)
     room.prize_pool = sum(p.bet_amount for p in room.players)
     
-    # Notify ROOM participants that game is starting (room-specific)
+    # EVENT 1: room_ready - Trigger "GET READY!" animation (2-3 seconds)
+    await socket_rooms.broadcast_to_room(sio, room.id, 'room_ready', {
+        'room_id': room.id,
+        'room_type': room.room_type,
+        'match_id': match_id,
+        'players': [p.dict() for p in room.players],
+        'prize_pool': room.prize_pool,
+        'message': '🚀 GET READY FOR BATTLE!',
+        'countdown': 3
+    })
+    logging.info(f"✅ Emitted room_ready to room {room.id}")
+    
+    # Wait for "GET READY!" animation (3 seconds)
+    await asyncio.sleep(3)
+    
+    # EVENT 2: game_starting - Game is now starting
+    room.status = "playing"
+    room.started_at = datetime.now(timezone.utc)
+    
     await socket_rooms.broadcast_to_room(sio, room.id, 'game_starting', {
         'room_id': room.id,
         'room_type': room.room_type,
+        'match_id': match_id,
         'players': [p.dict() for p in room.players],
-        'prize_pool': room.prize_pool
+        'prize_pool': room.prize_pool,
+        'started_at': room.started_at.isoformat()
     })
+    logging.info(f"✅ Emitted game_starting to room {room.id}")
     
-    # Wait for dramatic effect
+    # Wait for game duration (3 seconds for dramatic effect)
     await asyncio.sleep(3)
     
     # Select winner using weighted random selection
