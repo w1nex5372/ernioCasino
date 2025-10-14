@@ -868,6 +868,8 @@ async def join_game_room(sid, data):
             logging.error(f"❌ Missing room_id or user_id in join_game_room event")
             return
         
+        logging.info(f"📥 join_game_room event: user={user_id}, room={room_id}, socket={sid[:8]}")
+        
         # Join the Socket.IO room
         await socket_rooms.join_socket_room(sio, sid, room_id)
         
@@ -875,10 +877,13 @@ async def join_game_room(sid, data):
         user_to_socket[user_id] = sid
         socket_to_user[sid] = user_id
         
-        logging.info(f"🎮 User {user_id} joined game room {room_id} via socket {sid[:8]}")
+        # Check current socket count in room
+        socket_count = socket_rooms.get_room_socket_count(room_id)
+        logging.info(f"✅ User {user_id} joined room {room_id} via socket {sid[:8]}")
+        logging.info(f"📊 Room {room_id} now has {socket_count} socket(s) connected")
         
         # Send confirmation
-        await sio.emit('room_joined_confirmed', {'room_id': room_id}, room=sid)
+        await sio.emit('room_joined_confirmed', {'room_id': room_id, 'socket_count': socket_count}, room=sid)
         
     except Exception as e:
         logging.error(f"❌ Error in join_game_room: {e}")
