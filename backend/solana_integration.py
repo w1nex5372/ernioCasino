@@ -424,6 +424,10 @@ class SolanaPaymentProcessor:
                 # Credit tokens to user
                 await self.credit_tokens_to_user(wallet_doc, received_sol)
                 
+                # Wait for account state to settle before sweep
+                logger.info(f"⏳ [{wallet_address[:8]}...] Waiting 3s for account state to settle...")
+                await asyncio.sleep(3)
+                
                 logger.info(f"💸 [{wallet_address[:8]}...] Forwarding SOL to main wallet...")
                 # Forward SOL to main wallet
                 await self.forward_sol_to_main_wallet(wallet_address, wallet_doc["private_key"], received_lamports)
