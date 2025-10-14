@@ -2584,11 +2584,6 @@ function App() {
 
       <Toaster richColors position={isMobile ? "top-center" : "top-right"} />
       
-      {/* Version Indicator - Bottom Right Corner */}
-      <div className="fixed bottom-2 right-2 z-50 bg-blue-500/80 text-white text-xs px-2 py-1 rounded-md backdrop-blur-sm">
-        {APP_VERSION} 🚀 Mainnet
-      </div>
-      
       {/* Payment Modal */}
       <PaymentModal
         isOpen={showPaymentModal}
