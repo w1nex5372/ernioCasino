@@ -971,14 +971,37 @@ async def start_game_round(room: GameRoom):
     match_id = str(uuid.uuid4())[:12]  # Short unique ID
     logging.info(f"🎮 Starting game round for room {room.id}, match_id: {match_id}")
     
-    # CRITICAL: Wait 500ms for 3rd player's socket to join the room
-    # This prevents race condition where room_ready is emitted before socket joins
-    logging.info(f"⏱️ Waiting 500ms for all sockets to join room {room.id}...")
-    await asyncio.sleep(0.5)
+    # CRITICAL: Wait for ALL 3 sockets to actually join the room
+    max_wait_time = 3.0  # Maximum 3 seconds to wait
+    wait_interval = 0.2   # Check every 200ms
+    elapsed = 0.0
     
-    # Check how many sockets are in the room
-    socket_count = socket_rooms.get_room_socket_count(room.id)
-    logging.info(f"📊 Room {room.id} has {socket_count} socket(s) connected")
+    while elapsed < max_wait_time:
+        socket_count = socket_rooms.get_room_socket_count(room.id)
+        sockets_in_room = socket_rooms.room_to_sockets.get(room.id, set())
+        
+        logging.info(f"⏱️ Checking sockets in room {room.id}: {socket_count}/3")
+        logging.info(f"📋 Socket IDs in room: {[sid[:8] for sid in sockets_in_room]}")
+        
+        if socket_count >= 3:
+            logging.info(f"✅ All 3 sockets confirmed in room {room.id}!")
+            break
+        
+        logging.info(f"⏳ Waiting for more sockets ({socket_count}/3)... {elapsed:.1f}s elapsed")
+        await asyncio.sleep(wait_interval)
+        elapsed += wait_interval
+    
+    # Final check
+    final_socket_count = socket_rooms.get_room_socket_count(room.id)
+    final_sockets = socket_rooms.room_to_sockets.get(room.id, set())
+    
+    if final_socket_count < 3:
+        logging.warning(f"⚠️ Only {final_socket_count} sockets in room after {max_wait_time}s wait!")
+        logging.warning(f"⚠️ Sockets present: {[sid[:8] for sid in final_sockets]}")
+        logging.warning(f"⚠️ Proceeding anyway to avoid deadlock...")
+    else:
+        logging.info(f"✅✅✅ CONFIRMED: {final_socket_count} sockets in room {room.id}")
+        logging.info(f"✅ Socket IDs: {[sid[:8] for sid in final_sockets]}")
     
     room.status = "ready"
     
@@ -986,7 +1009,7 @@ async def start_game_round(room: GameRoom):
     room.prize_pool = sum(p.bet_amount for p in room.players)
     
     # EVENT 1: room_ready - Trigger "GET READY!" animation (2-3 seconds)
-    logging.info(f"📤 Broadcasting room_ready to room {room.id} ({socket_count} sockets)...")
+    logging.info(f"📤📤📤 BROADCASTING room_ready to room {room.id} with {final_socket_count} socket(s)")
     await socket_rooms.broadcast_to_room(sio, room.id, 'room_ready', {
         'room_id': room.id,
         'room_type': room.room_type,
