@@ -30,12 +30,26 @@ self.addEventListener('activate', (event) => {
       self.clients.claim()
     ]).then(() => {
       console.log(`SW v8.0: ${SW_VERSION} is now active and controlling all pages`);
+      
+      // Only notify clients once per activation
+      if (hasNotifiedClients) {
+        console.log('SW v8.0: Already notified clients, skipping');
+        return Promise.resolve();
+      }
+      
+      hasNotifiedClients = true;
+      
       // Get all window clients
       return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     }).then(clients => {
-      console.log(`SW v8.0: Found ${clients.length} clients to update`);
+      if (!clients || clients.length === 0) {
+        console.log('SW v8.0: No clients to notify');
+        return;
+      }
       
-      // Send message to all clients first
+      console.log(`SW v8.0: Found ${clients.length} clients to notify (one-time)`);
+      
+      // Send message to all clients ONCE
       clients.forEach(client => {
         console.log('SW v8.0: Notifying client:', client.url);
         client.postMessage({ 
@@ -45,24 +59,7 @@ self.addEventListener('activate', (event) => {
         });
       });
       
-      // For Telegram WebView, also try to navigate to force reload
-      // This is more aggressive and works even if message handler isn't set up
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          clients.forEach(client => {
-            if (client.url && client.url.includes('?')) {
-              // Add/update timestamp to force reload
-              const url = new URL(client.url);
-              url.searchParams.set('_sw_refresh', Date.now());
-              console.log('SW v8.0: Navigating client to:', url.href);
-              client.navigate(url.href).catch(err => {
-                console.log('SW v8.0: Navigate failed (expected in some contexts):', err.message);
-              });
-            }
-          });
-          resolve();
-        }, 1000);
-      });
+      console.log('SW v8.0: Client notification complete');
     })
   );
 });
