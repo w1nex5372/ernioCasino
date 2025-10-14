@@ -1821,8 +1821,8 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
     target_room.players.append(player)
     target_room.prize_pool += request.bet_amount
     
-    # Notify all clients about new player and update all room states
-    await sio.emit('player_joined', {
+    # Notify ROOM participants about new player (room-specific broadcast)
+    await socket_rooms.broadcast_to_room(sio, target_room.id, 'player_joined', {
         'room_id': target_room.id,
         'room_type': target_room.room_type,
         'player': player.dict(),
@@ -1832,11 +1832,19 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         'room_status': 'filling' if len(target_room.players) < 3 else 'ready'
     })
     
-    # Broadcast updated room states to all clients
+    # Broadcast updated room states to all clients (global lobby update)
     await broadcast_room_updates()
     
-    # Start game if room is full
+    # Check if room is full and notify
     if len(target_room.players) == 3:
+        # Emit room_full event to all participants in THIS room only
+        await socket_rooms.broadcast_to_room(sio, target_room.id, 'room_full', {
+            'room_id': target_room.id,
+            'room_type': target_room.room_type,
+            'players': [p.dict() for p in target_room.players],
+            'message': '🚀 ROOM IS FULL! GET READY FOR THE BATTLE!'
+        })
+        # Start the game
         background_tasks.add_task(start_game_round, target_room)
     
     return {
