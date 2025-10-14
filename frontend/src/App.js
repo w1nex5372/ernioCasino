@@ -461,6 +461,13 @@ function App() {
     newSocket.on('connect', () => {
       console.log('✅✅✅ WebSocket CONNECTED! ID:', newSocket.id);
       toast.success('Connected to server!', { duration: 2000 });
+      
+      // Register user to socket mapping if user is logged in
+      const storedUser = JSON.parse(localStorage.getItem('casino_user_session') || '{}');
+      if (storedUser && storedUser.id) {
+        console.log('📝 Registering user to socket:', storedUser.id);
+        newSocket.emit('register_user', { user_id: storedUser.id });
+      }
     });
     
     newSocket.on('connect_error', (error) => {
