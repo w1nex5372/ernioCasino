@@ -663,12 +663,11 @@ function App() {
     });
 
     newSocket.on('game_finished', (data) => {
-      console.log('📥 EVENT: game_finished', {
-        room: data.room_type,
-        match_id: data.match_id,
-        winner: data.winner_name,
-        timestamp: data.finished_at
-      });
+      console.log('🟢🟢🟢 EVENT: game_finished RECEIVED 🟢🟢🟢');
+      console.log('Room:', data.room_type);
+      console.log('Match ID:', data.match_id);
+      console.log('Winner:', data.winner_name);
+      console.log('Timestamp:', data.finished_at);
       
       // CRITICAL: Use match_id to prevent duplicates
       const matchId = data.match_id;
