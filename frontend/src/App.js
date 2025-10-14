@@ -519,47 +519,31 @@ function App() {
       });
     });
 
-    // Game events
+    // Game events - CRITICAL: These must maintain strict order
     newSocket.on('player_joined', (data) => {
-      console.log('👤 Player joined:', data);
-      console.log('All players in room:', data.all_players);
-      console.log('Room type:', data.room_type);
-      console.log('Players count:', data.all_players?.length);
-      
-      // Update room participants - this will trigger lobby re-render
-      setRoomParticipants(prev => {
-        const updated = {
-          ...prev,
-          [data.room_type]: data.all_players || []
-        };
-        console.log('🔄 Updated roomParticipants:', updated);
-        console.log(`🎯 Room ${data.room_type} now has ${data.all_players?.length || 0}/3 players`);
-        
-        // Force component re-render by creating new object
-        return {...updated};
+      console.log('📥 EVENT: player_joined', {
+        room: data.room_type,
+        player: data.player.first_name,
+        count: data.players_count,
+        status: data.room_status,
+        timestamp: data.timestamp
       });
       
-      // If room is now full, show special notification
-      if (data.all_players?.length === 3) {
-        console.log('🚀 ROOM IS FULL! Showing explosive animation...');
-        toast.success('🚀 ROOM IS FULL! GET READY!', {
-          duration: 3000,
-          style: { 
-            background: 'linear-gradient(to right, #22c55e, #10b981)',
-            color: 'white',
-            fontSize: '18px',
-            fontWeight: 'bold'
-          }
-        });
-      }
+      // REPLACE (not append) room participants with full list from server
+      setRoomParticipants(prev => ({
+        ...prev,
+        [data.room_type]: data.all_players || []  // FULL list replacement
+      }));
       
-      // Show notification
+      console.log(`✅ Participant list REPLACED for ${data.room_type}: ${data.all_players?.map(p => p.first_name).join(', ')}`);
+      
+      // Show notification for new player
       toast.success(
-        `🎯 ${data.player.first_name} joined ${data.room_type} room! (${data.players_count}/3)`,
-        { duration: 3000 }
+        `👤 ${data.player.first_name} joined! (${data.players_count}/3)`,
+        { duration: 2000 }
       );
       
-      // Reload rooms to update counts
+      // Reload rooms to update lobby counts
       loadRooms();
     });
 
