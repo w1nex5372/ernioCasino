@@ -121,32 +121,27 @@ function DailyTokensButton({ user, onClaim }) {
   const handleClaim = async () => {
     if (!canClaim || claiming) return;
 
+    // Immediately disable button and start countdown
     setClaiming(true);
+    setCanClaim(false);
+    setTimeLeft('23h 59m');
+    
     try {
       const response = await axios.post(`${API}/claim-daily-tokens/${user.id}`);
       
       if (response.data.status === 'success') {
         toast.success(`🎁 ${response.data.message}`, { duration: 3000 });
         
-        // FIXED: Update user object with new claim time BEFORE calling onClaim
-        const updatedUser = {
-          ...user,
-          token_balance: response.data.new_balance,
-          last_daily_claim: new Date().toISOString()
-        };
-        
+        // Update parent component with new balance AND claim time
         onClaim(response.data.new_balance);
         
-        // FIXED: Immediately set to not claimable and start countdown
-        setCanClaim(false);
-        setTimeLeft('23h 59m'); // Start showing countdown immediately
-        
-        // Force immediate recheck with updated time
-        setTimeout(() => {
-          checkClaimStatus();
-        }, 100);
+        // Keep button disabled and countdown visible
+        // checkClaimStatus will be called on next user update
       } else {
         toast.error(response.data.message);
+        // If failed, revert to claimable
+        setCanClaim(true);
+        setTimeLeft('');
       }
     } catch (error) {
       console.error('Bonus claim error:', error);
@@ -156,11 +151,12 @@ function DailyTokensButton({ user, onClaim }) {
         toast.error('User not found. Please log in again.');
       } else if (error.response?.status === 400) {
         toast.error('Already claimed today. Try again tomorrow!');
-        // FIXED: If already claimed, update the UI immediately
-        setCanClaim(false);
-        checkClaimStatus();
+        // Keep disabled - already claimed
       } else {
         toast.error('Failed to claim tokens. Please try again.');
+        // On network error, revert to claimable
+        setCanClaim(true);
+        setTimeLeft('');
       }
     } finally {
       setClaiming(false);
