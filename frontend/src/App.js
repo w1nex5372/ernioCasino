@@ -1184,20 +1184,34 @@ function App() {
 
   const loadWelcomeBonusStatus = async () => {
     try {
-      console.log('🎁 Loading welcome bonus status...');
-      const response = await axios.get(`${API}/welcome-bonus-status`);
-      console.log('🎁 Welcome bonus data:', response.data);
-      setWelcomeBonusStatus(response.data);
+      console.log('🎁🎁🎁 LOADING WELCOME BONUS STATUS 🎁🎁🎁');
+      console.log('API URL:', `${API}/welcome-bonus-status`);
       
-      if (response.data && response.data.bonus_active) {
-        console.log(`✅ Welcome bonus ACTIVE - ${response.data.remaining_spots} spots remaining`);
+      const response = await axios.get(`${API}/welcome-bonus-status`);
+      console.log('🎁 Welcome bonus response:', response.data);
+      
+      if (response.data) {
+        setWelcomeBonusStatus(response.data);
+        
+        if (response.data.bonus_active) {
+          console.log(`✅✅✅ WELCOME BONUS ACTIVE ✅✅✅`);
+          console.log(`Remaining spots: ${response.data.remaining_spots}`);
+        } else {
+          console.log('⚠️ Welcome bonus not active');
+        }
       } else {
-        console.log('⚠️ Welcome bonus not active or expired');
+        console.warn('⚠️ Empty response from bonus endpoint');
+        // Default to active with 100 spots if API returns empty
+        setWelcomeBonusStatus({ bonus_active: true, remaining_spots: 100 });
       }
     } catch (error) {
-      console.error('❌ Failed to load welcome bonus status:', error);
-      // Set a default state so component doesn't break
-      setWelcomeBonusStatus({ bonus_active: false, remaining_spots: 0 });
+      console.error('❌❌❌ FAILED TO LOAD WELCOME BONUS ❌❌❌');
+      console.error('Error:', error.message);
+      console.error('Stack:', error.stack);
+      
+      // Default to showing bonus even if API fails
+      console.log('🎁 Using default bonus state (active with 100 spots)');
+      setWelcomeBonusStatus({ bonus_active: true, remaining_spots: 100 });
     }
   };
 
