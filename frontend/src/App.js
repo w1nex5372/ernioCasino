@@ -656,6 +656,14 @@ function App() {
         const userData = JSON.parse(savedUser);
         console.log('✅ Found saved user session:', userData);
         
+        // CRITICAL FIX: If user ID is null/undefined, force re-auth
+        if (!userData.id || userData.id === 'null' || userData.id === 'undefined') {
+          console.warn('⚠️ Invalid user ID in cache - forcing re-authentication');
+          localStorage.removeItem('casino_user');
+          authenticateFromTelegram();
+          return;
+        }
+        
         // Set cached user first for instant UI
         setUser(userData);
         
