@@ -1226,7 +1226,7 @@ async def telegram_auth(user_data: UserCreate):
     logging.info(f"🔍 Authenticating Telegram user: {telegram_data.first_name} (ID: {telegram_data.id})")
     
     # Check if user already exists
-    logging.info(f"🔎 Searching for existing user with telegram_id={telegram_data.id}")
+    logging.info(f"🔎 Searching for existing user with telegram_id={telegram_data.id} in database '{DB_NAME}'")
     existing_user = await db.users.find_one({"telegram_id": telegram_data.id})
     logging.info(f"🔎 Search result: {'FOUND' if existing_user else 'NOT FOUND'}")
     
