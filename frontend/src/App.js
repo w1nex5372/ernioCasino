@@ -2490,19 +2490,18 @@ function App() {
                   ) : (
                     <div className="space-y-3">
                       {gameHistory.map((game, index) => {
-                        // FIXED: More robust winner detection with multiple checks
+                        // FIXED: Correct winner detection using user_id from RoomPlayer
                         const isUserWinner = user && game.winner && (
-                          String(game.winner.telegram_id) === String(user.telegram_id) || 
-                          String(game.winner.id) === String(user.id) ||
-                          game.winner.user_id === user.id ||
-                          game.winner_user_id === user.id
+                          String(game.winner.user_id) === String(user.id) ||
+                          String(game.winner_id) === String(user.id) ||
+                          String(game.winner_user_id) === String(user.id)
                         );
                         
                         console.log('History winner check:', {
                           user_id: user?.id,
-                          user_telegram_id: user?.telegram_id,
-                          winner_id: game.winner?.id,
-                          winner_telegram_id: game.winner?.telegram_id,
+                          winner_user_id: game.winner?.user_id,
+                          winner_id: game.winner_id,
+                          winner_user_id_field: game.winner_user_id,
                           isUserWinner
                         });
                         
