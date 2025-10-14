@@ -432,6 +432,19 @@ function App() {
   // Service Worker completely disabled - no SW listener needed
   // Cache clearing handled in index.html
 
+  // Monitor room participants changes for debugging
+  useEffect(() => {
+    if (inLobby && lobbyData) {
+      const currentRoomPlayers = roomParticipants[lobbyData.room_type] || [];
+      console.log(`📊 [Room Monitor] ${lobbyData.room_type} room has ${currentRoomPlayers.length}/3 players`);
+      console.log('📊 [Room Monitor] Players:', currentRoomPlayers.map(p => p.username).join(', '));
+      
+      if (currentRoomPlayers.length === 3) {
+        console.log('✅ [Room Monitor] ROOM IS FULL - Should show GET READY animation');
+      }
+    }
+  }, [roomParticipants, inLobby, lobbyData])
+
   // Socket connection
   useEffect(() => {
     console.log('🔌 Connecting to WebSocket:', BACKEND_URL);
