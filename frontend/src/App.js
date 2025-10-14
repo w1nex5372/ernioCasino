@@ -1365,6 +1365,17 @@ function App() {
         // The backend will emit player_joined with all_players array which is the source of truth
         console.log('✅ Joined room, waiting for player_joined socket event...');
         
+        // Join the Socket.IO room for room-specific events
+        if (socket && socket.connected) {
+          console.log('🎮 Emitting join_game_room event:', { room_id: response.data.room_id, user_id: user.id });
+          socket.emit('join_game_room', {
+            room_id: response.data.room_id,
+            user_id: user.id
+          });
+        } else {
+          console.warn('⚠️ Socket not connected, cannot join game room');
+        }
+        
         // Enter lobby mode
         setInLobby(true);
         setLobbyData({
