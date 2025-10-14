@@ -9,7 +9,7 @@ console.log(`🚀 SW v9.0 loaded at ${BUILD_TIMESTAMP}`);
 
 // Immediately install and take over
 self.addEventListener('install', (event) => {
-  console.log(`SW v8.0: Installing new service worker ${SW_VERSION}`);
+  console.log(`🔧 SW v9.0: Installing ${SW_VERSION} at ${BUILD_TIMESTAMP}`);
   // Skip waiting to activate immediately
   event.waitUntil(self.skipWaiting());
 });
