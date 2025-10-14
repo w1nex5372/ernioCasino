@@ -2574,10 +2574,7 @@ function App() {
                             </div>
                             <div className="text-sm text-slate-300 space-y-1">
                               {isUserWinner ? (
-                                <>
-                                  <div className="text-green-400 font-semibold">🎉 You won this game!</div>
-                                  <div>Prize: <span className="text-gold-400 font-bold">{game.prize_pool} tokens</span></div>
-                                </>
+                                <div className="text-green-400 font-semibold">🎉 You won this game!</div>
                               ) : (
                                 <>
                                   <div>Winner: <span className="text-yellow-400 font-medium">
