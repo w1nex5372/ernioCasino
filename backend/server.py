@@ -843,6 +843,10 @@ async def disconnect(sid):
 async def register_user(sid, data):
     """Register user_id to socket_id mapping for room-specific events"""
     try:
+        logging.info(f"📥📥📥 REGISTER_USER EVENT RECEIVED 📥📥📥")
+        logging.info(f"Socket ID: {sid}")
+        logging.info(f"Data: {data}")
+        
         user_id = data.get('user_id')
         if not user_id:
             logging.error(f"❌ No user_id provided in register_user event")
@@ -853,6 +857,7 @@ async def register_user(sid, data):
         socket_to_user[sid] = user_id
         
         logging.info(f"✅ Registered user {user_id} to socket {sid[:8]}")
+        logging.info(f"📊 Total user mappings: {len(user_to_socket)}")
         
         # Send confirmation
         await sio.emit('user_registered', {'user_id': user_id, 'status': 'registered'}, room=sid)
