@@ -671,53 +671,48 @@ class SolanaPaymentProcessor:
                 # If we got here without a signature, something went wrong
                 if not signature:
                     raise Exception("Sweep transaction failed - no signature obtained")
+                
+                # Wait for confirmation with proper timeout
+                logger.info(f"⏳ [Sweep] Waiting for transaction confirmation...")
+                try:
+                    # Use last_valid_block_height for proper timeout behavior
+                    from solana.rpc.commitment import Confirmed
+                    confirmation_response = await self.client.confirm_transaction(
+                        signature, 
+                        commitment=Confirmed,
+                        last_valid_block_height=last_valid_block_height
+                    )
                     
-                    if response.value:
-                        signature = str(response.value)
-                        logger.info(f"💸 [Sweep Submitted] Transaction signature: {signature}")
-                        logger.info(f"🔗 [Sweep] Explorer: https://explorer.solana.com/tx/{signature}?cluster=mainnet")
+                    if confirmation_response.value:
+                        logger.info(f"✅ [Sweep Success] Transaction confirmed on-chain!")
+                    else:
+                        logger.warning(f"⚠️  [Sweep] Confirmation response: {confirmation_response}")
                         
-                        # Wait for confirmation with proper timeout
-                        logger.info(f"⏳ [Sweep] Waiting for transaction confirmation...")
-                        try:
-                            # Use last_valid_block_height for proper timeout behavior
-                            from solana.rpc.commitment import Confirmed
-                            confirmation_response = await self.client.confirm_transaction(
-                                signature, 
-                                commitment=Confirmed,
-                                last_valid_block_height=last_valid_block_height
-                            )
-                            
-                            if confirmation_response.value:
-                                logger.info(f"✅ [Sweep Success] Transaction confirmed on-chain!")
-                            else:
-                                logger.warning(f"⚠️  [Sweep] Confirmation response: {confirmation_response}")
-                                
-                        except Exception as confirm_error:
-                            logger.warning(f"⚠️  [Sweep] Could not confirm transaction: {confirm_error}")
-                            logger.warning(f"   Transaction may still succeed - check explorer")
+                except Exception as confirm_error:
+                    logger.warning(f"⚠️  [Sweep] Could not confirm transaction: {confirm_error}")
+                    logger.warning(f"   Transaction may still succeed - check explorer")
+                
+                # Verify post-sweep balance
+                logger.info(f"🔍 [Sweep] Verifying post-sweep balance...")
+                try:
+                    await asyncio.sleep(2)  # Give network time to update
+                    post_balance_response = await self.client.get_balance(temp_keypair.pubkey())
+                    post_balance = post_balance_response.value if post_balance_response.value else 0
+                    logger.info(f"🔍 [Post-Sweep Balance] {post_balance} lamports remaining")
+                    
+                    if post_balance < fee_lamports * 2:
+                        logger.info(f"✅ [Sweep] Wallet successfully emptied (only dust/fees remain)")
+                    else:
+                        logger.warning(f"⚠️  [Sweep] Unexpected remaining balance: {post_balance} lamports")
                         
-                        # Verify post-sweep balance
-                        logger.info(f"🔍 [Sweep] Verifying post-sweep balance...")
-                        try:
-                            await asyncio.sleep(2)  # Give network time to update
-                            post_balance_response = await self.client.get_balance(temp_keypair.pubkey())
-                            post_balance = post_balance_response.value if post_balance_response.value else 0
-                            logger.info(f"🔍 [Post-Sweep Balance] {post_balance} lamports remaining")
-                            
-                            if post_balance < fee_lamports * 2:
-                                logger.info(f"✅ [Sweep] Wallet successfully emptied (only dust/fees remain)")
-                            else:
-                                logger.warning(f"⚠️  [Sweep] Unexpected remaining balance: {post_balance} lamports")
-                                
-                        except Exception as balance_error:
-                            logger.warning(f"⚠️  [Sweep] Could not verify post-balance: {balance_error}")
-                        
-                        # Log final success
-                        transfer_sol = transfer_amount / LAMPORTS_PER_SOL
-                        logger.info(f"✅ [Sweep Success] ========== COMPLETED ==========")
-                        logger.info(f"✅ [Sweep Success] From: {wallet_address}")
-                        logger.info(f"✅ [Sweep Success] To: {self.main_wallet}")
+                except Exception as balance_error:
+                    logger.warning(f"⚠️  [Sweep] Could not verify post-balance: {balance_error}")
+                
+                # Log final success
+                transfer_sol = transfer_amount / LAMPORTS_PER_SOL
+                logger.info(f"✅ [Sweep Success] ========== COMPLETED ==========")
+                logger.info(f"✅ [Sweep Success] From: {wallet_address}")
+                logger.info(f"✅ [Sweep Success] To: {self.main_wallet}")
                         logger.info(f"✅ [Sweep Success] Amount: {transfer_sol:.6f} SOL")
                         logger.info(f"✅ [Sweep Success] Tx: {signature}")
                         logger.info(f"✅ [Sweep Success] Network: Mainnet")
