@@ -797,6 +797,29 @@ function App() {
       }
     });
 
+    // NEW EVENT: redirect_home - Backend signals all players to return to home
+    newSocket.on('redirect_home', (data) => {
+      console.log('🟢🟢🟢 EVENT: redirect_home RECEIVED 🟢🟢🟢');
+      console.log('Match ID:', data.match_id);
+      console.log('Message:', data.message);
+      
+      // Close all game screens
+      console.log('🏠 Redirecting to home screen...');
+      setShowWinnerScreen(false);
+      setWinnerData(null);
+      setInLobby(false);
+      setLobbyData(null);
+      setGameInProgress(false);
+      setActiveTab('rooms');
+      
+      // Reload data
+      loadRooms();
+      loadGameHistory();
+      loadWelcomeBonusStatus();
+      
+      console.log('✅ Redirected to home successfully');
+    });
+
     newSocket.on('new_room_available', (data) => {
       console.log('🆕 New room available:', data);
       loadRooms();
