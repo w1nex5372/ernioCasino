@@ -430,74 +430,8 @@ function App() {
       window.removeEventListener('orientationchange', checkMobile);
     };
   }, []);
-  // Listen for Service Worker updates and force reload
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      // Track if we've already reloaded to prevent infinite loop
-      const hasReloadedKey = 'sw_reloaded_at';
-      const reloadCooldown = 10000; // 10 seconds cooldown
-      
-      // Listen for messages from service worker
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'SW_UPDATED') {
-          console.log('🔄 SW UPDATE DETECTED:', event.data.version);
-          
-          // Check if we recently reloaded to prevent infinite loop
-          const lastReload = localStorage.getItem(hasReloadedKey);
-          const now = Date.now();
-          
-          if (lastReload && (now - parseInt(lastReload)) < reloadCooldown) {
-            console.log('⏸️ Reload skipped - recently reloaded', (now - parseInt(lastReload)) + 'ms ago');
-            return;
-          }
-          
-          // Check if we're already on the target version
-          const currentVersion = localStorage.getItem('app_version');
-          if (currentVersion === event.data.version) {
-            console.log('✅ Already on version', event.data.version, '- no reload needed');
-            return;
-          }
-          
-          console.log('🔄 Force reloading page to get new version...');
-          
-          // Mark that we're about to reload
-          localStorage.setItem(hasReloadedKey, now.toString());
-          
-          // Show toast notification
-          toast.info('🔄 New version available! Reloading...', {
-            duration: 2000
-          });
-          
-          // Force reload after short delay
-          setTimeout(() => {
-            window.location.reload(true);
-          }, 2000);
-        }
-      });
-
-      // Also check for waiting service worker on page load
-      navigator.serviceWorker.ready.then((registration) => {
-        if (registration.waiting) {
-          console.log('⚠️ New SW is waiting, sending SKIP_WAITING');
-          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        }
-
-        // Listen for updates
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          console.log('🔄 SW update found, installing...');
-          
-          newWorker?.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('✅ New SW installed, will activate on next load');
-              // Tell it to skip waiting
-              newWorker.postMessage({ type: 'SKIP_WAITING' });
-            }
-          });
-        });
-      });
-    }
-  }, []);
+  // Service Worker completely disabled - no SW listener needed
+  // Cache clearing handled in index.html
 
   // Socket connection
   useEffect(() => {
