@@ -702,28 +702,32 @@ class SolanaPaymentProcessor:
                 
                 return signature  # Success!
                 
-        except Exception as e:
-            logger.error(f"❌ [Sweep] Fatal error in forward_sol_to_main_wallet")
-            logger.error(f"   Error: {type(e).__name__}: {str(e)}")
-            import traceback
-            logger.error(f"   Traceback:\n{traceback.format_exc()}")
-            
-            # Mark wallet as failed
-            try:
-                await self.db.temporary_wallets.update_one(
-                    {"wallet_address": wallet_address},
-                    {
-                        "$set": {
-                            "status": "forward_failed",
-                            "forward_error": str(e),
-                            "failed_at": datetime.now(timezone.utc)
-                        }
-                    }
-                )
-            except Exception as db_error:
-                logger.error(f"❌ [Sweep] Could not update database: {db_error}")
-            
-            raise
+            except Exception as e:
+                logger.error(f"❌ [Sweep] Fatal error in sweep attempt {attempt}")
+                logger.error(f"   Error: {type(e).__name__}: {str(e)}")
+                import traceback
+                logger.error(f"   Traceback:\n{traceback.format_exc()}")
+                
+                if attempt < max_retries:
+                    logger.info(f"⏳ [Sweep] Retrying in {retry_delay} seconds...")
+                    await asyncio.sleep(retry_delay)
+                else:
+                    logger.error(f"❌ [Sweep] All {max_retries} attempts exhausted!")
+                    # Mark wallet as failed
+                    try:
+                        await self.db.temporary_wallets.update_one(
+                            {"wallet_address": wallet_address},
+                            {
+                                "$set": {
+                                    "status": "forward_failed",
+                                    "forward_error": str(e),
+                                    "failed_at": datetime.now(timezone.utc)
+                                }
+                            }
+                        )
+                    except Exception as db_error:
+                        logger.error(f"❌ [Sweep] Could not update database: {db_error}")
+                    raise
     
     async def cleanup_wallet_data(self, wallet_address: str):
         """
