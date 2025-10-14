@@ -869,11 +869,16 @@ async def register_user(sid, data):
 async def join_game_room(sid, data):
     """Join a game room via Socket.IO (called after successful REST API join)"""
     try:
+        logging.info(f"📥📥📥 JOIN_GAME_ROOM EVENT RECEIVED 📥📥📥")
+        logging.info(f"Socket ID: {sid}")
+        logging.info(f"Data: {data}")
+        
         room_id = data.get('room_id')
         user_id = data.get('user_id')
         
         if not room_id or not user_id:
             logging.error(f"❌ Missing room_id or user_id in join_game_room event")
+            logging.error(f"Received data: {data}")
             return
         
         logging.info(f"📥 join_game_room event: user={user_id}, room={room_id}, socket={sid[:8]}")
@@ -889,12 +894,16 @@ async def join_game_room(sid, data):
         socket_count = socket_rooms.get_room_socket_count(room_id)
         logging.info(f"✅ User {user_id} joined room {room_id} via socket {sid[:8]}")
         logging.info(f"📊 Room {room_id} now has {socket_count} socket(s) connected")
+        logging.info(f"📋 All sockets in room: {socket_rooms.room_to_sockets.get(room_id, set())}")
         
         # Send confirmation
         await sio.emit('room_joined_confirmed', {'room_id': room_id, 'socket_count': socket_count}, room=sid)
+        logging.info(f"✅ Sent room_joined_confirmed to {sid[:8]}")
         
     except Exception as e:
         logging.error(f"❌ Error in join_game_room: {e}")
+        import traceback
+        logging.error(traceback.format_exc())
 
 # Game logic functions
 def calculate_win_probability(player_bet: int, total_pool: int) -> float:
