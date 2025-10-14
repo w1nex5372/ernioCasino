@@ -451,9 +451,29 @@ function App() {
     }
   }, [roomParticipants, inLobby, lobbyData])
 
+  // Detect platform
+  const detectPlatform = () => {
+    const ua = navigator.userAgent.toLowerCase();
+    if (window.Telegram && window.Telegram.WebApp) {
+      if (ua.includes('android')) return 'Telegram Android';
+      if (ua.includes('iphone') || ua.includes('ipad')) return 'Telegram iOS';
+      return 'Telegram WebView';
+    }
+    if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+      return 'Mobile Browser';
+    }
+    return 'Desktop Browser';
+  };
+  
+  const platform = detectPlatform();
+  
   // Socket connection
   useEffect(() => {
-    console.log('🔌 Connecting to WebSocket:', BACKEND_URL);
+    console.log('🔌🔌🔌 CONNECTING TO WEBSOCKET 🔌🔌🔌');
+    console.log('Backend URL:', BACKEND_URL);
+    console.log('Platform:', platform);
+    console.log('User Agent:', navigator.userAgent);
+    
     const newSocket = io(BACKEND_URL, {
       path: '/socket.io',
       transports: ['websocket', 'polling'],
