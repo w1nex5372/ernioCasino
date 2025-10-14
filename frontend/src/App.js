@@ -244,6 +244,7 @@ function App() {
   const [isMobile, setIsMobile] = useState(false);
   const [casinoWalletAddress, setCasinoWalletAddress] = useState('Loading...');
   const [welcomeBonusStatus, setWelcomeBonusStatus] = useState(null);
+  const [isRefreshingHistory, setIsRefreshingHistory] = useState(false);
 
   // Form state
   const [selectedRoom, setSelectedRoom] = useState(null);
