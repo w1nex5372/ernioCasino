@@ -582,6 +582,7 @@ function App() {
       setTimeout(() => {
         console.log('🎬 Hiding GET READY animation');
         setShowGetReady(false);
+        showGetReadyRef.current = false; // Update ref
       }, (data.countdown || 3) * 1000);
       
       console.log('✅ GET READY animation started successfully');
