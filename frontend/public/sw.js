@@ -2,6 +2,7 @@
 console.log('SW v8.0: AGGRESSIVE CACHE CLEAR MODE - Force updating all clients');
 
 const SW_VERSION = 'v8.0-WINNER-FIX-20250114';
+let hasNotifiedClients = false; // Track if we've already notified
 
 // Immediately install and take over
 self.addEventListener('install', (event) => {
