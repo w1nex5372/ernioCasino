@@ -786,8 +786,11 @@ socket_to_user: Dict[str, str] = {}  # sid -> user_id
 # Socket.IO events
 @sio.event
 async def connect(sid, environ):
-    logging.info(f"🔌 Client {sid} connected")
+    logging.info(f"🔌🔌🔌 NEW CLIENT CONNECTED 🔌🔌🔌")
+    logging.info(f"Socket ID: {sid}")
+    logging.info(f"Client info: {environ.get('REMOTE_ADDR', 'unknown')}")
     await sio.emit('connected', {'status': 'Connected to casino!'}, room=sid)
+    logging.info(f"✅ Sent 'connected' confirmation to {sid}")
 
 @sio.event
 async def disconnect(sid):
