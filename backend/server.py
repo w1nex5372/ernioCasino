@@ -1128,6 +1128,7 @@ async def start_game_round(room: GameRoom):
         logging.error(f"Error sending Telegram notification: {e}")
     
     # EVENT 3: game_finished - Notify ROOM participants of the winner
+    logging.info(f"📤 Broadcasting game_finished to room {room.id}")
     await socket_rooms.broadcast_to_room(sio, room.id, 'game_finished', {
         'room_id': room.id,
         'room_type': room.room_type,
@@ -1142,6 +1143,19 @@ async def start_game_round(room: GameRoom):
         'finished_at': room.finished_at.isoformat()
     })
     logging.info(f"✅ Emitted game_finished to room {room.id}, winner: {winner.username}, match_id: {match_id}")
+    
+    # Wait for winner announcement screen (3 seconds)
+    logging.info(f"⏱️ Waiting 3 seconds for winner announcement...")
+    await asyncio.sleep(3)
+    
+    # EVENT 4: redirect_home - Redirect all players back to home screen
+    logging.info(f"📤 Broadcasting redirect_home to room {room.id}")
+    await socket_rooms.broadcast_to_room(sio, room.id, 'redirect_home', {
+        'room_id': room.id,
+        'match_id': match_id,
+        'message': 'Returning to home screen...'
+    })
+    logging.info(f"✅ Emitted redirect_home to room {room.id}")
     
     # EVENT 4: prize_won - Send prize link privately to the winner (using socket ID)
     winner_sid = user_to_socket.get(winner.user_id)
