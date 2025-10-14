@@ -232,7 +232,10 @@ function App() {
   const [lobbyData, setLobbyData] = useState(null); // Store lobby room data
   const [showWinnerScreen, setShowWinnerScreen] = useState(false); // Show winner announcement
   const [winnerData, setWinnerData] = useState(null); // Store winner information
-  const [winnerDisplayedForGame, setWinnerDisplayedForGame] = useState(null); // Track which game ID we've shown winner for
+  const [winnerDisplayedForGame, setWinnerDisplayedForGame] = useState(() => {
+    // Initialize from sessionStorage to persist across re-renders but not page reloads
+    return sessionStorage.getItem('last_winner_game_id') || null;
+  }); // Track which game ID we've shown winner for
   const [gameInProgress, setGameInProgress] = useState(false); // Track if game is running
   const [currentGameData, setCurrentGameData] = useState(null); // Store current game info
   
