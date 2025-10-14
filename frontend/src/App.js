@@ -476,6 +476,8 @@ function App() {
     newSocket.on('player_joined', (data) => {
       console.log('👤 Player joined:', data);
       console.log('All players in room:', data.all_players);
+      console.log('Room type:', data.room_type);
+      console.log('Players count:', data.all_players?.length);
       
       // Update room participants - this will trigger lobby re-render
       setRoomParticipants(prev => {
@@ -483,9 +485,26 @@ function App() {
           ...prev,
           [data.room_type]: data.all_players || []
         };
-        console.log('Updated roomParticipants:', updated);
-        return updated;
+        console.log('🔄 Updated roomParticipants:', updated);
+        console.log(`🎯 Room ${data.room_type} now has ${data.all_players?.length || 0}/3 players`);
+        
+        // Force component re-render by creating new object
+        return {...updated};
       });
+      
+      // If room is now full, show special notification
+      if (data.all_players?.length === 3) {
+        console.log('🚀 ROOM IS FULL! Showing explosive animation...');
+        toast.success('🚀 ROOM IS FULL! GET READY!', {
+          duration: 3000,
+          style: { 
+            background: 'linear-gradient(to right, #22c55e, #10b981)',
+            color: 'white',
+            fontSize: '18px',
+            fontWeight: 'bold'
+          }
+        });
+      }
       
       // Show notification
       toast.success(
