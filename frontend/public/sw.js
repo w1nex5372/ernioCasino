@@ -15,16 +15,16 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  console.log(`SW v8.0: Activating ${SW_VERSION} - DELETING ALL OLD CACHES`);
+  console.log(`✅ SW v9.0: Activating ${SW_VERSION} - DELETING ALL OLD CACHES`);
   
   event.waitUntil(
     Promise.all([
       // Delete ALL caches
       caches.keys().then((cacheNames) => {
-        console.log('SW v8.0: Found caches:', cacheNames);
+        console.log('🗑️ SW v9.0: Found caches:', cacheNames);
         return Promise.all(
           cacheNames.map((cacheName) => {
-            console.log('SW v8.0: DELETING cache:', cacheName);
+            console.log('🗑️ SW v9.0: DELETING cache:', cacheName);
             return caches.delete(cacheName);
           })
         );
@@ -32,11 +32,11 @@ self.addEventListener('activate', (event) => {
       // Take control of all clients immediately
       self.clients.claim()
     ]).then(() => {
-      console.log(`SW v8.0: ${SW_VERSION} is now active and controlling all pages`);
+      console.log(`🎉 SW v9.0: ${SW_VERSION} is now active and controlling all pages`);
       
       // Only notify clients once per activation
       if (hasNotifiedClients) {
-        console.log('SW v8.0: Already notified clients, skipping');
+        console.log('⏭️ SW v9.0: Already notified clients, skipping');
         return Promise.resolve();
       }
       
@@ -46,23 +46,24 @@ self.addEventListener('activate', (event) => {
       return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     }).then(clients => {
       if (!clients || clients.length === 0) {
-        console.log('SW v8.0: No clients to notify');
+        console.log('⚠️ SW v9.0: No clients to notify');
         return;
       }
       
-      console.log(`SW v8.0: Found ${clients.length} clients to notify (one-time)`);
+      console.log(`📢 SW v9.0: Found ${clients.length} clients to notify (one-time)`);
       
       // Send message to all clients ONCE
       clients.forEach(client => {
-        console.log('SW v8.0: Notifying client:', client.url);
+        console.log('📤 SW v9.0: Notifying client:', client.url);
         client.postMessage({ 
           type: 'SW_UPDATED', 
           version: SW_VERSION,
+          timestamp: BUILD_TIMESTAMP,
           forceReload: true
         });
       });
       
-      console.log('SW v8.0: Client notification complete');
+      console.log('✅ SW v9.0: Client notification complete');
     })
   );
 });
