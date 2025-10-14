@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Implement Socket.IO room-based broadcasting to fix game room synchronization issues. Players in Bronze/Silver/Gold rooms were seeing events from all rooms globally, causing winner modals to repeat and room participant lists not updating in real-time. Need proper room isolation so events only go to participants in the specific game room."
+user_problem_statement: "Fix real-time state synchronization issues: 1) Add GET READY! full-screen animation when room becomes full 2) Enforce strict event order (player_joined → room_full → room_ready → game_starting → game_finished) 3) Use match_id to prevent duplicate winner modals 4) Always send FULL participant lists (replace, not append) 5) Handle player_left event properly 6) Ensure all players see same state simultaneously"
 
 backend:
   - task: "Socket.IO Room Management Implementation"
