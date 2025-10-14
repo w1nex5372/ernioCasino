@@ -1,8 +1,11 @@
-// Service Worker v8.0 - AGGRESSIVE CACHE CLEARING
-console.log('SW v8.0: AGGRESSIVE CACHE CLEAR MODE - Force updating all clients');
+// Service Worker v9.0 - SYNC FIX WITH GET READY ANIMATION
+console.log('SW v9.0: SYNC FIX - GET READY ANIMATION BUILD');
 
-const SW_VERSION = 'v8.0-WINNER-FIX-20250114';
+const SW_VERSION = 'v9.0-SYNC-FIX-20250114-1820';
+const BUILD_TIMESTAMP = Date.now();
 let hasNotifiedClients = false; // Track if we've already notified
+
+console.log(`🚀 SW v9.0 loaded at ${BUILD_TIMESTAMP}`);
 
 // Immediately install and take over
 self.addEventListener('install', (event) => {
