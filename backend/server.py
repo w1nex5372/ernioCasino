@@ -922,8 +922,8 @@ async def start_game_round(room: GameRoom):
     # Calculate prize pool (total bets)
     room.prize_pool = sum(p.bet_amount for p in room.players)
     
-    # Notify all clients that game is starting
-    await sio.emit('game_starting', {
+    # Notify ROOM participants that game is starting (room-specific)
+    await socket_rooms.broadcast_to_room(sio, room.id, 'game_starting', {
         'room_id': room.id,
         'room_type': room.room_type,
         'players': [p.dict() for p in room.players],
