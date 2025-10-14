@@ -151,7 +151,9 @@ class SolanaPaymentProcessor:
     
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
-        self.client = AsyncClient(SOLANA_RPC_URL)
+        # Initialize RPC manager with fallback support
+        self.rpc_manager = RPCManager(SOLANA_RPC_URL, SOLANA_RPC_FALLBACKS)
+        self.client = AsyncClient(self.rpc_manager.get_current_url())
         self.main_wallet = Pubkey.from_string(MAIN_WALLET_ADDRESS)
         self.active_monitors = set()  # Track active payment monitors
         self.price_fetcher = PriceFetcher()  # Initialize price fetcher
@@ -159,7 +161,8 @@ class SolanaPaymentProcessor:
         # Log RPC configuration prominently
         logger.info("=" * 80)
         logger.info("🚀 SOLANA PAYMENT PROCESSOR INITIALIZED")
-        logger.info(f"🌐 Using RPC: {SOLANA_RPC_URL}")
+        logger.info(f"🌐 Primary RPC: {SOLANA_RPC_URL[:60]}...")
+        logger.info(f"🔄 Fallback RPCs: {len(SOLANA_RPC_FALLBACKS)} configured")
         logger.info(f"💼 Main Wallet: {MAIN_WALLET_ADDRESS}")
         logger.info(f"📊 Network: Mainnet-Beta")
         
