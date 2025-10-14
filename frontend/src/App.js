@@ -532,23 +532,27 @@ function App() {
       console.log('🏆 GAME FINISHED EVENT RECEIVED!');
       console.log('📊 Game data:', data);
       console.log('👤 Current user:', user);
-      console.log('🎯 User telegram_id:', user?.telegram_id);
-      console.log('🎯 Winner telegram_id:', data.winner?.telegram_id);
       
-      // Show notification to ALL players about the winner
+      // PREVENT DUPLICATE: Check if we already showed winner for this game
+      const gameId = data.game_id || data.id || `${data.room_type}-${Date.now()}`;
+      if (winnerDisplayedForGame === gameId) {
+        console.log('⏭️ Winner already displayed for game:', gameId, '- SKIPPING');
+        return;
+      }
+      
       const winnerName = data.winner_name || `${data.winner?.first_name} ${data.winner?.last_name || ''}`.trim();
       const gameTime = new Date().toLocaleTimeString();
       
-      // BIG TOAST for everyone
-      toast.success(`🏆 ${ROOM_CONFIGS[data.room_type]?.icon} Game Finished at ${gameTime}! Winner: ${winnerName}`, {
-        duration: 8000,
-        style: {
-          background: '#eab308',
-          color: 'black',
-          fontSize: '18px',
-          fontWeight: 'bold',
-          padding: '20px'
-        }
+      // Check if current user is the winner - ROBUST CHECK
+      const isWinner = user && (
+        String(user.id) === String(data.winner_id) ||
+        String(user.id) === String(data.winner?.user_id) ||
+        String(user.telegram_id) === String(data.winner?.telegram_id)
+      );
+      console.log('🤔 Am I the winner?', isWinner, {
+        user_id: user?.id,
+        winner_id: data.winner_id,
+        winner_user_id: data.winner?.user_id
       });
       
       // FORCE CLOSE ALL OTHER SCREENS
@@ -557,53 +561,42 @@ function App() {
       setInLobby(false);
       setLobbyData(null);
       setActiveRoom(null);
-      console.log('✅ All game screens closed');
       
-      // Check if current user is the winner
-      const isWinner = user && (user.telegram_id === data.winner?.telegram_id || user.id === data.winner_id);
-      console.log('🤔 Am I the winner?', isWinner);
-      
-      // Show winner screen to ALL players - WITH DUPLICATE GUARD
-      const gameId = data.game_id || data.id || `${data.room_type}-${Date.now()}`;
-      
-      // PREVENT DUPLICATE: Check if we already showed winner for this game
-      if (winnerDisplayedForGame === gameId) {
-        console.log('⏭️ Winner already displayed for game:', gameId);
-        return;
-      }
-      
+      // Prepare winner data with ALL needed fields
       const winnerInfo = {
+        winner: data.winner, // Full winner object with user_id
         winner_name: winnerName,
-        winner_telegram_id: data.winner?.telegram_id || data.winner_telegram_id,
+        winner_id: data.winner_id,
+        winner_user_id: data.winner?.user_id,
+        winner_telegram_id: data.winner?.telegram_id,
         winner_photo: data.winner?.photo_url || '',
         winner_username: data.winner?.username || '',
         room_type: data.room_type,
+        prize_pool: data.prize_pool,
         prize_link: data.prize_link,
         is_winner: isWinner,
         game_time: gameTime,
         game_id: gameId
       };
-      console.log('👑 Setting winner info for game:', gameId, winnerInfo);
       
+      // Set winner screen state
       setWinnerData(winnerInfo);
       setShowWinnerScreen(true);
-      setWinnerDisplayedForGame(gameId); // Mark this game as displayed
-      console.log('✅ Winner screen state set to TRUE for game:', gameId);
+      setWinnerDisplayedForGame(gameId);
+      console.log('✅ Winner screen displayed for game:', gameId);
       
-      // Extra logging
-      setTimeout(() => {
-        console.log('⏱️ After 1 second - showWinnerScreen:', showWinnerScreen);
-        console.log('⏱️ After 1 second - winnerData:', winnerData);
-      }, 1000);
-      
-      // AUTO-CLOSE after 2 seconds and return to rooms
-      setTimeout(() => {
-        console.log('⏰ 2 seconds passed, closing winner screen...');
-        setShowWinnerScreen(false);
-        setWinnerData(null);
-        setActiveTab('rooms');
-        toast.success('Room reset! Ready for new players 🎰');
-      }, 2000);
+      // Toast notification for everyone
+      if (isWinner) {
+        toast.success(`🎉 You Won ${data.prize_pool} tokens!`, {
+          duration: 5000,
+          style: { background: '#22c55e', color: 'white', fontSize: '18px', fontWeight: 'bold' }
+        });
+      } else {
+        toast.info(`🏆 ${winnerName} won the game!`, {
+          duration: 5000,
+          style: { background: '#3b82f6', color: 'white', fontSize: '16px' }
+        });
+      }
       
       // Refresh data
       loadRooms();
