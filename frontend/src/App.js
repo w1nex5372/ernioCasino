@@ -2113,8 +2113,8 @@ function App() {
               </Card>
             )}
 
-            {/* LOBBY SCREEN - Show when player is waiting in room */}
-            {!showWinnerScreen && !gameInProgress && inLobby && lobbyData && (
+            {/* LOBBY SCREEN - Show when player is waiting in room - HIDDEN when GET READY animation is showing */}
+            {!showWinnerScreen && !gameInProgress && inLobby && !showGetReady && lobbyData && (
               <Card className="bg-slate-800/90 border-2 border-yellow-500/50">
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl text-yellow-400 flex items-center justify-center gap-2">
