@@ -2060,35 +2060,37 @@ function App() {
                           // Room is full - EXPLOSIVE ANIMATION
                           return (
                             <div className="py-6 relative">
-                              {/* Explosion Effect */}
+                              {/* Glow Effect */}
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-32 h-32 bg-gradient-to-r from-yellow-400 via-red-500 to-orange-600 rounded-full opacity-20 animate-ping"></div>
-                                <div className="w-24 h-24 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 rounded-full opacity-30 animate-pulse absolute"></div>
+                                <div className="w-40 h-40 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500 rounded-full opacity-20 animate-ping"></div>
+                                <div className="w-32 h-32 bg-gradient-to-r from-green-400 to-emerald-600 rounded-full opacity-30 animate-pulse absolute"></div>
                               </div>
                               
                               {/* Main Content */}
-                              <div className="relative z-10 animate-bounce-slow">
-                                <div className="text-6xl mb-3 animate-pulse">💥</div>
-                                <div className="mb-4">
-                                  <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-red-500 to-orange-600 animate-pulse mb-2">
-                                    ROOM IS FULL!
+                              <div className="relative z-10">
+                                <div className="text-6xl mb-4 animate-bounce">🚀</div>
+                                <div className="mb-4 space-y-2">
+                                  <p className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400 animate-pulse">
+                                    GET READY!
                                   </p>
-                                  <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-blue-400 to-purple-500 animate-pulse">
-                                    GET READY FOR BATTLE!
+                                  <p className="text-xl md:text-2xl font-bold text-white animate-pulse">
+                                    THE GAME IS ABOUT TO BEGIN!
                                   </p>
                                 </div>
+                                
+                                {/* Ready indicator */}
+                                <div className="flex items-center justify-center gap-3 mt-6">
+                                  <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                                  <p className="text-green-400 font-bold text-lg">
+                                    All 3 Players Ready
+                                  </p>
+                                  <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                                </div>
+                                
+                                <p className="text-slate-400 text-sm mt-4 animate-pulse">
+                                  Stay on this screen...
+                                </p>
                               </div>
-                              
-                              {/* Spinning indicator */}
-                              <div className="flex items-center justify-center gap-2 mt-4">
-                                <div className="w-10 h-10 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-                                <p className="text-white font-bold text-lg animate-pulse">Starting Now...</p>
-                                <div className="w-10 h-10 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
-                              </div>
-                              
-                              <p className="text-green-400 font-semibold text-sm mt-3 animate-pulse">
-                                ⚡ 3/3 Players Ready ⚡
-                              </p>
                             </div>
                           );
                         }
