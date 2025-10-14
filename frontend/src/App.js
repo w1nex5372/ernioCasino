@@ -1864,9 +1864,10 @@ function App() {
                         {/* View Game History Button */}
                         <Button
                           onClick={() => {
+                            console.log('📜 View History clicked');
                             setShowWinnerScreen(false);
                             setWinnerData(null);
-                            setWinnerDisplayedForGame(null); // Reset guard for next game
+                            // Keep game ID to prevent re-display
                             setActiveTab('history');
                             setInLobby(false);
                             setGameInProgress(false);
