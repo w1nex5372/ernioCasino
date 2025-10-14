@@ -2022,34 +2022,42 @@ function App() {
                       </div>
                     </div>
 
-                    {/* Status Message */}
+                    {/* Status Message - Dynamic based on player count */}
                     <div className="text-center">
-                      {roomParticipants[lobbyData.room_type]?.length < 3 ? (
-                        <div className="py-4">
-                          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mb-2"></div>
-                          <p className="text-yellow-400 font-semibold">Waiting for {3 - (roomParticipants[lobbyData.room_type]?.length || 0)} more player{3 - (roomParticipants[lobbyData.room_type]?.length || 0) === 1 ? '' : 's'}...</p>
-                          <p className="text-slate-400 text-sm mt-1">Stay on this screen</p>
-                        </div>
-                      ) : (
-                        <div className="py-4">
-                          <div className="animate-pulse">
-                            <p className="text-green-400 font-semibold text-lg">⚡ Battle in Progress...</p>
-                            <div className="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto my-2"></div>
-                            <p className="text-yellow-400 text-sm">Determining winner...</p>
-                          </div>
-                          
-                          <button 
-                            onClick={() => {
-                              console.log('🔴 MANUAL WINNER DETECTION RESTART');
-                              toast.info('Restarting winner detection...');
-                              startWinnerDetection(lobbyData.room_type);
-                            }}
-                            className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold"
-                          >
-                            🏆 Force Check Winner
-                          </button>
-                        </div>
-                      )}
+                      {(() => {
+                        const playerCount = roomParticipants[lobbyData.room_type]?.length || 0;
+                        const playersNeeded = 3 - playerCount;
+                        
+                        if (playerCount < 3) {
+                          // Waiting for more players
+                          return (
+                            <div className="py-4">
+                              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mb-2"></div>
+                              <p className="text-yellow-400 font-semibold text-lg">
+                                Waiting for {playersNeeded} more player{playersNeeded === 1 ? '' : 's'}...
+                              </p>
+                              <p className="text-slate-400 text-sm mt-1">
+                                {playerCount}/3 players ready
+                              </p>
+                              <p className="text-slate-500 text-xs mt-2">Stay on this screen</p>
+                            </div>
+                          );
+                        } else {
+                          // Room is full - waiting for game to start
+                          return (
+                            <div className="py-4">
+                              <div className="animate-pulse mb-3">
+                                <div className="text-4xl mb-2">🚀</div>
+                                <p className="text-green-400 font-bold text-xl">ROOM IS FULL!</p>
+                                <p className="text-yellow-400 font-semibold text-lg mt-1">STAY READY!</p>
+                              </div>
+                              <div className="w-8 h-8 border-4 border-green-400 border-t-transparent rounded-full animate-spin mx-auto my-3"></div>
+                              <p className="text-white text-sm">Game starting...</p>
+                              <p className="text-slate-400 text-xs mt-1">3/3 players ready</p>
+                            </div>
+                          );
+                        }
+                      })()}
                     </div>
 
                     {/* Leave Room Button */}
