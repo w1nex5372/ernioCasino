@@ -744,9 +744,10 @@ function App() {
     });
 
     newSocket.on('rooms_updated', () => {
-      console.log('📥 EVENT: rooms_updated - reloading room list');
+      console.log('📥 EVENT: rooms_updated');
       // DON'T reload if GET READY is showing - prevents state reset
-      if (!showGetReady) {
+      if (!showGetReadyRef.current) {
+        console.log('✅ Reloading room list');
         loadRooms();
       } else {
         console.log('⏭️ Skipping rooms reload - GET READY animation in progress');
