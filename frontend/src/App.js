@@ -1148,10 +1148,20 @@ function App() {
 
   const loadWelcomeBonusStatus = async () => {
     try {
+      console.log('🎁 Loading welcome bonus status...');
       const response = await axios.get(`${API}/welcome-bonus-status`);
+      console.log('🎁 Welcome bonus data:', response.data);
       setWelcomeBonusStatus(response.data);
+      
+      if (response.data && response.data.bonus_active) {
+        console.log(`✅ Welcome bonus ACTIVE - ${response.data.remaining_spots} spots remaining`);
+      } else {
+        console.log('⚠️ Welcome bonus not active or expired');
+      }
     } catch (error) {
-      console.error('Failed to load welcome bonus status:', error);
+      console.error('❌ Failed to load welcome bonus status:', error);
+      // Set a default state so component doesn't break
+      setWelcomeBonusStatus({ bonus_active: false, remaining_spots: 0 });
     }
   };
 
