@@ -1462,13 +1462,23 @@ function App() {
         
         // Join the Socket.IO room for room-specific events
         if (socket && socket.connected) {
-          console.log('🎮 Emitting join_game_room event:', { room_id: response.data.room_id, user_id: user.id });
+          console.log('🎮🎮🎮 EMITTING join_game_room event 🎮🎮🎮');
+          console.log('Socket ID:', socket.id);
+          console.log('Socket connected:', socket.connected);
+          console.log('Room ID:', response.data.room_id);
+          console.log('User ID:', user.id);
+          
           socket.emit('join_game_room', {
             room_id: response.data.room_id,
             user_id: user.id
           });
+          
+          console.log('✅ join_game_room event emitted successfully');
         } else {
-          console.warn('⚠️ Socket not connected, cannot join game room');
+          console.error('❌❌❌ SOCKET NOT CONNECTED!');
+          console.log('Socket exists:', !!socket);
+          console.log('Socket connected:', socket?.connected);
+          console.log('Socket ID:', socket?.id);
         }
         
         // Enter lobby mode
