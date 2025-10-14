@@ -1,29 +1,44 @@
-// Service Worker - DISABLED - NO CACHING
-console.log('SW: DISABLED - Unregistering all service workers');
+// Service Worker v8.0 - AGGRESSIVE CACHE CLEARING
+console.log('SW v8.0: AGGRESSIVE CACHE CLEAR MODE - Force updating all clients');
 
-// Immediately unregister this service worker
+const SW_VERSION = 'v8.0-WINNER-FIX-20250114';
+
+// Immediately install and take over
 self.addEventListener('install', (event) => {
-  console.log('SW: Installing DISABLED service worker');
-  self.skipWaiting();
+  console.log(`SW v8.0: Installing new service worker ${SW_VERSION}`);
+  // Skip waiting to activate immediately
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('SW: Activating DISABLED service worker - DELETING ALL CACHES');
+  console.log(`SW v8.0: Activating ${SW_VERSION} - DELETING ALL OLD CACHES`);
   
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          console.log('SW: DELETING cache:', cacheName);
-          return caches.delete(cacheName);
-        })
-      );
-    }).then(() => {
-      console.log('SW: ALL CACHES DELETED');
-      return self.clients.claim();
-    }).then(() => {
-      // Unregister self
-      return self.registration.unregister();
+    Promise.all([
+      // Delete ALL caches
+      caches.keys().then((cacheNames) => {
+        console.log('SW v8.0: Found caches:', cacheNames);
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            console.log('SW v8.0: DELETING cache:', cacheName);
+            return caches.delete(cacheName);
+          })
+        );
+      }),
+      // Take control of all clients immediately
+      self.clients.claim()
+    ]).then(() => {
+      console.log(`SW v8.0: ${SW_VERSION} is now active and controlling all pages`);
+      // Refresh all clients to load new version
+      return self.clients.matchAll({ type: 'window' }).then(clients => {
+        clients.forEach(client => {
+          console.log('SW v8.0: Refreshing client:', client.url);
+          client.postMessage({ 
+            type: 'SW_UPDATED', 
+            version: SW_VERSION 
+          });
+        });
+      });
     })
   );
 });
