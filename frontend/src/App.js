@@ -239,6 +239,7 @@ function App() {
   const [showGetReady, setShowGetReady] = useState(false); // Show "GET READY!" animation
   const [shownMatchIds, setShownMatchIds] = useState(new Set()); // Track shown match IDs to prevent duplicates
   const [getReadyCountdown, setGetReadyCountdown] = useState(3); // Countdown for GET READY screen
+  const showGetReadyRef = React.useRef(false); // Ref to track GET READY state for socket listeners
   
   // UI state
   const [activeTab, setActiveTab] = useState('rooms');
