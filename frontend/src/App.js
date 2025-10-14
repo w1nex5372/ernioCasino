@@ -2059,6 +2059,7 @@ function App() {
                             setInLobby(false);
                             setGameInProgress(false);
                             loadGameHistory();
+                            loadWelcomeBonusStatus();
                             toast.info('📊 Viewing game history');
                           }}
                           variant="outline"
