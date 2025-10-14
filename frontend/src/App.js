@@ -1515,10 +1515,13 @@ function App() {
           console.log('Socket connected:', socket.connected);
           console.log('Room ID:', response.data.room_id);
           console.log('User ID:', user.id);
+          console.log('Platform:', platform);
+          console.log('Transport:', socket.io.engine.transport.name);
           
           socket.emit('join_game_room', {
             room_id: response.data.room_id,
-            user_id: user.id
+            user_id: user.id,
+            platform: platform
           });
           
           console.log('✅ join_game_room event emitted successfully');
@@ -1527,6 +1530,7 @@ function App() {
           console.log('Socket exists:', !!socket);
           console.log('Socket connected:', socket?.connected);
           console.log('Socket ID:', socket?.id);
+          console.log('Platform:', platform);
         }
         
         // Enter lobby mode
