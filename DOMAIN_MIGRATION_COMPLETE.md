@@ -48,7 +48,7 @@ command=npx serve -s build -l 3000  # ✅ Production build
 - Proper content types
 
 ✅ **Backend API**:
-- Health endpoint: `https://gamepay-solution.preview.emergentagent.com/api/health`
+- Health endpoint: `https://solana-battles-1.preview.emergentagent.com/api/health`
 - Returns: `{"status":"healthy","version":"8.0-WINNER-FIX-20250114"}`
 
 ✅ **CORS Configuration**:
@@ -56,7 +56,7 @@ command=npx serve -s build -l 3000  # ✅ Production build
 - WebSocket CORS: `"*"` (allows all origins)
 
 ✅ **Frontend Configuration**:
-- `.env` file correctly points to: `REACT_APP_BACKEND_URL=https://gamepay-solution.preview.emergentagent.com`
+- `.env` file correctly points to: `REACT_APP_BACKEND_URL=https://solana-battles-1.preview.emergentagent.com`
 
 ---
 
@@ -73,7 +73,7 @@ mongodb    RUNNING   (Port 27017)
 
 ## Current Deployment Details
 
-**Domain**: `https://gamepay-solution.preview.emergentagent.com`
+**Domain**: `https://solana-battles-1.preview.emergentagent.com`
 
 **Frontend**:
 - Version: 8.0-WINNER-FIX-v5
@@ -98,43 +98,43 @@ mongodb    RUNNING   (Port 27017)
 
 ### ✅ Domain Accessibility
 ```bash
-curl -I https://gamepay-solution.preview.emergentagent.com
+curl -I https://solana-battles-1.preview.emergentagent.com
 # Result: HTTP/2 200
 ```
 
 ### ✅ HTML Delivery
 ```bash
-curl -s https://gamepay-solution.preview.emergentagent.com | grep "8.0-WINNER-FIX-v5"
+curl -s https://solana-battles-1.preview.emergentagent.com | grep "8.0-WINNER-FIX-v5"
 # Result: Version found
 ```
 
 ### ✅ JavaScript Bundle
 ```bash
-curl -I https://gamepay-solution.preview.emergentagent.com/static/js/main.4746b7e6.js
+curl -I https://solana-battles-1.preview.emergentagent.com/static/js/main.4746b7e6.js
 # Result: HTTP/2 200, content-length: 433475
 ```
 
 ### ✅ CSS Bundle
 ```bash
-curl -I https://gamepay-solution.preview.emergentagent.com/static/css/main.c2eb4ee8.css
+curl -I https://solana-battles-1.preview.emergentagent.com/static/css/main.c2eb4ee8.css
 # Result: HTTP/2 200, text/css
 ```
 
 ### ✅ Backend Health
 ```bash
-curl -s https://gamepay-solution.preview.emergentagent.com/api/health
+curl -s https://solana-battles-1.preview.emergentagent.com/api/health
 # Result: {"status":"healthy","version":"8.0-WINNER-FIX-20250114"}
 ```
 
 ### ✅ Version Endpoint
 ```bash
-curl -s https://gamepay-solution.preview.emergentagent.com/api/version
+curl -s https://solana-battles-1.preview.emergentagent.com/api/version
 # Result: Full version info with features
 ```
 
 ### ✅ CORS Headers
 ```bash
-curl -I https://gamepay-solution.preview.emergentagent.com
+curl -I https://solana-battles-1.preview.emergentagent.com
 # access-control-allow-origin: *
 # access-control-allow-methods: *
 # access-control-allow-headers: *
@@ -178,7 +178,7 @@ curl -I https://gamepay-solution.preview.emergentagent.com
 
 ### Test 1: Basic Load
 ```
-1. Open: https://gamepay-solution.preview.emergentagent.com
+1. Open: https://solana-battles-1.preview.emergentagent.com
 2. Expected: App loads, shows casino interface
 3. Console should show:
    🔥 NUCLEAR CACHE CLEAR v8.0: Starting...
@@ -233,7 +233,7 @@ curl -I https://gamepay-solution.preview.emergentagent.com
 
 **Update BotFather URL to**:
 ```
-https://gamepay-solution.preview.emergentagent.com?v=10
+https://solana-battles-1.preview.emergentagent.com?v=10
 ```
 
 **Steps**:
@@ -242,7 +242,7 @@ https://gamepay-solution.preview.emergentagent.com?v=10
 3. Select your bot
 4. Bot Settings → Menu Button
 5. Edit Menu Button URL
-6. Enter: `https://gamepay-solution.preview.emergentagent.com?v=10`
+6. Enter: `https://solana-battles-1.preview.emergentagent.com?v=10`
 7. Save
 
 **Clear Telegram Cache**:
@@ -296,7 +296,7 @@ location.reload(true);
 ### Issue: CORS errors
 **Verification**:
 ```bash
-curl -I https://gamepay-solution.preview.emergentagent.com | grep "access-control"
+curl -I https://solana-battles-1.preview.emergentagent.com | grep "access-control"
 # Should show: access-control-allow-origin: *
 ```
 
@@ -341,17 +341,17 @@ tail -f /var/log/supervisor/backend.out.log
 
 ### Test Domain
 ```bash
-curl -I https://gamepay-solution.preview.emergentagent.com
+curl -I https://solana-battles-1.preview.emergentagent.com
 ```
 
 ### Test API
 ```bash
-curl -s https://gamepay-solution.preview.emergentagent.com/api/health | jq
+curl -s https://solana-battles-1.preview.emergentagent.com/api/health | jq
 ```
 
 ### Test WebSocket (from browser console)
 ```javascript
-const socket = io('https://gamepay-solution.preview.emergentagent.com');
+const socket = io('https://solana-battles-1.preview.emergentagent.com');
 socket.on('connect', () => console.log('✅ Connected'));
 socket.on('disconnect', () => console.log('❌ Disconnected'));
 ```
@@ -387,5 +387,5 @@ socket.on('disconnect', () => console.log('❌ Disconnected'));
 
 **Deployment Date**: Oct 14, 2025 14:35 UTC
 **Version**: 8.0-WINNER-FIX-v5-NOSW
-**Domain**: https://gamepay-solution.preview.emergentagent.com
+**Domain**: https://solana-battles-1.preview.emergentagent.com
 **Status**: ✅ Live and operational

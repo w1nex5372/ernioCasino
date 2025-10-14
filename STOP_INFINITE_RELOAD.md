@@ -92,7 +92,7 @@ navigator.serviceWorker.getRegistrations()
 
 ### Step 2: Load App Fresh
 ```
-Open: https://casinosol.preview.emergentagent.com
+Open: https://solana-battles-1.preview.emergentagent.com
 ```
 
 ### Step 3: Check Console

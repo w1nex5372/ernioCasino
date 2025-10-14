@@ -116,12 +116,12 @@ tail -f /var/log/supervisor/backend.err.log | grep "Rescan"
 ### Manual Rescan
 Force immediate check of all pending wallets:
 ```bash
-curl -X POST "https://gamepay-solution.preview.emergentagent.com/api/admin/rescan-payments?admin_key=PRODUCTION_CLEANUP_2025"
+curl -X POST "https://solana-battles-1.preview.emergentagent.com/api/admin/rescan-payments?admin_key=PRODUCTION_CLEANUP_2025"
 ```
 
 Check specific wallet:
 ```bash
-curl -X POST "https://gamepay-solution.preview.emergentagent.com/api/admin/rescan-payments?admin_key=PRODUCTION_CLEANUP_2025&wallet_address=<ADDRESS>"
+curl -X POST "https://solana-battles-1.preview.emergentagent.com/api/admin/rescan-payments?admin_key=PRODUCTION_CLEANUP_2025&wallet_address=<ADDRESS>"
 ```
 
 ---

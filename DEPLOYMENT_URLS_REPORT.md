@@ -8,7 +8,7 @@
 ## 🌐 Current Deployment URLs
 
 ### Primary Domain
-**Production URL**: `https://gamepay-solution.preview.emergentagent.com`
+**Production URL**: `https://solana-battles-1.preview.emergentagent.com`
 
 **Status**: ✅ **ACTIVE** (Emergent Preview Domain)
 
@@ -18,7 +18,7 @@
 
 ### 1. Frontend Deployment
 
-**Domain**: `https://gamepay-solution.preview.emergentagent.com`
+**Domain**: `https://solana-battles-1.preview.emergentagent.com`
 
 **Hosting**: Emergent Preview Environment  
 **Port**: 3000 (internal) → 443 (external HTTPS)  
@@ -27,39 +27,39 @@
 
 **Verification**:
 ```bash
-curl -s https://gamepay-solution.preview.emergentagent.com | grep title
+curl -s https://solana-battles-1.preview.emergentagent.com | grep title
 # Output: <title>Casino Battle Royale</title>
 ```
 
 **Configuration File**: `/app/frontend/.env`
 ```env
-REACT_APP_BACKEND_URL=https://gamepay-solution.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://solana-battles-1.preview.emergentagent.com
 WDS_SOCKET_PORT=443
 ```
 
 **Build Configuration**:
 - Environment variable baked into build: `REACT_APP_BACKEND_URL`
 - JavaScript bundle: `/build/static/js/main.171693ee.js`
-- Contains: `https://gamepay-solution.preview.emergentagent.com`
+- Contains: `https://solana-battles-1.preview.emergentagent.com`
 
 ---
 
 ### 2. Backend API Deployment
 
-**API Base URL**: `https://gamepay-solution.preview.emergentagent.com/api`
+**API Base URL**: `https://solana-battles-1.preview.emergentagent.com/api`
 
 **Port**: 8001 (internal) → routed via `/api` prefix  
 **Service**: FastAPI + WebSocket Server  
 **Status**: ✅ Running  
 
 **Example Endpoints**:
-- Price Endpoint: `https://gamepay-solution.preview.emergentagent.com/api/sol-eur-price`
-- Purchase: `https://gamepay-solution.preview.emergentagent.com/api/purchase-tokens`
-- Auth: `https://gamepay-solution.preview.emergentagent.com/api/auth/authenticate`
+- Price Endpoint: `https://solana-battles-1.preview.emergentagent.com/api/sol-eur-price`
+- Purchase: `https://solana-battles-1.preview.emergentagent.com/api/purchase-tokens`
+- Auth: `https://solana-battles-1.preview.emergentagent.com/api/auth/authenticate`
 
 **Verification**:
 ```bash
-curl -s https://gamepay-solution.preview.emergentagent.com/api/sol-eur-price
+curl -s https://solana-battles-1.preview.emergentagent.com/api/sol-eur-price
 ```
 
 **Response**:
@@ -76,8 +76,8 @@ curl -s https://gamepay-solution.preview.emergentagent.com/api/sol-eur-price
 ```
 
 **Configuration**: Backend auto-discovers from environment
-- Supervisor APP_URL: `https://gamepay-solution.preview.emergentagent.com`
-- But frontend uses: `https://gamepay-solution.preview.emergentagent.com`
+- Supervisor APP_URL: `https://solana-battles-1.preview.emergentagent.com`
+- But frontend uses: `https://solana-battles-1.preview.emergentagent.com`
 
 ---
 
@@ -88,7 +88,7 @@ curl -s https://gamepay-solution.preview.emergentagent.com/api/sol-eur-price
 
 **WebApp URL** (for BotFather):
 ```
-https://gamepay-solution.preview.emergentagent.com
+https://solana-battles-1.preview.emergentagent.com
 ```
 
 **Telegram Bot Setup**:
@@ -96,7 +96,7 @@ https://gamepay-solution.preview.emergentagent.com
 2. Send: `/setmenubutton`
 3. Select your bot
 4. Send button name: `Play Casino`
-5. Send WebApp URL: `https://gamepay-solution.preview.emergentagent.com`
+5. Send WebApp URL: `https://solana-battles-1.preview.emergentagent.com`
 
 **Alternative BotFather Command**:
 ```
@@ -105,7 +105,7 @@ Select your bot
 App Title: Casino Battle Royale
 Description: Ultimate betting arena on Solana
 Photo: [upload icon]
-Web App URL: https://gamepay-solution.preview.emergentagent.com
+Web App URL: https://solana-battles-1.preview.emergentagent.com
 Short Name: casinobattle
 ```
 
@@ -119,10 +119,10 @@ Short Name: casinobattle
 
 | Component | URL |
 |-----------|-----|
-| **Frontend served at** | `https://gamepay-solution.preview.emergentagent.com` |
-| **Frontend API calls to** | `https://gamepay-solution.preview.emergentagent.com/api` |
+| **Frontend served at** | `https://solana-battles-1.preview.emergentagent.com` |
+| **Frontend API calls to** | `https://solana-battles-1.preview.emergentagent.com/api` |
 | **Backend listening on** | `0.0.0.0:8001` (internal) |
-| **Backend exposed at** | `https://gamepay-solution.preview.emergentagent.com/api` (via routing) |
+| **Backend exposed at** | `https://solana-battles-1.preview.emergentagent.com/api` (via routing) |
 
 **Result**: ✅ **Same Origin** - No CORS issues
 
@@ -134,8 +134,8 @@ Short Name: casinobattle
 
 | Component | URL |
 |-----------|-----|
-| **Telegram WebApp URL** | Should be: `https://gamepay-solution.preview.emergentagent.com` |
-| **Frontend served at** | `https://gamepay-solution.preview.emergentagent.com` |
+| **Telegram WebApp URL** | Should be: `https://solana-battles-1.preview.emergentagent.com` |
+| **Frontend served at** | `https://solana-battles-1.preview.emergentagent.com` |
 
 **Result**: ✅ **Match** - WebApp will load correctly
 
@@ -154,7 +154,7 @@ Searched for:
 
 **Current Status**: Application is **ONLY** deployed to:
 ```
-https://gamepay-solution.preview.emergentagent.com
+https://solana-battles-1.preview.emergentagent.com
 ```
 
 ---
@@ -176,7 +176,7 @@ https://gamepay-solution.preview.emergentagent.com
 
 4. **Configure Button**:
    - Button text: `🎰 Play Casino` or `Open App`
-   - Web App URL: `https://gamepay-solution.preview.emergentagent.com`
+   - Web App URL: `https://solana-battles-1.preview.emergentagent.com`
 
 5. **Test**:
    - Open your bot
@@ -193,7 +193,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 
 button = InlineKeyboardButton(
     text="🎰 Open Casino",
-    web_app=WebAppInfo(url="https://gamepay-solution.preview.emergentagent.com")
+    web_app=WebAppInfo(url="https://solana-battles-1.preview.emergentagent.com")
 )
 keyboard = InlineKeyboardMarkup([[button]])
 ```
@@ -229,7 +229,7 @@ nslookup casinosol.preview.emergentagent.com
 
 **Test Accessibility**:
 ```bash
-curl -I https://gamepay-solution.preview.emergentagent.com
+curl -I https://solana-battles-1.preview.emergentagent.com
 # Should return: HTTP/2 200
 ```
 
@@ -247,7 +247,7 @@ curl -I https://gamepay-solution.preview.emergentagent.com
                   │
                   ▼
 ┌─────────────────────────────────────────┐
-│  https://gamepay-solution.preview.emergentagent.com
+│  https://solana-battles-1.preview.emergentagent.com
 │  (Frontend - Port 3000 internal)        │
 └─────────────────┬───────────────────────┘
                   │
@@ -255,7 +255,7 @@ curl -I https://gamepay-solution.preview.emergentagent.com
                   │
                   ▼
 ┌─────────────────────────────────────────┐
-│  https://gamepay-solution.preview.emergentagent.com/api
+│  https://solana-battles-1.preview.emergentagent.com/api
 │  (Backend - Port 8001 internal)         │
 └─────────────────┬───────────────────────┘
                   │
@@ -295,7 +295,7 @@ curl -I https://gamepay-solution.preview.emergentagent.com
 ## ✅ Verification Checklist
 
 ### Frontend Accessibility
-- [x] HTTPS works: `https://gamepay-solution.preview.emergentagent.com`
+- [x] HTTPS works: `https://solana-battles-1.preview.emergentagent.com`
 - [x] Page loads: Title shows "Casino Battle Royale"
 - [x] React app running
 - [x] Build includes correct backend URL
@@ -328,7 +328,7 @@ curl -I https://gamepay-solution.preview.emergentagent.com
 2. Search for `@BotFather`
 3. Send command: `/setmenubutton`
 4. Select your casino bot
-5. Enter URL: `https://gamepay-solution.preview.emergentagent.com`
+5. Enter URL: `https://solana-battles-1.preview.emergentagent.com`
 
 **Verification After Update**:
 1. Open your bot in Telegram
@@ -378,29 +378,29 @@ For testing and initial launch, the preview domain works perfectly:
 
 **Application URLs**:
 ```
-Frontend:  https://gamepay-solution.preview.emergentagent.com
-Backend:   https://gamepay-solution.preview.emergentagent.com/api
+Frontend:  https://solana-battles-1.preview.emergentagent.com
+Backend:   https://solana-battles-1.preview.emergentagent.com/api
 WebSocket: wss://casinosol.preview.emergentagent.com/socket.io
 ```
 
 **API Endpoints** (Examples):
 ```
-Price:     https://gamepay-solution.preview.emergentagent.com/api/sol-eur-price
-Auth:      https://gamepay-solution.preview.emergentagent.com/api/auth/authenticate
-Purchase:  https://gamepay-solution.preview.emergentagent.com/api/purchase-tokens
-History:   https://gamepay-solution.preview.emergentagent.com/api/game-history
+Price:     https://solana-battles-1.preview.emergentagent.com/api/sol-eur-price
+Auth:      https://solana-battles-1.preview.emergentagent.com/api/auth/authenticate
+Purchase:  https://solana-battles-1.preview.emergentagent.com/api/purchase-tokens
+History:   https://solana-battles-1.preview.emergentagent.com/api/game-history
 ```
 
 **Testing URLs**:
 ```bash
 # Frontend
-curl https://gamepay-solution.preview.emergentagent.com
+curl https://solana-battles-1.preview.emergentagent.com
 
 # Backend API
-curl https://gamepay-solution.preview.emergentagent.com/api/sol-eur-price
+curl https://solana-battles-1.preview.emergentagent.com/api/sol-eur-price
 
 # Health Check
-curl https://gamepay-solution.preview.emergentagent.com/api/health
+curl https://solana-battles-1.preview.emergentagent.com/api/health
 ```
 
 ---
@@ -409,7 +409,7 @@ curl https://gamepay-solution.preview.emergentagent.com/api/health
 
 ### Current Deployment Status
 
-**Domain**: `https://gamepay-solution.preview.emergentagent.com`  
+**Domain**: `https://solana-battles-1.preview.emergentagent.com`  
 **Environment**: Emergent Preview (Production-Ready)  
 **SSL**: ✅ Enabled  
 **Status**: ✅ Live & Operational  
@@ -422,7 +422,7 @@ curl https://gamepay-solution.preview.emergentagent.com/api/health
 
 **Next Step**: Update BotFather with:
 ```
-https://gamepay-solution.preview.emergentagent.com
+https://solana-battles-1.preview.emergentagent.com
 ```
 
 ---

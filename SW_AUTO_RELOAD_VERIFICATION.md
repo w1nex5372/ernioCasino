@@ -79,7 +79,7 @@ useEffect(() => {
 1. **Open DevTools** (F12)
 2. **Go to Application tab** → Service Workers
 3. **Check "Update on reload"** (temporarily)
-4. **Load the app**: `https://casinosol.preview.emergentagent.com`
+4. **Load the app**: `https://solana-battles-1.preview.emergentagent.com`
 5. **Open Console tab**
 
 **Expected Console Output**:
@@ -90,7 +90,7 @@ useEffect(() => {
 SW v8.0: Installing new service worker v8.0-WINNER-FIX-20250114
 SW v8.0: Activating v8.0-WINNER-FIX-20250114 - DELETING ALL OLD CACHES
 SW v8.0: Found 2 clients to update
-SW v8.0: Notifying client: https://casinosol.preview.emergentagent.com/
+SW v8.0: Notifying client: https://solana-battles-1.preview.emergentagent.com/
 🔄 SW UPDATE DETECTED: v8.0-WINNER-FIX-20250114
 🔄 Force reloading page to get new version...
 ```
@@ -106,7 +106,7 @@ Run in browser console:
 ```javascript
 // Check current SW version
 navigator.serviceWorker.controller?.scriptURL
-// Should show: "https://casinosol.preview.emergentagent.com/sw.js"
+// Should show: "https://solana-battles-1.preview.emergentagent.com/sw.js"
 
 // Force check for SW updates
 navigator.serviceWorker.getRegistration().then(reg => {
