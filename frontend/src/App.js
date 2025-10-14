@@ -2501,11 +2501,36 @@ function App() {
             {activeTab === 'history' && (
               <Card className="bg-slate-800/90 border-slate-700">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-blue-400">
-                    <Timer className="w-5 h-5" />
-                    Game History
-                  </CardTitle>
-                  <CardDescription>Recent completed games</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2 text-blue-400">
+                        <Timer className="w-5 h-5" />
+                        Game History
+                      </CardTitle>
+                      <CardDescription>Recent completed games</CardDescription>
+                    </div>
+                    <button
+                      onClick={() => loadGameHistory(true)}
+                      disabled={isRefreshingHistory}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                        isRefreshingHistory 
+                          ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white active:scale-95'
+                      }`}
+                    >
+                      {isRefreshingHistory ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
+                          <span>Refreshing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-lg">🔄</span>
+                          <span>Refresh</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {gameHistory.length === 0 ? (
