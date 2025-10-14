@@ -524,6 +524,9 @@ frontend:
         - working: "NA"
           agent: "main"
           comment: "MULTIPLE UI FIXES IMPLEMENTED: 1) WRONG RESULT MESSAGE: Fixed winner detection logic throughout winner screen - was checking non-existent fields (telegram_id, id) instead of winner.user_id. Now correctly shows 'Congratulations, You Won!' for winners and 'Better Luck Next Time!' for losers. Updated 4 instances of winner detection logic (title, trophy, name display, prize section). 2) VERSION LABEL REMOVED: Completely removed 'v7.0-MAINNET-PRODUCTION...' text from bottom-right corner of UI. 3) PRIZE POOL VISIBILITY: Prize Pool section now only displays for winners - losers no longer see it. Changed from conditional content to conditional rendering (returns null for losers). 4) CROSS-DEVICE STABILITY: All responsive classes (text-2xl md:text-3xl, p-3 md:p-4, space-y-3 md:space-y-4) maintained for proper display on both mobile and PC."
+        - working: "NA"
+          agent: "main"
+          comment: "TELEGRAM CACHE REFRESH DEPLOYED: Version bumped from v7.0 to v8.0-WINNER-FIX-20250114 to force Telegram cache invalidation. Updated: 1) App.js APP_VERSION constant 2) index.html meta tags (version, build-timestamp, app-version) 3) Service worker version string 4) manifest.json start_url parameter. Enhanced cache-busting script in index.html with aggressive localStorage/sessionStorage clearing, service worker unregistration, and detailed console logging. All files show v8.0 identifier. User needs to: a) Update bot menu URL to include ?v=8001 parameter b) Clear Telegram cache on their device c) Reopen bot. Changes deployed to same domain - Emergent preview should show new version immediately."
 
 agent_communication:
     - agent: "main"
