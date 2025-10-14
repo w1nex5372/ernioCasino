@@ -530,7 +530,10 @@ function App() {
 
     // Room management events
     newSocket.on('user_registered', (data) => {
-      console.log('✅ User registered to socket:', data);
+      console.log('✅✅✅ USER REGISTERED TO SOCKET ✅✅✅');
+      console.log('User ID:', data.user_id);
+      console.log('Platform:', data.platform);
+      console.log('Status:', data.status);
     });
 
     newSocket.on('room_joined_confirmed', (data) => {
