@@ -1580,6 +1580,40 @@ function App() {
     <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white ${
       isMobile ? 'overflow-x-hidden max-w-full w-full' : ''
     }`} style={isMobile ? {maxWidth: '100vw', width: '100vw'} : {}}>
+      
+      {/* GET READY! Full-Screen Animation */}
+      {showGetReady && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 animate-pulse">
+          <div className="text-center">
+            <div className="text-8xl font-black mb-8 animate-bounce" style={{
+              background: 'linear-gradient(135deg, #22c55e, #10b981, #22c55e)',
+              backgroundSize: '200% 200%',
+              animation: 'gradient 2s ease infinite, bounce 0.5s ease infinite',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              textShadow: '0 0 40px rgba(34, 197, 94, 0.5)'
+            }}>
+              🚀 GET READY! 🚀
+            </div>
+            <div className="text-6xl font-bold text-white animate-pulse">
+              {getReadyCountdown}
+            </div>
+            <div className="mt-8 text-2xl text-green-400 font-semibold animate-pulse">
+              BATTLE STARTS SOON...
+            </div>
+          </div>
+          
+          {/* Add gradient animation keyframes */}
+          <style>{`
+            @keyframes gradient {
+              0% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+              100% { background-position: 0% 50%; }
+            }
+          `}</style>
+        </div>
+      )}
+      
       {/* Header */}
       <header className="bg-slate-900/90 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
         <div className="px-4 py-3">
