@@ -547,11 +547,46 @@ function App() {
       loadRooms();
     });
 
-    newSocket.on('game_starting', (data) => {
-      console.log('🎮 Game starting:', data);
+    // NEW EVENT: room_ready - Show "GET READY!" full-screen animation
+    newSocket.on('room_ready', (data) => {
+      console.log('📥 EVENT: room_ready', {
+        room: data.room_type,
+        match_id: data.match_id,
+        players: data.players?.length,
+        countdown: data.countdown
+      });
       
-      // Show BIG notification to ALL players (even those outside the room)
-      toast.success(`🎰 ${ROOM_CONFIGS[data.room_type]?.icon} ${ROOM_CONFIGS[data.room_type]?.name} ROOM IS FULL! Game starting!`, {
+      // Show GET READY! animation
+      setShowGetReady(true);
+      setGetReadyCountdown(data.countdown || 3);
+      
+      // Start countdown
+      let count = data.countdown || 3;
+      const countdownInterval = setInterval(() => {
+        count--;
+        setGetReadyCountdown(count);
+        if (count <= 0) {
+          clearInterval(countdownInterval);
+        }
+      }, 1000);
+      
+      // Hide after countdown
+      setTimeout(() => {
+        setShowGetReady(false);
+      }, (data.countdown || 3) * 1000);
+      
+      console.log('✅ GET READY animation started');
+    });
+
+    newSocket.on('game_starting', (data) => {
+      console.log('📥 EVENT: game_starting', {
+        room: data.room_type,
+        match_id: data.match_id,
+        players: data.players?.length
+      });
+      
+      // Show notification
+      toast.success(`🎰 ${ROOM_CONFIGS[data.room_type]?.icon} Game Starting!`, {
         duration: 3000,
         style: {
           background: '#10b981',
