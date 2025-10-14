@@ -125,17 +125,56 @@
             });
         </script>
         <script>
+            // AGGRESSIVE CACHE CLEARING FOR TELEGRAM - v8.0 WINNER FIX
+            console.log('🔄 CACHE BUSTER v8.0: Starting aggressive cache clear for Telegram...');
+            
+            // Force clear ALL storage
+            (function() {
+                const currentVersion = '8.0-WINNER-FIX-20250114';
+                const storedVersion = localStorage.getItem('app_version');
+                
+                console.log('📦 Version check:', storedVersion, '->', currentVersion);
+                
+                if (storedVersion !== currentVersion) {
+                    console.log('🧹 Version mismatch! Clearing ALL storage...');
+                    
+                    // Clear localStorage (keep only essential keys)
+                    try {
+                        const essentialKeys = ['casino_last_eur_amount', 'casino_last_sol_eur_price'];
+                        const allKeys = Object.keys(localStorage);
+                        allKeys.forEach(key => {
+                            if (!essentialKeys.includes(key) && key !== 'app_version') {
+                                localStorage.removeItem(key);
+                                console.log('🗑️ Removed localStorage:', key);
+                            }
+                        });
+                        localStorage.setItem('app_version', currentVersion);
+                        console.log('✅ localStorage cleaned and version updated');
+                    } catch(e) {
+                        console.error('❌ localStorage clear error:', e);
+                    }
+                    
+                    // Clear sessionStorage
+                    try {
+                        sessionStorage.clear();
+                        console.log('✅ sessionStorage cleared');
+                    } catch(e) {
+                        console.error('❌ sessionStorage clear error:', e);
+                    }
+                }
+            })();
+            
             // SERVICE WORKER COMPLETELY DISABLED - NO CACHING
-            console.log('SW: Service Worker registration DISABLED for fresh updates');
+            console.log('🚫 Service Worker registration DISABLED for fresh updates');
             
             if ('serviceWorker' in navigator) {
                 // Unregister ALL existing service workers
                 navigator.serviceWorker.getRegistrations().then(function(registrations) {
                     for(let registration of registrations) {
-                        console.log('SW: Unregistering old service worker:', registration.scope);
+                        console.log('🗑️ Unregistering old service worker:', registration.scope);
                         registration.unregister();
                     }
-                    console.log('SW: All service workers unregistered - NO CACHING');
+                    console.log('✅ All service workers unregistered - NO CACHING');
                 });
                 
                 // Clear all caches
@@ -143,15 +182,17 @@
                     caches.keys().then(function(cacheNames) {
                         return Promise.all(
                             cacheNames.map(function(cacheName) {
-                                console.log('SW: Deleting cache:', cacheName);
+                                console.log('🗑️ Deleting cache:', cacheName);
                                 return caches.delete(cacheName);
                             })
                         );
                     }).then(function() {
-                        console.log('SW: All caches cleared');
+                        console.log('✅ All caches cleared');
                     });
                 }
             }
+            
+            console.log('✅ CACHE BUSTER v8.0: Complete!');
         </script>
     </body>
 </html>
