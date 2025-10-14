@@ -949,12 +949,22 @@ async def start_game_round(room: GameRoom):
     match_id = str(uuid.uuid4())[:12]  # Short unique ID
     logging.info(f"🎮 Starting game round for room {room.id}, match_id: {match_id}")
     
+    # CRITICAL: Wait 500ms for 3rd player's socket to join the room
+    # This prevents race condition where room_ready is emitted before socket joins
+    logging.info(f"⏱️ Waiting 500ms for all sockets to join room {room.id}...")
+    await asyncio.sleep(0.5)
+    
+    # Check how many sockets are in the room
+    socket_count = socket_rooms.get_room_socket_count(room.id)
+    logging.info(f"📊 Room {room.id} has {socket_count} socket(s) connected")
+    
     room.status = "ready"
     
     # Calculate prize pool (total bets)
     room.prize_pool = sum(p.bet_amount for p in room.players)
     
     # EVENT 1: room_ready - Trigger "GET READY!" animation (2-3 seconds)
+    logging.info(f"📤 Broadcasting room_ready to room {room.id} ({socket_count} sockets)...")
     await socket_rooms.broadcast_to_room(sio, room.id, 'room_ready', {
         'room_id': room.id,
         'room_type': room.room_type,
@@ -964,7 +974,7 @@ async def start_game_round(room: GameRoom):
         'message': '🚀 GET READY FOR BATTLE!',
         'countdown': 3
     })
-    logging.info(f"✅ Emitted room_ready to room {room.id}")
+    logging.info(f"✅ Emitted room_ready to room {room.id} with match_id {match_id}")
     
     # Wait for "GET READY!" animation (3 seconds)
     await asyncio.sleep(3)
