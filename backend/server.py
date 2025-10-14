@@ -1463,6 +1463,64 @@ async def manually_process_payment(wallet_address: str, signature: str, admin_ke
         logging.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Failed to process payment: {str(e)}")
 
+@api_router.post("/admin/manual-credit")
+async def manual_credit_tokens(
+    telegram_id: int,
+    amount: int,
+    reason: str,
+    transaction_signature: Optional[str] = None,
+    admin_key: str = ""
+):
+    """
+    ADMIN ONLY: Manually credit tokens to a user with full logging
+    
+    Args:
+        telegram_id: User's Telegram ID
+        amount: Tokens to credit
+        reason: Reason for manual credit
+        transaction_signature: Optional Solana transaction signature
+        admin_key: Admin authentication key
+    """
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Invalid admin key")
+    
+    result = await credit_tokens_manually(
+        db=db,
+        telegram_id=telegram_id,
+        amount=amount,
+        reason=reason,
+        transaction_signature=transaction_signature
+    )
+    
+    return result
+
+@api_router.get("/admin/recovery-status")
+async def get_recovery_status(admin_key: str = ""):
+    """ADMIN ONLY: Get payment recovery system status"""
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Invalid admin key")
+    
+    # Get RPC health status
+    rpc_health = rpc_alert_system.get_health_report()
+    
+    # Get recent manual credits
+    credit_logger = ManualCreditLogger(db)
+    recent_credits = await credit_logger.get_recent_manual_credits(limit=10)
+    
+    return {
+        "rpc_health": rpc_health,
+        "recent_manual_credits": [
+            {
+                "telegram_id": c.get("telegram_id"),
+                "amount": c.get("tokens_credited"),
+                "reason": c.get("reason"),
+                "timestamp": c.get("timestamp").isoformat() if c.get("timestamp") else None
+            }
+            for c in recent_credits
+        ],
+        "monitoring_active": True
+    }
+
 @api_router.post("/admin/rescan-payments")
 async def rescan_payments(admin_key: str = "", wallet_address: Optional[str] = None):
     """
