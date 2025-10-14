@@ -1003,18 +1003,21 @@ async def start_game_round(room: GameRoom):
     except Exception as e:
         logging.error(f"Error sending Telegram notification: {e}")
     
-    # Notify ROOM participants of the winner (room-specific broadcast)
+    # EVENT 3: game_finished - Notify ROOM participants of the winner
     await socket_rooms.broadcast_to_room(sio, room.id, 'game_finished', {
         'room_id': room.id,
         'room_type': room.room_type,
+        'match_id': match_id,  # Unique match identifier
         'winner': winner.dict(),
         'winner_name': f"{winner.first_name} {winner.last_name}".strip(),
         'winner_id': winner.user_id,
         'prize_pool': room.prize_pool,
         'prize_link': prize_link,  # Include for winner screen
         'round_number': room.round_number,
-        'has_prize': True
+        'has_prize': True,
+        'finished_at': room.finished_at.isoformat()
     })
+    logging.info(f"✅ Emitted game_finished to room {room.id}, winner: {winner.username}, match_id: {match_id}")
     
     # Send prize link privately to the winner (using socket ID)
     winner_sid = user_to_socket.get(winner.user_id)
