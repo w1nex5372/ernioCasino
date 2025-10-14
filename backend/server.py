@@ -793,19 +793,48 @@ async def connect(sid, environ):
 async def disconnect(sid):
     logging.info(f"🔌 Client {sid} disconnected")
     
+    # Get user_id before cleanup
+    user_id = socket_to_user.get(sid)
+    
+    # Get room_id from socket_rooms tracking
+    room_id = socket_rooms.socket_to_room.get(sid)
+    
     # Clean up socket from rooms
     socket_rooms.cleanup_socket(sid)
     
     # Clean up user mapping
     if sid in socket_to_user:
-        user_id = socket_to_user[sid]
         if user_id in user_to_socket:
             del user_to_socket[user_id]
         del socket_to_user[sid]
         logging.info(f"🧹 Cleaned up user {user_id} socket mapping")
     
-    # TODO: Notify room participants about player disconnect
-    # This will be implemented in a future update for proper reconnection handling
+    # Notify room participants about player disconnect
+    if room_id and user_id:
+        # Find the room and user
+        room = active_rooms.get(room_id)
+        if room:
+            # Find and remove player from room
+            player_left = None
+            for player in room.players:
+                if player.user_id == user_id:
+                    player_left = player
+                    break
+            
+            if player_left:
+                room.players.remove(player_left)
+                logging.info(f"👋 Player {player_left.username} left room {room_id}")
+                
+                # Notify remaining participants with updated FULL list
+                await socket_rooms.broadcast_to_room(sio, room_id, 'player_left', {
+                    'room_id': room_id,
+                    'room_type': room.room_type,
+                    'player': player_left.dict(),
+                    'players_count': len(room.players),
+                    'all_players': [p.dict() for p in room.players],  # FULL updated list
+                    'timestamp': datetime.now(timezone.utc).isoformat()
+                })
+                logging.info(f"✅ Emitted player_left to room {room_id}, remaining: {len(room.players)}")
 
 @sio.event
 async def register_user(sid, data):
