@@ -1228,9 +1228,10 @@ function App() {
     try {
       console.log('🎁🎁🎁 LOADING WELCOME BONUS STATUS 🎁🎁🎁');
       console.log('API URL:', `${API}/welcome-bonus-status`);
+      console.log('Current state:', welcomeBonusStatus);
       
       const response = await axios.get(`${API}/welcome-bonus-status`);
-      console.log('🎁 Welcome bonus response:', response.data);
+      console.log('🎁 Welcome bonus API response:', response.data);
       
       if (response.data) {
         setWelcomeBonusStatus(response.data);
@@ -1238,22 +1239,26 @@ function App() {
         if (response.data.bonus_active) {
           console.log(`✅✅✅ WELCOME BONUS ACTIVE ✅✅✅`);
           console.log(`Remaining spots: ${response.data.remaining_spots}`);
+          console.log('✅ Bonus visible: TRUE');
         } else {
-          console.log('⚠️ Welcome bonus not active');
+          console.log('⚠️ Welcome bonus not active (bonus_active=false)');
+          console.log('❌ Bonus missing (unexpected)');
         }
       } else {
         console.warn('⚠️ Empty response from bonus endpoint');
-        // Default to active with 100 spots if API returns empty
+        console.log('🎁 Using default bonus state (active with 100 spots)');
         setWelcomeBonusStatus({ bonus_active: true, remaining_spots: 100 });
+        console.log('✅ Bonus visible: TRUE (fallback)');
       }
     } catch (error) {
       console.error('❌❌❌ FAILED TO LOAD WELCOME BONUS ❌❌❌');
       console.error('Error:', error.message);
       console.error('Stack:', error.stack);
       
-      // Default to showing bonus even if API fails
+      // ALWAYS show bonus even if API fails
       console.log('🎁 Using default bonus state (active with 100 spots)');
       setWelcomeBonusStatus({ bonus_active: true, remaining_spots: 100 });
+      console.log('✅ Bonus visible: TRUE (error fallback)');
     }
   };
 
