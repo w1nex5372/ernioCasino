@@ -1854,30 +1854,42 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
     target_room.players.append(player)
     target_room.prize_pool += request.bet_amount
     
-    # Notify ROOM participants about new player (room-specific broadcast)
+    # Notify ROOM participants about new player - ALWAYS send FULL participant list
+    players_list = [p.dict() for p in target_room.players]
+    logging.info(f"👤 Player {player.username} joined room {target_room.id} ({len(target_room.players)}/3)")
+    logging.info(f"📋 Full participant list: {[p['username'] for p in players_list]}")
+    
     await socket_rooms.broadcast_to_room(sio, target_room.id, 'player_joined', {
         'room_id': target_room.id,
         'room_type': target_room.room_type,
         'player': player.dict(),
         'players_count': len(target_room.players),
         'prize_pool': target_room.prize_pool,
-        'all_players': [p.dict() for p in target_room.players],  # All participants for display
-        'room_status': 'filling' if len(target_room.players) < 3 else 'ready'
+        'all_players': players_list,  # FULL participant list - REPLACE, don't append
+        'room_status': 'filling' if len(target_room.players) < 3 else 'full',
+        'timestamp': datetime.now(timezone.utc).isoformat()
     })
+    logging.info(f"✅ Emitted player_joined to room {target_room.id} with {len(players_list)} players")
     
     # Broadcast updated room states to all clients (global lobby update)
     await broadcast_room_updates()
     
-    # Check if room is full and notify
+    # Check if room is full and start game sequence
     if len(target_room.players) == 3:
+        logging.info(f"🚀 ROOM FULL! Room {target_room.id} has 3 players, starting game sequence...")
+        
         # Emit room_full event to all participants in THIS room only
         await socket_rooms.broadcast_to_room(sio, target_room.id, 'room_full', {
             'room_id': target_room.id,
             'room_type': target_room.room_type,
-            'players': [p.dict() for p in target_room.players],
-            'message': '🚀 ROOM IS FULL! GET READY FOR THE BATTLE!'
+            'players': players_list,
+            'players_count': 3,
+            'message': '🚀 ROOM IS FULL! GET READY FOR THE BATTLE!',
+            'timestamp': datetime.now(timezone.utc).isoformat()
         })
-        # Start the game
+        logging.info(f"✅ Emitted room_full to room {target_room.id}")
+        
+        # Start the game sequence (will emit room_ready, game_starting, game_finished in order)
         background_tasks.add_task(start_game_round, target_room)
     
     return {
