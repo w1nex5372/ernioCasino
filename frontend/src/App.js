@@ -2040,6 +2040,7 @@ function App() {
                             setInLobby(false);
                             setGameInProgress(false);
                             loadRooms();
+                            loadWelcomeBonusStatus();
                             toast.success('🎮 Ready for another game!');
                           }}
                           className="w-full bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 hover:from-purple-700 hover:via-purple-800 hover:to-indigo-800 text-white font-bold text-base md:text-lg py-3 md:py-4 rounded-lg border border-purple-500/50 shadow-lg shadow-purple-500/25 transition-all duration-300 active:scale-95"
