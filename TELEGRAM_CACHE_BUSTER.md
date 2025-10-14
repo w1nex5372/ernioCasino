@@ -44,7 +44,7 @@ const APP_VERSION = 'v7.0-DEVNET-PAYMENT-20241013131800';
 4. Go to: `Bot Settings` → `Menu Button` → `Edit Menu Button URL`
 5. **Update URL to:**
    ```
-   https://casinosol.preview.emergentagent.com?v=20241013131800
+   https://gamepay-solution.preview.emergentagent.com?v=20241013131800
    ```
 
 **OR use API:**
@@ -56,7 +56,7 @@ curl -X POST "https://api.telegram.org/bot8366450667:AAEAOR3ea5BXBMumyS2Mz9g9svf
       "type": "web_app",
       "text": "🎰 Play Casino",
       "web_app": {
-        "url": "https://casinosol.preview.emergentagent.com?v=20241013131800"
+        "url": "https://gamepay-solution.preview.emergentagent.com?v=20241013131800"
       }
     }
   }'
@@ -160,7 +160,7 @@ If you've tried everything and still see the old version:
 
 ### Diagnostic Steps:
 1. **Check if you're in the right place:**
-   - Preview URL: `https://casinosol.preview.emergentagent.com`
+   - Preview URL: `https://gamepay-solution.preview.emergentagent.com`
    - Are you opening the bot in Telegram or browser directly?
 
 2. **Check browser console for errors:**
@@ -171,7 +171,7 @@ If you've tried everything and still see the old version:
 3. **Verify bot URL in BotFather:**
    - Send `/mybots` to @BotFather
    - Check what URL is configured
-   - Should match: `https://casinosol.preview.emergentagent.com?v=20241013131800`
+   - Should match: `https://gamepay-solution.preview.emergentagent.com?v=20241013131800`
 
 4. **Try different device:**
    - Test on another phone/computer

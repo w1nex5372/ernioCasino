@@ -11,7 +11,7 @@ from datetime import datetime
 import json
 
 # Configuration
-API_URL = "https://casinosol.preview.emergentagent.com/api"
+API_URL = "https://gamepay-solution.preview.emergentagent.com/api"
 CONCURRENT_USERS = 100  # Start with 100, can scale to 1000
 TEST_DURATION = 60  # seconds
 
