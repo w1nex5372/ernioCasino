@@ -16,8 +16,8 @@ import './App.css';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// App version for cache busting - UPDATED FOR TELEGRAM REFRESH
-const APP_VERSION = 'v8.0-WINNER-FIX-20250114';
+// App version for cache busting - NO SERVICE WORKER
+const APP_VERSION = '8.0-WINNER-FIX-v5-20250114';
 
 // Check and clear old version cache
 const storedVersion = localStorage.getItem('app_version');
