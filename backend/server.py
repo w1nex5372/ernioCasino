@@ -133,10 +133,17 @@ class SolanaWalletDerivation:
 # Initialize wallet derivation system
 wallet_derivation = SolanaWalletDerivation(CASINO_WALLET_PRIVATE_KEY)
 
-# MongoDB connection
-client = AsyncIOMotorClient(MONGO_URL)
+# MongoDB connection with connection pooling for high concurrency
+client = AsyncIOMotorClient(
+    MONGO_URL,
+    maxPoolSize=200,  # Maximum connections in pool
+    minPoolSize=10,   # Minimum connections maintained
+    maxIdleTimeMS=45000,  # Close idle connections after 45s
+    serverSelectionTimeoutMS=5000  # Timeout for server selection
+)
 db = client[DB_NAME]
 logging.info(f"🗄️  MongoDB: Connected to database '{DB_NAME}' at {MONGO_URL}")
+logging.info(f"🔧 Connection pool: min={10}, max={200}")
 logging.info(f"🔍 Database config: DB_NAME from env = {os.environ.get('DB_NAME', 'NOT SET')}")
 
 # Socket.IO setup
