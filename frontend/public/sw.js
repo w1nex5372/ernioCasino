@@ -98,4 +98,4 @@ self.addEventListener('push', (event) => {
   );
 });
 
-console.log('SW: Casino Battle Service Worker v8 loaded - WINNER-FIX-ACTIVE ' + Date.now());
+console.log(`SW v8.0: Casino Battle Service Worker ${SW_VERSION} loaded at ${Date.now()}`);
