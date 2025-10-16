@@ -3178,6 +3178,169 @@ function App() {
         tokenAmount={paymentTokenAmount}
         initialEurAmount={paymentEurAmount}
       />
+
+      {/* City Selector Modal */}
+      {showCitySelector && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <Card className="w-full max-w-md mx-4 bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-2xl text-center text-white">🏙️ Choose Your City</CardTitle>
+              <CardDescription className="text-center text-slate-300">
+                Select your city to start playing
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                onClick={() => handleCitySelect('London')}
+                className="w-full h-20 text-xl bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
+              >
+                🇬🇧 London
+              </Button>
+              <Button
+                onClick={() => handleCitySelect('Paris')}
+                className="w-full h-20 text-xl bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+              >
+                🇫🇷 Paris
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Work Access Purchase Modal */}
+      {showWorkModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <Card className="w-full max-w-md mx-4 bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-2xl text-center text-white">💼 Work for Casino</CardTitle>
+              <CardDescription className="text-center text-slate-300">
+                Upload hidden gifts and earn from the casino
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center py-4">
+                <div className="text-5xl mb-2">🎁</div>
+                <h3 className="text-2xl font-bold text-yellow-400 mb-2">1000 Tokens</h3>
+                <p className="text-slate-300 text-sm">(~10 EUR via Solana)</p>
+                <p className="text-slate-400 text-xs mt-4">
+                  This is a one-time access fee. No tokens will be deducted from your balance.
+                </p>
+              </div>
+              <Button
+                onClick={handlePurchaseWorkAccess}
+                className="w-full h-12 text-lg bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900"
+              >
+                Purchase via Solana
+              </Button>
+              <Button
+                onClick={() => setShowWorkModal(false)}
+                variant="outline"
+                className="w-full"
+              >
+                Cancel
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Gift Upload Form */}
+      {showGiftUploadForm && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <Card className="w-full max-w-2xl mx-4 my-8 bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-2xl text-center text-white">🎁 Upload Hidden Gift</CardTitle>
+              <CardDescription className="text-center text-slate-300">
+                Add a gift with photo and coordinates for winners to find
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Photo Upload */}
+              <div className="space-y-2">
+                <label className="text-white font-semibold">📸 Gift Photo</label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  className="bg-slate-700 text-white border-slate-600"
+                />
+                {giftPhoto && (
+                  <div className="mt-2">
+                    <img 
+                      src={giftPhoto} 
+                      alt="Gift preview" 
+                      className="w-full h-48 object-cover rounded-lg border-2 border-green-500"
+                    />
+                    <p className="text-green-400 text-sm mt-1">✓ Photo uploaded</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Coordinates */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-white font-semibold">📍 Latitude</label>
+                  <Input
+                    type="number"
+                    step="0.000001"
+                    placeholder="48.8566"
+                    value={giftLat}
+                    onChange={(e) => setGiftLat(e.target.value)}
+                    className="bg-slate-700 text-white border-slate-600"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-white font-semibold">📍 Longitude</label>
+                  <Input
+                    type="number"
+                    step="0.000001"
+                    placeholder="2.3522"
+                    value={giftLng}
+                    onChange={(e) => setGiftLng(e.target.value)}
+                    className="bg-slate-700 text-white border-slate-600"
+                  />
+                </div>
+              </div>
+
+              {/* City Selection */}
+              <div className="space-y-2">
+                <label className="text-white font-semibold">🏙️ Gift City</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    onClick={() => setGiftCity('London')}
+                    className={`h-12 ${giftCity === 'London' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-700 hover:bg-slate-600'}`}
+                  >
+                    🇬🇧 London
+                  </Button>
+                  <Button
+                    onClick={() => setGiftCity('Paris')}
+                    className={`h-12 ${giftCity === 'Paris' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-slate-700 hover:bg-slate-600'}`}
+                  >
+                    🇫🇷 Paris
+                  </Button>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="space-y-2">
+                <Button
+                  onClick={handleGiftUpload}
+                  className="w-full h-12 text-lg bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900"
+                >
+                  Submit Gift
+                </Button>
+                <Button
+                  onClick={() => setShowGiftUploadForm(false)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
