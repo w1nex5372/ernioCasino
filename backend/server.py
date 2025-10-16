@@ -1245,7 +1245,29 @@ async def start_game_round(room: GameRoom):
     except Exception as e:
         logging.error(f"Failed to store winner prize: {e}")
     
-    # Send Telegram notification to winner
+    # NEW: Assign gift to winner based on their city
+    assigned_gift = None
+    try:
+        # Get winner's data from database
+        winner_user = await db.users.find_one({"id": winner.user_id})
+        if winner_user:
+            winner_city = winner_user.get('city')
+            winner_telegram_id = winner_user.get('telegram_id')
+            
+            if winner_city:
+                # Try to assign a gift from the winner's city
+                assigned_gift = await assign_gift_to_winner(
+                    winner_user_id=winner.user_id,
+                    winner_city=winner_city,
+                    winner_telegram_id=winner_telegram_id,
+                    winner_username=winner.username
+                )
+            else:
+                logging.info(f"Winner {winner.username} has no city selected - no gift assigned")
+    except Exception as e:
+        logging.error(f"Error in gift assignment: {e}")
+    
+    # Send Telegram notification to winner (original prize notification)
     try:
         # Get winner's Telegram ID from database
         winner_user = await db.users.find_one({"id": winner.user_id})
