@@ -1,9 +1,10 @@
 <analysis>
-The AI engineer's work involved an iterative and complex journey, primarily focused on solidifying the Solana payment system, rectifying critical frontend and backend issues, and stabilizing game flow. Initial efforts tackled transaction commitment, payment recovery, and database inconsistencies, leading to significant refactoring in  and . Subsequent tasks focused on frontend UI/UX, including fixing win/loss badges, removing version labels, refining winner screens, and implementing a history refresh. Persistent Telegram WebApp caching issues necessitated aggressive cache-busting and service worker modifications, ultimately revealing a crucial domain mismatch. The latest phase addressed recurring game flow inconsistencies, such as repeating winner modals and player synchronization problems. The immediate focus is on correcting a fundamental backend Socket.IO architectural flaw where events are broadcast globally instead of to specific game rooms, highlighting a systematic problem-solving approach moving from symptoms to root causes.
+The AI engineer's work primarily focused on stabilizing a Solana-based PWA casino mini-app, addressing critical real-time synchronization, UI consistency, and deployment caching issues. Initially, fixes targeted global Socket.IO event broadcasting, which led to incorrect game state across clients. Subsequent efforts involved implementing proper room-based Socket.IO communication, fixing service worker registration for aggressive caching, and resolving race conditions causing GET READY animations to disappear or winner screens to be inconsistent. A major challenge was ensuring cross-device synchronization, especially between Telegram WebApp (mobile) and desktop. The Free 100 Players Bonus visibility was a recurring bug. The work followed an iterative debugging cycle, adding extensive logging and state management to pinpoint and resolve issues. The latest work involved a comprehensive codebase cleanup to remove unused files and dependencies.
+
 </analysis>
 
 <product_requirements>
-The application is a Solana-based PWA casino mini-app supporting real-time betting in Bronze, Silver, and Gold rooms for 2-3 players. Winners receive prize links via private Telegram messages. In-game tokens (1 EUR = 100 tokens) are purchased using Solana. The UI must be professional, responsive, and mobile-optimized, with Telegram Web App handling authentication.
+The application is a Solana-based PWA casino mini-app enabling real-time betting in Bronze, Silver, and Gold rooms for 2-3 players. Winners receive prize links via private Telegram messages. In-game tokens (1 EUR = 100 tokens) are purchased using Solana. The UI must be professional, responsive, and mobile-optimized, with Telegram Web App handling authentication.
 
 The previous work established core game mechanics, room management, daily free tokens, and continuous game cycles. Recent development focused on:
 1.  **Solana Token Purchase:** Dynamic wallet generation, real-time blockchain monitoring for SOL, automatic token crediting, forwarding SOL to a main project wallet, and fetching dynamic SOL/EUR prices.
@@ -14,6 +15,8 @@ The previous work established core game mechanics, room management, daily free t
 6.  **Authentication & Data Consistency**: Resolving authentication mix-ups for specific users caused by database mismatches and null user IDs.
 7.  **Performance & Load Optimization**: Adding MongoDB indexing and connection pooling, implementing RPC fallback logic.
 8.  **UI/UX Refinements**: Fixed Lost badge for winners, removed version label, simplified winner announcement screen (no token display), added history refresh button, implemented ROOM IS FULL animation, fixed Claim 10 button visuals and cooldown.
+9.  **Real-time Synchronization & Event Sequencing**: Implement room-specific Socket.IO broadcasting, enforce strict event order (player_joined → room_full → room_ready → game_started → game_finished → redirect_home), ensure GET READY! animation and winner modal appear consistently for all players, and keep the Free 100 Players Bonus visible.
+
 </product_requirements>
 
 <key_technical_concepts>
@@ -21,78 +24,88 @@ The previous work established core game mechanics, room management, daily free t
 -   **React.js:** Frontend UI development.
 -   **MongoDB:** NoSQL database (with indexing and connection pooling).
 -   **Solana Web3.js / solders:** Blockchain interaction.
--   **Socket.IO:** Real-time communication (requires fixes).
--   **Tailwind CSS:** Styling.
--   **PWA:** App-like installation.
+-   **Socket.IO:** Real-time communication for game sync.
+-   **Tailwind CSS:** Styling framework.
+-   **PWA:** Progressive Web Application for app-like experience.
 -   **Telegram Web App Authentication:** Secure user login.
--   **Helius RPC:** Solana RPC provider for mainnet (with fallback to public).
--   **:** Python for concurrent background tasks.
--   **:** Environment variable loading.
--   **:** Generating unique user IDs.
+-   **Service Workers:** For PWA caching and offline capabilities.
 </key_technical_concepts>
 
 <code_architecture>
 
 -   ****:
     -   **Purpose**: Core FastAPI app for API routes, WebSockets, and game logic.
-    -   **Changes**:  explicitly set to . MongoDB connection pooling ,  configured. Background tasks (, ) added. Admin endpoints (, ) implemented. API endpoints for manual credit and recovery status added. Startup event handler now calls . Logging for database and auth added. CORS  for both HTTP and WebSocket origins. Socket.IO broadcasting () is currently sending to all clients instead of specific rooms, which is a known issue.
+    -   **Changes**: Refactored  and MongoDB connection pooling. Implemented admin, manual credit, and recovery endpoints. CORS  for HTTP/WebSocket. Socket.IO event handling was a major focus, moving from global broadcasting () to room-specific (). Added , , , , ,  events. Enhanced  to wait for 3 players in a room before emitting  and included  delays between , , and  events to enforce strict sequencing. Added extensive logging for Socket.IO connection, room joining, and event emissions. Integrated platform detection on socket connection.
 -   ****:
     -   **Purpose**: Backend environment variables.
-    -   **Changes**: ,  added.  changed from Helius to a public RPC due to authentication errors, then back to Helius with an API key, then back to a temporary public RPC.  set to .  set to .
+    -   **Changes**: ,  added.  configured for Helius (with public RPC fallback).  set to .  set to .
 -   ****:
     -   **Purpose**: Encapsulates Solana blockchain interaction.
-    -   **Changes**: Implemented , , , . Enhanced error logging,  (15s interval), rate limit handling.  singleton reinitializes on RPC URL change.  rewritten for robustness, explicit logging, and insufficient balance logic correction, and added  (2s) delay before sweep.  updated to use . Implemented  (72h) for wallet cleanup. RPC fallback manager added ( array, ). Significant refactoring to fix indentation errors and duplicate retry loops. Enhanced to use  for RPC alerts.
+    -   **Changes**: Enhanced for payment processing, error logging, , robust , and RPC fallback management.
 -   ****:
-    -   **Purpose**: New module for automated payment recovery.
-    -   **Changes**: Created to handle  logic, scanning for missed payments and re-crediting users.
+    -   **Purpose**: Automated payment recovery.
+    -   **Changes**: Handles  logic for missed payments.
 -   ****:
-    -   **Purpose**: New module for RPC failure alerting.
-    -   **Changes**: Created to capture and log RPC errors (401, 403, 429) without public exposure, integrated with 's .
+    -   **Purpose**: RPC failure alerting.
+    -   **Changes**: Logs RPC errors (401, 403, 429) for .
 -   ****:
-    -   **Purpose**: New module for logging manual token credits.
-    -   **Changes**: Created to record user ID, amount, and reason for manual token updates.
+    -   **Purpose**: Logs manual token credits.
+    -   **Changes**: Records user ID, amount, and reason.
+-   ****:
+    -   **Purpose**: Socket.IO Room Management.
+    -   **Changes**: Initial module created to handle room joining/leaving; integrated into  to manage -to- mappings.
 -   ****:
     -   **Purpose**: Main HTML file.
-    -   **Changes**: Removed Made with Emergent badge.  and  updated for aggressive cache busting. Service worker registration initially commented out, then aggressively configured for auto-reload, then completely removed/commented out. Meta tags for versioning updated.
+    -   **Changes**: Aggressive cache busting,  meta tag updates. Critically, service worker registration was initially commented out, then fixed to *properly register* () instead of unregistering it. Version metadata updated.
 -   ****:
     -   **Purpose**: Service worker.
-    -   **Changes**: Initially commented out for aggressive cache busting. Later modified to include  and  for immediate takeover and  for forced reload. Eventually, all logic was commented out to disable it entirely due to infinite reload issues.
+    -   **Changes**: Initially commented out or modified for aggressive cache busting. Later configured with  and  for immediate takeover and  for forced reload. Updated to include a new version  for cache busting and notification messages.
 -   ****:
     -   **Purpose**: PWA manifest file.
     -   **Changes**:  field updated for cache busting.
 -   ****:
-    -   **Purpose**: New endpoint for frontend version display.
-    -   **Changes**: Created to expose current frontend build version and status flags.
--   ****:
     -   **Purpose**: Main React component managing UI, state, API calls, Telegram Web App.
-    -   **Changes**: Improved auth error messages.  integrated,  button fixed. Winner Announcement screen logic refined, now displaying messages (Congratulations, Better Luck Next Time!) based on . History tab displays winners/losers correctly. Version check and force reload logic (related to SW) initially implemented, then removed. Logic added to force re-authentication if  is null from . Devnet text updated to Mainnet. Mobile Buy buttons enabled.
-    -   **UI Fixes**: Win/loss badge logic corrected, version label  completely removed, prize pool section now only visible to winners, tokens/prize pool removed from winner screen and history cards. Room full message changed to 🚀 ROOM IS FULL! GET READY FOR THE BATTLE! with  animation. Claim 10 button logic () made more robust, updating  and disabling button visually. Verified  handler does not modify . Manual Refresh History button added with loading state.
-    -   **Game Flow/Sync Fixes**: Polling  commented out, relying on socket events. Winner screen guards added using  and time-based checks to prevent repeats.  function no longer locally mutates , relying solely on backend socket events to update the room state. Added  for  debugging.
+    -   **Changes**: Extensive updates for Socket.IO event handling, including , , , , , . Introduced , ,  states to manage UI transitions and prevent state resets.  now replaces participant list. Winner screen logic refined with  tracking. GET READY! animation component added. Logic to reload  on various events (user update, game finish, redirect home) and ensure bonus visibility with default/fallback data. Platform detection added for , , .
 -   ****:
     -   **Purpose**: Styling.
-    -   **Changes**: Added animations, adjusted styles for desktop/winner screens.  keyframe animation added for explosive room-full effect.
+    -   **Changes**: Added animations and adjusted styles, including for GET READY! screen.
 -   ****:
-    -   **Purpose**: New React component to display Solana payment invoice.
-    -   **Changes**: Created. Displays EUR/SOL, payment address, payment ID, 20-minute countdown. EUR input fully editable, remembered via . Auto-refresh of SOL/EUR rate (3 min). Payment polling logic improved. Smooth fade-out, body scroll lock. Amount in SOL copyable. EUR input accepts comma/dot. Devnet to Mainnet. Modal closing logic simplified to close after tokens credited. Added  to update  state when  prop changes and a cleanup effect to reset state on close.
--   **Documentation files** (): Various new markdown files were created to document findings, fixes, and test results, including , , , , , , , .
+    -   **Purpose**: React component to display Solana payment invoice.
+    -   **Changes**: Displays EUR/SOL, payment address, countdown, auto-refresh rate, and smooth UI.
+-   ****:
+    -   **Purpose**: Reusable UI components.
+    -   **Changes**: After cleanup, only used components (badge, button, card, input, progress, separator, sonner) remain.
+-   ****:
+    -   **Purpose**: Project documentation.
+    -   **Changes**: Created a new, clean README after removing many scattered  files.
+-   ****:
+    -   **Purpose**: Documentation for codebase cleanup.
+    -   **Changes**: Created to detail removed files, folders, and dependencies.
 </code_architecture>
 
 <pending_tasks>
--   **Backend Socket.IO Room Management:** Implement correct Socket.IO room joining for clients and ensure event broadcasting (, ) targets specific rooms, not all clients.
--   **Real-time Synchronization:** Achieve smooth, consistent room state and participant updates across all clients without manual refreshes.
--   **Winner Modal Reliability:** Ensure the winner modal appears exactly once per match, per user, and never reappears.
--   **Disconnect/Reconnect Handling:** Implement robust logic for  events and participant list re-sync on client reconnect.
--   **Production RPC Key:** Securely re-enable Helius or QuickNode RPC with a valid API key, using public Solana RPC as a fallback.
+-   **Redirect to Home Screen Reliability**: Ensure all players consistently return to the Home screen after a game, with the Free 100 Players Bonus visible.
+-   **Claim 10 Button Functionality**: Investigate and fix the Claim 10 button, which is reported as bugged.
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary, the AI engineer was tackling persistent issues related to game room synchronization and the winner announcement modal. Despite numerous fixes, users were still reporting that room states (e.g., player lists, Waiting for players messages) were not updating in real-time for all participants, and the winner modal was sometimes repeating or appearing at incorrect times.
+Immediately prior to this summary, the AI engineer was addressing three critical, user-reported issues:
+1.  **Redirect to Home Screen Failure**: After the GET READY sequence and game completion, players were reportedly not being redirected to the Home screen and remained stuck on the Waiting for 3 more players lobby screen, despite the backend emitting  events.
+2.  **Free 100 Players Bonus Missing**: The bonus section was completely missing for all users across devices after the latest build.
+3.  **Claim 10 Button Bug**: The Claim 10 daily bonus button was reported as not working properly.
 
-The latest investigation focused on the backend's Socket.IO implementation in . The root cause identified is that the backend is using  which broadcasts messages to *all* connected clients globally, rather than targeting clients within specific game rooms. This means  and  events are not correctly isolated to room participants, leading to the observed synchronization failures and inconsistent UI states across players. The frontend was previously corrected to stop local mutations of the  state, now relying on backend updates, but this backend broadcasting issue is preventing proper data flow.
+The AI engineer's most recent actions involved a comprehensive **codebase cleanup**. This was initiated after the previous fixes failed to resolve the core issues, suggesting that the codebase might be cluttered with unused files or dependencies that could contribute to unexpected behavior or make debugging harder.
 
-The AI engineer has identified this fundamental architectural flaw in the backend's Socket.IO event handling and is currently planning a comprehensive fix to introduce proper room-based broadcasting.
+The cleanup objective was to remove all unnecessary files, redundant folders, and unused dependencies to improve performance and reduce clutter. This included:
+-   **Dependency Audit**: Identifying and removing unused NPM packages like , , , , and .
+-   **Source Folder Audit**: Deleting old/unused UI components (keeping only , , , , , , ), and archiving 35 markdown files into a single .
+-   **Backend Cleanup**: Removing .
+-   **Build Verification**: Ensuring the app builds successfully with a smaller, cleaner production bundle.
+
+The AI engineer has completed this cleanup and created a  and . The next immediate step is to restart services to verify the app builds and runs without missing module errors after the cleanup.
+
 </current_work>
 
 <optional_next_step>
-Implement correct Socket.IO room joining and broadcasting in .
+Restart the backend and frontend services to verify the application functions correctly after the cleanup, and then verify the unresolved issues.
 </optional_next_step>

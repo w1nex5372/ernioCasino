@@ -92,7 +92,7 @@ navigator.serviceWorker.getRegistrations()
 
 ### Step 2: Load App Fresh
 ```
-Open: https://solana-battles-1.preview.emergentagent.com
+Open: https://solanaplay-sync.preview.emergentagent.com
 ```
 
 ### Step 3: Check Console
