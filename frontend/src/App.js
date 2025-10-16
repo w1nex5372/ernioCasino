@@ -1231,6 +1231,24 @@ function App() {
     };
   }, []);
 
+
+  // Check if user needs to select city
+  useEffect(() => {
+    if (user && !isLoading) {
+      // Set user city from user data
+      if (user.city) {
+        setUserCity(user.city);
+        setHasWorkAccess(user.work_access_purchased || false);
+      } else {
+        // User has no city selected, show city selector
+        setTimeout(() => {
+          setShowCitySelector(true);
+        }, 1000); // Small delay to let user see main screen first
+      }
+    }
+  }, [user, isLoading]);
+
+
   // User session management
   const saveUserSession = (userData) => {
     try {
