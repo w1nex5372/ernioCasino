@@ -487,16 +487,14 @@ function App() {
     
     const newSocket = io(BACKEND_URL, {
       path: '/api/socket.io',  // Use /api prefix to route to backend
-      transports: ['websocket', 'polling'],
-      timeout: 60000,  // Increased to 60 seconds (was 20)
+      transports: ['polling'],  // Use polling only (WebSocket upgrade fails through proxy)
+      timeout: 60000,
       reconnection: true,
-      reconnectionDelay: 1000,  // Faster reconnection
-      reconnectionDelayMax: 5000,  // Max 5 seconds
-      reconnectionAttempts: Infinity,  // Keep trying forever
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: Infinity,
       forceNew: false,
-      autoConnect: true,
-      upgrade: true,  // Allow upgrading to websocket
-      rememberUpgrade: true  // Remember successful upgrades
+      autoConnect: true
     });
     
     newSocket.on('connect', () => {
