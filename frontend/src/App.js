@@ -485,9 +485,13 @@ function App() {
     console.log('Platform:', platform);
     console.log('User Agent:', navigator.userAgent);
     
-    const newSocket = io(BACKEND_URL, {
-      path: '/api/socket.io',  // Use /api prefix to route to backend
-      transports: ['polling'],  // Use polling only (WebSocket upgrade fails through proxy)
+    // Socket.IO connection - Use direct connection to avoid proxy issues
+    const socketUrl = BACKEND_URL; // Already includes /api in requests
+    console.log('🔌 Socket URL:', socketUrl);
+    
+    const newSocket = io(socketUrl, {
+      path: '/socket.io',  // Default Socket.IO path
+      transports: ['polling'],  // Use polling only
       timeout: 60000,
       reconnection: true,
       reconnectionDelay: 1000,
