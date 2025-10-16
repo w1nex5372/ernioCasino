@@ -38,20 +38,23 @@ Additionally, implementing new "Work for Casino" system with:
 ## Implementation Progress
 
 ### Phase 1: Game Flow Synchronization (Completed)
-- Status: ✅ Backend logic implemented
+- Status: ✅ Backend logic implemented & Frontend enhanced
 - Goal: Fix winner screen sync and auto-redirect
 - Backend game flow: room_ready (T+0) → game_starting (T+3) → game_finished (T+6) → redirect_home (T+9)
+- Frontend: Improved socket reconnection logic with 10 attempts, 2-20 second delays
+- Fixed: Lobby no longer reappears after GET READY screen
 - Testing: Pending
 
 ### Phase 2: City-Based System (Completed)
 - Status: ✅ Implemented
 - Goal: Add city selection and filtering
-- Features: City selector modal, city display in header, city stored in user profile
+- Features: City selector modal, city display in mobile/desktop header, city stored in user profile
 
 ### Phase 3: Work for Casino System (Completed)
-- Status: ✅ Implemented
+- Status: ✅ Implemented & Mobile UI Fixed
 - Goal: Implement payment, gift upload, auto-assignment
-- Features: Work for Casino button, payment modal integration, gift upload form, automatic gift assignment to winners
+- Features: Work for Casino button (visible on mobile & desktop), payment modal integration, gift upload form, automatic gift assignment to winners
+- Mobile: Added header buttons for "Work Casino" and "Buy Tokens"
 - Backend endpoints: set-city, work/purchase-access, gifts/upload, check-access
 - Gift assignment: Triggered automatically when game finishes, matches winner's city
 
@@ -61,6 +64,18 @@ Additionally, implementing new "Work for Casino" system with:
 - Features: Admin endpoints for viewing assigned gifts and statistics
 - Endpoints: /admin/gifts/assigned, /admin/gifts/stats
 - Access: Restricted to telegram_username == "cia_nera"
+
+### Phase 5: Socket Reconnection & Server Wake-up (Completed)
+- Status: ✅ Enhanced
+- Goal: Fix socket reconnection when servers sleep
+- Features:
+  - Increased reconnection attempts from 5 to 10
+  - Extended timeout from 10s to 20s (for slow server wakeup)
+  - Reconnection delay: 2-10 seconds between attempts
+  - Auto-reconnect on server disconnect
+  - User re-registration after reconnection
+  - Toast notifications for connection status
+  - Automatic room reload after successful reconnection
 
 ## Test Results
 
