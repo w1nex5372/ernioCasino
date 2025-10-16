@@ -1987,19 +1987,40 @@ function App() {
       <header className="bg-slate-900/90 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
         <div className="px-4 py-3">
           {isMobile ? (
-            <div className="flex items-center justify-between px-3 py-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <Crown className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-                <div>
-                  <h1 className="text-sm font-bold text-white">Casino Battle</h1>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between px-3 py-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Crown className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+                  <div>
+                    <h1 className="text-sm font-bold text-white">Casino Battle</h1>
+                    {userCity && (
+                      <div className="text-xs text-yellow-400">{userCity} 🏙️</div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <div className="text-xs text-slate-400">Balance</div>
+                    <div className="text-sm font-bold text-yellow-400">{user.token_balance || 0}</div>
+                  </div>
+                  <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="text-right">
-                  <div className="text-xs text-slate-400">Balance</div>
-                  <div className="text-sm font-bold text-yellow-400">{user.token_balance || 0}</div>
-                </div>
-                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
+              
+              {/* Mobile Action Buttons */}
+              <div className="flex gap-2 px-3 pb-2">
+                <Button
+                  onClick={handleWorkForCasino}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xs py-2"
+                >
+                  💼 Work Casino
+                </Button>
+                <Button
+                  onClick={() => setActiveTab('tokens')}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs py-2"
+                >
+                  💰 Buy Tokens
+                </Button>
               </div>
             </div>
           ) : (
