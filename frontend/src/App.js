@@ -478,7 +478,7 @@ function App() {
   
   const platform = detectPlatform();
   
-  // Socket connection
+  // Socket connection with robust reconnection
   useEffect(() => {
     console.log('🔌🔌🔌 CONNECTING TO WEBSOCKET 🔌🔌🔌');
     console.log('Backend URL:', BACKEND_URL);
@@ -488,11 +488,13 @@ function App() {
     const newSocket = io(BACKEND_URL, {
       path: '/socket.io',
       transports: ['websocket', 'polling'],
-      timeout: 10000,
+      timeout: 20000,  // Increased timeout for slow server wakeup
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
-      forceNew: false
+      reconnectionDelay: 2000,  // Wait 2 seconds before reconnecting
+      reconnectionDelayMax: 10000,  // Max 10 seconds
+      reconnectionAttempts: 10,  // Try up to 10 times
+      forceNew: false,
+      autoConnect: true
     });
     
     newSocket.on('connect', () => {
@@ -502,6 +504,7 @@ function App() {
       console.log('Connected:', newSocket.connected);
       console.log('Transport:', newSocket.io.engine.transport.name);
       
+      setIsConnected(true);
       toast.success(`Connected! (${platform})`, { duration: 2000 });
       
       // Register user to socket mapping if user is logged in
@@ -519,25 +522,52 @@ function App() {
     
     newSocket.on('connect_error', (error) => {
       console.error('❌❌❌ WebSocket connection error:', error);
-      // Remove persistent error notifications - just log to console
+      setIsConnected(false);
+      // Show a gentle notification about trying to reconnect
+      if (!newSocket.connected) {
+        toast.error('Server connection issue. Reconnecting...', { duration: 3000 });
+      }
+    });
+    
+    newSocket.on('reconnect_attempt', (attemptNumber) => {
+      console.log(`🔄 Reconnection attempt ${attemptNumber}...`);
+      setIsConnected(false);
+      toast.info(`Reconnecting... (attempt ${attemptNumber})`, { duration: 2000 });
+    });
+    
+    newSocket.on('reconnect', (attemptNumber) => {
+      console.log(`✅ Reconnected after ${attemptNumber} attempts!`);
+      setIsConnected(true);
+      toast.success('Reconnected to server!', { duration: 2000 });
+      
+      // Re-register user after reconnection
+      const storedUser = JSON.parse(localStorage.getItem('casino_user_session') || '{}');
+      if (storedUser && storedUser.id) {
+        console.log('📝 Re-registering user after reconnection:', storedUser.id);
+        newSocket.emit('register_user', {
+          user_id: storedUser.id,
+          platform: platform
+        });
+      }
+      
+      // Reload rooms after reconnection
+      loadRooms();
     });
     
     newSocket.on('disconnect', (reason) => {
       console.warn('⚠️⚠️⚠️ WebSocket disconnected:', reason);
+      setIsConnected(false);
+      
+      if (reason === 'io server disconnect') {
+        // Server disconnected us, manually reconnect
+        console.log('🔄 Server disconnected, attempting to reconnect...');
+        newSocket.connect();
+      }
+      
       toast.warning('Disconnected from server', { duration: 2000 });
     });
 
     setSocket(newSocket);
-
-    newSocket.on('connect', () => {
-      console.log('✅ Connected to server');
-      setIsConnected(true);
-    });
-
-    newSocket.on('disconnect', () => {
-      console.log('❌ Disconnected from server');
-      setIsConnected(false);
-    });
 
     // Room management events
     newSocket.on('user_registered', (data) => {
