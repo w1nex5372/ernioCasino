@@ -2443,14 +2443,16 @@ async def set_user_city(request: SetCityRequest):
         if request.city not in valid_cities:
             raise HTTPException(status_code=400, detail=f"Invalid city. Must be one of: {valid_cities}")
         
-        # Update user's city
+        # Check if user exists first
+        user = await db.users.find_one({"id": request.user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Update user's city (or insert if not present)
         result = await db.users.update_one(
             {"id": request.user_id},
             {"$set": {"city": request.city}}
         )
-        
-        if result.modified_count == 0:
-            raise HTTPException(status_code=404, detail="User not found")
         
         logging.info(f"✅ User {request.user_id} set city to {request.city}")
         return {"success": True, "city": request.city}
