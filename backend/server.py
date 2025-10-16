@@ -2432,6 +2432,227 @@ async def check_if_winner(user_id: str):
     
     return {"recent_prizes": recent_prizes}
 
+
+# ==================== NEW ENDPOINTS: City Selection & Work for Casino ====================
+
+@api_router.post("/users/set-city")
+async def set_user_city(request: SetCityRequest):
+    """Set user's city selection (London or Paris)"""
+    try:
+        valid_cities = ["London", "Paris"]
+        if request.city not in valid_cities:
+            raise HTTPException(status_code=400, detail=f"Invalid city. Must be one of: {valid_cities}")
+        
+        # Update user's city
+        result = await db.users.update_one(
+            {"id": request.user_id},
+            {"$set": {"city": request.city}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        logging.info(f"✅ User {request.user_id} set city to {request.city}")
+        return {"success": True, "city": request.city}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error setting user city: {e}")
+        raise HTTPException(status_code=500, detail="Failed to set city")
+
+@api_router.post("/work/purchase-access")
+async def purchase_work_access(request: PurchaseWorkAccessRequest):
+    """Purchase work access for uploading gifts (1000 tokens symbolic, paid via Solana)"""
+    try:
+        # Verify user exists
+        user = await db.users.find_one({"id": request.user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Check if already purchased
+        if user.get('work_access_purchased'):
+            return {
+                "success": True, 
+                "message": "Work access already active",
+                "already_purchased": True
+            }
+        
+        # Mark work access as purchased
+        await db.users.update_one(
+            {"id": request.user_id},
+            {"$set": {"work_access_purchased": True}}
+        )
+        
+        logging.info(f"✅ User {request.user_id} purchased work access")
+        
+        # Send Telegram confirmation
+        if user.get('telegram_id'):
+            await send_work_access_confirmation(
+                telegram_id=user['telegram_id'],
+                username=user.get('first_name', 'User')
+            )
+        
+        return {
+            "success": True,
+            "message": "Work access granted! Check Telegram for next steps.",
+            "work_access_purchased": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error purchasing work access: {e}")
+        raise HTTPException(status_code=500, detail="Failed to purchase work access")
+
+@api_router.post("/gifts/upload")
+async def upload_gift(request: UploadGiftRequest):
+    """Upload a gift with photo and coordinates (requires work access)"""
+    try:
+        # Verify user exists and has work access
+        user = await db.users.find_one({"id": request.user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        if not user.get('work_access_purchased'):
+            raise HTTPException(status_code=403, detail="Work access required. Purchase access first.")
+        
+        # Validate city
+        valid_cities = ["London", "Paris"]
+        if request.city not in valid_cities:
+            raise HTTPException(status_code=400, detail=f"Invalid city. Must be one of: {valid_cities}")
+        
+        # Validate coordinates
+        if 'lat' not in request.coordinates or 'lng' not in request.coordinates:
+            raise HTTPException(status_code=400, detail="Coordinates must include 'lat' and 'lng'")
+        
+        # Create gift document
+        gift = Gift(
+            creator_user_id=request.user_id,
+            creator_telegram_id=user['telegram_id'],
+            creator_username=user.get('telegram_username'),
+            city=request.city,
+            photo_base64=request.photo_base64,
+            coordinates=request.coordinates
+        )
+        
+        # Insert into database
+        await db.gifts.insert_one(gift.dict())
+        
+        logging.info(f"🎁 Gift uploaded by {user.get('first_name')} in {request.city}")
+        
+        return {
+            "success": True,
+            "gift_id": gift.gift_id,
+            "message": f"Gift successfully uploaded in {request.city}!"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error uploading gift: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upload gift")
+
+# ==================== ADMIN ENDPOINTS ====================
+
+@api_router.get("/admin/gifts/assigned")
+async def get_assigned_gifts(telegram_username: Optional[str] = None):
+    """Admin endpoint: Get all assigned gifts (restricted to @cia_nera)"""
+    try:
+        # Check admin access
+        if not check_admin_access(telegram_username):
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        # Get all assigned gifts
+        assigned_gifts = await db.gifts.find(
+            {"status": "assigned"},
+            {"_id": 0}
+        ).sort("assigned_at", -1).to_list(1000)
+        
+        return {
+            "success": True,
+            "total": len(assigned_gifts),
+            "gifts": assigned_gifts
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error fetching assigned gifts: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch assigned gifts")
+
+@api_router.get("/admin/gifts/stats")
+async def get_gift_stats(telegram_username: Optional[str] = None):
+    """Admin endpoint: Get gift statistics (restricted to @cia_nera)"""
+    try:
+        # Check admin access
+        if not check_admin_access(telegram_username):
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        # Get total counts
+        total_uploaded = await db.gifts.count_documents({})
+        total_assigned = await db.gifts.count_documents({"status": "assigned"})
+        total_pending = await db.gifts.count_documents({"status": "available"})
+        
+        # Get breakdown by city
+        london_uploaded = await db.gifts.count_documents({"city": "London"})
+        london_assigned = await db.gifts.count_documents({"city": "London", "status": "assigned"})
+        
+        paris_uploaded = await db.gifts.count_documents({"city": "Paris"})
+        paris_assigned = await db.gifts.count_documents({"city": "Paris", "status": "assigned"})
+        
+        return {
+            "success": True,
+            "total_uploaded": total_uploaded,
+            "total_assigned": total_assigned,
+            "total_pending": total_pending,
+            "breakdown_by_city": {
+                "London": {
+                    "uploaded": london_uploaded,
+                    "assigned": london_assigned
+                },
+                "Paris": {
+                    "uploaded": paris_uploaded,
+                    "assigned": paris_assigned
+                }
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error fetching gift stats: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch gift stats")
+
+@api_router.get("/work/check-access/{user_id}")
+async def check_work_access(user_id: str):
+    """Check if user has purchased work access"""
+    try:
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {
+            "has_work_access": user.get('work_access_purchased', False),
+            "city": user.get('city')
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error checking work access: {e}")
+        raise HTTPException(status_code=500, detail="Failed to check work access")
+
+@api_router.get("/gifts/available/{city}")
+async def get_available_gifts_count(city: str):
+    """Get count of available gifts in a city"""
+    try:
+        count = await db.gifts.count_documents({"city": city, "status": "available"})
+        return {"city": city, "available_gifts": count}
+    except Exception as e:
+        logging.error(f"Error getting available gifts count: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get gift count")
+
 # Include the router
 app.include_router(api_router)
 
