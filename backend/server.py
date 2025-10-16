@@ -1202,22 +1202,9 @@ async def start_game_round(room: GameRoom):
     # Wait for "GET READY!" animation (3 seconds)
     await asyncio.sleep(3)
     
-    # EVENT 2: game_starting - Game is now starting
+    # Select winner immediately after GET READY (no game_starting event needed)
     room.status = "playing"
     room.started_at = datetime.now(timezone.utc)
-    
-    await socket_rooms.broadcast_to_room(sio, room.id, 'game_starting', {
-        'room_id': room.id,
-        'room_type': room.room_type,
-        'match_id': match_id,
-        'players': [p.dict() for p in room.players],
-        'prize_pool': room.prize_pool,
-        'started_at': room.started_at.isoformat()
-    })
-    logging.info(f"✅ Emitted game_starting to room {room.id}")
-    
-    # Wait for game duration (3 seconds for dramatic effect)
-    await asyncio.sleep(3)
     
     # Select winner using weighted random selection
     winner = select_winner(room.players)
