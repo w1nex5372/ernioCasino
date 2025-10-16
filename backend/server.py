@@ -211,6 +211,8 @@ class User(BaseModel):
     is_owner: bool = Field(default=False)
     role: str = Field(default="user")  # user, admin, owner
     last_daily_claim: Optional[str] = None  # Timestamp of last daily token claim
+    city: Optional[str] = None  # User's selected city: London, Paris
+    work_access_purchased: bool = Field(default=False)  # Has user bought "Work for Casino" access
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_login: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
