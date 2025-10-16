@@ -262,6 +262,19 @@ function App() {
   const [paymentTokenAmount, setPaymentTokenAmount] = useState(1000);
   const [paymentEurAmount, setPaymentEurAmount] = useState(null); // EUR amount for payment modal
 
+  // City selection state
+  const [userCity, setUserCity] = useState(null); // London or Paris
+  const [showCitySelector, setShowCitySelector] = useState(false); // Show city selection modal
+  
+  // Work for Casino state
+  const [hasWorkAccess, setHasWorkAccess] = useState(false); // Has user purchased work access
+  const [showWorkModal, setShowWorkModal] = useState(false); // Show work access purchase modal
+  const [showGiftUploadForm, setShowGiftUploadForm] = useState(false); // Show gift upload form
+  const [giftPhoto, setGiftPhoto] = useState(null); // Base64 photo for gift
+  const [giftLat, setGiftLat] = useState('');
+  const [giftLng, setGiftLng] = useState('');
+  const [giftCity, setGiftCity] = useState(''); // City for gift upload
+
   // Debug roomParticipants changes
   useEffect(() => {
     console.log('🔄 roomParticipants changed:', roomParticipants);
