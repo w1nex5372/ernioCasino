@@ -763,12 +763,19 @@ function App() {
         winner_user_id: data.winner?.user_id
       });
       
-      // FORCE CLOSE ALL OTHER SCREENS
+      // FORCE CLOSE ALL OTHER SCREENS AGGRESSIVELY
+      console.log('🚪🚪🚪 game_finished: CLOSING ALL SCREENS');
+      console.log('BEFORE game_finished:', { inLobby, showGetReady, showWinnerScreen, gameInProgress });
+      
       setGameInProgress(false);
       setCurrentGameData(null);
       setInLobby(false);
       setLobbyData(null);
       setActiveRoom(null);
+      setShowGetReady(false); // Make sure GET READY is hidden
+      showGetReadyRef.current = false;
+      
+      console.log('✅ All screens closed, preparing winner screen');
       
       // Reload bonus status to ensure it's visible on return to main screen
       loadWelcomeBonusStatus();
