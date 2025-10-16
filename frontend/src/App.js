@@ -1553,6 +1553,173 @@ function App() {
     }
   };
 
+
+  // City selection handlers
+  const handleCitySelect = async (city) => {
+    try {
+      if (!user || !user.id) {
+        toast.error('User not authenticated');
+        return;
+      }
+      
+      const response = await axios.post(`${API}/users/set-city`, {
+        user_id: user.id,
+        city: city
+      });
+      
+      if (response.data.success) {
+        setUserCity(city);
+        setUser({...user, city: city});
+        setShowCitySelector(false);
+        toast.success(`City set to ${city}! 🏙️`);
+      }
+    } catch (error) {
+      console.error('Failed to set city:', error);
+      toast.error('Failed to set city. Please try again.');
+    }
+  };
+
+  // Work for Casino handlers
+  const handleWorkForCasino = async () => {
+    try {
+      if (!user || !user.id) {
+        toast.error('Please authenticate first');
+        return;
+      }
+
+      // Check if user has city selected
+      if (!user.city && !userCity) {
+        setShowCitySelector(true);
+        toast.info('Please select your city first');
+        return;
+      }
+
+      // Check if user already has work access
+      const checkResponse = await axios.get(`${API}/work/check-access/${user.id}`);
+      
+      if (checkResponse.data.has_work_access) {
+        setHasWorkAccess(true);
+        setShowGiftUploadForm(true);
+        toast.success('You already have work access! Upload a gift.');
+        return;
+      }
+
+      // Show work access purchase modal
+      setShowWorkModal(true);
+    } catch (error) {
+      console.error('Failed to check work access:', error);
+      toast.error('Failed to load work status');
+    }
+  };
+
+  const handlePurchaseWorkAccess = () => {
+    // Calculate token amount: 1000 tokens = ~10 EUR
+    // This is symbolic only, no tokens are deducted
+    setPaymentTokenAmount(1000);
+    setPaymentEurAmount(10);
+    setShowWorkModal(false);
+    setShowPaymentModal(true);
+    
+    toast.info('After payment confirmation, check Telegram for next steps!');
+  };
+
+  const handleWorkAccessConfirmed = async (signature) => {
+    try {
+      const response = await axios.post(`${API}/work/purchase-access`, {
+        user_id: user.id,
+        payment_signature: signature
+      });
+
+      if (response.data.success) {
+        setHasWorkAccess(true);
+        setUser({...user, work_access_purchased: true});
+        toast.success('Work access granted! Check Telegram to start working.');
+      }
+    } catch (error) {
+      console.error('Failed to grant work access:', error);
+      toast.error('Failed to grant work access');
+    }
+  };
+
+  // Gift upload handlers
+  const handlePhotoUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Photo size must be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setGiftPhoto(reader.result); // Base64 string
+      toast.success('Photo uploaded successfully!');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleGiftUpload = async () => {
+    try {
+      if (!user || !user.id) {
+        toast.error('Please authenticate first');
+        return;
+      }
+
+      if (!giftPhoto) {
+        toast.error('Please upload a photo');
+        return;
+      }
+
+      if (!giftLat || !giftLng) {
+        toast.error('Please enter coordinates');
+        return;
+      }
+
+      if (!giftCity) {
+        toast.error('Please select a city for the gift');
+        return;
+      }
+
+      const lat = parseFloat(giftLat);
+      const lng = parseFloat(giftLng);
+
+      if (isNaN(lat) || isNaN(lng)) {
+        toast.error('Invalid coordinates');
+        return;
+      }
+
+      // Validate coordinate ranges
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        toast.error('Coordinates out of valid range');
+        return;
+      }
+
+      const response = await axios.post(`${API}/gifts/upload`, {
+        user_id: user.id,
+        city: giftCity,
+        photo_base64: giftPhoto,
+        coordinates: { lat, lng }
+      });
+
+      if (response.data.success) {
+        toast.success(`Gift uploaded successfully in ${giftCity}! 🎁`);
+        
+        // Reset form
+        setGiftPhoto(null);
+        setGiftLat('');
+        setGiftLng('');
+        setGiftCity('');
+        setShowGiftUploadForm(false);
+      }
+    } catch (error) {
+      console.error('Failed to upload gift:', error);
+      toast.error(error.response?.data?.detail || 'Failed to upload gift');
+    }
+  };
+
+
   // Game functions
   const joinRoom = async (roomType) => {
     console.log('🎯 JOIN ROOM CALLED!', { 
