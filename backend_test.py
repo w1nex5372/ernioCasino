@@ -2854,6 +2854,431 @@ class SolanaCasinoAPITester:
             self.log_test("Solana Integration Comprehensive", False, str(e))
             return False
 
+    def test_set_city(self, user_number=1, city="London"):
+        """Test setting user's city"""
+        test_user = None
+        if user_number == 1:
+            test_user = self.test_user1
+        elif user_number == 2:
+            test_user = self.test_user2
+        elif user_number == 3:
+            test_user = self.test_user3
+        
+        if not test_user:
+            self.log_test(f"Set City User {user_number}", False, "No test user available")
+            return False
+        
+        try:
+            set_city_data = {
+                "user_id": test_user['id'],
+                "city": city
+            }
+            
+            response = requests.post(f"{self.api_url}/users/set-city", json=set_city_data)
+            success = response.status_code == 200
+            
+            if success:
+                result = response.json()
+                details = f"User {user_number} city set to {result.get('city')}"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test(f"Set City User {user_number} ({city})", success, details)
+            return success
+        except Exception as e:
+            self.log_test(f"Set City User {user_number} ({city})", False, str(e))
+            return False
+
+    def test_set_city_invalid(self, user_number=1):
+        """Test setting invalid city"""
+        test_user = self.test_user1 if user_number == 1 else self.test_user2
+        if not test_user:
+            self.log_test(f"Set City Invalid User {user_number}", False, "No test user available")
+            return False
+        
+        try:
+            set_city_data = {
+                "user_id": test_user['id'],
+                "city": "InvalidCity"
+            }
+            
+            response = requests.post(f"{self.api_url}/users/set-city", json=set_city_data)
+            success = response.status_code == 400
+            
+            if success:
+                details = "Correctly rejected invalid city"
+            else:
+                details = f"Expected 400, got {response.status_code}"
+            
+            self.log_test(f"Set City Invalid User {user_number}", success, details)
+            return success
+        except Exception as e:
+            self.log_test(f"Set City Invalid User {user_number}", False, str(e))
+            return False
+
+    def test_purchase_work_access(self, user_number=1):
+        """Test purchasing work access"""
+        test_user = None
+        if user_number == 1:
+            test_user = self.test_user1
+        elif user_number == 2:
+            test_user = self.test_user2
+        elif user_number == 3:
+            test_user = self.test_user3
+        
+        if not test_user:
+            self.log_test(f"Purchase Work Access User {user_number}", False, "No test user available")
+            return False
+        
+        try:
+            purchase_data = {
+                "user_id": test_user['id'],
+                "payment_signature": "test_signature_12345"
+            }
+            
+            response = requests.post(f"{self.api_url}/work/purchase-access", json=purchase_data)
+            success = response.status_code == 200
+            
+            if success:
+                result = response.json()
+                details = f"Work access purchased: {result.get('work_access_purchased')}"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test(f"Purchase Work Access User {user_number}", success, details)
+            return success
+        except Exception as e:
+            self.log_test(f"Purchase Work Access User {user_number}", False, str(e))
+            return False
+
+    def test_check_work_access(self, user_number=1):
+        """Test checking work access"""
+        test_user = None
+        if user_number == 1:
+            test_user = self.test_user1
+        elif user_number == 2:
+            test_user = self.test_user2
+        elif user_number == 3:
+            test_user = self.test_user3
+        
+        if not test_user:
+            self.log_test(f"Check Work Access User {user_number}", False, "No test user available")
+            return False
+        
+        try:
+            response = requests.get(f"{self.api_url}/work/check-access/{test_user['id']}")
+            success = response.status_code == 200
+            
+            if success:
+                result = response.json()
+                has_access = result.get('has_work_access', False)
+                city = result.get('city')
+                details = f"Work access: {has_access}, City: {city}"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test(f"Check Work Access User {user_number}", success, details)
+            return success, result if success else None
+        except Exception as e:
+            self.log_test(f"Check Work Access User {user_number}", False, str(e))
+            return False, None
+
+    def test_upload_gift(self, user_number=1, city="London"):
+        """Test uploading a gift"""
+        test_user = None
+        if user_number == 1:
+            test_user = self.test_user1
+        elif user_number == 2:
+            test_user = self.test_user2
+        elif user_number == 3:
+            test_user = self.test_user3
+        
+        if not test_user:
+            self.log_test(f"Upload Gift User {user_number}", False, "No test user available")
+            return False
+        
+        try:
+            # Test coordinates for London and Paris
+            coordinates = {
+                "London": {"lat": 51.5074, "lng": -0.1278},
+                "Paris": {"lat": 48.8566, "lng": 2.3522}
+            }
+            
+            upload_data = {
+                "user_id": test_user['id'],
+                "city": city,
+                "photo_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=",
+                "coordinates": coordinates.get(city, coordinates["London"])
+            }
+            
+            response = requests.post(f"{self.api_url}/gifts/upload", json=upload_data)
+            success = response.status_code == 200
+            
+            if success:
+                result = response.json()
+                gift_id = result.get('gift_id')
+                details = f"Gift uploaded in {city}, ID: {gift_id}"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test(f"Upload Gift User {user_number} ({city})", success, details)
+            return success
+        except Exception as e:
+            self.log_test(f"Upload Gift User {user_number} ({city})", False, str(e))
+            return False
+
+    def test_upload_gift_without_access(self, user_number=1):
+        """Test uploading gift without work access (should fail)"""
+        test_user = self.test_user1 if user_number == 1 else self.test_user2
+        if not test_user:
+            self.log_test(f"Upload Gift No Access User {user_number}", False, "No test user available")
+            return False
+        
+        try:
+            upload_data = {
+                "user_id": test_user['id'],
+                "city": "London",
+                "photo_base64": "data:image/jpeg;base64,test",
+                "coordinates": {"lat": 51.5074, "lng": -0.1278}
+            }
+            
+            response = requests.post(f"{self.api_url}/gifts/upload", json=upload_data)
+            success = response.status_code == 403
+            
+            if success:
+                details = "Correctly rejected upload without work access"
+            else:
+                details = f"Expected 403, got {response.status_code}"
+            
+            self.log_test(f"Upload Gift No Access User {user_number}", success, details)
+            return success
+        except Exception as e:
+            self.log_test(f"Upload Gift No Access User {user_number}", False, str(e))
+            return False
+
+    def test_get_available_gifts(self, city="London"):
+        """Test getting available gifts count"""
+        try:
+            response = requests.get(f"{self.api_url}/gifts/available/{city}")
+            success = response.status_code == 200
+            
+            if success:
+                result = response.json()
+                count = result.get('available_gifts', 0)
+                details = f"Available gifts in {city}: {count}"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test(f"Get Available Gifts ({city})", success, details)
+            return success, result if success else None
+        except Exception as e:
+            self.log_test(f"Get Available Gifts ({city})", False, str(e))
+            return False, None
+
+    def test_admin_gifts_assigned(self, admin_username="cia_nera"):
+        """Test admin endpoint for assigned gifts"""
+        try:
+            response = requests.get(f"{self.api_url}/admin/gifts/assigned?telegram_username={admin_username}")
+            success = response.status_code == 200
+            
+            if success:
+                result = response.json()
+                total = result.get('total', 0)
+                details = f"Admin access granted, {total} assigned gifts found"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test(f"Admin Gifts Assigned ({admin_username})", success, details)
+            return success
+        except Exception as e:
+            self.log_test(f"Admin Gifts Assigned ({admin_username})", False, str(e))
+            return False
+
+    def test_admin_gifts_assigned_unauthorized(self):
+        """Test admin endpoint without proper authorization"""
+        try:
+            response = requests.get(f"{self.api_url}/admin/gifts/assigned")
+            success = response.status_code == 403
+            
+            if success:
+                details = "Correctly rejected unauthorized admin access"
+            else:
+                details = f"Expected 403, got {response.status_code}"
+            
+            self.log_test("Admin Gifts Assigned Unauthorized", success, details)
+            return success
+        except Exception as e:
+            self.log_test("Admin Gifts Assigned Unauthorized", False, str(e))
+            return False
+
+    def test_admin_gifts_stats(self, admin_username="cia_nera"):
+        """Test admin endpoint for gift statistics"""
+        try:
+            response = requests.get(f"{self.api_url}/admin/gifts/stats?telegram_username={admin_username}")
+            success = response.status_code == 200
+            
+            if success:
+                result = response.json()
+                total_uploaded = result.get('total_uploaded', 0)
+                total_assigned = result.get('total_assigned', 0)
+                breakdown = result.get('breakdown_by_city', {})
+                details = f"Stats: {total_uploaded} uploaded, {total_assigned} assigned, Cities: {len(breakdown)}"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test(f"Admin Gifts Stats ({admin_username})", success, details)
+            return success
+        except Exception as e:
+            self.log_test(f"Admin Gifts Stats ({admin_username})", False, str(e))
+            return False
+
+    def test_work_for_casino_flow(self):
+        """Test complete Work for Casino flow"""
+        try:
+            print("\n🎁 Testing Complete Work for Casino Flow...")
+            
+            # Create a fresh test user for this flow
+            test_user_data = {
+                "telegram_auth_data": {
+                    "id": 987654321,
+                    "first_name": "WorkTest",
+                    "last_name": "User",
+                    "username": "worktest_user",
+                    "photo_url": "https://example.com/worktest.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            auth_response = requests.post(f"{self.api_url}/auth/telegram", json=test_user_data)
+            if auth_response.status_code != 200:
+                self.log_test("Work for Casino Flow - User Creation", False, "Failed to create test user")
+                return False
+            
+            work_user = auth_response.json()
+            print(f"✅ Created work test user: {work_user['first_name']}")
+            
+            # Step 1: Set city to London
+            print("🏙️ Step 1: Setting city to London...")
+            city_success = self.test_set_city_direct(work_user, "London")
+            if not city_success:
+                self.log_test("Work for Casino Flow", False, "Failed to set city")
+                return False
+            
+            # Step 2: Check work access (should be False initially)
+            print("🔍 Step 2: Checking initial work access...")
+            access_success, access_result = self.test_check_work_access_direct(work_user)
+            if not access_success or access_result.get('has_work_access'):
+                self.log_test("Work for Casino Flow", False, "Initial work access check failed")
+                return False
+            
+            # Step 3: Try to upload gift without access (should fail)
+            print("🚫 Step 3: Trying to upload gift without access...")
+            no_access_success = self.test_upload_gift_without_access_direct(work_user)
+            if not no_access_success:
+                self.log_test("Work for Casino Flow", False, "Should have rejected upload without access")
+                return False
+            
+            # Step 4: Purchase work access
+            print("💳 Step 4: Purchasing work access...")
+            purchase_success = self.test_purchase_work_access_direct(work_user)
+            if not purchase_success:
+                self.log_test("Work for Casino Flow", False, "Failed to purchase work access")
+                return False
+            
+            # Step 5: Check work access again (should be True now)
+            print("✅ Step 5: Verifying work access...")
+            access_success2, access_result2 = self.test_check_work_access_direct(work_user)
+            if not access_success2 or not access_result2.get('has_work_access'):
+                self.log_test("Work for Casino Flow", False, "Work access not granted after purchase")
+                return False
+            
+            # Step 6: Upload gift successfully
+            print("🎁 Step 6: Uploading gift with access...")
+            upload_success = self.test_upload_gift_direct(work_user, "London")
+            if not upload_success:
+                self.log_test("Work for Casino Flow", False, "Failed to upload gift with access")
+                return False
+            
+            # Step 7: Check available gifts count
+            print("📊 Step 7: Checking available gifts count...")
+            gifts_success, gifts_result = self.test_get_available_gifts("London")
+            if not gifts_success:
+                self.log_test("Work for Casino Flow", False, "Failed to get available gifts count")
+                return False
+            
+            details = "Complete Work for Casino flow working: city selection → access purchase → gift upload → availability check"
+            self.log_test("Work for Casino Flow", True, details)
+            return True
+            
+        except Exception as e:
+            self.log_test("Work for Casino Flow", False, str(e))
+            return False
+
+    def test_set_city_direct(self, user, city):
+        """Helper method to set city for a specific user"""
+        try:
+            set_city_data = {"user_id": user['id'], "city": city}
+            response = requests.post(f"{self.api_url}/users/set-city", json=set_city_data)
+            return response.status_code == 200
+        except:
+            return False
+
+    def test_check_work_access_direct(self, user):
+        """Helper method to check work access for a specific user"""
+        try:
+            response = requests.get(f"{self.api_url}/work/check-access/{user['id']}")
+            if response.status_code == 200:
+                return True, response.json()
+            return False, None
+        except:
+            return False, None
+
+    def test_upload_gift_without_access_direct(self, user):
+        """Helper method to test upload without access"""
+        try:
+            upload_data = {
+                "user_id": user['id'],
+                "city": "London",
+                "photo_base64": "data:image/jpeg;base64,test",
+                "coordinates": {"lat": 51.5074, "lng": -0.1278}
+            }
+            response = requests.post(f"{self.api_url}/gifts/upload", json=upload_data)
+            return response.status_code == 403
+        except:
+            return False
+
+    def test_purchase_work_access_direct(self, user):
+        """Helper method to purchase work access for a specific user"""
+        try:
+            purchase_data = {
+                "user_id": user['id'],
+                "payment_signature": "test_signature_flow"
+            }
+            response = requests.post(f"{self.api_url}/work/purchase-access", json=purchase_data)
+            return response.status_code == 200
+        except:
+            return False
+
+    def test_upload_gift_direct(self, user, city):
+        """Helper method to upload gift for a specific user"""
+        try:
+            coordinates = {
+                "London": {"lat": 51.5074, "lng": -0.1278},
+                "Paris": {"lat": 48.8566, "lng": 2.3522}
+            }
+            
+            upload_data = {
+                "user_id": user['id'],
+                "city": city,
+                "photo_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=",
+                "coordinates": coordinates.get(city, coordinates["London"])
+            }
+            response = requests.post(f"{self.api_url}/gifts/upload", json=upload_data)
+            return response.status_code == 200
+        except:
+            return False
+
     def run_all_tests(self):
         """Run all API tests - Updated for Solana Integration and 3-Player System"""
         print("🚀 Starting Solana Casino Backend API Tests...")
