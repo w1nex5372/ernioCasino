@@ -257,6 +257,40 @@ class JoinRoomRequest(BaseModel):
     user_id: str
     bet_amount: int
 
+
+class Gift(BaseModel):
+    """Model for gifts uploaded by casino workers"""
+    model_config = ConfigDict(extra="ignore")
+    gift_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    creator_user_id: str  # User who uploaded this gift
+    creator_telegram_id: int
+    creator_username: Optional[str] = None
+    city: str  # London or Paris
+    photo_base64: str  # Base64 encoded photo
+    coordinates: Dict[str, float]  # {"lat": 48.8566, "lng": 2.3522}
+    status: str = Field(default="available")  # available, assigned
+    assigned_to: Optional[int] = None  # Telegram ID of winner
+    assigned_to_user_id: Optional[str] = None
+    winner_name: Optional[str] = None
+    winner_city: Optional[str] = None
+    assigned_at: Optional[datetime] = None
+    delivered: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SetCityRequest(BaseModel):
+    user_id: str
+    city: str  # London or Paris
+
+class PurchaseWorkAccessRequest(BaseModel):
+    user_id: str
+    payment_signature: str  # Solana transaction signature
+
+class UploadGiftRequest(BaseModel):
+    user_id: str
+    city: str
+    photo_base64: str
+    coordinates: Dict[str, float]  # {"lat": 48.8566, "lng": 2.3522}
+
 # In-memory storage for active rooms (in production, use Redis)
 active_rooms: Dict[str, GameRoom] = {}
 
