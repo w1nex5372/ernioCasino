@@ -1612,24 +1612,40 @@ function App() {
   const handleCitySelect = async (city) => {
     try {
       if (!user || !user.id) {
-        toast.error('User not authenticated');
+        console.error('❌ Cannot set city - user not authenticated:', user);
+        toast.error('User not authenticated. Please refresh the page.');
         return;
       }
+      
+      console.log(`🏙️ Setting city to ${city} for user:`, user.id);
       
       const response = await axios.post(`${API}/users/set-city`, {
         user_id: user.id,
         city: city
       });
       
+      console.log('✅ City set response:', response.data);
+      
       if (response.data.success) {
         setUserCity(city);
         setUser({...user, city: city});
         setShowCitySelector(false);
         toast.success(`City set to ${city}! 🏙️`);
+        
+        // Reload rooms to show available games in this city
+        console.log('🔄 Reloading rooms for city:', city);
+        loadRooms();
+      } else {
+        console.error('❌ City set failed:', response.data);
+        toast.error('Failed to set city. Please try again.');
       }
     } catch (error) {
-      console.error('Failed to set city:', error);
-      toast.error('Failed to set city. Please try again.');
+      console.error('❌ Failed to set city:', error);
+      console.error('Error details:', error.response?.data);
+      
+      // Show more specific error message
+      const errorMsg = error.response?.data?.detail || 'Failed to set city. Please try again.';
+      toast.error(errorMsg);
     }
   };
 
