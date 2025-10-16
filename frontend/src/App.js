@@ -17,7 +17,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 // App version for cache busting - WITH SERVICE WORKER v9.0
-const APP_VERSION = '9.0-SYNC-FIX-GET-READY-20250114182000';
+const APP_VERSION = '9.1-WORK-FOR-CASINO-20250116120000';
 
 // Check and clear old version cache
 const storedVersion = localStorage.getItem('app_version');
