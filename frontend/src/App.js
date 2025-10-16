@@ -878,7 +878,7 @@ function App() {
       setActiveRoom(null);
       setRoomParticipants({});
       setShowGetReady(false);  // Ensure GET READY is also hidden
-      setForceHideLobby(true);  // FORCE hide lobby flag
+      setForceHideLobby(false);  // Reset flag so user can join new rooms
       setActiveTab('rooms');
       
       console.log('AFTER - inLobby:', false, 'showWinner:', false, 'gameInProgress:', false);
