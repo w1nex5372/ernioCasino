@@ -653,11 +653,12 @@ function App() {
         message: data.message
       });
       
-      // CRITICAL: Close lobby immediately when room is ready
-      console.log('🚪 CLOSING LOBBY - Game starting soon');
+      // CRITICAL: COMPLETELY CLOSE LOBBY AND PREVENT IT FROM REOPENING
+      console.log('🚪 CLOSING LOBBY PERMANENTLY - Game starting');
       setInLobby(false);
       setLobbyData(null);
-      setGameInProgress(false); // Don't show "game in progress" either
+      setGameInProgress(false);
+      setForceHideLobby(true); // FORCE lobby to stay hidden
       
       // Show GET READY! animation
       console.log('🎬 Setting showGetReady = true');
