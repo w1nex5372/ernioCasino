@@ -16,18 +16,18 @@ import './App.css';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// App version for cache busting - WITH SERVICE WORKER v9.0
+// App version for cache busting - WITH SERVICE WORKER v9.1
 const APP_VERSION = '9.1-WORK-FOR-CASINO-20250116120000';
 
-// Check and clear old version cache (ONE TIME ONLY)
+// SIMPLIFIED VERSION CHECK - NO AUTO RELOAD
+// Just update the version in storage, let service worker handle caching
 const storedVersion = localStorage.getItem('app_version');
-const reloadFlag = sessionStorage.getItem('version_reloaded');
-
-if (storedVersion !== APP_VERSION && !reloadFlag) {
-  console.log(`🔄 Version changed from ${storedVersion} to ${APP_VERSION} - Clearing cache`);
+if (storedVersion !== APP_VERSION) {
+  console.log(`📦 Version updated: ${storedVersion} → ${APP_VERSION}`);
+  localStorage.setItem('app_version', APP_VERSION);
   
-  // Clear specific cached data that might be stale
-  const keysToKeep = ['casino_last_eur_amount', 'casino_last_sol_eur_price', 'app_version'];
+  // Clear other cached data (but keep important user data)
+  const keysToKeep = ['casino_last_eur_amount', 'casino_last_sol_eur_price', 'app_version', 'casino_user'];
   const allKeys = Object.keys(localStorage);
   
   allKeys.forEach(key => {
@@ -35,18 +35,6 @@ if (storedVersion !== APP_VERSION && !reloadFlag) {
       localStorage.removeItem(key);
     }
   });
-  
-  // Set new version FIRST
-  localStorage.setItem('app_version', APP_VERSION);
-  
-  // Set reload flag in sessionStorage (persists only for this browser tab session)
-  sessionStorage.setItem('version_reloaded', 'true');
-  
-  // Force reload to clear any in-memory cache (ONLY if there was a previous version)
-  if (storedVersion) {
-    console.log('🔄 Reloading page ONE TIME with new version...');
-    window.location.reload(true);
-  }
 }
 
 // Prize links configuration
