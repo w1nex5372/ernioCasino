@@ -486,7 +486,7 @@ function App() {
     console.log('User Agent:', navigator.userAgent);
     
     const newSocket = io(BACKEND_URL, {
-      path: '/socket.io',
+      path: '/api/socket.io',  // Use /api prefix to route to backend
       transports: ['websocket', 'polling'],
       timeout: 60000,  // Increased to 60 seconds (was 20)
       reconnection: true,
