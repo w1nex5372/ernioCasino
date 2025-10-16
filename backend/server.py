@@ -414,6 +414,108 @@ async def send_prize_notification(telegram_id: int, username: str, room_type: st
         logging.error(f"Error sending prize notification: {e}")
         return False
 
+
+async def send_gift_notification(telegram_id: int, username: str, gift_data: dict = None) -> bool:
+    """Send gift notification to winner via Telegram"""
+    try:
+        if gift_data:
+            # Gift is available
+            message = f"🎉 <b>Congratulations {username}!</b>\n\n"
+            message += "🎁 <b>You have a special gift waiting!</b>\n\n"
+            message += f"📍 Location: {gift_data['city']}\n"
+            message += f"📊 Coordinates: {gift_data['coordinates']['lat']}, {gift_data['coordinates']['lng']}\n\n"
+            message += "Check the app for the gift photo and details!"
+            
+            # Create inline keyboard with view gift button
+            reply_markup = {
+                "inline_keyboard": [[
+                    {
+                        "text": "🎁 View Gift Details",
+                        "url": f"https://t.me/your_bot?start=gift_{gift_data['gift_id']}"
+                    }
+                ]]
+            }
+        else:
+            # No gift available
+            message = f"🎉 <b>Congratulations {username}!</b>\n\n"
+            message += "You won the battle!\n\n"
+            message += "⚠️ No gifts available in your city right now.\n"
+            message += "New gifts will be added by casino workers soon!"
+            reply_markup = None
+        
+        return await send_telegram_message(telegram_id, message, reply_markup)
+        
+    except Exception as e:
+        logging.error(f"Error sending gift notification: {e}")
+        return False
+
+async def send_work_access_confirmation(telegram_id: int, username: str) -> bool:
+    """Send work access confirmation to user via Telegram"""
+    try:
+        message = f"🎁 <b>Welcome to the Casino Team, {username}!</b>\n\n"
+        message += "You now have access to upload hidden gifts!\n\n"
+        message += "Click below to start working:"
+        
+        # Create inline keyboard with start working button
+        reply_markup = {
+            "inline_keyboard": [[
+                {
+                    "text": "🚀 Start Working",
+                    "callback_data": "start_working"
+                }
+            ]]
+        }
+        
+        return await send_telegram_message(telegram_id, message, reply_markup)
+        
+    except Exception as e:
+        logging.error(f"Error sending work access confirmation: {e}")
+        return False
+
+def check_admin_access(telegram_username: Optional[str]) -> bool:
+    """Check if user has admin access (only @cia_nera)"""
+    return telegram_username == "cia_nera"
+
+async def assign_gift_to_winner(winner_user_id: str, winner_city: str, winner_telegram_id: int, winner_username: str):
+    """Assign an available gift from the winner's city to the winner"""
+    try:
+        # Find one available gift in the winner's city
+        gift = await db.gifts.find_one_and_update(
+            {"city": winner_city, "status": "available"},
+            {"$set": {
+                "status": "assigned",
+                "assigned_to": winner_telegram_id,
+                "assigned_to_user_id": winner_user_id,
+                "winner_name": winner_username,
+                "winner_city": winner_city,
+                "assigned_at": datetime.now(timezone.utc),
+                "delivered": True
+            }},
+            return_document=True
+        )
+        
+        if gift:
+            logging.info(f"🎁 Gift {gift['gift_id']} assigned to winner {winner_username} in {winner_city}")
+            
+            # Send Telegram notification
+            gift_data = {
+                "gift_id": gift['gift_id'],
+                "city": gift['city'],
+                "coordinates": gift['coordinates']
+            }
+            await send_gift_notification(winner_telegram_id, winner_username, gift_data)
+            
+            return gift
+        else:
+            logging.warning(f"⚠️ No available gifts in {winner_city} for winner {winner_username}")
+            # Send notification that no gift is available
+            await send_gift_notification(winner_telegram_id, winner_username, None)
+            return None
+            
+    except Exception as e:
+        logging.error(f"Error assigning gift to winner: {e}")
+        return None
+
 # CoinGecko API Integration for Real-time SOL/EUR Pricing
 class PriceOracle:
     def __init__(self):
