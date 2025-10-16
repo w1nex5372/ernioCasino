@@ -1,30 +1,28 @@
-// Service Worker v9.0 - SYNC FIX WITH GET READY ANIMATION
-console.log('SW v9.0: SYNC FIX - GET READY ANIMATION BUILD');
+// Service Worker v9.1 - WORK FOR CASINO BUILD
+console.log('SW v9.1: WORK FOR CASINO BUILD');
 
-const SW_VERSION = 'v9.0-SYNC-FIX-20250114-1820';
+const SW_VERSION = 'v9.1-WORK-FOR-CASINO-20250116-1200';
 const BUILD_TIMESTAMP = Date.now();
-let hasNotifiedClients = false; // Track if we've already notified
 
-console.log(`🚀 SW v9.0 loaded at ${BUILD_TIMESTAMP}`);
+console.log(`🚀 SW v9.1 loaded at ${BUILD_TIMESTAMP}`);
 
 // Immediately install and take over
 self.addEventListener('install', (event) => {
-  console.log(`🔧 SW v9.0: Installing ${SW_VERSION} at ${BUILD_TIMESTAMP}`);
+  console.log(`🔧 SW v9.1: Installing ${SW_VERSION}`);
   // Skip waiting to activate immediately
   event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', (event) => {
-  console.log(`✅ SW v9.0: Activating ${SW_VERSION} - DELETING ALL OLD CACHES`);
+  console.log(`✅ SW v9.1: Activating ${SW_VERSION} - DELETING ALL OLD CACHES`);
   
   event.waitUntil(
     Promise.all([
-      // Delete ALL caches
+      // Delete ALL old caches
       caches.keys().then((cacheNames) => {
-        console.log('🗑️ SW v9.0: Found caches:', cacheNames);
         return Promise.all(
           cacheNames.map((cacheName) => {
-            console.log('🗑️ SW v9.0: DELETING cache:', cacheName);
+            console.log('🗑️ SW v9.1: DELETING cache:', cacheName);
             return caches.delete(cacheName);
           })
         );
@@ -32,38 +30,7 @@ self.addEventListener('activate', (event) => {
       // Take control of all clients immediately
       self.clients.claim()
     ]).then(() => {
-      console.log(`🎉 SW v9.0: ${SW_VERSION} is now active and controlling all pages`);
-      
-      // Only notify clients once per activation
-      if (hasNotifiedClients) {
-        console.log('⏭️ SW v9.0: Already notified clients, skipping');
-        return Promise.resolve();
-      }
-      
-      hasNotifiedClients = true;
-      
-      // Get all window clients
-      return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    }).then(clients => {
-      if (!clients || clients.length === 0) {
-        console.log('⚠️ SW v9.0: No clients to notify');
-        return;
-      }
-      
-      console.log(`📢 SW v9.0: Found ${clients.length} clients to notify (one-time)`);
-      
-      // Send message to all clients ONCE
-      clients.forEach(client => {
-        console.log('📤 SW v9.0: Notifying client:', client.url);
-        client.postMessage({ 
-          type: 'SW_UPDATED', 
-          version: SW_VERSION,
-          timestamp: BUILD_TIMESTAMP,
-          forceReload: true
-        });
-      });
-      
-      console.log('✅ SW v9.0: Client notification complete');
+      console.log(`🎉 SW v9.1: ${SW_VERSION} is now active`);
     })
   );
 });
