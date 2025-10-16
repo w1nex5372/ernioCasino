@@ -19,13 +19,15 @@ const API = `${BACKEND_URL}/api`;
 // App version for cache busting - WITH SERVICE WORKER v9.0
 const APP_VERSION = '9.1-WORK-FOR-CASINO-20250116120000';
 
-// Check and clear old version cache
+// Check and clear old version cache (ONE TIME ONLY)
 const storedVersion = localStorage.getItem('app_version');
-if (storedVersion !== APP_VERSION) {
+const reloadFlag = sessionStorage.getItem('version_reloaded');
+
+if (storedVersion !== APP_VERSION && !reloadFlag) {
   console.log(`🔄 Version changed from ${storedVersion} to ${APP_VERSION} - Clearing cache`);
   
   // Clear specific cached data that might be stale
-  const keysToKeep = ['casino_last_eur_amount', 'casino_last_sol_eur_price'];
+  const keysToKeep = ['casino_last_eur_amount', 'casino_last_sol_eur_price', 'app_version'];
   const allKeys = Object.keys(localStorage);
   
   allKeys.forEach(key => {
@@ -34,12 +36,15 @@ if (storedVersion !== APP_VERSION) {
     }
   });
   
-  // Set new version
+  // Set new version FIRST
   localStorage.setItem('app_version', APP_VERSION);
   
-  // Force reload to clear any in-memory cache
+  // Set reload flag in sessionStorage (persists only for this browser tab session)
+  sessionStorage.setItem('version_reloaded', 'true');
+  
+  // Force reload to clear any in-memory cache (ONLY if there was a previous version)
   if (storedVersion) {
-    console.log('🔄 Reloading page with new version...');
+    console.log('🔄 Reloading page ONE TIME with new version...');
     window.location.reload(true);
   }
 }
