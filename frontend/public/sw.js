@@ -1,36 +1,38 @@
-// Service Worker v9.1 - WORK FOR CASINO BUILD
-console.log('SW v9.1: WORK FOR CASINO BUILD');
+// Service Worker v9.1 - NO CACHING - ALWAYS FRESH
+console.log('SW v9.1: NO CACHE MODE - Always fetch fresh');
 
-const SW_VERSION = 'v9.1-WORK-FOR-CASINO-20250116-1200';
-const BUILD_TIMESTAMP = Date.now();
+const SW_VERSION = 'v9.1-NO-CACHE-20250116-1205';
 
-console.log(`🚀 SW v9.1 loaded at ${BUILD_TIMESTAMP}`);
-
-// Immediately install and take over
+// Unregister this service worker on install
 self.addEventListener('install', (event) => {
-  console.log(`🔧 SW v9.1: Installing ${SW_VERSION}`);
-  // Skip waiting to activate immediately
-  event.waitUntil(self.skipWaiting());
+  console.log('🔧 SW v9.1: Unregistering service worker - no caching needed');
+  event.waitUntil(
+    self.registration.unregister().then(() => {
+      console.log('✅ SW: Unregistered successfully');
+    })
+  );
 });
 
 self.addEventListener('activate', (event) => {
-  console.log(`✅ SW v9.1: Activating ${SW_VERSION} - DELETING ALL OLD CACHES`);
+  console.log('✅ SW v9.1: Cleaning up and unregistering');
   
   event.waitUntil(
     Promise.all([
-      // Delete ALL old caches
+      // Delete ALL caches
       caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            console.log('🗑️ SW v9.1: DELETING cache:', cacheName);
+            console.log('🗑️ Deleting cache:', cacheName);
             return caches.delete(cacheName);
           })
         );
       }),
-      // Take control of all clients immediately
-      self.clients.claim()
+      // Take control briefly before unregistering
+      self.clients.claim(),
+      // Unregister self
+      self.registration.unregister()
     ]).then(() => {
-      console.log(`🎉 SW v9.1: ${SW_VERSION} is now active`);
+      console.log('🎉 SW: All caches deleted and service worker unregistered');
     })
   );
 });
