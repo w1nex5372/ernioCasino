@@ -548,7 +548,7 @@ function App() {
     newSocket.on('reconnect', (attemptNumber) => {
       console.log(`✅ Reconnected after ${attemptNumber} attempts!`);
       setIsConnected(true);
-      toast.success('Reconnected to server!', { duration: 2000 });
+      toast.success('Reconnected!', { duration: 1500 });
       
       // Re-register user after reconnection
       const storedUser = JSON.parse(localStorage.getItem('casino_user_session') || '{}');
