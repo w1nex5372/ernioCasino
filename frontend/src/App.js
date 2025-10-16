@@ -645,48 +645,49 @@ function App() {
     // NEW EVENT: room_ready - Show "GET READY!" full-screen animation
     newSocket.on('room_ready', (data) => {
       console.log('🚀🚀🚀 EVENT: room_ready RECEIVED 🚀🚀🚀');
-      console.log('📥 room_ready data:', {
-        room: data.room_type,
-        match_id: data.match_id,
-        players: data.players?.length,
-        countdown: data.countdown,
-        message: data.message
-      });
+      console.log('📥 room_ready data:', data);
       
-      // CRITICAL: COMPLETELY CLOSE LOBBY AND PREVENT IT FROM REOPENING
-      console.log('🚪 CLOSING LOBBY PERMANENTLY - Game starting');
+      // AGGRESSIVELY CLOSE EVERYTHING IMMEDIATELY
+      console.log('🚪🚪🚪 FORCE CLOSING ALL SCREENS 🚪🚪🚪');
+      console.log('BEFORE:', { inLobby, showGetReady, showWinnerScreen, gameInProgress, forceHideLobby });
+      
       setInLobby(false);
       setLobbyData(null);
       setGameInProgress(false);
-      setForceHideLobby(true); // FORCE lobby to stay hidden
+      setShowWinnerScreen(false);
+      setWinnerData(null);
+      setForceHideLobby(true);
       
-      // Show GET READY! animation
-      console.log('🎬 Setting showGetReady = true');
+      console.log('AFTER setting states');
+      
+      // THEN show GET READY
       setShowGetReady(true);
-      showGetReadyRef.current = true; // Update ref for socket listeners
+      showGetReadyRef.current = true;
       setGetReadyCountdown(data.countdown || 3);
+      
+      console.log('GET READY SHOWN');
       
       // Start countdown
       let count = data.countdown || 3;
-      console.log(`⏱️ Starting countdown from ${count}`);
       const countdownInterval = setInterval(() => {
         count--;
         console.log(`⏱️ Countdown: ${count}`);
         setGetReadyCountdown(count);
         if (count <= 0) {
           clearInterval(countdownInterval);
-          console.log('⏱️ Countdown complete');
+          console.log('⏱️ Countdown complete - waiting for winner screen');
         }
       }, 1000);
       
-      // Hide after countdown
+      // Hide GET READY after countdown
       setTimeout(() => {
         console.log('🎬 Hiding GET READY animation');
         setShowGetReady(false);
-        showGetReadyRef.current = false; // Update ref
+        showGetReadyRef.current = false;
+        console.log('States after hiding GET READY:', { inLobby: false, showGetReady: false, forceHideLobby: true });
       }, (data.countdown || 3) * 1000);
       
-      console.log('✅ GET READY animation started successfully');
+      console.log('✅ room_ready handler complete');
     });
 
     newSocket.on('game_starting', (data) => {
