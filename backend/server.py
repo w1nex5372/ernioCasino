@@ -2680,6 +2680,21 @@ async def startup_event():
     """Initialize the application"""
     initialize_rooms()
     
+    # Create database indexes for optimal performance
+    try:
+        # Gifts collection indexes
+        await db.gifts.create_index([("city", 1), ("status", 1)])
+        await db.gifts.create_index([("assigned_to", 1)])
+        await db.gifts.create_index([("creator_user_id", 1)])
+        
+        # Users collection indexes
+        await db.users.create_index([("city", 1)])
+        await db.users.create_index([("telegram_username", 1)])
+        
+        logger.info("✅ Database indexes created successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to create indexes: {e}")
+    
     # Start Solana payment monitoring
     await payment_monitor.start_monitoring()
     
