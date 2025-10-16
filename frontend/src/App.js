@@ -523,16 +523,25 @@ function App() {
     newSocket.on('connect_error', (error) => {
       console.error('❌❌❌ WebSocket connection error:', error);
       setIsConnected(false);
-      // Show a gentle notification about trying to reconnect
-      if (!newSocket.connected) {
-        toast.error('Server connection issue. Reconnecting...', { duration: 3000 });
-      }
+      // Only show error toast if we've been trying for more than 3 attempts
+      // This prevents spam during initial connection or temporary network blips
     });
     
     newSocket.on('reconnect_attempt', (attemptNumber) => {
       console.log(`🔄 Reconnection attempt ${attemptNumber}...`);
       setIsConnected(false);
-      toast.info(`Reconnecting... (attempt ${attemptNumber})`, { duration: 2000 });
+      // Only show reconnection toast every 3 attempts to reduce spam
+      if (attemptNumber % 3 === 0) {
+        toast.info(`Reconnecting...`, { duration: 1500 });
+      }
+    });
+    
+    newSocket.on('reconnect_failed', () => {
+      console.error('❌ All reconnection attempts failed');
+      setIsConnected(false);
+      toast.error('Unable to connect to server. Please refresh the page.', { 
+        duration: 5000 
+      });
     });
     
     newSocket.on('reconnect', (attemptNumber) => {
