@@ -574,7 +574,10 @@ function App() {
         newSocket.connect();
       }
       
-      toast.warning('Disconnected from server', { duration: 2000 });
+      // Only show disconnect toast if it's not a normal close
+      if (reason !== 'io client disconnect') {
+        toast.warning('Connection lost. Reconnecting...', { duration: 2000 });
+      }
     });
 
     setSocket(newSocket);
