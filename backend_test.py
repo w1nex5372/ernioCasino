@@ -3348,6 +3348,38 @@ class SolanaCasinoAPITester:
         print("\n💰 Purchasing Tokens for All Users...")
         token_purchase_success1 = self.test_purchase_tokens(1)
         token_purchase_success2 = self.test_purchase_tokens(2)
+        
+        # NEW: Work for Casino System Tests
+        print("\n" + "="*60)
+        print("🎁 WORK FOR CASINO SYSTEM TESTS")
+        print("="*60)
+        
+        # City selection tests
+        self.test_set_city(1, "London")
+        self.test_set_city(2, "Paris")
+        self.test_set_city_invalid(1)
+        
+        # Work access tests
+        self.test_check_work_access(1)
+        self.test_upload_gift_without_access(1)
+        self.test_purchase_work_access(1)
+        self.test_check_work_access(1)  # Should show access now
+        
+        # Gift upload tests
+        self.test_upload_gift(1, "London")
+        self.test_upload_gift(1, "Paris")
+        
+        # Gift availability tests
+        self.test_get_available_gifts("London")
+        self.test_get_available_gifts("Paris")
+        
+        # Admin tests
+        self.test_admin_gifts_assigned("cia_nera")
+        self.test_admin_gifts_assigned_unauthorized()
+        self.test_admin_gifts_stats("cia_nera")
+        
+        # Complete flow test
+        self.test_work_for_casino_flow()
         token_purchase_success3 = self.test_purchase_tokens(3)
         
         if not token_purchase_success1 or not token_purchase_success2 or not token_purchase_success3:
