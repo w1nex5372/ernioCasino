@@ -1291,9 +1291,9 @@ async def start_game_round(room: GameRoom):
     })
     logging.info(f"✅ Emitted game_finished to room {room.id}, winner: {winner.username}, match_id: {match_id}")
     
-    # Wait for winner announcement screen (3 seconds)
-    logging.info(f"⏱️ Waiting 3 seconds for winner announcement...")
-    await asyncio.sleep(3)
+    # Wait for winner announcement screen (2 seconds as requested)
+    logging.info(f"⏱️ Waiting 2 seconds for winner announcement...")
+    await asyncio.sleep(2)
     
     # EVENT 4: redirect_home - Redirect all players back to home screen
     final_sockets = socket_rooms.room_to_sockets.get(room.id, set())
