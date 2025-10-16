@@ -1093,6 +1093,13 @@ def select_winner(players: List[RoomPlayer]) -> RoomPlayer:
     
     # Create weighted selection based on bet amounts
     # Each player's chance = their bet amount / total pool
+
+
+@sio.event
+async def catch_all(event, sid, data):
+    """Catch all events for debugging"""
+    logging.info(f"🎯 CATCH-ALL: Event '{event}' from {sid[:8]} with data: {data}")
+
     total_pool = sum(p.bet_amount for p in players)
     
     # Generate a random number between 0 and total_pool
