@@ -488,13 +488,15 @@ function App() {
     const newSocket = io(BACKEND_URL, {
       path: '/socket.io',
       transports: ['websocket', 'polling'],
-      timeout: 20000,  // Increased timeout for slow server wakeup
+      timeout: 60000,  // Increased to 60 seconds (was 20)
       reconnection: true,
-      reconnectionDelay: 2000,  // Wait 2 seconds before reconnecting
-      reconnectionDelayMax: 10000,  // Max 10 seconds
-      reconnectionAttempts: 10,  // Try up to 10 times
+      reconnectionDelay: 1000,  // Faster reconnection
+      reconnectionDelayMax: 5000,  // Max 5 seconds
+      reconnectionAttempts: Infinity,  // Keep trying forever
       forceNew: false,
-      autoConnect: true
+      autoConnect: true,
+      upgrade: true,  // Allow upgrading to websocket
+      rememberUpgrade: true  // Remember successful upgrades
     });
     
     newSocket.on('connect', () => {
