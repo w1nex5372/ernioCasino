@@ -505,7 +505,8 @@ function App() {
       console.log('Transport:', newSocket.io.engine.transport.name);
       
       setIsConnected(true);
-      toast.success(`Connected! (${platform})`, { duration: 2000 });
+      // Only show success toast, no duplicate
+      toast.success(`Connected!`, { duration: 1500 });
       
       // Register user to socket mapping if user is logged in
       const storedUser = JSON.parse(localStorage.getItem('casino_user_session') || '{}');
