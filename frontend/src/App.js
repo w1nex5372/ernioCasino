@@ -3209,10 +3209,13 @@ function App() {
         onClose={() => {
           setShowPaymentModal(false);
           setPaymentEurAmount(null);
+          setIsWorkPurchase(false); // Reset flag
         }}
         userId={user?.id}
         tokenAmount={paymentTokenAmount}
         initialEurAmount={paymentEurAmount}
+        onConfirm={isWorkPurchase ? handleWorkAccessConfirmed : null}
+        isWorkPurchase={isWorkPurchase}
       />
 
       {/* City Selector Modal */}
