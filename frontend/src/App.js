@@ -1705,13 +1705,13 @@ function App() {
   };
 
   const handleAddGift = () => {
-    if (!giftPhoto || !giftLat || !giftLng) {
-      toast.error('Please provide photo and coordinates');
+    if (currentGiftMedia.length === 0 || !giftLat || !giftLng) {
+      toast.error('Please provide at least one media file and coordinates');
       return;
     }
 
     const newGift = {
-      photo_base64: giftPhoto,
+      media: currentGiftMedia, // Array of {type, data}
       coordinates: {
         lat: parseFloat(giftLat),
         lng: parseFloat(giftLng)
@@ -1719,11 +1719,28 @@ function App() {
     };
 
     setUploadedGifts([...uploadedGifts, newGift]);
-    setGiftPhoto(null);
+    setCurrentGiftMedia([]);
     setGiftLat('');
     setGiftLng('');
     
-    toast.success(`Gift ${uploadedGifts.length + 1} added`);
+    toast.success(`Gift ${uploadedGifts.length + 1} added with ${currentGiftMedia.length} media file(s)`);
+  };
+
+  const handleAddMedia = (e) => {
+    const files = Array.from(e.target.files);
+    
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const mediaType = file.type.startsWith('image/') ? 'photo' : 'video';
+        setCurrentGiftMedia(prev => [...prev, {
+          type: mediaType,
+          data: reader.result
+        }]);
+        toast.success(`${mediaType} added (${currentGiftMedia.length + 1} total)`);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleSubmitGifts = async () => {
