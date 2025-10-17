@@ -1017,54 +1017,16 @@ async def disconnect(sid):
     # Get room_id from socket_rooms tracking
     room_id = socket_rooms.socket_to_room.get(sid)
     
-    # Clean up socket from rooms
+    # Clean up socket from rooms ONLY
     socket_rooms.cleanup_socket(sid)
     
-    # Clean up user mapping
-    if sid in socket_to_user:
-        if user_id in user_to_socket:
-            del user_to_socket[user_id]
-        del socket_to_user[sid]
-        logging.info(f"🧹 Cleaned up user {user_id} socket mapping")
+    # DON'T immediately clean up user mapping or remove from game room
+    # Give user 30 seconds to reconnect (Telegram browser often disconnects temporarily)
+    # User mapping and room removal will be handled on reconnect timeout or manual leave
+    logging.info(f"⏳ User {user_id} disconnected, keeping in room for potential reconnect")
     
-    # Notify room participants about player disconnect
-    if room_id and user_id:
-        # Find the room and user
-        room = active_rooms.get(room_id)
-        if room:
-            # Find and remove player from room
-            player_left = None
-            for player in room.players:
-                if player.user_id == user_id:
-                    player_left = player
-                    break
-            
-            if player_left:
-                room.players.remove(player_left)
-                logging.info(f"👋 Player {player_left.username} left room {room_id}")
-                
-                # Serialize player data
-                player_left_dict = player_left.dict()
-                if 'joined_at' in player_left_dict and isinstance(player_left_dict['joined_at'], datetime):
-                    player_left_dict['joined_at'] = player_left_dict['joined_at'].isoformat()
-                
-                remaining_players = []
-                for p in room.players:
-                    player_dict = p.dict()
-                    if 'joined_at' in player_dict and isinstance(player_dict['joined_at'], datetime):
-                        player_dict['joined_at'] = player_dict['joined_at'].isoformat()
-                    remaining_players.append(player_dict)
-                
-                # Notify remaining participants with updated FULL list
-                await socket_rooms.broadcast_to_room(sio, room_id, 'player_left', {
-                    'room_id': room_id,
-                    'room_type': room.room_type,
-                    'player': player_left_dict,
-                    'players_count': len(room.players),
-                    'all_players': remaining_players,  # FULL updated list
-                    'timestamp': datetime.now(timezone.utc).isoformat()
-                })
-                logging.info(f"✅ Emitted player_left to room {room_id}, remaining: {len(room.players)}")
+    # DO NOT remove from active_rooms.players - let them stay in the game
+    # They can still receive events when they reconnect
 
 @sio.event
 async def register_user(sid, data):
