@@ -39,7 +39,7 @@ import socket_rooms
 # Get environment variables
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 DB_NAME = os.environ.get('DB_NAME', 'casino_db')
-CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,https://solanaplay-sync.preview.emergentagent.com').split(',')
+CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,https://casino-worker.preview.emergentagent.com').split(',')
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_TELEGRAM_BOT_TOKEN_HERE')
 
 # Solana Configuration for devnet (test environment as requested)

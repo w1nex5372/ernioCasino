@@ -1,21 +1,21 @@
 # Deployment Status Report
 
 ## Current Active Domain
-**✅ CONFIRMED ACTIVE: `https://solanaplay-sync.preview.emergentagent.com`**
+**✅ CONFIRMED ACTIVE: `https://casino-worker.preview.emergentagent.com`**
 
 ## Service Status
 
 ### Backend
 - **Status**: ✅ RUNNING (PID: 2482)
 - **Port**: 8001
-- **URL**: https://solanaplay-sync.preview.emergentagent.com/api
+- **URL**: https://casino-worker.preview.emergentagent.com/api
 - **Socket.IO**: ✅ Working on localhost:8001
 - **API Test**: ✅ Returns "Solana Casino Battle Royale API"
 
 ### Frontend  
 - **Status**: ✅ RUNNING (PID: 1509)
 - **Port**: 3000
-- **URL**: https://solanaplay-sync.preview.emergentagent.com
+- **URL**: https://casino-worker.preview.emergentagent.com
 - **Build Version**: 8.0-WINNER-FIX-v5-20250114
 - **Latest Code**: ✅ DEPLOYED (verified "GET READY" and "room_ready" in bundle.js)
 
@@ -26,7 +26,7 @@
 
 ### Frontend Bundle Check
 ```bash
-curl https://solanaplay-sync.preview.emergentagent.com/static/js/bundle.js | grep -o "room_ready"
+curl https://casino-worker.preview.emergentagent.com/static/js/bundle.js | grep -o "room_ready"
 ```
 **Result**: ✅ Found 3 occurrences of "room_ready"
 **Result**: ✅ Found "GET READY" text in bundle
@@ -41,13 +41,13 @@ curl https://solanaplay-sync.preview.emergentagent.com/static/js/bundle.js | gre
 
 ### Frontend .env
 ```
-REACT_APP_BACKEND_URL=https://solanaplay-sync.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://casino-worker.preview.emergentagent.com
 WDS_SOCKET_PORT=443
 ```
 
 ### Environment Variables
 ```
-preview_endpoint=https://solanaplay-sync.preview.emergentagent.com (INACTIVE)
+preview_endpoint=https://casino-worker.preview.emergentagent.com (INACTIVE)
 base_url=https://demobackend.emergentagent.com
 ```
 
@@ -56,7 +56,7 @@ base_url=https://demobackend.emergentagent.com
 ### 1. Socket.IO Connection Through Proxy
 **Issue**: Socket.IO polling endpoint returns HTML instead of handshake
 ```bash
-curl https://solanaplay-sync.preview.emergentagent.com/socket.io/?EIO=4&transport=polling
+curl https://casino-worker.preview.emergentagent.com/socket.io/?EIO=4&transport=polling
 ```
 Returns: HTML page instead of Socket.IO handshake
 
@@ -79,7 +79,7 @@ Backend logs show no recent client connections, suggesting:
 ### Current Configuration
 **Use this exact URL in Telegram Bot Settings:**
 ```
-https://solanaplay-sync.preview.emergentagent.com
+https://casino-worker.preview.emergentagent.com
 ```
 
 ### Verification Steps
@@ -178,7 +178,7 @@ INFO: ✅ Emitted game_finished, winner: Alice, match_id: a1b2c3d4e5f6
 This is a Kubernetes ingress routing issue. The Socket.IO endpoint needs special configuration to handle WebSocket upgrades and polling requests properly.
 
 **Temporary Workaround**: Test in regular browser first
-- Go to: https://solanaplay-sync.preview.emergentagent.com
+- Go to: https://casino-worker.preview.emergentagent.com
 - Open browser DevTools
 - Test game flow
 - If it works in browser but not Telegram, it's a Telegram cache issue
@@ -192,7 +192,7 @@ This is a Kubernetes ingress routing issue. The Socket.IO endpoint needs special
 ⚠️ **Telegram cache** may be showing old version
 
 **Action Required**: 
-1. Update Telegram Mini App to use `https://solanaplay-sync.preview.emergentagent.com`
+1. Update Telegram Mini App to use `https://casino-worker.preview.emergentagent.com`
 2. Clear Telegram cache
 3. Test and report what you see in browser console
 

@@ -333,7 +333,7 @@ Open room in 2 browsers (Player A and Player B):
 - Enhanced console logging for all events
 
 ## Deployment Status
-- **Domain**: https://solanaplay-sync.preview.emergentagent.com
+- **Domain**: https://casino-worker.preview.emergentagent.com
 - **Backend**: ✅ Running (PID: 2482)
 - **Frontend**: ✅ Compiled Successfully
 - **Status**: ✅ Ready for User Testing
