@@ -2482,6 +2482,7 @@ async def get_user_data(user_id: str):
             "username": user_doc.get('telegram_username', ''),
             "photo_url": user_doc.get('photo_url', ''),
             "token_balance": user_doc.get('token_balance', 0),
+            "city": user_doc.get('city', ''),  # User's selected city
             "created_at": user_doc.get('created_at'),
             "last_login": user_doc.get('last_login'),
             "is_verified": user_doc.get('is_verified', False),
