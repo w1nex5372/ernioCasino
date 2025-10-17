@@ -708,15 +708,8 @@ function App() {
         }
       }, 1000);
       
-      // Hide GET READY after countdown
-      setTimeout(() => {
-        console.log('🎬 Hiding GET READY animation');
-        setShowGetReady(false);
-        showGetReadyRef.current = false;
-        console.log('States after hiding GET READY:', { inLobby: false, showGetReady: false, forceHideLobby: true });
-      }, (data.countdown || 3) * 1000);
-      
-      console.log('✅ room_ready handler complete');
+      // DON'T hide GET READY manually - let game_finished event replace it immediately
+      console.log('✅ room_ready handler complete - GET READY stays visible until winner screen');
     });
 
     newSocket.on('game_starting', (data) => {
