@@ -976,9 +976,7 @@ function App() {
     newSocket.on('new_room_available', (data) => {
       console.log('🆕 New room available:', data);
       loadRooms();
-      toast.success(`${ROOM_CONFIGS[data.room_type]?.icon} New ${data.room_type} room ready! Round #${data.round_number}`, {
-        duration: 2000
-      });
+      // Removed noisy toast notification
     });
 
     newSocket.on('token_balance_updated', (data) => {
