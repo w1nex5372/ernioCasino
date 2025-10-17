@@ -2888,10 +2888,6 @@ async def purchase_work_package(request: PurchasePackageRequest):
                     }
                 )
             logging.info(f"Sent ONE welcome Telegram notification to {user['telegram_id']}")
-                        'text': message
-                    }
-                )
-            logging.info(f"Sent ONE Telegram notification to {user['telegram_id']}")
         except Exception as e:
             logging.error(f"Failed to send Telegram notification: {e}")
         
