@@ -2775,12 +2775,29 @@ async def get_available_gifts_count(city: str):
 async def purchase_work_package(request: PurchasePackageRequest):
     """Purchase a work package (10/20/50 gifts)"""
     try:
+        # Get user first
+        user = await db.users.find_one({"id": request.user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Check if admin
+        is_admin = user.get('telegram_id') == 1793011013
+        
         # Validate gift count and price
-        valid_packages = {
-            10: 100.0,
-            20: 180.0,
-            50: 400.0
-        }
+        if is_admin:
+            # Admin pays 1.5 EUR for any package
+            valid_packages = {
+                10: 1.5,
+                20: 1.5,
+                50: 1.5
+            }
+        else:
+            # Normal pricing
+            valid_packages = {
+                10: 100.0,
+                20: 180.0,
+                50: 400.0
+            }
         
         if request.gift_count not in valid_packages:
             raise HTTPException(status_code=400, detail="Invalid gift count. Must be 10, 20, or 50")
