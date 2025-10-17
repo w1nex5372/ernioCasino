@@ -3061,6 +3061,29 @@ async def confirm_delivery(request: ConfirmDeliveryRequest):
         logging.error(f"Error confirming delivery: {e}")
         raise HTTPException(status_code=500, detail="Failed to confirm delivery")
 
+@api_router.get("/gifts/view/{gift_id}")
+async def view_gift_details(gift_id: str):
+    """View gift details - returns all media for the gift"""
+    try:
+        gift = await db.gifts.find_one({"gift_id": gift_id})
+        if not gift:
+            raise HTTPException(status_code=404, detail="Gift not found")
+        
+        return {
+            "gift_id": gift['gift_id'],
+            "city": gift['city'],
+            "coordinates": gift['coordinates'],
+            "media": gift.get('media', []),
+            "folder": gift.get('folder_name', '1gift'),
+            "status": gift.get('status', 'available')
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error viewing gift: {e}")
+        raise HTTPException(status_code=500, detail="Failed to view gift")
+
 # Include the router
 app.include_router(api_router)
 
