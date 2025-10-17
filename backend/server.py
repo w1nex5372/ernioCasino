@@ -156,7 +156,7 @@ sio = socketio.AsyncServer(
     logger=True,
     engineio_logger=True,
     async_mode='asgi',
-    engineio_path='/api/socket.io'  # Set Engine.IO path to /api/socket.io
+    engineio_path='/socket.io'  # Socket.IO path (will be accessed via /api/socket.io through ingress)
 )
 
 # FastAPI app
