@@ -2152,19 +2152,30 @@ class SolanaCasinoAPITester:
             # Step 5: Game 2 - User4, User5, User6 join bronze room (should create new room)
             print("\n🎯 Step 5: Game 2 - User4, User5, User6 join bronze room...")
             
-            # Wait a moment to ensure new room is available
-            time.sleep(1)
+            # Wait for new room to be available after Game 1 completion
+            print("   🔄 Waiting for new bronze room to be created after Game 1...")
+            max_wait = 10  # Maximum 10 seconds to wait for new room
+            wait_time = 0
+            room_available = False
             
-            # Check if bronze room is available
-            rooms_check = requests.get(f"{self.api_url}/rooms")
-            if rooms_check.status_code == 200:
-                rooms_data = rooms_check.json().get('rooms', [])
-                bronze_rooms = [r for r in rooms_data if r['room_type'] == 'bronze']
-                if bronze_rooms:
-                    print(f"   📊 Bronze room available: {bronze_rooms[0]['players_count']}/3 players")
-                else:
-                    print("   ⚠️ No bronze room available, waiting for room creation...")
-                    time.sleep(2)
+            while wait_time < max_wait:
+                rooms_check = requests.get(f"{self.api_url}/rooms")
+                if rooms_check.status_code == 200:
+                    rooms_data = rooms_check.json().get('rooms', [])
+                    bronze_rooms = [r for r in rooms_data if r['room_type'] == 'bronze']
+                    if bronze_rooms and bronze_rooms[0]['players_count'] == 0:
+                        print(f"   ✅ New bronze room available: {bronze_rooms[0]['players_count']}/3 players")
+                        room_available = True
+                        break
+                    else:
+                        print(f"   ⏳ Waiting for empty bronze room... (current: {bronze_rooms[0]['players_count'] if bronze_rooms else 'none'}/3)")
+                
+                time.sleep(1)
+                wait_time += 1
+            
+            if not room_available:
+                self.log_test("Concurrent Game Flow", False, "New bronze room not available after Game 1 completion")
+                return False
             
             for i in range(3, 6):
                 join_data = {
