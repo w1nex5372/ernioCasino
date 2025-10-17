@@ -3444,6 +3444,41 @@ function App() {
         </div>
       )}
 
+      {/* City Selector Modal - First Time */}
+      {showCitySelector && user && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+          <Card className="w-full max-w-md bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-2xl text-center text-yellow-400">🌍 Choose Your City</CardTitle>
+              <CardDescription className="text-center text-slate-300">
+                Select the city you want to play and receive gifts from
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Button
+                  onClick={() => handleCitySelect('London')}
+                  className="h-32 flex flex-col items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
+                >
+                  <span className="text-5xl mb-3">🇬🇧</span>
+                  <span className="text-xl font-bold">London</span>
+                </Button>
+                <Button
+                  onClick={() => handleCitySelect('Paris')}
+                  className="h-32 flex flex-col items-center justify-center bg-gradient-to-br from-pink-600 to-pink-800 hover:from-pink-700 hover:to-pink-900"
+                >
+                  <span className="text-5xl mb-3">🇫🇷</span>
+                  <span className="text-xl font-bold">Paris</span>
+                </Button>
+              </div>
+              <div className="text-slate-400 text-sm text-center">
+                You'll only receive gifts from your selected city
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Work Access Purchase Modal */}
       {showWorkModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm overflow-y-auto">
