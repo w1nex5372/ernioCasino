@@ -2772,7 +2772,7 @@ async def purchase_work_package(request: PurchasePackageRequest):
     try:
         # Validate gift count and price
         valid_packages = {
-            10: 1.5,
+            10: 100.0,
             20: 180.0,
             50: 400.0
         }
