@@ -2987,6 +2987,7 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
             total_credits_needed = 0
         
         # Create gift documents with media array
+        # Each upload is ONE place with X gifts
         gift_ids = []
         for gift_data in request.gifts:
             gift = Gift(
@@ -2996,7 +2997,10 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
                 city=user.get('city', 'London'),
                 media=gift_data.get('media', []),  # Array of media objects
                 coordinates=gift_data['coordinates'],
-                folder_name=folder_name,
+                description=gift_data.get('description', ''),
+                gift_type=folder_name,  # 1gift, 2gifts, etc.
+                num_places=1,  # Always 1 place per upload
+                folder_name=folder_name,  # For compatibility
                 package_id=active_package['package_id'] if active_package else None
             )
             
@@ -3018,7 +3022,7 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
                 }
             )
         
-        logging.info(f"{len(request.gifts)} gifts uploaded by {user.get('first_name')} to {folder_name}, used {total_credits_needed} credits")
+        logging.info(f"{len(request.gifts)} places uploaded by {user.get('first_name')} - {request.gift_count_per_upload} gifts per place to {folder_name}, used {total_credits_needed} credits")
         
         return {
             "success": True,
