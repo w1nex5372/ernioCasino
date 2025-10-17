@@ -2795,6 +2795,7 @@ async def purchase_work_package(request: PurchasePackageRequest):
             username=user.get('username'),
             city=request.city,
             gift_count=request.gift_count,
+            gift_credits_remaining=request.gift_count,  # Initialize credits
             paid_amount_eur=request.paid_amount_eur,
             payment_signature=request.payment_signature
         )
