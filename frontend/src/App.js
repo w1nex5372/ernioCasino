@@ -628,15 +628,7 @@ function App() {
 
     newSocket.on('room_full', (data) => {
       console.log('🚀 ROOM FULL event received:', data);
-      toast.success(data.message || '🚀 ROOM IS FULL! GET READY FOR THE BATTLE!', {
-        duration: 3000,
-        style: { 
-          background: 'linear-gradient(to right, #22c55e, #10b981)',
-          color: 'white',
-          fontSize: '18px',
-          fontWeight: 'bold'
-        }
-      });
+      // Removed toast - silent transition to GET READY
     });
 
     // Game events - CRITICAL: These must maintain strict order
@@ -645,24 +637,17 @@ function App() {
         room: data.room_type,
         player: data.player.first_name,
         count: data.players_count,
-        status: data.room_status,
-        timestamp: data.timestamp,
-        get_ready_active: showGetReadyRef.current
+        status: data.room_status
       });
       
       // REPLACE (not append) room participants with full list from server
       setRoomParticipants(prev => ({
         ...prev,
-        [data.room_type]: data.all_players || []  // FULL list replacement
+        [data.room_type]: data.all_players || []
       }));
       
-      console.log(`✅ Participant list REPLACED for ${data.room_type}: ${data.all_players?.map(p => p.first_name).join(', ')}`);
-      
-      // Show notification for new player (skip if GET READY is active to avoid overlap)
-      if (!showGetReadyRef.current) {
-        toast.success(
-          `👤 ${data.player.first_name} joined! (${data.players_count}/3)`,
-          { duration: 2000 }
+      console.log(`✅ Participant list REPLACED for ${data.room_type}`);
+      // Removed toast - silent player join
         );
       }
       
