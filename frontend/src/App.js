@@ -275,6 +275,8 @@ function App() {
   const [giftLat, setGiftLat] = useState('');
   const [giftLng, setGiftLng] = useState('');
   const [giftCity, setGiftCity] = useState(''); // City for gift upload
+  const [viewingGift, setViewingGift] = useState(null); // Gift being viewed
+  const [showGiftViewer, setShowGiftViewer] = useState(false);
 
   // Debug roomParticipants changes
   useEffect(() => {
