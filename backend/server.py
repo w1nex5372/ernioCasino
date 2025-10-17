@@ -269,9 +269,12 @@ class Gift(BaseModel):
     city: str  # London or Paris
     media: List[Dict[str, str]] = Field(default_factory=list)  # [{"type": "photo|video", "data": "base64..."}]
     coordinates: Dict[str, float]  # {"lat": 48.8566, "lng": 2.3522}
-    folder_name: str  # 1gift, 2gifts, 5gifts, 10gifts, 20gifts, 50gifts
+    description: Optional[str] = None  # e.g., "behind the red door near Hyde Park"
+    gift_type: str  # 1gift, 2gifts, 5gifts, 10gifts, 20gifts, 50gifts
+    num_places: int = 1  # Number of places (always 1 per upload record)
+    folder_name: str  # Same as gift_type for compatibility
     package_id: Optional[str] = None  # Reference to work package purchase
-    status: str = Field(default="available")  # available, assigned, delivered
+    status: str = Field(default="available")  # available, assigned, used
     assigned_to: Optional[int] = None  # Telegram ID of winner
     assigned_to_user_id: Optional[str] = None
     winner_name: Optional[str] = None
