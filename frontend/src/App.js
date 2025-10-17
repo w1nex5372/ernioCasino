@@ -313,6 +313,13 @@ function App() {
     checkGiftView();
   }, []);
 
+  // Check if user has selected a city
+  useEffect(() => {
+    if (user && user.id && !user.city) {
+      setShowCitySelector(true);
+    }
+  }, [user]);
+
   // Debug winner screen state
   useEffect(() => {
     console.log('🏆 showWinnerScreen changed:', showWinnerScreen);
