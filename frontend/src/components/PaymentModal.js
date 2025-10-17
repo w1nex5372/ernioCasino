@@ -167,27 +167,43 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
             toast.success('💰 Payment detected! Processing...');
           }
         } else if (status.tokens_credited) {
-          // State 2: Tokens credited - close modal (sweep happens in background)
-          // User has their tokens, sweep will complete independently
+          // State 2: Tokens credited (for token purchase) OR payment confirmed (for work purchase)
           setPaymentStatus('completed');
-          toast.success('🎉 Payment successful! Tokens credited.');
           
-          // Close modal after 2 seconds with animation
-          setTimeout(() => {
-            onClose();
+          if (isWorkPurchase) {
+            // Work for Casino purchase - no tokens, just access
+            toast.success('🎉 Payment successful! Work access granted.');
             
-            // Refresh user data without full page reload
-            if (window.location.hash !== '#tokens') {
-              window.location.hash = '#tokens';
+            // Call the confirmation callback with payment signature
+            if (onConfirm && paymentData?.wallet_address) {
+              await onConfirm(paymentData.wallet_address);
             }
             
-            // Trigger app to reload user data
-            window.dispatchEvent(new CustomEvent('payment-completed'));
-            
-            // Fallback: full reload if no event listener
+            // Close modal after 2 seconds
             setTimeout(() => {
-              window.location.reload();
-            }, 500);
+              onClose();
+              // No page reload for work purchase
+            }, 2000);
+          } else {
+            // Regular token purchase
+            toast.success('🎉 Payment successful! Tokens credited.');
+            
+            // Close modal after 2 seconds with animation
+            setTimeout(() => {
+              onClose();
+              
+              // Refresh user data without full page reload
+              if (window.location.hash !== '#tokens') {
+                window.location.hash = '#tokens';
+              }
+              
+              // Trigger app to reload user data
+              window.dispatchEvent(new CustomEvent('payment-completed'));
+              
+              // Fallback: full reload if no event listener
+              setTimeout(() => {
+                window.location.reload();
+              }, 500);
           }, 2000);
         }
       } catch (error) {
