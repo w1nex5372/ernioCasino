@@ -1208,11 +1208,19 @@ async def start_game_round(room: GameRoom):
     room.prize_pool = sum(p.bet_amount for p in room.players)
     
     # EVENT 1: room_ready - Trigger "GET READY!" animation (2-3 seconds)
+    # Serialize player data properly
+    serialized_players = []
+    for p in room.players:
+        player_dict = p.dict()
+        if 'joined_at' in player_dict and isinstance(player_dict['joined_at'], datetime):
+            player_dict['joined_at'] = player_dict['joined_at'].isoformat()
+        serialized_players.append(player_dict)
+    
     room_ready_data = {
         'room_id': room.id,
         'room_type': room.room_type,
         'match_id': match_id,
-        'players': [p.dict() for p in room.players],
+        'players': serialized_players,
         'prize_pool': room.prize_pool,
         'message': '🚀 GET READY FOR BATTLE!',
         'countdown': 3
