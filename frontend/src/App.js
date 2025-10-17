@@ -485,14 +485,14 @@ function App() {
     console.log('Platform:', platform);
     console.log('User Agent:', navigator.userAgent);
     
-    // Socket.IO connection - Connect to /api/io (mounted path)
-    const socketUrl = BACKEND_URL;
-    console.log('🔌 Socket URL:', socketUrl);
-    console.log('🔌 Socket path: /api/io/socket.io/');
+    // Socket.IO connection
+    // Use custom server URL that includes /api path
+    const socketServerUrl = BACKEND_URL + '/api';  // This becomes https://domain.com/api
+    console.log('🔌 Socket Server URL:', socketServerUrl);
     
-    const newSocket = io(socketUrl, {
-      path: '/api/io/socket.io',  // Socket.IO mounted at /api/io
-      transports: ['polling'],  // Use polling only
+    const newSocket = io(socketServerUrl, {
+      path: '/socket.io',  // Standard path, will become /api/socket.io
+      transports: ['polling'],
       timeout: 60000,
       reconnection: true,
       reconnectionDelay: 1000,
