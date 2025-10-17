@@ -766,6 +766,12 @@ function App() {
         return;
       }
       
+      // Check if winner screen is already showing - prevents double display
+      if (showWinnerScreen) {
+        console.log('⏭️ Winner screen already showing - SKIPPING duplicate event');
+        return;
+      }
+      
       // Mark this match as shown
       setShownMatchIds(prev => new Set([...prev, matchId]));
       console.log('✅ Match marked as shown:', matchId);
