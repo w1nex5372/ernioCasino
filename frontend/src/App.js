@@ -722,73 +722,47 @@ function App() {
     });
 
     newSocket.on('game_finished', (data) => {
-      console.log('🟢🟢🟢 EVENT: game_finished RECEIVED 🟢🟢🟢');
-      console.log('Room:', data.room_type);
-      console.log('Match ID:', data.match_id);
-      console.log('Winner:', data.winner_name);
-      
-      // CRITICAL: Block winner screen if redirect_home was already called
-      if (blockWinnerScreenRef.current) {
-        console.log('🚫 Winner screen BLOCKED - redirect_home already processed');
-        return;
-      }
-      
-      // CRITICAL: Use match_id to prevent duplicates
       const matchId = data.match_id;
-      if (!matchId) {
-        console.error('❌ No match_id in game_finished event');
+      
+      // FIRST CHECK - Before any logging or processing
+      if (blockWinnerScreenRef.current) {
+        console.log('🚫 BLOCKED by ref');
         return;
       }
       
-      // Check if we already showed this match
-      if (shownMatchIds.has(matchId)) {
-        console.log('⏭️ Winner already displayed for match:', matchId, '- SKIPPING');
+      if (!matchId || shownMatchIds.has(matchId)) {
+        console.log('🚫 BLOCKED by matchId');
         return;
       }
       
-      // Check if winner screen is already showing
       if (showWinnerScreen) {
-        console.log('⏭️ Winner screen already showing - SKIPPING');
+        console.log('🚫 BLOCKED - already showing');
         return;
       }
       
-      // Mark this match as shown
+      console.log('✅ game_finished PASSED all checks - Match:', matchId);
+      
+      // Mark IMMEDIATELY before any processing
       setShownMatchIds(prev => new Set([...prev, matchId]));
-      console.log('✅ Match marked as shown:', matchId);
       
-      const winnerName = data.winner_name || `${data.winner?.first_name} ${data.winner?.last_name || ''}`.trim();
-      const gameTime = new Date().toLocaleTimeString();
-      
-      // Check if current user is the winner - ROBUST CHECK
+      // Determine winner
+      const winnerName = data.winner_name || `${data.winner?.first_name || ''} ${data.winner?.last_name || ''}`.trim();
+      const gameTime = data.finished_at ? new Date(data.finished_at).toLocaleTimeString() : new Date().toLocaleTimeString();
       const isWinner = user && (
-        String(user.id) === String(data.winner_id) ||
         String(user.id) === String(data.winner?.user_id) ||
         String(user.telegram_id) === String(data.winner?.telegram_id)
       );
-      console.log('🤔 Am I the winner?', isWinner, {
-        user_id: user?.id,
-        winner_id: data.winner_id,
-        winner_user_id: data.winner?.user_id
-      });
       
-      // FORCE CLOSE ALL OTHER SCREENS AGGRESSIVELY
-      console.log('🚪🚪🚪 game_finished: CLOSING ALL SCREENS');
-      console.log('BEFORE game_finished:', { inLobby, showGetReady, showWinnerScreen, gameInProgress });
-      
+      // FORCE CLOSE ALL OTHER SCREENS
       setGameInProgress(false);
       setCurrentGameData(null);
       setInLobby(false);
       setLobbyData(null);
       setActiveRoom(null);
-      setShowGetReady(false); // Make sure GET READY is hidden
+      setShowGetReady(false);
       showGetReadyRef.current = false;
       
-      console.log('✅ All screens closed, preparing winner screen');
-      
-      // Reload bonus status to ensure it's visible on return to main screen
-      loadWelcomeBonusStatus();
-      
-      // Prepare winner data with ALL needed fields
+      // Prepare winner data
       const winnerInfo = {
         winner: data.winner,
         winner_name: winnerName,
@@ -802,7 +776,7 @@ function App() {
         prize_link: data.prize_link,
         is_winner: isWinner,
         game_time: gameTime,
-        match_id: matchId  // Use match_id instead of game_id
+        match_id: matchId
       };
       
       // Set winner screen state
@@ -810,13 +784,9 @@ function App() {
       setShowWinnerScreen(true);
       setWinnerDisplayedForGame(matchId);
       
-      console.log('✅ Winner screen displayed for match:', matchId);
+      console.log('✅ Winner screen displayed');
       
-      // Removed toasts - winner screen is enough
-      
-      // Refresh data
-      loadRooms();
-      loadGameHistory();
+      // DON'T reload rooms/history here - do it after redirect_home
       if (user) loadUserPrizes();
     });
 
