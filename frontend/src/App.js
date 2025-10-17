@@ -356,76 +356,12 @@ function App() {
     };
   }, [inLobby, lobbyData]);
 
-  // Global winner detection for ALL users (even if not in lobby)
+  // DISABLED - Socket.IO handles winner detection now
+  // Old polling fallback code removed to prevent duplicate winner screens
   useEffect(() => {
-    let globalWinnerCheckInterval;
-    
-    // Only start global checking if user is authenticated
-    if (user && user.telegram_id) {
-      console.log('🌐 Starting global winner detection for user:', user.first_name);
-      
-      const checkForGlobalWinners = async () => {
-        try {
-          // Check for very recent completed games (last 30 seconds for better coverage)
-          const response = await axios.get(`${API}/game-history?limit=10`);
-          const games = response.data.games;
-          
-          console.log(`🔍 Global winner check - Found ${games.length} recent games for ${user.first_name}`);
-          
-          const veryRecentGame = games.find(game => 
-            game.status === 'finished' &&
-            new Date(game.finished_at) > new Date(Date.now() - 30000) // Last 30 seconds (increased)
-          );
-          
-          if (veryRecentGame) {
-            console.log('⏰ Recent completed game found:', {
-              gameId: veryRecentGame.id,
-              finishedAt: veryRecentGame.finished_at,
-              secondsAgo: (Date.now() - new Date(veryRecentGame.finished_at)) / 1000,
-              showWinnerScreen: showWinnerScreen
-            });
-            
-            if (!showWinnerScreen) {
-              console.log('🌟 GLOBAL WINNER DETECTED! Checking participation...');
-              
-              // Check if current user was in this game
-              const userWasInGame = veryRecentGame.players?.some(p => {
-                const match = p.telegram_id === user.telegram_id || p.user_id === user.id;
-                console.log(`🔍 Checking player ${p.first_name} (telegram_id: ${p.telegram_id}, user_id: ${p.user_id}) vs current user (telegram_id: ${user.telegram_id}, id: ${user.id}): ${match}`);
-                return match;
-              });
-              
-              console.log(`👥 User participation check: ${userWasInGame ? 'PARTICIPATED' : 'NOT PARTICIPATED'}`);
-              
-              if (userWasInGame) {
-                console.log('🎯 Current user participated in this game! Showing winner screen on ALL devices...');
-                await broadcastWinnerToAllPlayers(veryRecentGame, veryRecentGame.room_type);
-              } else {
-                console.log('ℹ️ User was not in this game, skipping winner screen');
-              }
-            } else {
-              console.log('ℹ️ Winner screen already showing, skipping...');
-            }
-          } else {
-            console.log('⏳ No recent completed games found (last 30 seconds)');
-          }
-          
-        } catch (error) {
-          console.error('Global winner check error:', error);
-        }
-      };
-      
-      // Check every 2 seconds for global winners
-      globalWinnerCheckInterval = setInterval(checkForGlobalWinners, 2000);
-    }
-    
-    return () => {
-      if (globalWinnerCheckInterval) {
-        console.log('🧹 Cleaning up global winner detection');
-        clearInterval(globalWinnerCheckInterval);
-      }
-    };
-  }, [user, showWinnerScreen]);
+    // Socket.IO game_finished event handles all winner detection
+    // No polling needed
+  }, [user]);
 
   // Mobile detection - force mobile for Telegram WebApp
   useEffect(() => {
