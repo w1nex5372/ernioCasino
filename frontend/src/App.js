@@ -810,23 +810,11 @@ function App() {
       // Set winner screen state
       setWinnerData(winnerInfo);
       setShowWinnerScreen(true);
-      setWinnerDisplayedForGame(matchId);  // Use match_id
+      setWinnerDisplayedForGame(matchId);
       
       console.log('✅ Winner screen displayed for match:', matchId);
-      console.log('✅ Winner screen displayed for game:', gameId, '(stored in sessionStorage)');
       
-      // Toast notification for everyone (no token amounts)
-      if (isWinner) {
-        toast.success(`🎉 Congratulations, You Won!`, {
-          duration: 5000,
-          style: { background: '#22c55e', color: 'white', fontSize: '18px', fontWeight: 'bold' }
-        });
-      } else {
-        toast.info(`🏆 ${winnerName} won the game!`, {
-          duration: 5000,
-          style: { background: '#3b82f6', color: 'white', fontSize: '16px' }
-        });
-      }
+      // Removed toasts - winner screen is enough
       
       // Refresh data
       loadRooms();
@@ -836,7 +824,7 @@ function App() {
 
     newSocket.on('prize_won', (data) => {
       console.log('🎉 Prize won:', data);
-      toast.success('🎉 Congratulations! You won a prize!');
+      // Removed toast - silent prize notification
       if (user) loadUserPrizes();
     });
 
