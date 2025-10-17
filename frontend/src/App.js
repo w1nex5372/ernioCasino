@@ -752,12 +752,17 @@ function App() {
       console.log('Room:', data.room_type);
       console.log('Match ID:', data.match_id);
       console.log('Winner:', data.winner_name);
-      console.log('Timestamp:', data.finished_at);
+      
+      // CRITICAL: Block winner screen if redirect_home was already called
+      if (blockWinnerScreenRef.current) {
+        console.log('🚫 Winner screen BLOCKED - redirect_home already processed');
+        return;
+      }
       
       // CRITICAL: Use match_id to prevent duplicates
       const matchId = data.match_id;
       if (!matchId) {
-        console.error('❌ No match_id in game_finished event - cannot track duplicates');
+        console.error('❌ No match_id in game_finished event');
         return;
       }
       
@@ -767,9 +772,9 @@ function App() {
         return;
       }
       
-      // Check if winner screen is already showing - prevents double display
+      // Check if winner screen is already showing
       if (showWinnerScreen) {
-        console.log('⏭️ Winner screen already showing - SKIPPING duplicate event');
+        console.log('⏭️ Winner screen already showing - SKIPPING');
         return;
       }
       
