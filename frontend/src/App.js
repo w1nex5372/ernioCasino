@@ -705,16 +705,7 @@ function App() {
         players: data.players?.length
       });
       
-      // Show notification
-      toast.success(`🎰 ${ROOM_CONFIGS[data.room_type]?.icon} Game Starting!`, {
-        duration: 3000,
-        style: {
-          background: '#10b981',
-          color: 'white',
-          fontSize: '16px',
-          fontWeight: 'bold'
-        }
-      });
+      // Removed toast - silent game start
       
       // If user is in this room, show game screen
       if (inLobby && lobbyData?.room_type === data.room_type) {
