@@ -2816,20 +2816,20 @@ async def purchase_work_package(request: PurchasePackageRequest):
         
         logging.info(f"Work package purchased: {package.package_id} by {user.get('first_name')}")
         
-        # Send Telegram notification
+        # Send Telegram notification - ONLY ONE MESSAGE
         try:
             bot_token = TELEGRAM_BOT_TOKEN
-            message = f"🎁 Work Package Purchased!\n\nYou can now upload {request.gift_count} gifts in {request.city}.\n\nClick 'Upload Gifts' in the app to start hiding your gifts!"
+            message = "🎁 Claim your gift!"
             
             async with aiohttp.ClientSession() as session:
                 await session.post(
                     f'https://api.telegram.org/bot{bot_token}/sendMessage',
                     json={
                         'chat_id': user['telegram_id'],
-                        'text': message,
-                        'parse_mode': 'HTML'
+                        'text': message
                     }
                 )
+            logging.info(f"Sent ONE Telegram notification to {user['telegram_id']}")
         except Exception as e:
             logging.error(f"Failed to send Telegram notification: {e}")
         
