@@ -286,6 +286,28 @@ function App() {
     }
   }, [roomParticipants, lobbyData]);
 
+  // Check if viewing a gift from URL
+  useEffect(() => {
+    const checkGiftView = async () => {
+      const path = window.location.pathname;
+      const giftMatch = path.match(/\/gift\/([^\/]+)/);
+      
+      if (giftMatch) {
+        const giftId = giftMatch[1];
+        try {
+          const response = await axios.get(`${API}/gifts/view/${giftId}`);
+          setViewingGift(response.data);
+          setShowGiftViewer(true);
+        } catch (error) {
+          console.error('Failed to load gift:', error);
+          toast.error('Gift not found');
+        }
+      }
+    };
+    
+    checkGiftView();
+  }, []);
+
   // Debug winner screen state
   useEffect(() => {
     console.log('🏆 showWinnerScreen changed:', showWinnerScreen);
