@@ -6,7 +6,7 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: initialTokenAmount, initialEurAmount }) {
+export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: initialTokenAmount, initialEurAmount, onConfirm, isWorkPurchase = false }) {
   const [paymentData, setPaymentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
