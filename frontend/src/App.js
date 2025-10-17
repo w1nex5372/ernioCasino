@@ -264,6 +264,7 @@ function App() {
   const [hasWorkAccess, setHasWorkAccess] = useState(false); // Has user purchased work access
   const [showWorkModal, setShowWorkModal] = useState(false); // Show work access purchase modal
   const [showGiftUploadForm, setShowGiftUploadForm] = useState(false); // Show gift upload form
+  const [isWorkPurchase, setIsWorkPurchase] = useState(false); // Track if current payment is for work access
   const [giftPhoto, setGiftPhoto] = useState(null); // Base64 photo for gift
   const [giftLat, setGiftLat] = useState('');
   const [giftLng, setGiftLng] = useState('');
