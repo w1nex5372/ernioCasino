@@ -462,9 +462,7 @@ async def send_gift_notification(telegram_id: int, username: str, gift_data: dic
     try:
         if gift_data:
             # Gift is available
-            message = f"🎉 <b>Congratulations {username}!</b>\n\n"
-            message += "🎁 <b>You won a special gift!</b>\n\n"
-            message += f"📍 Location: {gift_data['city']}\n"
+            message = "🎁 Congratulations, you won a gift!"
             
             # Get app domain from environment
             app_domain = os.environ.get('REACT_APP_BACKEND_URL', 'https://casino-worker.preview.emergentagent.com').replace('/api', '')
