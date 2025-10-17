@@ -3254,10 +3254,10 @@ function App() {
             <CardContent className="space-y-4">
               <div className="text-center py-4">
                 <div className="text-5xl mb-2">🎁</div>
-                <h3 className="text-2xl font-bold text-yellow-400 mb-2">1000 Tokens</h3>
-                <p className="text-slate-300 text-sm">(~10 EUR via Solana)</p>
+                <h3 className="text-2xl font-bold text-yellow-400 mb-2">1.5 EUR</h3>
+                <p className="text-slate-300 text-sm">(Payment via Solana)</p>
                 <p className="text-slate-400 text-xs mt-4">
-                  This is a one-time access fee. No tokens will be deducted from your balance.
+                  This is a one-time access fee to start working for the casino.
                 </p>
               </div>
               <Button
