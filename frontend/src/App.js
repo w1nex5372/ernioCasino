@@ -3434,11 +3434,11 @@ function App() {
                   </div>
                   
                   <Button
-                    onClick={() => handlePackageSelection(10, 1.5)}
+                    onClick={() => handlePackageSelection(10, 100)}
                     className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900"
                   >
                     <span className="text-2xl font-bold">10 Gifts</span>
-                    <span className="text-sm">1.5 EUR (in SOL)</span>
+                    <span className="text-sm">100 EUR (in SOL)</span>
                   </Button>
                   
                   <Button
