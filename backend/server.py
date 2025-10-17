@@ -155,8 +155,8 @@ sio = socketio.AsyncServer(
     cors_allowed_origins="*",
     logger=True,
     engineio_logger=True,
-    async_mode='asgi',
-    engineio_path='/api/socket.io'  # Must match ingress routing
+    async_mode='asgi'
+    # engineio_path is set via ASGIApp's socketio_path parameter
 )
 
 # FastAPI app
