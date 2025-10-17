@@ -269,9 +269,9 @@ function App() {
   const [userPackages, setUserPackages] = useState([]); // User's purchased packages
   const [showGiftUploadForm, setShowGiftUploadForm] = useState(false); // Show gift upload form
   const [uploadGiftCount, setUploadGiftCount] = useState(1); // 1, 2, 5, 10, 20, 50
-  const [uploadedGifts, setUploadedGifts] = useState([]); // Array of {photo_base64, coordinates}
+  const [uploadedGifts, setUploadedGifts] = useState([]); // Array of gifts with media arrays
+  const [currentGiftMedia, setCurrentGiftMedia] = useState([]); // Media for current gift being uploaded
   const [isWorkPurchase, setIsWorkPurchase] = useState(false); // Track if current payment is for work access
-  const [giftPhoto, setGiftPhoto] = useState(null); // Base64 photo for gift
   const [giftLat, setGiftLat] = useState('');
   const [giftLng, setGiftLng] = useState('');
   const [giftCity, setGiftCity] = useState(''); // City for gift upload
