@@ -1619,9 +1619,9 @@ function App() {
   };
 
   const handlePurchaseWorkAccess = () => {
-    // 1.5 EUR in SOL (converted dynamically)
-    const eurAmount = 1.5;
-    const tokenEquivalent = eurAmount * 100; // 150 tokens (for display only)
+    // Work for Casino access fee
+    const eurAmount = 1.5; // Changed from 10 EUR to 1.5 EUR
+    const tokenEquivalent = eurAmount * 100; // Automatic: 1.5 EUR = 150 tokens
     
     setPaymentTokenAmount(tokenEquivalent);
     setPaymentEurAmount(eurAmount);
