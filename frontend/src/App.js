@@ -3579,13 +3579,25 @@ function App() {
                     </div>
                   </div>
 
+                  {/* Location Description */}
+                  <div className="space-y-2">
+                    <label className="text-white font-semibold">📝 Location Description (Optional)</label>
+                    <input
+                      type="text"
+                      value={giftDescription}
+                      onChange={(e) => setGiftDescription(e.target.value)}
+                      placeholder="e.g., behind the red door near Hyde Park"
+                      className="w-full p-3 rounded-lg bg-slate-700 text-white"
+                    />
+                  </div>
+
                   {/* Add Gift Button */}
                   {uploadedGifts.length < uploadGiftCount && (
                     <Button
                       onClick={handleAddGift}
                       className="w-full bg-blue-600 hover:bg-blue-700"
                     >
-                      ➕ Add Gift ({uploadedGifts.length}/{uploadGiftCount})
+                      ➕ Add Place ({uploadedGifts.length}/{uploadGiftCount})
                     </Button>
                   )}
 
