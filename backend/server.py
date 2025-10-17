@@ -2783,5 +2783,6 @@ async def shutdown_event():
     payment_monitor.monitoring = False
     logging.info("🛑 Casino Battle Royale API shutting down")
 
-# Export the socket app for uvicorn
-app = socket_app
+# Export the FastAPI app (not socket_app anymore)
+# Socket.IO is now mounted at /api/io
+app_export = app
