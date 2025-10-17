@@ -313,6 +313,22 @@ class UploadGiftRequest(BaseModel):
     photo_base64: str
     coordinates: Dict[str, float]  # {"lat": 48.8566, "lng": 2.3522}
 
+class PurchasePackageRequest(BaseModel):
+    user_id: str
+    city: str  # London or Paris
+    gift_count: int  # 10, 20, or 50
+    paid_amount_eur: float  # 100, 180, or 400
+    payment_signature: str
+
+class BulkUploadGiftsRequest(BaseModel):
+    user_id: str
+    gifts: List[Dict[str, Any]]  # List of {photo_base64, coordinates}
+    gift_count_per_upload: int  # 1, 2, 5, 10, 20, or 50
+
+class ConfirmDeliveryRequest(BaseModel):
+    gift_id: str
+    winner_user_id: str
+
 # In-memory storage for active rooms (in production, use Redis)
 active_rooms: Dict[str, GameRoom] = {}
 
