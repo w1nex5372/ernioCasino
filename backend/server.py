@@ -2663,9 +2663,10 @@ app.add_middleware(
 )
 
 # Create Socket.IO ASGI app with custom path
+# socketio_path='/' means the Socket.IO server will handle requests at the mounted path
 sio_app = socketio.ASGIApp(
     socketio_server=sio,
-    socketio_path='/socket.io'  # Socket.IO internal path
+    socketio_path='/'  # Root path relative to mount point
 )
 
 # Mount Socket.IO at /api/socket.io (matches ingress routing and frontend client path)
