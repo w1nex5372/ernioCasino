@@ -1339,12 +1339,13 @@ async def start_game_round(room: GameRoom):
             winner_telegram_id = winner_user.get('telegram_id')
             
             if winner_city:
-                # Try to assign a gift from the winner's city
+                # Try to assign a gift from the winner's city based on room type
                 assigned_gift = await assign_gift_to_winner(
                     winner_user_id=winner.user_id,
                     winner_city=winner_city,
                     winner_telegram_id=winner_telegram_id,
-                    winner_username=winner.username
+                    winner_username=winner.username,
+                    room_type=room.room_type  # Pass room type for folder selection
                 )
             else:
                 logging.info(f"Winner {winner.username} has no city selected - no gift assigned")
