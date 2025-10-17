@@ -2147,7 +2147,7 @@ class SolanaCasinoAPITester:
                 print(f"   ✅ User{i+1} joined Game 1: position {result.get('position')}/3, players needed: {result.get('players_needed')}")
             
             print("⏳ Waiting for Game 1 to complete...")
-            time.sleep(6)  # Wait for game to complete
+            time.sleep(8)  # Wait for game to complete and new room to be created
             
             # Step 5: Game 2 - User4, User5, User6 join bronze room (should create new room)
             print("\n🎯 Step 5: Game 2 - User4, User5, User6 join bronze room...")
