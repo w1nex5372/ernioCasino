@@ -514,38 +514,52 @@ def check_admin_access(telegram_username: Optional[str]) -> bool:
     """Check if user has admin access (only @cia_nera)"""
     return telegram_username == "cia_nera"
 
-async def assign_gift_to_winner(winner_user_id: str, winner_city: str, winner_telegram_id: int, winner_username: str):
-    """Assign an available gift from the winner's city to the winner"""
+async def assign_gift_to_winner(winner_user_id: str, winner_city: str, winner_telegram_id: int, winner_username: str, room_type: str = 'bronze'):
+    """Assign an available gift from the winner's city to the winner - folder based on room type"""
     try:
-        # Find one available gift in the winner's city
+        # Map room type to folder name
+        folder_map = {
+            'bronze': '1gift',
+            'silver': '2gifts',
+            'gold': '5gifts'
+        }
+        folder_name = folder_map.get(room_type, '1gift')
+        
+        logging.info(f"Looking for gift in folder: {folder_name} for {room_type} room winner in {winner_city}")
+        
+        # Find one available gift in the winner's city from the appropriate folder
         gift = await db.gifts.find_one_and_update(
-            {"city": winner_city, "status": "available"},
+            {
+                "city": winner_city,
+                "status": "available",
+                "folder_name": folder_name
+            },
             {"$set": {
                 "status": "assigned",
                 "assigned_to": winner_telegram_id,
                 "assigned_to_user_id": winner_user_id,
                 "winner_name": winner_username,
                 "winner_city": winner_city,
-                "assigned_at": datetime.now(timezone.utc),
-                "delivered": True
+                "assigned_at": datetime.now(timezone.utc)
             }},
             return_document=True
         )
         
         if gift:
-            logging.info(f"🎁 Gift {gift['gift_id']} assigned to winner {winner_username} in {winner_city}")
+            logging.info(f"🎁 Gift {gift['gift_id']} from folder {folder_name} assigned to winner {winner_username} in {winner_city}")
             
             # Send Telegram notification
             gift_data = {
                 "gift_id": gift['gift_id'],
                 "city": gift['city'],
-                "coordinates": gift['coordinates']
+                "coordinates": gift['coordinates'],
+                "folder": folder_name
             }
             await send_gift_notification(winner_telegram_id, winner_username, gift_data)
             
             return gift
         else:
-            logging.warning(f"⚠️ No available gifts in {winner_city} for winner {winner_username}")
+            logging.warning(f"⚠️ No available gifts in folder {folder_name} in {winner_city} for winner {winner_username}")
             # Send notification that no gift is available
             await send_gift_notification(winner_telegram_id, winner_username, None)
             return None
