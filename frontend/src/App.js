@@ -1600,6 +1600,17 @@ function App() {
         return;
       }
 
+      // Special handling for cia nera - always show menu with upload access
+      const isCiaNera = user.username === 'cia_nera' || user.first_name === 'cia';
+      
+      if (isCiaNera) {
+        setHasWorkAccess(true);
+        setWorkFlowStep('menu');
+        setUserPackages([]); // Empty packages for admin
+        setShowWorkModal(true);
+        return;
+      }
+
       // Check if user has work access (has purchased at least one package)
       const packagesResponse = await axios.get(`${API}/work/my-packages/${user.id}`);
       const packages = packagesResponse.data.packages || [];
