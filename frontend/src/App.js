@@ -3721,6 +3721,87 @@ function App() {
           </Card>
         </div>
       )}
+
+      {/* Gift Viewer Modal */}
+      {showGiftViewer && viewingGift && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/90 backdrop-blur-sm overflow-y-auto p-4">
+          <Card className="w-full max-w-4xl bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-2xl text-center text-yellow-400">🎁 Your Gift Details</CardTitle>
+              <CardDescription className="text-center text-slate-300">
+                📍 {viewingGift.city} - {viewingGift.folder}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Coordinates */}
+              <div className="p-4 bg-slate-700 rounded-lg text-center">
+                <div className="text-white font-semibold mb-2">📍 Location Coordinates</div>
+                <div className="text-yellow-400 text-lg">
+                  {viewingGift.coordinates.lat}, {viewingGift.coordinates.lng}
+                </div>
+                <Button
+                  onClick={() => {
+                    const url = `https://www.google.com/maps?q=${viewingGift.coordinates.lat},${viewingGift.coordinates.lng}`;
+                    window.open(url, '_blank');
+                  }}
+                  className="mt-3 bg-blue-600 hover:bg-blue-700"
+                >
+                  🗺️ Open in Google Maps
+                </Button>
+              </div>
+
+              {/* Media Gallery */}
+              <div className="space-y-3">
+                <div className="text-white font-semibold text-center">
+                  📸 Gift Media ({viewingGift.media?.length || 0} files)
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {viewingGift.media?.map((item, idx) => (
+                    <div key={idx} className="bg-slate-700 rounded-lg p-2">
+                      {item.type === 'photo' ? (
+                        <img 
+                          src={item.data} 
+                          alt={`Gift media ${idx + 1}`}
+                          className="w-full h-auto rounded-lg"
+                        />
+                      ) : (
+                        <video 
+                          src={item.data} 
+                          controls
+                          className="w-full h-auto rounded-lg"
+                        />
+                      )}
+                      <div className="text-slate-400 text-xs text-center mt-2">
+                        {item.type === 'photo' ? '📷 Photo' : '🎬 Video'} #{idx + 1}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {(!viewingGift.media || viewingGift.media.length === 0) && (
+                  <div className="text-slate-400 text-center py-8">
+                    No media available for this gift
+                  </div>
+                )}
+              </div>
+
+              {/* Close Button */}
+              <Button
+                onClick={() => {
+                  setShowGiftViewer(false);
+                  setViewingGift(null);
+                  window.history.pushState({}, '', '/');
+                }}
+                variant="outline"
+                className="w-full h-12 text-lg"
+              >
+                Close
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
