@@ -204,7 +204,8 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
               setTimeout(() => {
                 window.location.reload();
               }, 500);
-          }, 2000);
+            }, 2000);
+          }
         }
       } catch (error) {
         console.error('Status check error:', error);
