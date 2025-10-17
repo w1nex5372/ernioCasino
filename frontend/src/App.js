@@ -274,6 +274,7 @@ function App() {
   const [isWorkPurchase, setIsWorkPurchase] = useState(false); // Track if current payment is for work access
   const [giftLat, setGiftLat] = useState('');
   const [giftLng, setGiftLng] = useState('');
+  const [giftDescription, setGiftDescription] = useState(''); // Location description
   const [giftCity, setGiftCity] = useState(''); // City for gift upload
   const [viewingGift, setViewingGift] = useState(null); // Gift being viewed
   const [showGiftViewer, setShowGiftViewer] = useState(false);
