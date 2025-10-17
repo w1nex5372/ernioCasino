@@ -1626,6 +1626,7 @@ function App() {
     
     setPaymentTokenAmount(tokenEquivalent);
     setPaymentEurAmount(eurAmount);
+    setIsWorkPurchase(true); // Mark this as work purchase
     setShowWorkModal(false);
     setShowPaymentModal(true);
     
