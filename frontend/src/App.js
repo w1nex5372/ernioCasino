@@ -3505,22 +3505,21 @@ function App() {
                     </select>
                   </div>
 
-                  {/* Photo Upload */}
+                  {/* Photo/Video Upload */}
                   <div className="space-y-2">
-                    <label className="text-white font-semibold">📸 Gift Photo</label>
+                    <label className="text-white font-semibold">📸📹 Add Photos/Videos</label>
                     <input
                       type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => setGiftPhoto(reader.result);
-                          reader.readAsDataURL(file);
-                        }
-                      }}
+                      accept="image/*,video/*"
+                      multiple
+                      onChange={handleAddMedia}
                       className="w-full p-2 rounded-lg bg-slate-700 text-white"
                     />
+                    {currentGiftMedia.length > 0 && (
+                      <div className="text-green-400 text-sm">
+                        ✓ {currentGiftMedia.length} file(s) added
+                      </div>
+                    )}
                   </div>
 
                   {/* Coordinates */}
