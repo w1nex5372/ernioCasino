@@ -267,7 +267,7 @@ class Gift(BaseModel):
     creator_telegram_id: int
     creator_username: Optional[str] = None
     city: str  # London or Paris
-    photo_base64: str  # Base64 encoded photo
+    media: List[Dict[str, str]] = Field(default_factory=list)  # [{"type": "photo|video", "data": "base64..."}]
     coordinates: Dict[str, float]  # {"lat": 48.8566, "lng": 2.3522}
     folder_name: str  # 1gift, 2gifts, 5gifts, 10gifts, 20gifts, 50gifts
     package_id: Optional[str] = None  # Reference to work package purchase
