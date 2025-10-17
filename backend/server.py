@@ -538,10 +538,10 @@ async def assign_gift_to_winner(winner_user_id: str, winner_city: str, winner_te
             {
                 "city": winner_city,
                 "status": "available",
-                "folder_name": folder_name
+                "gift_type": folder_name
             },
             {"$set": {
-                "status": "assigned",
+                "status": "used",  # Mark as used immediately
                 "assigned_to": winner_telegram_id,
                 "assigned_to_user_id": winner_user_id,
                 "winner_name": winner_username,
