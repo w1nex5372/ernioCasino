@@ -1393,6 +1393,9 @@ async def start_game_round(room: GameRoom):
     except Exception as e:
         logging.error(f"Failed to save completed game: {e}")
     
+    # Wait a moment before cleaning up room to ensure redirect_home is processed
+    await asyncio.sleep(0.5)
+    
     # Remove room from active rooms and create new one
     if room.id in active_rooms:
         del active_rooms[room.id]
@@ -1404,15 +1407,19 @@ async def start_game_round(room: GameRoom):
     )
     active_rooms[new_room.id] = new_room
     
-    # Notify clients about new room
+    logging.info(f"🆕 Created new {room.room_type} room {new_room.id}, round #{new_room.round_number}")
+    
+    # Notify clients about new room (global broadcast)
     await sio.emit('new_room_available', {
         'room_id': new_room.id,
         'room_type': new_room.room_type,
         'round_number': new_room.round_number
     })
     
-    # Broadcast updated room states
+    # Broadcast updated room states (global broadcast)
     await broadcast_room_updates()
+    
+    logging.info(f"✅ Game cycle complete for {room.room_type} room")
 
 # Initialize rooms
 def initialize_rooms():
