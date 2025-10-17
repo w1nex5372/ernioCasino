@@ -902,31 +902,30 @@ function App() {
     // NEW EVENT: redirect_home - Backend signals all players to return to home
     newSocket.on('redirect_home', (data) => {
       console.log('🟢🟢🟢 EVENT: redirect_home RECEIVED 🟢🟢🟢');
-      console.log('User:', user?.first_name || 'Unknown');
       console.log('Match ID:', data.match_id);
-      console.log('Message:', data.message);
-      console.log('BEFORE - inLobby:', inLobby, 'showWinner:', showWinnerScreen, 'gameInProgress:', gameInProgress);
+      
+      // CRITICAL: Block any future winner screens from this game
+      blockWinnerScreenRef.current = true;
+      console.log('🚫 Winner screen BLOCKED for future events');
       
       // FORCE RESET ALL GAME STATE IMMEDIATELY
       console.log('🏠🏠🏠 FORCING HOME SCREEN RETURN 🏠🏠🏠');
       
-      // Mark this match as fully processed to prevent any late duplicate events
+      // Mark this match as fully processed
       if (data.match_id) {
         setShownMatchIds(prev => new Set([...prev, data.match_id]));
-        console.log('🔒 Match locked:', data.match_id);
       }
       
       // Batch all state updates together
-      console.log('Clearing ALL game state...');
       setShowWinnerScreen(false);
       setWinnerData(null);
-      setInLobby(false);  // CRITICAL: Hide lobby
+      setInLobby(false);
       setLobbyData(null);
       setGameInProgress(false);
       setActiveRoom(null);
       setRoomParticipants({});
-      setShowGetReady(false);  // Ensure GET READY is also hidden
-      setForceHideLobby(false);  // Reset flag so user can join new rooms
+      setShowGetReady(false);
+      setForceHideLobby(false);
       setActiveTab('rooms');
       
       console.log('AFTER - inLobby:', false, 'showWinner:', false, 'gameInProgress:', false);
