@@ -2903,25 +2903,35 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
             if not user.get('work_access_purchased'):
                 raise HTTPException(status_code=403, detail="Work access not purchased")
             
-            # Find an active package with remaining upload slots
+            # Find an active package with remaining credits
             active_package = await db.work_packages.find_one({
                 "user_id": request.user_id,
-                "$expr": {"$lt": ["$gifts_uploaded", "$gift_count"]}
+                "gift_credits_remaining": {"$gt": 0}
             })
             
             if not active_package:
-                raise HTTPException(status_code=400, detail="No active package with remaining slots. Purchase a new package.")
+                raise HTTPException(status_code=400, detail="No remaining gift credits. Purchase a new package.")
             
-            # Check if user has enough slots
-            remaining_slots = active_package['gift_count'] - active_package.get('gifts_uploaded', 0)
-            if len(request.gifts) > remaining_slots:
-                raise HTTPException(status_code=400, detail=f"Only {remaining_slots} slots remaining in package")
+            # Calculate credit cost based on gift type
+            # 1gift = 1 credit, 2gifts = 2 credits, 5gifts = 5 credits, etc.
+            credit_cost_per_gift = request.gift_count_per_upload
+            total_credits_needed = len(request.gifts) * credit_cost_per_gift
+            
+            remaining_credits = active_package.get('gift_credits_remaining', 0)
+            if total_credits_needed > remaining_credits:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Not enough credits. Need {total_credits_needed}, have {remaining_credits}. " +
+                           f"(Each {request.gift_count_per_upload}-gift upload costs {credit_cost_per_gift} credits)"
+                )
         else:
             # For cia nera, no package restrictions
             active_package = None
-            remaining_slots = 999999  # Unlimited
+            remaining_credits = 999999  # Unlimited
+            credit_cost_per_gift = 0
+            total_credits_needed = 0
         
-        # Create gift documents
+        # Create gift documents with media array
         gift_ids = []
         for gift_data in request.gifts:
             gift = Gift(
@@ -2929,7 +2939,7 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
                 creator_telegram_id=user['telegram_id'],
                 creator_username=user.get('username'),
                 city=user.get('city', 'London'),
-                photo_base64=gift_data['photo_base64'],
+                media=gift_data.get('media', []),  # Array of media objects
                 coordinates=gift_data['coordinates'],
                 folder_name=folder_name,
                 package_id=active_package['package_id'] if active_package else None
@@ -2941,21 +2951,27 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
             await db.gifts.insert_one(gift_dict)
             gift_ids.append(gift.gift_id)
         
-        # Update package upload count (only for non-admin users)
+        # Update package: deduct credits and increment upload count (only for non-admin users)
         if active_package:
             await db.work_packages.update_one(
                 {"package_id": active_package['package_id']},
-                {"$inc": {"gifts_uploaded": len(request.gifts)}}
+                {
+                    "$inc": {
+                        "gifts_uploaded": len(request.gifts),
+                        "gift_credits_remaining": -total_credits_needed
+                    }
+                }
             )
         
-        logging.info(f"{len(request.gifts)} gifts uploaded by {user.get('first_name')} to {folder_name}")
+        logging.info(f"{len(request.gifts)} gifts uploaded by {user.get('first_name')} to {folder_name}, used {total_credits_needed} credits")
         
         return {
             "success": True,
             "uploaded_count": len(request.gifts),
             "gift_ids": gift_ids,
             "folder": folder_name,
-            "remaining_slots": remaining_slots - len(request.gifts)
+            "credits_used": total_credits_needed,
+            "remaining_credits": remaining_credits - total_credits_needed if not is_cia_nera else 999999
         }
         
     except HTTPException:
