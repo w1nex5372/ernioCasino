@@ -1160,9 +1160,10 @@ async def start_game_round(room: GameRoom):
     # Generate unique match ID for this game
     match_id = str(uuid.uuid4())[:12]  # Short unique ID
     logging.info(f"🎮 Starting game round for room {room.id}, match_id: {match_id}")
+    logging.info(f"👥 Players in room: {[p.username for p in room.players]}")
     
     # CRITICAL: Wait for ALL 3 sockets to actually join the room
-    max_wait_time = 3.0  # Maximum 3 seconds to wait
+    max_wait_time = 5.0  # Maximum 5 seconds to wait (increased)
     wait_interval = 0.2   # Check every 200ms
     elapsed = 0.0
     
@@ -1170,8 +1171,16 @@ async def start_game_round(room: GameRoom):
         socket_count = socket_rooms.get_room_socket_count(room.id)
         sockets_in_room = socket_rooms.room_to_sockets.get(room.id, set())
         
-        logging.info(f"⏱️ Checking sockets in room {room.id}: {socket_count}/3")
+        logging.info(f"⏱️ [{elapsed:.1f}s] Checking sockets in room {room.id}: {socket_count}/3")
         logging.info(f"📋 Socket IDs in room: {[sid[:8] for sid in sockets_in_room]}")
+        
+        # Check which user IDs are mapped to sockets
+        users_with_sockets = []
+        for player in room.players:
+            if player.user_id in user_to_socket:
+                sid = user_to_socket[player.user_id]
+                users_with_sockets.append(f"{player.username}={sid[:8]}")
+        logging.info(f"👥 Users with socket mapping: {users_with_sockets}")
         
         if socket_count >= 3:
             logging.info(f"✅ All 3 sockets confirmed in room {room.id}!")
