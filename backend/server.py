@@ -985,13 +985,25 @@ async def disconnect(sid):
                 room.players.remove(player_left)
                 logging.info(f"👋 Player {player_left.username} left room {room_id}")
                 
+                # Serialize player data
+                player_left_dict = player_left.dict()
+                if 'joined_at' in player_left_dict and isinstance(player_left_dict['joined_at'], datetime):
+                    player_left_dict['joined_at'] = player_left_dict['joined_at'].isoformat()
+                
+                remaining_players = []
+                for p in room.players:
+                    player_dict = p.dict()
+                    if 'joined_at' in player_dict and isinstance(player_dict['joined_at'], datetime):
+                        player_dict['joined_at'] = player_dict['joined_at'].isoformat()
+                    remaining_players.append(player_dict)
+                
                 # Notify remaining participants with updated FULL list
                 await socket_rooms.broadcast_to_room(sio, room_id, 'player_left', {
                     'room_id': room_id,
                     'room_type': room.room_type,
-                    'player': player_left.dict(),
+                    'player': player_left_dict,
                     'players_count': len(room.players),
-                    'all_players': [p.dict() for p in room.players],  # FULL updated list
+                    'all_players': remaining_players,  # FULL updated list
                     'timestamp': datetime.now(timezone.utc).isoformat()
                 })
                 logging.info(f"✅ Emitted player_left to room {room_id}, remaining: {len(room.players)}")
