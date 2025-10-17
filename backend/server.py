@@ -293,6 +293,7 @@ class WorkPackage(BaseModel):
     username: Optional[str] = None
     city: str  # London or Paris
     gift_count: int  # 10, 20, or 50
+    gift_credits_remaining: int  # Tracks how many gift units left (starts same as gift_count)
     paid_amount_eur: float  # 100, 180, or 400
     paid_amount_sol: Optional[float] = None
     payment_signature: str
