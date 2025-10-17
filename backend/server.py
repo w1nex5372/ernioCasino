@@ -2661,14 +2661,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create Socket.IO ASGI app (WITHOUT wrapping FastAPI)
-socket_asgi_app = socketio.ASGIApp(sio, other_asgi_app=None)
-
-# Mount Socket.IO under /api/io (NOT /api/socket.io to avoid conflicts)
-app.mount("/api/io", socket_asgi_app)
-
-# Export app (not socket_app)
-# The socket_app variable below is for backwards compatibility but we export 'app' now
+# Mount Socket.IO (wraps FastAPI app)
+socket_app = socketio.ASGIApp(sio, app)
 
 # Configure logging
 logging.basicConfig(
