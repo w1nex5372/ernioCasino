@@ -2662,8 +2662,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount Socket.IO (wraps FastAPI app)
-socket_app = socketio.ASGIApp(sio, app)
+# Mount Socket.IO as a sub-application at /api/socket.io
+# First create a Socket.IO ASGI app
+sio_asgi_app = socketio.ASGIApp(sio)
+
+# Mount Socket.IO at /api/socket.io using FastAPI's mount
+app.mount('/api/socket.io', sio_asgi_app)
+
+# Export the main app (Socket.IO is now mounted at /api/socket.io)
+socket_app = app
 
 # Configure logging
 logging.basicConfig(
