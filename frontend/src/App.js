@@ -648,8 +648,6 @@ function App() {
       
       console.log(`✅ Participant list REPLACED for ${data.room_type}`);
       // Removed toast - silent player join
-        );
-      }
       
       // Reload rooms to update lobby counts (skip if GET READY is active)
       if (!showGetReadyRef.current) {
