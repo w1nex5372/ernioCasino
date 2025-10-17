@@ -1619,10 +1619,12 @@ function App() {
   };
 
   const handlePurchaseWorkAccess = () => {
-    // Calculate token amount: 1000 tokens = ~10 EUR
-    // This is symbolic only, no tokens are deducted
-    setPaymentTokenAmount(1000);
-    setPaymentEurAmount(10);
+    // 1.5 EUR in SOL (converted dynamically)
+    const eurAmount = 1.5;
+    const tokenEquivalent = eurAmount * 100; // 150 tokens (for display only)
+    
+    setPaymentTokenAmount(tokenEquivalent);
+    setPaymentEurAmount(eurAmount);
     setShowWorkModal(false);
     setShowPaymentModal(true);
     
