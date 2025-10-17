@@ -1121,10 +1121,19 @@ async def broadcast_room_updates():
     try:
         room_data = []
         for room in active_rooms.values():
+            # Serialize player data with datetime conversion
+            serialized_players = []
+            for p in room.players:
+                player_dict = p.dict()
+                # Convert datetime fields to ISO format
+                if 'joined_at' in player_dict and isinstance(player_dict['joined_at'], datetime):
+                    player_dict['joined_at'] = player_dict['joined_at'].isoformat()
+                serialized_players.append(player_dict)
+            
             room_info = {
                 'id': room.id,
                 'room_type': room.room_type,
-                'players': [p.dict() for p in room.players],
+                'players': serialized_players,
                 'status': room.status,
                 'prize_pool': room.prize_pool,
                 'round_number': room.round_number,
@@ -1140,6 +1149,8 @@ async def broadcast_room_updates():
         
     except Exception as e:
         logging.error(f"Error broadcasting room updates: {e}")
+        import traceback
+        logging.error(traceback.format_exc())
 
 async def start_game_round(room: GameRoom):
     """Start a game round when room is full - with strict event sequence"""
