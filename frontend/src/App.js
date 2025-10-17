@@ -1744,15 +1744,17 @@ function App() {
       coordinates: {
         lat: parseFloat(giftLat),
         lng: parseFloat(giftLng)
-      }
+      },
+      description: giftDescription // Optional location description
     };
 
     setUploadedGifts([...uploadedGifts, newGift]);
     setCurrentGiftMedia([]);
     setGiftLat('');
     setGiftLng('');
+    setGiftDescription('');
     
-    toast.success(`Gift ${uploadedGifts.length + 1} added with ${currentGiftMedia.length} media file(s)`);
+    toast.success(`Place ${uploadedGifts.length + 1} added with ${currentGiftMedia.length} media file(s)`);
   };
 
   const handleAddMedia = (e) => {
