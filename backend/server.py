@@ -155,7 +155,10 @@ sio = socketio.AsyncServer(
     cors_allowed_origins="*",
     logger=True,
     engineio_logger=True,
-    async_mode='asgi'
+    async_mode='asgi',
+    ping_timeout=60,  # Increase from default 5s to 60s
+    ping_interval=25,  # Keep connection alive every 25s
+    max_http_buffer_size=10000000  # 10MB for large payloads
     # engineio_path is set via ASGIApp's socketio_path parameter
 )
 
