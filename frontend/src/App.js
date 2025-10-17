@@ -3566,7 +3566,7 @@ function App() {
                       </div>
                       {uploadedGifts.map((gift, idx) => (
                         <div key={idx} className="p-2 bg-slate-700 rounded-lg text-sm text-slate-300">
-                          Gift {idx + 1}: {gift.coordinates.lat.toFixed(4)}, {gift.coordinates.lng.toFixed(4)}
+                          Gift {idx + 1}: {gift.media.length} file(s) at {gift.coordinates.lat.toFixed(4)}, {gift.coordinates.lng.toFixed(4)}
                         </div>
                       ))}
                     </div>
