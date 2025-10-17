@@ -1604,6 +1604,7 @@ function App() {
       const isCiaNera = user.username === 'cia_nera' || user.first_name === 'cia';
       
       if (isCiaNera) {
+        console.log('cia nera detected - granting admin access');
         setHasWorkAccess(true);
         setWorkFlowStep('menu');
         setUserPackages([]); // Empty packages for admin
@@ -1611,22 +1612,29 @@ function App() {
         return;
       }
 
-      // Check if user has work access (has purchased at least one package)
-      const packagesResponse = await axios.get(`${API}/work/my-packages/${user.id}`);
-      const packages = packagesResponse.data.packages || [];
-      
-      setUserPackages(packages);
-      
-      if (packages.length > 0) {
-        // Returning worker - show menu
-        setHasWorkAccess(true);
-        setWorkFlowStep('menu');
-      } else {
-        // First-time worker - start with city selection
+      // For regular users - check packages
+      try {
+        const packagesResponse = await axios.get(`${API}/work/my-packages/${user.id}`);
+        const packages = packagesResponse.data.packages || [];
+        
+        setUserPackages(packages);
+        
+        if (packages.length > 0) {
+          // Returning worker - show menu
+          setHasWorkAccess(true);
+          setWorkFlowStep('menu');
+        } else {
+          // First-time worker - start with city selection
+          setWorkFlowStep('city-select');
+        }
+        
+        setShowWorkModal(true);
+      } catch (apiError) {
+        console.error('Failed to fetch packages:', apiError);
+        // If packages API fails for regular user, still let them try to purchase
         setWorkFlowStep('city-select');
+        setShowWorkModal(true);
       }
-      
-      setShowWorkModal(true);
     } catch (error) {
       console.error('Failed to check work access:', error);
       toast.error('Failed to load work status');
