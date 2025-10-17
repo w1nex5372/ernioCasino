@@ -236,6 +236,10 @@ function App() {
   const blockWinnerScreenRef = React.useRef(false); // Block winner screen after redirect_home
   const [forceHideLobby, setForceHideLobby] = useState(false); // Force hide lobby after redirect
   
+  // City selection
+  const [showCitySelector, setShowCitySelector] = useState(false);
+  const [giftsAvailable, setGiftsAvailable] = useState(true);
+  
   // UI state
   const [activeTab, setActiveTab] = useState('rooms');
   const [isMobile, setIsMobile] = useState(false);
