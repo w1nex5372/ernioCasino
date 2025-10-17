@@ -2239,6 +2239,19 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
     if user_doc.get('token_balance', 0) < request.bet_amount:
         raise HTTPException(status_code=400, detail="Insufficient token balance")
     
+    # Check if user has selected a city
+    user_city = user_doc.get('city')
+    if not user_city:
+        raise HTTPException(status_code=400, detail="Please select your city first (London or Paris)")
+    
+    # Check if gifts are available in user's city
+    gifts_available = await db.gifts.count_documents({"city": user_city, "status": "available"})
+    if gifts_available == 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"No gifts available in {user_city} right now. Please check back later or contact casino workers to upload gifts."
+        )
+    
     # Check if user is already in the room
     if any(p.user_id == request.user_id for p in target_room.players):
         raise HTTPException(status_code=400, detail="You are already in this room")
