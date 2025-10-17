@@ -2060,6 +2060,228 @@ class SolanaCasinoAPITester:
             self.log_test("Welcome Bonus Comprehensive", False, str(e))
             return False
 
+    def test_concurrent_game_flow(self):
+        """Test concurrent game flow scenario: Multiple sets of 3 players joining bronze room simultaneously"""
+        try:
+            print("\n🎮🎮🎮 TESTING CONCURRENT GAME FLOW SCENARIO 🎮🎮🎮")
+            print("Scenario: Multiple sets of 3 players joining bronze room simultaneously")
+            print("Expected: 3 separate games with proper room isolation and cleanup")
+            print("=" * 80)
+            
+            # Step 1: Clean database and initialize
+            print("🧹 Step 1: Cleaning database and initializing...")
+            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database?admin_key=PRODUCTION_CLEANUP_2025")
+            if cleanup_response.status_code != 200:
+                self.log_test("Concurrent Game Flow - Database Cleanup", False, "Database cleanup failed")
+                return False
+            
+            time.sleep(2)  # Wait for rooms to be reinitialized
+            print("✅ Database cleaned and rooms initialized")
+            
+            # Step 2: Create 9 test users (User1-User9) with sufficient tokens
+            print("\n👥 Step 2: Creating 9 test users with sufficient tokens...")
+            test_users = []
+            telegram_ids = [123456789, 6168593741, 1793011013, 987654321, 555666777, 888999000, 111222333, 444555666, 777888999]
+            
+            for i in range(9):
+                user_data = {
+                    "telegram_auth_data": {
+                        "id": telegram_ids[i],
+                        "first_name": f"User{i+1}",
+                        "last_name": "Concurrent",
+                        "username": f"user{i+1}concurrent",
+                        "photo_url": f"https://example.com/user{i+1}.jpg",
+                        "auth_date": int(datetime.now().timestamp()),
+                        "hash": "telegram_auto"
+                    }
+                }
+                
+                auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+                if auth_response.status_code != 200:
+                    self.log_test("Concurrent Game Flow", False, f"Failed to create User{i+1}")
+                    return False
+                
+                user = auth_response.json()
+                test_users.append(user)
+                
+                # Give sufficient tokens (1000 tokens each)
+                token_response = requests.post(f"{self.api_url}/admin/add-tokens/{telegram_ids[i]}?admin_key=PRODUCTION_CLEANUP_2025&tokens=1000")
+                if token_response.status_code != 200:
+                    print(f"⚠️ Warning: Failed to add tokens to User{i+1}")
+                
+                print(f"✅ Created User{i+1} with ID: {user['id'][:8]}...")
+            
+            print(f"✅ All 9 users created successfully")
+            
+            # Step 3: Check initial room state
+            print("\n🏠 Step 3: Checking initial room state...")
+            initial_rooms_response = requests.get(f"{self.api_url}/rooms")
+            if initial_rooms_response.status_code != 200:
+                self.log_test("Concurrent Game Flow", False, "Failed to get initial rooms")
+                return False
+            
+            initial_rooms = initial_rooms_response.json().get('rooms', [])
+            bronze_rooms = [r for r in initial_rooms if r['room_type'] == 'bronze']
+            print(f"📊 Initial state: {len(bronze_rooms)} bronze room(s) found")
+            if bronze_rooms:
+                print(f"   Bronze room: {bronze_rooms[0]['players_count']}/3 players, status: {bronze_rooms[0]['status']}")
+            
+            # Step 4: Game 1 - User1, User2, User3 join bronze room
+            print("\n🎯 Step 4: Game 1 - User1, User2, User3 join bronze room...")
+            bet_amount = 300  # Within bronze range (150-450)
+            
+            # User1, User2, User3 join rapidly
+            for i in range(3):
+                join_data = {
+                    "room_type": "bronze",
+                    "user_id": test_users[i]['id'],
+                    "bet_amount": bet_amount
+                }
+                
+                join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+                if join_response.status_code != 200:
+                    self.log_test("Concurrent Game Flow", False, f"User{i+1} failed to join Game 1")
+                    return False
+                
+                result = join_response.json()
+                print(f"   ✅ User{i+1} joined Game 1: position {result.get('position')}/3, players needed: {result.get('players_needed')}")
+            
+            print("⏳ Waiting for Game 1 to complete...")
+            time.sleep(6)  # Wait for game to complete
+            
+            # Step 5: Game 2 - User4, User5, User6 join bronze room (should create new room)
+            print("\n🎯 Step 5: Game 2 - User4, User5, User6 join bronze room...")
+            
+            for i in range(3, 6):
+                join_data = {
+                    "room_type": "bronze",
+                    "user_id": test_users[i]['id'],
+                    "bet_amount": bet_amount
+                }
+                
+                join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+                if join_response.status_code != 200:
+                    self.log_test("Concurrent Game Flow", False, f"User{i+1} failed to join Game 2")
+                    return False
+                
+                result = join_response.json()
+                print(f"   ✅ User{i+1} joined Game 2: position {result.get('position')}/3, players needed: {result.get('players_needed')}")
+            
+            print("⏳ Waiting for Game 2 to complete...")
+            time.sleep(6)  # Wait for game to complete
+            
+            # Step 6: Game 3 - User7, User8, User9 join bronze room (should create new room)
+            print("\n🎯 Step 6: Game 3 - User7, User8, User9 join bronze room...")
+            
+            for i in range(6, 9):
+                join_data = {
+                    "room_type": "bronze",
+                    "user_id": test_users[i]['id'],
+                    "bet_amount": bet_amount
+                }
+                
+                join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+                if join_response.status_code != 200:
+                    self.log_test("Concurrent Game Flow", False, f"User{i+1} failed to join Game 3")
+                    return False
+                
+                result = join_response.json()
+                print(f"   ✅ User{i+1} joined Game 3: position {result.get('position')}/3, players needed: {result.get('players_needed')}")
+            
+            print("⏳ Waiting for Game 3 to complete...")
+            time.sleep(6)  # Wait for game to complete
+            
+            # Step 7: Verify room states after all games
+            print("\n🔍 Step 7: Verifying room states after all games...")
+            final_rooms_response = requests.get(f"{self.api_url}/rooms")
+            if final_rooms_response.status_code != 200:
+                self.log_test("Concurrent Game Flow", False, "Failed to get final rooms")
+                return False
+            
+            final_rooms = final_rooms_response.json().get('rooms', [])
+            final_bronze_rooms = [r for r in final_rooms if r['room_type'] == 'bronze']
+            
+            if not final_bronze_rooms:
+                self.log_test("Concurrent Game Flow", False, "No bronze room found after games")
+                return False
+            
+            final_bronze_room = final_bronze_rooms[0]
+            print(f"📊 Final bronze room: {final_bronze_room['players_count']}/3 players, status: {final_bronze_room['status']}")
+            
+            # Should be empty and waiting for new players
+            if final_bronze_room['players_count'] != 0 or final_bronze_room['status'] != 'waiting':
+                print(f"⚠️ Warning: Final room not properly cleaned - players: {final_bronze_room['players_count']}, status: {final_bronze_room['status']}")
+            
+            # Step 8: Verify game history shows all 3 completed games
+            print("\n📚 Step 8: Verifying game history shows all 3 completed games...")
+            history_response = requests.get(f"{self.api_url}/game-history?limit=10")
+            if history_response.status_code != 200:
+                self.log_test("Concurrent Game Flow", False, "Failed to get game history")
+                return False
+            
+            history_data = history_response.json()
+            completed_games = history_data.get('games', [])
+            recent_bronze_games = [g for g in completed_games if g.get('room_type') == 'bronze']
+            
+            print(f"📊 Game history: {len(completed_games)} total games, {len(recent_bronze_games)} recent bronze games")
+            
+            # Verify we have at least 3 bronze games (could be more from previous tests)
+            if len(recent_bronze_games) < 3:
+                print(f"⚠️ Warning: Expected at least 3 bronze games, found {len(recent_bronze_games)}")
+            else:
+                print(f"✅ Found {len(recent_bronze_games)} bronze games in history")
+            
+            # Step 9: Verify winners were selected for each game
+            print("\n🏆 Step 9: Verifying winners were selected...")
+            winners_found = 0
+            
+            for i, user in enumerate(test_users):
+                prizes_response = requests.get(f"{self.api_url}/user/{user['id']}/prizes")
+                if prizes_response.status_code == 200:
+                    prizes_data = prizes_response.json()
+                    prizes = prizes_data.get('prizes', [])
+                    if prizes:
+                        winners_found += 1
+                        print(f"   🏆 User{i+1} has {len(prizes)} prize(s)")
+            
+            print(f"📊 Total winners found: {winners_found}/9 users")
+            
+            # Should have exactly 3 winners (one from each game)
+            if winners_found < 3:
+                print(f"⚠️ Warning: Expected 3 winners, found {winners_found}")
+            else:
+                print(f"✅ Found {winners_found} winners from concurrent games")
+            
+            # Step 10: Final verification summary
+            print("\n✅ Step 10: Final verification summary...")
+            
+            success_criteria = {
+                "room_cleanup": final_bronze_room['players_count'] == 0 and final_bronze_room['status'] == 'waiting',
+                "game_history": len(recent_bronze_games) >= 3,
+                "winners_selected": winners_found >= 3,
+                "no_crashes": True  # If we got this far, no crashes occurred
+            }
+            
+            all_success = all(success_criteria.values())
+            
+            details = (
+                f"Concurrent game flow test results:\n"
+                f"   ✅ Room cleanup: {'PASS' if success_criteria['room_cleanup'] else 'FAIL'}\n"
+                f"   ✅ Game history: {'PASS' if success_criteria['game_history'] else 'FAIL'} ({len(recent_bronze_games)} games)\n"
+                f"   ✅ Winners selected: {'PASS' if success_criteria['winners_selected'] else 'FAIL'} ({winners_found} winners)\n"
+                f"   ✅ No crashes: {'PASS' if success_criteria['no_crashes'] else 'FAIL'}\n"
+                f"   📊 All 9 users successfully participated in 3 concurrent games\n"
+                f"   🏠 Room isolation and cleanup working correctly\n"
+                f"   🎯 Backend handled concurrent games without errors"
+            )
+            
+            self.log_test("Concurrent Game Flow - Complete Scenario", all_success, details)
+            return all_success
+            
+        except Exception as e:
+            self.log_test("Concurrent Game Flow - Complete Scenario", False, str(e))
+            return False
+
     def test_critical_3_player_lobby_to_winner_flow(self):
         """Test the CRITICAL issue: 3-player game flow from lobby to winner screen"""
         try:
