@@ -1600,24 +1600,21 @@ function App() {
         return;
       }
 
-      // Check if user has city selected
-      if (!user.city && !userCity) {
-        setShowCitySelector(true);
-        toast.info('Please select your city first');
-        return;
-      }
-
-      // Check if user already has work access
-      const checkResponse = await axios.get(`${API}/work/check-access/${user.id}`);
+      // Check if user has work access (has purchased at least one package)
+      const packagesResponse = await axios.get(`${API}/work/my-packages/${user.id}`);
+      const packages = packagesResponse.data.packages || [];
       
-      if (checkResponse.data.has_work_access) {
+      setUserPackages(packages);
+      
+      if (packages.length > 0) {
+        // Returning worker - show menu
         setHasWorkAccess(true);
-        setShowGiftUploadForm(true);
-        toast.success('You already have work access! Upload a gift.');
-        return;
+        setWorkFlowStep('menu');
+      } else {
+        // First-time worker - start with city selection
+        setWorkFlowStep('city-select');
       }
-
-      // Show work access purchase modal
+      
       setShowWorkModal(true);
     } catch (error) {
       console.error('Failed to check work access:', error);
@@ -1625,35 +1622,113 @@ function App() {
     }
   };
 
-  const handlePurchaseWorkAccess = () => {
-    // Work for Casino access fee
-    const eurAmount = 1.5; // Changed from 10 EUR to 1.5 EUR
-    const tokenEquivalent = eurAmount * 100; // Automatic: 1.5 EUR = 150 tokens
+  const handleCitySelection = (city) => {
+    setSelectedCity(city);
+    setWorkFlowStep('package-select');
+  };
+
+  const handlePackageSelection = (giftCount, priceEur) => {
+    setSelectedPackage({ count: giftCount, price: priceEur });
     
+    // Calculate SOL amount and open payment modal
+    const tokenEquivalent = priceEur * 100;
     setPaymentTokenAmount(tokenEquivalent);
-    setPaymentEurAmount(eurAmount);
-    setIsWorkPurchase(true); // Mark this as work purchase
+    setPaymentEurAmount(priceEur);
+    setIsWorkPurchase(true);
     setShowWorkModal(false);
     setShowPaymentModal(true);
-    
-    toast.info('After payment confirmation, check Telegram for next steps!');
   };
 
   const handleWorkAccessConfirmed = async (signature) => {
     try {
-      const response = await axios.post(`${API}/work/purchase-access`, {
+      if (!selectedPackage || !selectedCity) {
+        toast.error('Invalid package or city selection');
+        return;
+      }
+
+      const response = await axios.post(`${API}/work/purchase-package`, {
         user_id: user.id,
+        city: selectedCity,
+        gift_count: selectedPackage.count,
+        paid_amount_eur: selectedPackage.price,
         payment_signature: signature
       });
 
       if (response.data.success) {
         setHasWorkAccess(true);
-        setUser({...user, work_access_purchased: true});
-        toast.success('Work access granted! Check Telegram to start working.');
+        setUser({...user, work_access_purchased: true, city: selectedCity});
+        toast.success(`Package purchased! You can upload ${selectedPackage.count} gifts in ${selectedCity}`);
+        
+        // Reload packages
+        const packagesResponse = await axios.get(`${API}/work/my-packages/${user.id}`);
+        setUserPackages(packagesResponse.data.packages || []);
       }
     } catch (error) {
-      console.error('Failed to grant work access:', error);
-      toast.error('Failed to grant work access');
+      console.error('Failed to purchase package:', error);
+      toast.error(error.response?.data?.detail || 'Failed to purchase package');
+    }
+  };
+
+  const handleWorkAgain = () => {
+    setWorkFlowStep('city-select');
+  };
+
+  const handleUploadGifts = () => {
+    setWorkFlowStep('upload');
+    setUploadedGifts([]);
+  };
+
+  const handleAddGift = () => {
+    if (!giftPhoto || !giftLat || !giftLng) {
+      toast.error('Please provide photo and coordinates');
+      return;
+    }
+
+    const newGift = {
+      photo_base64: giftPhoto,
+      coordinates: {
+        lat: parseFloat(giftLat),
+        lng: parseFloat(giftLng)
+      }
+    };
+
+    setUploadedGifts([...uploadedGifts, newGift]);
+    setGiftPhoto(null);
+    setGiftLat('');
+    setGiftLng('');
+    
+    toast.success(`Gift ${uploadedGifts.length + 1} added`);
+  };
+
+  const handleSubmitGifts = async () => {
+    try {
+      if (uploadedGifts.length === 0) {
+        toast.error('Please add at least one gift');
+        return;
+      }
+
+      const response = await axios.post(`${API}/work/upload-gifts`, {
+        user_id: user.id,
+        gifts: uploadedGifts,
+        gift_count_per_upload: uploadGiftCount
+      });
+
+      if (response.data.success) {
+        toast.success(`${response.data.uploaded_count} gifts uploaded to ${response.data.folder}!`);
+        toast.info(`Remaining slots: ${response.data.remaining_slots}`);
+        
+        // Reset form
+        setUploadedGifts([]);
+        setShowWorkModal(false);
+        setWorkFlowStep('menu');
+        
+        // Reload packages
+        const packagesResponse = await axios.get(`${API}/work/my-packages/${user.id}`);
+        setUserPackages(packagesResponse.data.packages || []);
+      }
+    } catch (error) {
+      console.error('Failed to upload gifts:', error);
+      toast.error(error.response?.data?.detail || 'Failed to upload gifts');
     }
   };
 
