@@ -269,13 +269,34 @@ class Gift(BaseModel):
     city: str  # London or Paris
     photo_base64: str  # Base64 encoded photo
     coordinates: Dict[str, float]  # {"lat": 48.8566, "lng": 2.3522}
-    status: str = Field(default="available")  # available, assigned
+    folder_name: str  # 1gift, 2gifts, 5gifts, 10gifts, 20gifts, 50gifts
+    package_id: Optional[str] = None  # Reference to work package purchase
+    status: str = Field(default="available")  # available, assigned, delivered
     assigned_to: Optional[int] = None  # Telegram ID of winner
     assigned_to_user_id: Optional[str] = None
     winner_name: Optional[str] = None
     winner_city: Optional[str] = None
     assigned_at: Optional[datetime] = None
     delivered: bool = Field(default=False)
+    delivered_at: Optional[datetime] = None
+    payout_status: str = Field(default="pending")  # pending, paid
+    payout_amount_eur: Optional[float] = None  # 12, 24, or 60 EUR
+    payout_signature: Optional[str] = None  # Solana transaction signature
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class WorkPackage(BaseModel):
+    """Model for worker package purchases"""
+    model_config = ConfigDict(extra="ignore")
+    package_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    telegram_id: int
+    username: Optional[str] = None
+    city: str  # London or Paris
+    gift_count: int  # 10, 20, or 50
+    paid_amount_eur: float  # 100, 180, or 400
+    paid_amount_sol: Optional[float] = None
+    payment_signature: str
+    gifts_uploaded: int = Field(default=0)  # Track upload progress
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class SetCityRequest(BaseModel):
