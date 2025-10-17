@@ -3558,6 +3558,44 @@ function App() {
                 </div>
               )}
 
+              {/* CITY SELECTION FOR UPLOAD */}
+              {workFlowStep === 'city-select-upload' && (
+                <div className="space-y-3">
+                  <div className="text-center text-yellow-400 mb-4">
+                    Select which city you'll upload gifts for
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      onClick={async () => {
+                        await handleCitySelect('London');
+                        setWorkFlowStep('upload');
+                      }}
+                      className="h-24 flex flex-col items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
+                    >
+                      <span className="text-3xl mb-2">🇬🇧</span>
+                      <span className="text-lg font-bold">London</span>
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        await handleCitySelect('Paris');
+                        setWorkFlowStep('upload');
+                      }}
+                      className="h-24 flex flex-col items-center justify-center bg-gradient-to-br from-pink-600 to-pink-800 hover:from-pink-700 hover:to-pink-900"
+                    >
+                      <span className="text-3xl mb-2">🇫🇷</span>
+                      <span className="text-lg font-bold">Paris</span>
+                    </Button>
+                  </div>
+                  <Button
+                    onClick={() => setWorkFlowStep('menu')}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Back
+                  </Button>
+                </div>
+              )}
+
               {/* UPLOAD GIFTS */}
               {workFlowStep === 'upload' && (
                 <div className="space-y-4">
