@@ -3758,6 +3758,11 @@ function App() {
                 <div className="text-yellow-400 text-lg">
                   {viewingGift.coordinates.lat}, {viewingGift.coordinates.lng}
                 </div>
+                {viewingGift.description && (
+                  <div className="text-slate-300 text-sm mt-2 italic">
+                    "{viewingGift.description}"
+                  </div>
+                )}
                 <Button
                   onClick={() => {
                     const url = `https://www.google.com/maps?q=${viewingGift.coordinates.lat},${viewingGift.coordinates.lng}`;
