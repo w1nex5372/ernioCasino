@@ -901,8 +901,8 @@ function App() {
         }
       }, 1000);
       
-      console.log('✅✅✅ REDIRECT COMPLETE ✅✅✅');
-      toast.success('🏠 Game finished! Returning home...', { duration: 3000 });
+      console.log('✅ redirect_home complete');
+      // Removed "Game finished! Returning home..." toast - clean silent redirect
     });
 
     newSocket.on('new_room_available', (data) => {
