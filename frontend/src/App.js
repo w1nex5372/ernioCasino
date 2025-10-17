@@ -3329,36 +3329,228 @@ function App() {
 
       {/* Work Access Purchase Modal */}
       {showWorkModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <Card className="w-full max-w-md mx-4 bg-slate-800 border-slate-700">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <Card className="w-full max-w-md mx-4 my-8 bg-slate-800 border-slate-700">
             <CardHeader>
               <CardTitle className="text-2xl text-center text-white">💼 Work for Casino</CardTitle>
               <CardDescription className="text-center text-slate-300">
-                Upload hidden gifts and earn from the casino
+                {workFlowStep === 'menu' && 'Choose an option'}
+                {workFlowStep === 'city-select' && 'Which city do you want to work in?'}
+                {workFlowStep === 'package-select' && 'How many gifts will you hide?'}
+                {workFlowStep === 'upload' && 'Upload your hidden gifts'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="text-center py-4">
-                <div className="text-5xl mb-2">🎁</div>
-                <h3 className="text-2xl font-bold text-yellow-400 mb-2">1.5 EUR</h3>
-                <p className="text-slate-300 text-sm">(Payment via Solana)</p>
-                <p className="text-slate-400 text-xs mt-4">
-                  This is a one-time access fee to start working for the casino.
-                </p>
-              </div>
-              <Button
-                onClick={handlePurchaseWorkAccess}
-                className="w-full h-12 text-lg bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900"
-              >
-                Purchase via Solana
-              </Button>
-              <Button
-                onClick={() => setShowWorkModal(false)}
-                variant="outline"
-                className="w-full"
-              >
-                Cancel
-              </Button>
+              
+              {/* RETURNING WORKER MENU */}
+              {workFlowStep === 'menu' && (
+                <div className="space-y-3">
+                  <div className="text-center text-slate-400 text-sm mb-4">
+                    📦 You have {userPackages.length} package{userPackages.length !== 1 ? 's' : ''}
+                  </div>
+                  <Button
+                    onClick={handleWorkAgain}
+                    className="w-full h-14 text-lg bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+                  >
+                    🔄 Work Again
+                  </Button>
+                  <Button
+                    onClick={handleUploadGifts}
+                    className="w-full h-14 text-lg bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900"
+                  >
+                    📤 Upload Gifts
+                  </Button>
+                  <Button
+                    onClick={() => setShowWorkModal(false)}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              )}
+
+              {/* CITY SELECTION */}
+              {workFlowStep === 'city-select' && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      onClick={() => handleCitySelection('London')}
+                      className="h-24 flex flex-col items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
+                    >
+                      <span className="text-3xl mb-2">🇬🇧</span>
+                      <span className="text-lg font-bold">London</span>
+                    </Button>
+                    <Button
+                      onClick={() => handleCitySelection('Paris')}
+                      className="h-24 flex flex-col items-center justify-center bg-gradient-to-br from-pink-600 to-pink-800 hover:from-pink-700 hover:to-pink-900"
+                    >
+                      <span className="text-3xl mb-2">🇫🇷</span>
+                      <span className="text-lg font-bold">Paris</span>
+                    </Button>
+                  </div>
+                  <Button
+                    onClick={() => setShowWorkModal(false)}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              )}
+
+              {/* PACKAGE SELECTION */}
+              {workFlowStep === 'package-select' && (
+                <div className="space-y-3">
+                  <div className="text-center text-yellow-400 font-semibold mb-2">
+                    📍 {selectedCity}
+                  </div>
+                  
+                  <Button
+                    onClick={() => handlePackageSelection(10, 100)}
+                    className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900"
+                  >
+                    <span className="text-2xl font-bold">10 Gifts</span>
+                    <span className="text-sm">100 EUR (in SOL)</span>
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handlePackageSelection(20, 180)}
+                    className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-r from-gray-400 to-gray-600 hover:from-gray-500 hover:to-gray-700"
+                  >
+                    <span className="text-2xl font-bold">20 Gifts</span>
+                    <span className="text-sm">180 EUR (in SOL)</span>
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handlePackageSelection(50, 400)}
+                    className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-r from-yellow-500 to-yellow-700 hover:from-yellow-600 hover:to-yellow-800"
+                  >
+                    <span className="text-2xl font-bold">50 Gifts</span>
+                    <span className="text-sm">400 EUR (in SOL)</span>
+                  </Button>
+                  
+                  <Button
+                    onClick={() => setWorkFlowStep('city-select')}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Back
+                  </Button>
+                </div>
+              )}
+
+              {/* UPLOAD GIFTS */}
+              {workFlowStep === 'upload' && (
+                <div className="space-y-4">
+                  {/* Gift Count Selector */}
+                  <div className="space-y-2">
+                    <label className="text-white font-semibold">How many gifts to upload?</label>
+                    <select
+                      value={uploadGiftCount}
+                      onChange={(e) => setUploadGiftCount(parseInt(e.target.value))}
+                      className="w-full p-3 rounded-lg bg-slate-700 text-white border border-slate-600"
+                    >
+                      <option value={1}>1 gift (Bronze winners)</option>
+                      <option value={2}>2 gifts (Silver winners)</option>
+                      <option value={5}>5 gifts (Gold winners)</option>
+                      <option value={10}>10 gifts (Future)</option>
+                      <option value={20}>20 gifts (Future)</option>
+                      <option value={50}>50 gifts (Future)</option>
+                    </select>
+                  </div>
+
+                  {/* Photo Upload */}
+                  <div className="space-y-2">
+                    <label className="text-white font-semibold">📸 Gift Photo</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => setGiftPhoto(reader.result);
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="w-full p-2 rounded-lg bg-slate-700 text-white"
+                    />
+                  </div>
+
+                  {/* Coordinates */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <label className="text-white font-semibold">📍 Latitude</label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={giftLat}
+                        onChange={(e) => setGiftLat(e.target.value)}
+                        placeholder="51.5074"
+                        className="w-full p-3 rounded-lg bg-slate-700 text-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-white font-semibold">📍 Longitude</label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={giftLng}
+                        onChange={(e) => setGiftLng(e.target.value)}
+                        placeholder="-0.1278"
+                        className="w-full p-3 rounded-lg bg-slate-700 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Add Gift Button */}
+                  {uploadedGifts.length < uploadGiftCount && (
+                    <Button
+                      onClick={handleAddGift}
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                    >
+                      ➕ Add Gift ({uploadedGifts.length}/{uploadGiftCount})
+                    </Button>
+                  )}
+
+                  {/* Uploaded Gifts List */}
+                  {uploadedGifts.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="text-white font-semibold">
+                        Gifts Ready ({uploadedGifts.length}/{uploadGiftCount})
+                      </div>
+                      {uploadedGifts.map((gift, idx) => (
+                        <div key={idx} className="p-2 bg-slate-700 rounded-lg text-sm text-slate-300">
+                          Gift {idx + 1}: {gift.coordinates.lat.toFixed(4)}, {gift.coordinates.lng.toFixed(4)}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Submit Gifts */}
+                  {uploadedGifts.length === uploadGiftCount && (
+                    <Button
+                      onClick={handleSubmitGifts}
+                      className="w-full h-14 text-lg bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900"
+                    >
+                      🚀 Submit All Gifts
+                    </Button>
+                  )}
+
+                  <Button
+                    onClick={() => {
+                      setWorkFlowStep('menu');
+                      setUploadedGifts([]);
+                    }}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Back to Menu
+                  </Button>
+                </div>
+              )}
+              
             </CardContent>
           </Card>
         </div>
