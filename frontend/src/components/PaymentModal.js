@@ -411,11 +411,16 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
                 </p>
               </div>
 
-              {/* Calculated Tokens (updates automatically) */}
+              {/* Calculated Tokens or Gifts (updates automatically) */}
               <div className="flex justify-between items-center p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-                <span className="text-purple-300">Tokens You'll Get</span>
+                <span className="text-purple-300">
+                  {isWorkPurchase ? "Gifts You'll Receive" : "Tokens You'll Get"}
+                </span>
                 <span className="text-purple-400 font-bold">
-                  {recalculating ? '...' : Math.floor(eurAmount * 100)} tokens
+                  {isWorkPurchase 
+                    ? `${giftCount} gifts` 
+                    : `${recalculating ? '...' : Math.floor(eurAmount * 100)} tokens`
+                  }
                 </span>
               </div>
 
