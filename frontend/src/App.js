@@ -262,8 +262,14 @@ function App() {
   
   // Work for Casino state
   const [hasWorkAccess, setHasWorkAccess] = useState(false); // Has user purchased work access
-  const [showWorkModal, setShowWorkModal] = useState(false); // Show work access purchase modal
+  const [showWorkModal, setShowWorkModal] = useState(false); // Show work modal (menu or purchase)
+  const [workFlowStep, setWorkFlowStep] = useState('menu'); // menu, city-select, package-select, upload
+  const [selectedCity, setSelectedCity] = useState(''); // London or Paris
+  const [selectedPackage, setSelectedPackage] = useState(null); // {count: 10, price: 100}
+  const [userPackages, setUserPackages] = useState([]); // User's purchased packages
   const [showGiftUploadForm, setShowGiftUploadForm] = useState(false); // Show gift upload form
+  const [uploadGiftCount, setUploadGiftCount] = useState(1); // 1, 2, 5, 10, 20, 50
+  const [uploadedGifts, setUploadedGifts] = useState([]); // Array of {photo_base64, coordinates}
   const [isWorkPurchase, setIsWorkPurchase] = useState(false); // Track if current payment is for work access
   const [giftPhoto, setGiftPhoto] = useState(null); // Base64 photo for gift
   const [giftLat, setGiftLat] = useState('');
