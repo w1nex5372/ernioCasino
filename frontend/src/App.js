@@ -1621,6 +1621,31 @@ function App() {
     }
   };
 
+  // City selection handler
+  const handleCitySelect = async (city) => {
+    try {
+      const response = await axios.post(`${API}/users/set-city`, {
+        user_id: user.id,
+        city: city
+      });
+      
+      if (response.data.success) {
+        setUser({...user, city: city});
+        setShowCitySelector(false);
+        setGiftsAvailable(response.data.can_play);
+        
+        if (!response.data.can_play) {
+          toast.error(`No gifts available in ${city} yet. Rooms are locked until gifts are uploaded.`);
+        } else {
+          toast.success(`Welcome to ${city}! You can now play and receive gifts from this city.`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to set city:', error);
+      toast.error('Failed to set city');
+    }
+  };
+
   // Work for Casino handlers
   const handleWorkForCasino = async () => {
     try {
