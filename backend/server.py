@@ -2184,21 +2184,33 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
     target_room.prize_pool += request.bet_amount
     
     # Notify ROOM participants about new player - ALWAYS send FULL participant list
-    players_list = [p.dict() for p in target_room.players]
+    # Serialize player data with datetime conversion
+    serialized_players = []
+    for p in target_room.players:
+        player_dict = p.dict()
+        if 'joined_at' in player_dict and isinstance(player_dict['joined_at'], datetime):
+            player_dict['joined_at'] = player_dict['joined_at'].isoformat()
+        serialized_players.append(player_dict)
+    
+    # Serialize single player data
+    player_dict = player.dict()
+    if 'joined_at' in player_dict and isinstance(player_dict['joined_at'], datetime):
+        player_dict['joined_at'] = player_dict['joined_at'].isoformat()
+    
     logging.info(f"👤 Player {player.username} joined room {target_room.id} ({len(target_room.players)}/3)")
-    logging.info(f"📋 Full participant list: {[p['username'] for p in players_list]}")
+    logging.info(f"📋 Full participant list: {[p['username'] for p in serialized_players]}")
     
     await socket_rooms.broadcast_to_room(sio, target_room.id, 'player_joined', {
         'room_id': target_room.id,
         'room_type': target_room.room_type,
-        'player': player.dict(),
+        'player': player_dict,
         'players_count': len(target_room.players),
         'prize_pool': target_room.prize_pool,
-        'all_players': players_list,  # FULL participant list - REPLACE, don't append
+        'all_players': serialized_players,  # FULL participant list - REPLACE, don't append
         'room_status': 'filling' if len(target_room.players) < 3 else 'full',
         'timestamp': datetime.now(timezone.utc).isoformat()
     })
-    logging.info(f"✅ Emitted player_joined to room {target_room.id} with {len(players_list)} players")
+    logging.info(f"✅ Emitted player_joined to room {target_room.id} with {len(serialized_players)} players")
     
     # Broadcast updated room states to all clients (global lobby update)
     await broadcast_room_updates()
@@ -2211,7 +2223,7 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         await socket_rooms.broadcast_to_room(sio, target_room.id, 'room_full', {
             'room_id': target_room.id,
             'room_type': target_room.room_type,
-            'players': players_list,
+            'players': serialized_players,
             'players_count': 3,
             'message': '🚀 ROOM IS FULL! GET READY FOR THE BATTLE!',
             'timestamp': datetime.now(timezone.utc).isoformat()
