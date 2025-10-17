@@ -1874,14 +1874,13 @@ function App() {
       console.log('✅ API Response:', response.data);
 
       if (response.data.status === 'joined') {
-        toast.success(`Joined ${ROOM_CONFIGS[roomType].name}! Waiting for opponent...`);
+        // Removed toast - silent room join
         setUser({...user, token_balance: response.data.new_balance});
         setBetAmount('');
         setSelectedRoom(null);
-        setForceHideLobby(false);  // Reset flag when joining new room
+        setForceHideLobby(false);
         
         // DON'T manually set roomParticipants here - let the player_joined socket event handle it
-        // The backend will emit player_joined with all_players array which is the source of truth
         console.log('✅ Joined room, waiting for player_joined socket event...');
         
         // Join the Socket.IO room for room-specific events
