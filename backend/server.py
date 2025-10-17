@@ -1322,11 +1322,17 @@ async def start_game_round(room: GameRoom):
     
     # EVENT 3: game_finished - Notify ROOM participants of the winner
     logging.info(f"📤 Broadcasting game_finished to room {room.id}")
+    
+    # Serialize winner data
+    winner_dict = winner.dict()
+    if 'joined_at' in winner_dict and isinstance(winner_dict['joined_at'], datetime):
+        winner_dict['joined_at'] = winner_dict['joined_at'].isoformat()
+    
     await socket_rooms.broadcast_to_room(sio, room.id, 'game_finished', {
         'room_id': room.id,
         'room_type': room.room_type,
         'match_id': match_id,  # Unique match identifier
-        'winner': winner.dict(),
+        'winner': winner_dict,
         'winner_name': f"{winner.first_name} {winner.last_name}".strip(),
         'winner_id': winner.user_id,
         'prize_pool': room.prize_pool,
