@@ -904,6 +904,12 @@ function App() {
       // FORCE RESET ALL GAME STATE IMMEDIATELY
       console.log('🏠🏠🏠 FORCING HOME SCREEN RETURN 🏠🏠🏠');
       
+      // Mark this match as fully processed to prevent any late duplicate events
+      if (data.match_id) {
+        setShownMatchIds(prev => new Set([...prev, data.match_id]));
+        console.log('🔒 Match locked:', data.match_id);
+      }
+      
       // Batch all state updates together
       console.log('Clearing ALL game state...');
       setShowWinnerScreen(false);
