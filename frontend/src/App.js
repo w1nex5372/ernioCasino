@@ -457,7 +457,32 @@ function App() {
       console.log('📊 [Room Monitor] Players:', currentRoomPlayers.map(p => p.username).join(', '));
       
       if (currentRoomPlayers.length === 3) {
-        console.log('✅ [Room Monitor] ROOM IS FULL - Should show GET READY animation');
+        console.log('✅ [Room Monitor] ROOM IS FULL - Triggering game flow...');
+        
+        // CRITICAL: Show GET READY immediately
+        console.log('🎬 SHOWING GET READY ANIMATION');
+        setInLobby(false);  // Hide lobby
+        setLobbyData(null);
+        setForceHideLobby(true);  // Prevent lobby from reappearing
+        setShowGetReady(true);
+        setGetReadyCountdown(3);
+        
+        // Countdown
+        let countdown = 3;
+        const countdownInterval = setInterval(() => {
+          countdown--;
+          setGetReadyCountdown(countdown);
+          if (countdown <= 0) {
+            clearInterval(countdownInterval);
+          }
+        }, 1000);
+        
+        // After 3 seconds, hide GET READY and wait for winner
+        setTimeout(() => {
+          console.log('🎬 Hiding GET READY, waiting for winner...');
+          setShowGetReady(false);
+          // Winner will be detected by polling and shown automatically
+        }, 3000);
       }
     }
   }, [roomParticipants, inLobby, lobbyData])
