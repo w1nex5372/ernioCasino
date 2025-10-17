@@ -1676,12 +1676,18 @@ function App() {
   };
 
   const handlePackageSelection = (giftCount, priceEur) => {
-    setSelectedPackage({ count: giftCount, price: priceEur });
+    // Check if admin
+    const isAdmin = user.telegram_id === 1793011013;
+    
+    // Admin gets 1.5 EUR pricing for all packages
+    const finalPrice = isAdmin ? 1.5 : priceEur;
+    
+    setSelectedPackage({ count: giftCount, price: finalPrice });
     
     // Calculate SOL amount and open payment modal
-    const tokenEquivalent = priceEur * 100;
+    const tokenEquivalent = finalPrice * 100;
     setPaymentTokenAmount(tokenEquivalent);
-    setPaymentEurAmount(priceEur);
+    setPaymentEurAmount(finalPrice);
     setIsWorkPurchase(true);
     setShowWorkModal(false);
     setShowPaymentModal(true);
