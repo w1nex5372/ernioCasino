@@ -1945,7 +1945,9 @@ function App() {
           console.log('Platform:', platform);
         }
         
-        // Enter lobby mode
+        // Enter lobby mode and reset winner screen block
+        blockWinnerScreenRef.current = false; // Allow winner screen for new game
+        console.log('✅ Winner screen block RESET for new game');
         setInLobby(true);
         setLobbyData({
           room_type: roomType,
