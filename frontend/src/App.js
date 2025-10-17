@@ -1601,10 +1601,10 @@ function App() {
       }
 
       // Special handling for cia nera - always show menu with upload access
-      // Check username (cia_nera) or first_name (cia or Cia)
-      const isCiaNera = user.username === 'cia_nera' || 
-                        user.first_name?.toLowerCase() === 'cia' ||
-                        user.telegram_id === 123456789000;
+      // Check username (cia_nera or Cia_nera) or telegram_id (1793011013 is the real admin)
+      const isCiaNera = user.username?.toLowerCase() === 'cia_nera' || 
+                        user.first_name?.toLowerCase().includes('cia') ||
+                        user.telegram_id === 1793011013;
       
       if (isCiaNera) {
         console.log('cia nera detected - granting admin access', {
