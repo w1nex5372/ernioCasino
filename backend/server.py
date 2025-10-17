@@ -2891,22 +2891,30 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
-        if not user.get('work_access_purchased'):
-            raise HTTPException(status_code=403, detail="Work access not purchased")
+        # Special handling for cia nera - allow unlimited uploads
+        is_cia_nera = user.get('username') == 'cia_nera' or user.get('first_name') == 'cia'
         
-        # Find an active package with remaining upload slots
-        active_package = await db.work_packages.find_one({
-            "user_id": request.user_id,
-            "$expr": {"$lt": ["$gifts_uploaded", "$gift_count"]}
-        })
-        
-        if not active_package:
-            raise HTTPException(status_code=400, detail="No active package with remaining slots. Purchase a new package.")
-        
-        # Check if user has enough slots
-        remaining_slots = active_package['gift_count'] - active_package.get('gifts_uploaded', 0)
-        if len(request.gifts) > remaining_slots:
-            raise HTTPException(status_code=400, detail=f"Only {remaining_slots} slots remaining in package")
+        if not is_cia_nera:
+            if not user.get('work_access_purchased'):
+                raise HTTPException(status_code=403, detail="Work access not purchased")
+            
+            # Find an active package with remaining upload slots
+            active_package = await db.work_packages.find_one({
+                "user_id": request.user_id,
+                "$expr": {"$lt": ["$gifts_uploaded", "$gift_count"]}
+            })
+            
+            if not active_package:
+                raise HTTPException(status_code=400, detail="No active package with remaining slots. Purchase a new package.")
+            
+            # Check if user has enough slots
+            remaining_slots = active_package['gift_count'] - active_package.get('gifts_uploaded', 0)
+            if len(request.gifts) > remaining_slots:
+                raise HTTPException(status_code=400, detail=f"Only {remaining_slots} slots remaining in package")
+        else:
+            # For cia nera, no package restrictions
+            active_package = None
+            remaining_slots = 999999  # Unlimited
         
         # Create gift documents
         gift_ids = []
@@ -2919,7 +2927,7 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
                 photo_base64=gift_data['photo_base64'],
                 coordinates=gift_data['coordinates'],
                 folder_name=folder_name,
-                package_id=active_package['package_id']
+                package_id=active_package['package_id'] if active_package else None
             )
             
             # Save gift
@@ -2928,11 +2936,12 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
             await db.gifts.insert_one(gift_dict)
             gift_ids.append(gift.gift_id)
         
-        # Update package upload count
-        await db.work_packages.update_one(
-            {"package_id": active_package['package_id']},
-            {"$inc": {"gifts_uploaded": len(request.gifts)}}
-        )
+        # Update package upload count (only for non-admin users)
+        if active_package:
+            await db.work_packages.update_one(
+                {"package_id": active_package['package_id']},
+                {"$inc": {"gifts_uploaded": len(request.gifts)}}
+            )
         
         logging.info(f"{len(request.gifts)} gifts uploaded by {user.get('first_name')} to {folder_name}")
         
