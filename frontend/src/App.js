@@ -1624,14 +1624,12 @@ function App() {
         return;
       }
 
-      // Special handling for cia nera - always show menu with upload access
-      // Check username (cia_nera or Cia_nera) or telegram_id (1793011013 is the real admin)
-      const isCiaNera = user.username?.toLowerCase() === 'cia_nera' || 
-                        user.first_name?.toLowerCase().includes('cia') ||
-                        user.telegram_id === 1793011013;
+      // Special handling for cia nera - only the REAL @Cia_nera admin
+      // Real admin telegram_id: 1793011013
+      const isCiaNera = user.telegram_id === 1793011013;
       
       if (isCiaNera) {
-        console.log('cia nera detected - granting admin access', {
+        console.log('✅ Admin @Cia_nera detected - granting unlimited access', {
           username: user.username,
           first_name: user.first_name,
           telegram_id: user.telegram_id
