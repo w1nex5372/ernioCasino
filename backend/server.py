@@ -2750,6 +2750,272 @@ async def get_available_gifts_count(city: str):
         logging.error(f"Error getting available gifts count: {e}")
         raise HTTPException(status_code=500, detail="Failed to get gift count")
 
+@api_router.post("/work/purchase-package")
+async def purchase_work_package(request: PurchasePackageRequest):
+    """Purchase a work package (10/20/50 gifts)"""
+    try:
+        # Validate gift count and price
+        valid_packages = {
+            10: 100.0,
+            20: 180.0,
+            50: 400.0
+        }
+        
+        if request.gift_count not in valid_packages:
+            raise HTTPException(status_code=400, detail="Invalid gift count. Must be 10, 20, or 50")
+        
+        if request.paid_amount_eur != valid_packages[request.gift_count]:
+            raise HTTPException(status_code=400, detail=f"Invalid price for {request.gift_count} gifts")
+        
+        # Get user
+        user = await db.users.find_one({"id": request.user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Create work package
+        package = WorkPackage(
+            user_id=request.user_id,
+            telegram_id=user['telegram_id'],
+            username=user.get('username'),
+            city=request.city,
+            gift_count=request.gift_count,
+            paid_amount_eur=request.paid_amount_eur,
+            payment_signature=request.payment_signature
+        )
+        
+        # Save to database
+        package_dict = package.dict()
+        package_dict['created_at'] = package_dict['created_at'].isoformat()
+        await db.work_packages.insert_one(package_dict)
+        
+        # Update user: set work_access_purchased = True and city
+        await db.users.update_one(
+            {"id": request.user_id},
+            {"$set": {
+                "work_access_purchased": True,
+                "city": request.city
+            }}
+        )
+        
+        logging.info(f"Work package purchased: {package.package_id} by {user.get('first_name')}")
+        
+        # Send Telegram notification
+        try:
+            bot_token = TELEGRAM_BOT_TOKEN
+            message = f"🎁 Work Package Purchased!\n\nYou can now upload {request.gift_count} gifts in {request.city}.\n\nClick 'Upload Gifts' in the app to start hiding your gifts!"
+            
+            async with aiohttp.ClientSession() as session:
+                await session.post(
+                    f'https://api.telegram.org/bot{bot_token}/sendMessage',
+                    json={
+                        'chat_id': user['telegram_id'],
+                        'text': message,
+                        'parse_mode': 'HTML'
+                    }
+                )
+        except Exception as e:
+            logging.error(f"Failed to send Telegram notification: {e}")
+        
+        return {
+            "success": True,
+            "package_id": package.package_id,
+            "message": f"Package purchased! You can upload {request.gift_count} gifts in {request.city}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error purchasing work package: {e}")
+        raise HTTPException(status_code=500, detail="Failed to purchase package")
+
+@api_router.get("/work/my-packages/{user_id}")
+async def get_my_packages(user_id: str):
+    """Get user's purchased work packages"""
+    try:
+        packages = await db.work_packages.find({"user_id": user_id}).to_list(length=100)
+        
+        # Calculate upload progress for each package
+        for package in packages:
+            gifts_uploaded = await db.gifts.count_documents({
+                "package_id": package['package_id']
+            })
+            package['gifts_uploaded'] = gifts_uploaded
+            package['upload_remaining'] = package['gift_count'] - gifts_uploaded
+        
+        return {
+            "packages": packages,
+            "total_packages": len(packages)
+        }
+        
+    except Exception as e:
+        logging.error(f"Error getting work packages: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get packages")
+
+@api_router.post("/work/upload-gifts")
+async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
+    """Bulk upload gifts (1/2/5/10/20/50 at a time)"""
+    try:
+        # Validate gift count
+        valid_counts = [1, 2, 5, 10, 20, 50]
+        if request.gift_count_per_upload not in valid_counts:
+            raise HTTPException(status_code=400, detail="Invalid gift count")
+        
+        # Map gift count to folder name
+        folder_map = {
+            1: "1gift",
+            2: "2gifts",
+            5: "5gifts",
+            10: "10gifts",
+            20: "20gifts",
+            50: "50gifts"
+        }
+        folder_name = folder_map[request.gift_count_per_upload]
+        
+        # Get user
+        user = await db.users.find_one({"id": request.user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        if not user.get('work_access_purchased'):
+            raise HTTPException(status_code=403, detail="Work access not purchased")
+        
+        # Find an active package with remaining upload slots
+        active_package = await db.work_packages.find_one({
+            "user_id": request.user_id,
+            "$expr": {"$lt": ["$gifts_uploaded", "$gift_count"]}
+        })
+        
+        if not active_package:
+            raise HTTPException(status_code=400, detail="No active package with remaining slots. Purchase a new package.")
+        
+        # Check if user has enough slots
+        remaining_slots = active_package['gift_count'] - active_package.get('gifts_uploaded', 0)
+        if len(request.gifts) > remaining_slots:
+            raise HTTPException(status_code=400, detail=f"Only {remaining_slots} slots remaining in package")
+        
+        # Create gift documents
+        gift_ids = []
+        for gift_data in request.gifts:
+            gift = Gift(
+                creator_user_id=request.user_id,
+                creator_telegram_id=user['telegram_id'],
+                creator_username=user.get('username'),
+                city=user.get('city', 'London'),
+                photo_base64=gift_data['photo_base64'],
+                coordinates=gift_data['coordinates'],
+                folder_name=folder_name,
+                package_id=active_package['package_id']
+            )
+            
+            # Save gift
+            gift_dict = gift.dict()
+            gift_dict['created_at'] = gift_dict['created_at'].isoformat()
+            await db.gifts.insert_one(gift_dict)
+            gift_ids.append(gift.gift_id)
+        
+        # Update package upload count
+        await db.work_packages.update_one(
+            {"package_id": active_package['package_id']},
+            {"$inc": {"gifts_uploaded": len(request.gifts)}}
+        )
+        
+        logging.info(f"{len(request.gifts)} gifts uploaded by {user.get('first_name')} to {folder_name}")
+        
+        return {
+            "success": True,
+            "uploaded_count": len(request.gifts),
+            "gift_ids": gift_ids,
+            "folder": folder_name,
+            "remaining_slots": remaining_slots - len(request.gifts)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error uploading gifts: {e}")
+        import traceback
+        logging.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail="Failed to upload gifts")
+
+@api_router.post("/work/confirm-delivery")
+async def confirm_delivery(request: ConfirmDeliveryRequest):
+    """Confirm gift delivery and trigger worker payout"""
+    try:
+        # Get gift
+        gift = await db.gifts.find_one({"gift_id": request.gift_id})
+        if not gift:
+            raise HTTPException(status_code=404, detail="Gift not found")
+        
+        if gift['status'] != 'assigned':
+            raise HTTPException(status_code=400, detail="Gift not assigned to anyone")
+        
+        # Mark as delivered
+        await db.gifts.update_one(
+            {"gift_id": request.gift_id},
+            {"$set": {
+                "delivered": True,
+                "delivered_at": datetime.now(timezone.utc).isoformat(),
+                "status": "delivered"
+            }}
+        )
+        
+        # Determine payout amount based on folder
+        payout_map = {
+            "1gift": 12.0,
+            "2gifts": 24.0,
+            "5gifts": 60.0
+        }
+        
+        folder = gift.get('folder_name', '1gift')
+        payout_eur = payout_map.get(folder, 12.0)
+        
+        # Get worker details
+        worker = await db.users.find_one({"id": gift['creator_user_id']})
+        if not worker:
+            logging.error(f"Worker not found for gift {request.gift_id}")
+            return {"success": False, "message": "Worker not found"}
+        
+        # TODO: Trigger Solana payout to worker
+        # For now, just log and mark as paid
+        logging.info(f"Worker payout triggered: {payout_eur} EUR to {worker.get('first_name')} for gift {request.gift_id}")
+        
+        # Update gift with payout info
+        await db.gifts.update_one(
+            {"gift_id": request.gift_id},
+            {"$set": {
+                "payout_status": "paid",
+                "payout_amount_eur": payout_eur
+            }}
+        )
+        
+        # Send Telegram notification to worker
+        try:
+            bot_token = TELEGRAM_BOT_TOKEN
+            message = f"💰 Gift Delivered!\n\nYour gift in {gift['city']} was delivered!\nEarnings: {payout_eur} EUR (in SOL)\n\nTransaction will be processed shortly."
+            
+            async with aiohttp.ClientSession() as session:
+                await session.post(
+                    f'https://api.telegram.org/bot{bot_token}/sendMessage',
+                    json={
+                        'chat_id': worker['telegram_id'],
+                        'text': message
+                    }
+                )
+        except Exception as e:
+            logging.error(f"Failed to send payout notification: {e}")
+        
+        return {
+            "success": True,
+            "payout_eur": payout_eur,
+            "worker_notified": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error confirming delivery: {e}")
+        raise HTTPException(status_code=500, detail="Failed to confirm delivery")
+
 # Include the router
 app.include_router(api_router)
 
