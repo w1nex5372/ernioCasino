@@ -1601,10 +1601,17 @@ function App() {
       }
 
       // Special handling for cia nera - always show menu with upload access
-      const isCiaNera = user.username === 'cia_nera' || user.first_name === 'cia';
+      // Check username (cia_nera) or first_name (cia or Cia)
+      const isCiaNera = user.username === 'cia_nera' || 
+                        user.first_name?.toLowerCase() === 'cia' ||
+                        user.telegram_id === 123456789000;
       
       if (isCiaNera) {
-        console.log('cia nera detected - granting admin access');
+        console.log('cia nera detected - granting admin access', {
+          username: user.username,
+          first_name: user.first_name,
+          telegram_id: user.telegram_id
+        });
         setHasWorkAccess(true);
         setWorkFlowStep('menu');
         setUserPackages([]); // Empty packages for admin
