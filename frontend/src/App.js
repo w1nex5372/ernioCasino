@@ -1765,8 +1765,13 @@ function App() {
   };
 
   const handleUploadGifts = () => {
-    setWorkFlowStep('upload');
-    setUploadedGifts([]);
+    // If user hasn't selected city yet, ask for it
+    if (!user.city) {
+      setWorkFlowStep('city-select-upload');
+    } else {
+      setWorkFlowStep('upload');
+      setUploadedGifts([]);
+    }
   };
 
   const handleAddGift = () => {
