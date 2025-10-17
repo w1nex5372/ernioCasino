@@ -2662,9 +2662,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount Socket.IO (wraps entire FastAPI app)
-# Socket.IO will handle requests to /socket.io and pass others to FastAPI
-socket_app = socketio.ASGIApp(sio, app)
+# Create Socket.IO ASGI app with custom path
+sio_app = socketio.ASGIApp(
+    socketio_server=sio,
+    socketio_path='/socket.io'  # Socket.IO internal path
+)
+
+# Mount Socket.IO at /api/socket.io (matches ingress routing and frontend client path)
+app.mount('/api/socket.io', sio_app)
+
+# Export the main app for uvicorn
+socket_app = app
 
 # Configure logging
 logging.basicConfig(
