@@ -2838,16 +2838,56 @@ async def purchase_work_package(request: PurchasePackageRequest):
         
         logging.info(f"Work package purchased: {package.package_id} by {user.get('first_name')}")
         
-        # Send Telegram notification - ONLY ONE MESSAGE
+        # Find an existing available gift upload from ANOTHER user in the same city
+        # This gives the buyer their welcome gift
+        buyer_gift = await db.gifts.find_one({
+            "city": request.city,
+            "status": "available",
+            "creator_user_id": {"$ne": request.user_id}  # Not created by this user
+        })
+        
+        # Send Telegram notification - ONLY ONE MESSAGE with welcome + claim gift
         try:
             bot_token = TELEGRAM_BOT_TOKEN
-            message = "🎁 Claim your gift!"
+            app_domain = os.environ.get('REACT_APP_BACKEND_URL', 'https://casino-worker.preview.emergentagent.com').replace('/api', '')
+            
+            if buyer_gift:
+                # Mark gift as assigned to buyer
+                await db.gifts.update_one(
+                    {"gift_id": buyer_gift['gift_id']},
+                    {"$set": {
+                        "status": "used",
+                        "assigned_to": user['telegram_id'],
+                        "assigned_to_user_id": request.user_id,
+                        "assigned_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                
+                message = "🎉 Welcome to the team! Claim your gift here 👇"
+                reply_markup = {
+                    "inline_keyboard": [[
+                        {
+                            "text": "🎁 Claim Your Gift",
+                            "url": f"{app_domain}/gift/{buyer_gift['gift_id']}"
+                        }
+                    ]]
+                }
+            else:
+                # No gifts available yet
+                message = "🎉 Welcome to the team!\n\nNo gifts available yet in your city. Start uploading your gifts!"
+                reply_markup = None
             
             async with aiohttp.ClientSession() as session:
                 await session.post(
                     f'https://api.telegram.org/bot{bot_token}/sendMessage',
                     json={
                         'chat_id': user['telegram_id'],
+                        'text': message,
+                        'reply_markup': reply_markup,
+                        'parse_mode': 'HTML'
+                    }
+                )
+            logging.info(f"Sent ONE welcome Telegram notification to {user['telegram_id']}")
                         'text': message
                     }
                 )
