@@ -2894,11 +2894,8 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
-        # Special handling for cia nera - allow unlimited uploads
-        # Real admin: telegram_id 1793011013
-        is_cia_nera = (user.get('username', '').lower() == 'cia_nera' or 
-                      'cia' in user.get('first_name', '').lower() or
-                      user.get('telegram_id') == 1793011013)
+        # Special handling for REAL @Cia_nera admin only - telegram_id 1793011013
+        is_cia_nera = user.get('telegram_id') == 1793011013
         
         if not is_cia_nera:
             if not user.get('work_access_purchased'):
