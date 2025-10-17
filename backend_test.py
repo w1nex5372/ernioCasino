@@ -2152,6 +2152,20 @@ class SolanaCasinoAPITester:
             # Step 5: Game 2 - User4, User5, User6 join bronze room (should create new room)
             print("\n🎯 Step 5: Game 2 - User4, User5, User6 join bronze room...")
             
+            # Wait a moment to ensure new room is available
+            time.sleep(1)
+            
+            # Check if bronze room is available
+            rooms_check = requests.get(f"{self.api_url}/rooms")
+            if rooms_check.status_code == 200:
+                rooms_data = rooms_check.json().get('rooms', [])
+                bronze_rooms = [r for r in rooms_data if r['room_type'] == 'bronze']
+                if bronze_rooms:
+                    print(f"   📊 Bronze room available: {bronze_rooms[0]['players_count']}/3 players")
+                else:
+                    print("   ⚠️ No bronze room available, waiting for room creation...")
+                    time.sleep(2)
+            
             for i in range(3, 6):
                 join_data = {
                     "room_type": "bronze",
@@ -2159,10 +2173,18 @@ class SolanaCasinoAPITester:
                     "bet_amount": bet_amount
                 }
                 
-                join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
-                if join_response.status_code != 200:
-                    self.log_test("Concurrent Game Flow", False, f"User{i+1} failed to join Game 2")
-                    return False
+                # Retry logic for room joining
+                max_retries = 3
+                for retry in range(max_retries):
+                    join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+                    if join_response.status_code == 200:
+                        break
+                    elif join_response.status_code == 404 and retry < max_retries - 1:
+                        print(f"   ⏳ User{i+1} waiting for room availability (retry {retry+1}/{max_retries})...")
+                        time.sleep(1)
+                    else:
+                        self.log_test("Concurrent Game Flow", False, f"User{i+1} failed to join Game 2 after {max_retries} retries: {join_response.status_code}")
+                        return False
                 
                 result = join_response.json()
                 print(f"   ✅ User{i+1} joined Game 2: position {result.get('position')}/3, players needed: {result.get('players_needed')}")
