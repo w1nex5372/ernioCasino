@@ -455,22 +455,23 @@ async def send_prize_notification(telegram_id: int, username: str, room_type: st
 
 
 async def send_gift_notification(telegram_id: int, username: str, gift_data: dict = None) -> bool:
-    """Send gift notification to winner via Telegram"""
+    """Send gift notification to winner via Telegram - ONLY ONE MESSAGE"""
     try:
         if gift_data:
             # Gift is available
             message = f"🎉 <b>Congratulations {username}!</b>\n\n"
-            message += "🎁 <b>You have a special gift waiting!</b>\n\n"
+            message += "🎁 <b>You won a special gift!</b>\n\n"
             message += f"📍 Location: {gift_data['city']}\n"
-            message += f"📊 Coordinates: {gift_data['coordinates']['lat']}, {gift_data['coordinates']['lng']}\n\n"
-            message += "Check the app for the gift photo and details!"
             
-            # Create inline keyboard with view gift button
+            # Get app domain from environment
+            app_domain = os.environ.get('REACT_APP_BACKEND_URL', 'https://casino-worker.preview.emergentagent.com').replace('/api', '')
+            
+            # Create inline keyboard with view gift button - opens all media
             reply_markup = {
                 "inline_keyboard": [[
                     {
                         "text": "🎁 View Gift Details",
-                        "url": f"https://t.me/your_bot?start=gift_{gift_data['gift_id']}"
+                        "url": f"{app_domain}/gift/{gift_data['gift_id']}"
                     }
                 ]]
             }
