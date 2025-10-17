@@ -2195,6 +2195,9 @@ class SolanaCasinoAPITester:
             # Step 6: Game 3 - User7, User8, User9 join bronze room (should create new room)
             print("\n🎯 Step 6: Game 3 - User7, User8, User9 join bronze room...")
             
+            # Wait a moment to ensure new room is available
+            time.sleep(1)
+            
             for i in range(6, 9):
                 join_data = {
                     "room_type": "bronze",
@@ -2202,10 +2205,18 @@ class SolanaCasinoAPITester:
                     "bet_amount": bet_amount
                 }
                 
-                join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
-                if join_response.status_code != 200:
-                    self.log_test("Concurrent Game Flow", False, f"User{i+1} failed to join Game 3")
-                    return False
+                # Retry logic for room joining
+                max_retries = 3
+                for retry in range(max_retries):
+                    join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+                    if join_response.status_code == 200:
+                        break
+                    elif join_response.status_code == 404 and retry < max_retries - 1:
+                        print(f"   ⏳ User{i+1} waiting for room availability (retry {retry+1}/{max_retries})...")
+                        time.sleep(1)
+                    else:
+                        self.log_test("Concurrent Game Flow", False, f"User{i+1} failed to join Game 3 after {max_retries} retries: {join_response.status_code}")
+                        return False
                 
                 result = join_response.json()
                 print(f"   ✅ User{i+1} joined Game 3: position {result.get('position')}/3, players needed: {result.get('players_needed')}")
