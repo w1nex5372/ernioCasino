@@ -1758,10 +1758,11 @@ function App() {
 
       if (response.data.success) {
         toast.success(`${response.data.uploaded_count} gifts uploaded to ${response.data.folder}!`);
-        toast.info(`Remaining slots: ${response.data.remaining_slots}`);
+        toast.info(`Credits used: ${response.data.credits_used}, Remaining: ${response.data.remaining_credits}`);
         
         // Reset form
         setUploadedGifts([]);
+        setCurrentGiftMedia([]);
         setShowWorkModal(false);
         setWorkFlowStep('menu');
         
