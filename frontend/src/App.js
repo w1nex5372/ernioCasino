@@ -3453,6 +3453,7 @@ function App() {
               <CardDescription className="text-center text-slate-300">
                 {workFlowStep === 'menu' && 'Choose an option'}
                 {workFlowStep === 'city-select' && 'Which city do you want to work in?'}
+                {workFlowStep === 'city-select-upload' && 'Select your city for uploads'}
                 {workFlowStep === 'package-select' && 'How many gifts will you hide?'}
                 {workFlowStep === 'upload' && 'Upload your hidden gifts'}
               </CardDescription>
