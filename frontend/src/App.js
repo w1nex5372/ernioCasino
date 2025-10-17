@@ -485,12 +485,13 @@ function App() {
     console.log('Platform:', platform);
     console.log('User Agent:', navigator.userAgent);
     
-    // Socket.IO connection - Use direct connection to avoid proxy issues
-    const socketUrl = BACKEND_URL; // Already includes /api in requests
+    // Socket.IO connection - Connect to /api/io (mounted path)
+    const socketUrl = BACKEND_URL;
     console.log('🔌 Socket URL:', socketUrl);
+    console.log('🔌 Socket path: /api/io/socket.io/');
     
     const newSocket = io(socketUrl, {
-      path: '/socket.io',  // Default Socket.IO path
+      path: '/api/io/socket.io',  // Socket.IO mounted at /api/io
       transports: ['polling'],  // Use polling only
       timeout: 60000,
       reconnection: true,
