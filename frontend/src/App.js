@@ -1548,6 +1548,22 @@ function App() {
     setTimeout(() => {
       console.log('🔄 Force checking winner screen state:', { showWinnerScreen: true });
     }, 100);
+    
+    // AUTO-REDIRECT to home after 2 seconds
+    setTimeout(() => {
+      console.log('🏠 AUTO-REDIRECTING to home after winner screen...');
+      setShowWinnerScreen(false);
+      setWinnerData(null);
+      setInLobby(false);
+      setLobbyData(null);
+      setForceHideLobby(false);  // Allow joining new rooms
+      setActiveTab('rooms');
+      
+      // Reload rooms
+      loadRooms();
+      
+      toast.success('Redirected to home! Join another game.', { duration: 2000 });
+    }, 2000);  // 2 seconds to view winner
   };
 
   const checkForGameCompletion = async (roomType) => {
