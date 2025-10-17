@@ -3297,6 +3297,7 @@ function App() {
         initialEurAmount={paymentEurAmount}
         onConfirm={isWorkPurchase ? handleWorkAccessConfirmed : null}
         isWorkPurchase={isWorkPurchase}
+        giftCount={selectedPackage?.count || 0}
       />
 
       {/* City Selector Modal */}
