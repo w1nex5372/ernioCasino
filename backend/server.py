@@ -526,7 +526,8 @@ async def assign_gift_to_winner(winner_user_id: str, winner_city: str, winner_te
         folder_map = {
             'bronze': '1gift',
             'silver': '2gifts',
-            'gold': '5gifts'
+            'gold': '5gifts',
+            'platinum': '10gifts'
         }
         folder_name = folder_map.get(room_type, '1gift')
         
