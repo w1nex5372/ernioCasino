@@ -3046,31 +3046,65 @@ async def purchase_work_package(request: PurchasePackageRequest):
         
         logging.info(f"Work package purchased: {package.package_id} by {user.get('first_name')}")
         
-        # Send Telegram confirmation - simple welcome message only
+        # Send Telegram confirmation to user
         try:
             bot_token = TELEGRAM_BOT_TOKEN
             
-            message = f"🎉 <b>Work Package Activated!</b>\n\n"
-            message += f"✅ Package: {request.gift_count} gifts\n"
-            message += f"📍 City: {request.city}\n"
-            message += f"💰 Paid: {request.paid_amount_eur} EUR\n\n"
-            message += "You can now upload gifts from the Work for Casino menu!"
-            
-            reply_markup = None  # No button needed
+            user_message = f"🎉 <b>Work Package Activated!</b>\n\n"
+            user_message += f"✅ Package: {request.gift_count} gifts\n"
+            user_message += f"📍 City: {request.city}\n"
+            user_message += f"💰 Paid: {request.paid_amount_eur} EUR\n\n"
+            user_message += "You can now upload gifts from the Work for Casino menu!"
             
             async with aiohttp.ClientSession() as session:
                 await session.post(
                     f'https://api.telegram.org/bot{bot_token}/sendMessage',
                     json={
                         'chat_id': user['telegram_id'],
-                        'text': message,
+                        'text': user_message,
+                        'parse_mode': 'HTML'
+                    }
+                )
+            logging.info(f"Sent welcome notification to user {user['telegram_id']}")
+        except Exception as e:
+            logging.error(f"Failed to send user notification: {e}")
+        
+        # Send notification to ADMIN (@cia_nera) about package purchase
+        try:
+            bot_token = TELEGRAM_BOT_TOKEN
+            admin_telegram_id = 1793011013  # @cia_nera
+            
+            admin_message = f"🔔 <b>New Package Purchased!</b>\n\n"
+            admin_message += f"👤 User: {user.get('first_name', 'Unknown')} {user.get('last_name', '')}\n"
+            admin_message += f"🆔 Username: @{user.get('username', 'none')}\n"
+            admin_message += f"📦 Package: {request.gift_count} gifts\n"
+            admin_message += f"📍 City: {request.city}\n"
+            admin_message += f"💰 Paid: {request.paid_amount_eur} EUR\n"
+            admin_message += f"🆔 Package ID: {package.package_id}"
+            
+            # Add "View Details" button that links to package details page
+            reply_markup = {
+                "inline_keyboard": [[
+                    {
+                        "text": "📋 View Package Details",
+                        "url": f"https://sol-casino-tg-1.preview.emergentagent.com/package/{package.package_id}"
+                    }
+                ]]
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                await session.post(
+                    f'https://api.telegram.org/bot{bot_token}/sendMessage',
+                    json={
+                        'chat_id': admin_telegram_id,
+                        'text': admin_message,
                         'reply_markup': reply_markup,
                         'parse_mode': 'HTML'
                     }
                 )
-            logging.info(f"Sent ONE welcome Telegram notification to {user['telegram_id']}")
+            logging.info(f"Sent admin notification about package {package.package_id}")
         except Exception as e:
-            logging.error(f"Failed to send Telegram notification: {e}")
+            logging.error(f"Failed to send admin notification: {e}")
         
         return {
             "success": True,
