@@ -4698,6 +4698,10 @@ class SolanaCasinoAPITester:
         print("\n🎁 Testing Welcome Bonus System...")
         self.test_welcome_bonus_comprehensive()
         
+        # Test Package-Specific Availability System (NEW - Review Request)
+        print("\n📦 Testing Package-Specific Availability System...")
+        self.test_package_specific_availability_comprehensive()
+        
         # Test Enhanced Winner Detection & Broadcast System (NEW)
         print("\n🏆 Testing Enhanced Winner Detection & Broadcast System...")
         self.test_enhanced_winner_detection_broadcast_system()
