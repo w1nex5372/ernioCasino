@@ -982,6 +982,13 @@ function App() {
 
   // Authentication and data loading
   useEffect(() => {
+    // SKIP if in gift viewer mode - no authentication needed
+    if (window.isGiftViewerMode) {
+      console.log('🎁 Gift Viewer Mode - Skipping authentication');
+      setIsLoading(false);
+      return;
+    }
+    
     // Initialize Telegram Web App early
     if (window.Telegram && window.Telegram.WebApp) {
       console.log('🔄 Initializing Telegram Web App...');
