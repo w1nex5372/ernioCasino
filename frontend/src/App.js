@@ -2195,6 +2195,102 @@ function App() {
     );
   }
 
+  // Gift Viewer Mode - ONLY show gift viewer, no main app UI
+  if (showGiftViewer && viewingGift && window.isGiftViewerMode) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-4xl bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center text-yellow-400">🎁 Your Gift Details</CardTitle>
+            <CardDescription className="text-center text-slate-300">
+              📍 {viewingGift.city}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Coordinates */}
+            <div className="p-4 bg-slate-700 rounded-lg text-center">
+              <div className="text-white font-semibold mb-2">📍 Location</div>
+              <div className="text-yellow-400 text-lg whitespace-pre-wrap">
+                {viewingGift.coordinates}
+              </div>
+              {viewingGift.description && (
+                <div className="text-slate-300 text-sm mt-2 italic">
+                  "{viewingGift.description}"
+                </div>
+              )}
+              {/* Try to extract lat/lng for Google Maps if format is correct */}
+              {(() => {
+                const coords = viewingGift.coordinates.match(/(-?\d+\.?\d*),\s*(-?\d+\.?\d*)/);
+                if (coords) {
+                  return (
+                    <Button
+                      onClick={() => {
+                        const url = `https://www.google.com/maps?q=${coords[1]},${coords[2]}`;
+                        window.open(url, '_blank');
+                      }}
+                      className="mt-3 bg-blue-600 hover:bg-blue-700"
+                    >
+                      🗺️ Open in Google Maps
+                    </Button>
+                  );
+                }
+                return null;
+              })()}
+            </div>
+
+            {/* Media Gallery */}
+            <div className="space-y-3">
+              <div className="text-white font-semibold text-center">
+                📸 Gift Media ({viewingGift.media?.length || 0} files)
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {viewingGift.media?.map((item, idx) => (
+                  <div key={idx} className="bg-slate-700 rounded-lg p-2">
+                    {item.type === 'photo' ? (
+                      <img 
+                        src={item.data} 
+                        alt={`Gift media ${idx + 1}`}
+                        className="w-full h-auto rounded-lg"
+                      />
+                    ) : (
+                      <video 
+                        src={item.data} 
+                        controls
+                        className="w-full h-auto rounded-lg"
+                      />
+                    )}
+                    <div className="text-slate-400 text-xs text-center mt-2">
+                      {item.type === 'photo' ? '📷 Photo' : '🎬 Video'} #{idx + 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {(!viewingGift.media || viewingGift.media.length === 0) && (
+                <div className="text-slate-400 text-center py-8">
+                  No media available for this gift
+                </div>
+              )}
+            </div>
+
+            {/* Close Button */}
+            <Button
+              onClick={() => {
+                window.close();
+              }}
+              variant="outline"
+              className="w-full h-12 text-lg"
+            >
+              Close Window
+            </Button>
+          </CardContent>
+        </Card>
+        <Toaster richColors position="top-right" />
+      </div>
+    );
+  }
+
   // Loading screen
   if (isLoading) {
     return (
