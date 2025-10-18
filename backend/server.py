@@ -2213,8 +2213,29 @@ async def set_user_city(request: dict):
 
 @api_router.get("/rooms")
 async def get_active_rooms():
-    """Get all active rooms with their current status"""
+    """Get all active rooms with their current status and gift availability"""
     rooms_data = []
+    
+    # Check gift availability for each room type
+    gift_availability = {}
+    for room_type in ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'elite']:
+        folder_map = {
+            'bronze': '1gift',
+            'silver': '2gifts',
+            'gold': '5gifts',
+            'platinum': '10gifts',
+            'diamond': '20gifts',
+            'elite': '50gifts'
+        }
+        folder_name = folder_map.get(room_type, '1gift')
+        
+        # Count available gifts for this room type across all cities
+        available_count = await db.gifts.count_documents({
+            "status": "available",
+            "gift_type": folder_name
+        })
+        gift_availability[room_type] = available_count > 0
+    
     for room in active_rooms.values():
         room_data = {
             "id": room.id,
@@ -2224,11 +2245,12 @@ async def get_active_rooms():
             "status": room.status,
             "prize_pool": room.prize_pool,
             "round_number": room.round_number,
-            "settings": ROOM_SETTINGS[room.room_type]
+            "settings": ROOM_SETTINGS.get(room.room_type, ROOM_SETTINGS["bronze"]),
+            "gifts_available": gift_availability.get(room.room_type, False)
         }
         rooms_data.append(room_data)
     
-    return {"rooms": rooms_data}
+    return {"rooms": rooms_data, "gift_availability": gift_availability}
 
 @api_router.post("/join-room")
 async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks):
