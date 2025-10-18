@@ -554,6 +554,12 @@ function App() {
       return;
     }
     
+    // SKIP if in package viewer mode
+    if (window.isPackageViewerMode) {
+      console.log('📦 Package Viewer Mode - Skipping WebSocket connection');
+      return;
+    }
+    
     console.log('🔌🔌🔌 CONNECTING TO WEBSOCKET 🔌🔌🔌');
     console.log('Backend URL:', BACKEND_URL);
     console.log('Platform:', platform);
