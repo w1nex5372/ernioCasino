@@ -2375,6 +2375,121 @@ function App() {
     );
   }
 
+  // Package viewer (admin view for purchased packages)
+  if (showPackageViewer && viewingPackage && window.isPackageViewerMode) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-4xl bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center text-purple-400">📦 Package Details</CardTitle>
+            <CardDescription className="text-center text-slate-300">
+              {viewingPackage.package.gift_count} Gifts - {viewingPackage.package.city}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* User Info */}
+            <div className="p-4 bg-slate-700 rounded-lg">
+              <div className="text-white font-semibold mb-2">👤 Purchased By</div>
+              <div className="text-slate-300">
+                <div>{viewingPackage.user.first_name} {viewingPackage.user.last_name}</div>
+                <div className="text-sm text-slate-400">@{viewingPackage.user.username || 'none'}</div>
+                <div className="text-xs text-slate-500">ID: {viewingPackage.user.telegram_id}</div>
+              </div>
+            </div>
+
+            {/* Package Info */}
+            <div className="p-4 bg-slate-700 rounded-lg">
+              <div className="text-white font-semibold mb-2">📦 Package Information</div>
+              <div className="grid grid-cols-2 gap-2 text-slate-300">
+                <div>Gift Count:</div>
+                <div className="text-yellow-400">{viewingPackage.package.gift_count} gifts</div>
+                <div>City:</div>
+                <div className="text-yellow-400">{viewingPackage.package.city}</div>
+                <div>Amount Paid:</div>
+                <div className="text-green-400">{viewingPackage.package.paid_amount_eur} EUR</div>
+                <div>Uploaded:</div>
+                <div className="text-blue-400">{viewingPackage.total_uploaded} / {viewingPackage.package.gift_count}</div>
+                <div>Credits Remaining:</div>
+                <div className="text-orange-400">{viewingPackage.package.gift_credits_remaining}</div>
+              </div>
+            </div>
+
+            {/* Uploaded Gifts */}
+            <div className="space-y-3">
+              <div className="text-white font-semibold">🎁 Uploaded Gifts ({viewingPackage.total_uploaded})</div>
+              {viewingPackage.gifts.map((gift, idx) => (
+                <div key={gift.gift_id} className="p-4 bg-slate-700 rounded-lg">
+                  <div className="text-yellow-400 font-semibold mb-2">Gift #{idx + 1}</div>
+                  
+                  {/* Location */}
+                  <div className="mb-3">
+                    <div className="text-slate-400 text-sm">📍 Location:</div>
+                    <div className="text-white">{gift.coordinates}</div>
+                    {gift.description && (
+                      <div className="text-slate-400 text-sm italic mt-1">"{gift.description}"</div>
+                    )}
+                  </div>
+
+                  {/* Media */}
+                  {gift.media && gift.media.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      {gift.media.map((item, mediaIdx) => (
+                        <div key={mediaIdx} className="relative">
+                          {item.type === 'photo' ? (
+                            <img 
+                              src={item.data} 
+                              alt={`Gift ${idx + 1} Media ${mediaIdx + 1}`}
+                              className="w-full h-auto rounded-lg"
+                            />
+                          ) : (
+                            <video 
+                              src={item.data} 
+                              controls
+                              className="w-full h-auto rounded-lg"
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Status */}
+                  <div className="mt-3">
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      gift.status === 'available' ? 'bg-green-600 text-white' : 
+                      gift.status === 'assigned' ? 'bg-yellow-600 text-white' : 
+                      'bg-gray-600 text-white'
+                    }`}>
+                      {gift.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              {viewingPackage.total_uploaded === 0 && (
+                <div className="text-slate-400 text-center py-8">
+                  No gifts uploaded yet
+                </div>
+              )}
+            </div>
+
+            {/* Close Button */}
+            <Button
+              onClick={() => {
+                window.close();
+              }}
+              variant="outline"
+              className="w-full h-12 text-lg"
+            >
+              Close Window
+            </Button>
+          </CardContent>
+        </Card>
+        <Toaster richColors position="top-right" />
+      </div>
+    );
+  }
+
   // Loading screen
   if (isLoading) {
     return (
