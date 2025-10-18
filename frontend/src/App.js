@@ -3751,6 +3751,28 @@ function App() {
               {/* UPLOAD GIFTS */}
               {workFlowStep === 'upload' && (
                 <div className="space-y-4">
+                  {/* City Warning Notice */}
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+                    <div className="flex items-start gap-2">
+                      <span className="text-yellow-500 text-lg">⚠️</span>
+                      <div className="flex-1">
+                        <p className="text-yellow-400 text-sm font-semibold mb-1">Important: Check Your City</p>
+                        <p className="text-yellow-300/80 text-xs">
+                          Your gifts will be uploaded to <span className="font-bold text-yellow-400">{user?.city || 'your selected city'}</span>.
+                          Make sure this is correct! Winners from this city will receive these gifts.
+                        </p>
+                        {user?.city && (
+                          <button
+                            onClick={() => setShowCitySelector(true)}
+                            className="mt-2 text-blue-400 hover:text-blue-300 text-xs underline"
+                          >
+                            Change city
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Gift Count Selector */}
                   <div className="space-y-2">
                     <label className="text-white font-semibold">How many gifts to upload?</label>
