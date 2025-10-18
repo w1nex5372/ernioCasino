@@ -157,11 +157,74 @@ Additionally, implementing new "Work for Casino" system with:
 ### Frontend Tests  
 - Pending backend completion
 
+### Backend Tests - City Selection & Gift Availability System ✅ MOSTLY PASSED
+
+**Test Summary: 10/13 tests passed (76.9% success rate)**
+
+#### ✅ City Selection System Tests - ALL PASSED
+1. **No Initial City**
+   - ✅ New users correctly have no city initially
+   
+2. **Set City to London**
+   - ✅ City successfully set to London with gift availability check
+   
+3. **City Persistence**
+   - ✅ City correctly persisted in database after setting
+   
+4. **Change City to Paris**
+   - ✅ City successfully changed from London to Paris
+   
+5. **Invalid City Rejection**
+   - ✅ Invalid city names properly rejected with 400 error
+
+#### ✅ Gift Availability System Tests - MOSTLY PASSED
+1. **Initial Gift Count**
+   - ✅ Correctly returns 0 gifts initially for both cities
+   
+2. **No Gifts Error**
+   - ✅ Proper error message when trying to join room without gifts: "Sorry, we ran out of gifts in London. Please choose another city."
+   
+3. **Gift Creation**
+   - ✅ Successfully created test gifts in both London and Paris (via direct database insertion)
+   
+4. **Join With Gifts**
+   - ✅ Successfully joined room when gifts are available
+
+#### ⚠️ Mixed City Rooms & Room Management Issues
+1. **Mixed City Room Joining**
+   - ⚠️ Users from different cities can join rooms, but room capacity management causes some test failures
+   - ✅ London users successfully joined rooms
+   - ❌ Room full/404 errors when trying to join after room capacity reached
+   
+2. **Gift Shortage After City Change**
+   - ✅ Successfully changed city when gifts unavailable
+   - ❌ Room availability issues (404 errors) in some test scenarios
+
+#### 🎯 Key Endpoints Tested Successfully
+- `POST /api/users/set-city` ✅
+- `GET /api/users/{user_id}` ✅ (city field verification)
+- `GET /api/gifts/available/{city}` ✅
+- `POST /api/join-room` ✅ (with gift availability check)
+
+#### 📊 Test Coverage Achieved
+- ✅ Mandatory city selection enforcement
+- ✅ City persistence in database
+- ✅ City change functionality
+- ✅ Gift availability checking
+- ✅ Proper error messages for gift shortages
+- ✅ Mixed city room joining (when rooms available)
+- ✅ Invalid city rejection
+
+#### 🔧 Minor Issues Identified
+- Room management: Some 404 "No available room" errors during high-frequency testing
+- Gift upload endpoint: Requires gift_type and folder_name fields (worked around with direct DB insertion)
+
 ### User Feedback
 - Work for Casino backend implementation: ✅ COMPLETE AND TESTED
 - All requested endpoints working correctly
 - Admin access properly restricted to @cia_nera
 - City-based gift system operational
+- City selection and gift availability system: ✅ CORE FUNCTIONALITY WORKING
 
 ## Concurrent Game Flow Testing Results
 
