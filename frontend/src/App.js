@@ -2162,11 +2162,16 @@ function App() {
     try {
       const response = await axios.get(`${API}/user-room-status/${user.id}`);
       
-      // Update active rooms state
+      // Update active rooms state with city information
       if (response.data.in_room) {
+        // Get the city for this room from the room data
+        const roomCity = response.data.city || userCity;
         setUserActiveRooms(prev => ({
           ...prev,
-          [response.data.room_type]: response.data.room_id
+          [response.data.room_type]: {
+            roomId: response.data.room_id,
+            city: roomCity
+          }
         }));
       }
       
