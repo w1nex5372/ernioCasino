@@ -3877,14 +3877,30 @@ class SolanaCasinoAPITester:
                 requests.post(f"{self.api_url}/work/purchase-access", 
                     json={"user_id": user['id'], "payment_signature": f"test_sig_{i}"})
                 
-                # Create gifts in their city
-                gift_data = {
-                    "user_id": user['id'],
+                # Create gifts directly in database
+                import pymongo
+                from datetime import datetime, timezone
+                
+                mongo_client = pymongo.MongoClient("mongodb://localhost:27017")
+                test_db = mongo_client["test_database"]
+                
+                gift_doc = {
+                    "gift_id": f"test_mixed_gift_{i}",
+                    "creator_user_id": user['id'],
+                    "creator_telegram_id": telegram_ids[i],
+                    "creator_username": user.get('telegram_username'),
                     "city": cities[i],
-                    "photo_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=",
-                    "coordinates": {"lat": 51.5074 + i, "lng": -0.1278 + i}
+                    "media": [{"type": "photo", "data": "test_photo_data"}],
+                    "coordinates": {"lat": 51.5074 + i, "lng": -0.1278 + i},
+                    "description": f"Test mixed gift {i}",
+                    "gift_type": "1gift",
+                    "num_places": 1,
+                    "folder_name": "1gift",
+                    "status": "available",
+                    "created_at": datetime.now(timezone.utc)
                 }
-                requests.post(f"{self.api_url}/gifts/upload", json=gift_data)
+                test_db.gifts.insert_one(gift_doc)
+                mongo_client.close()
             
             # All 3 users join bronze room
             for i, user in enumerate(users):
