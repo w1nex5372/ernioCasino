@@ -321,7 +321,7 @@ class UploadGiftRequest(BaseModel):
     user_id: str
     city: str
     photo_base64: str
-    coordinates: Dict[str, float]  # {"lat": 48.8566, "lng": 2.3522}
+    coordinates: str  # Single field: "51.5074, -0.1278 – near the fountain"
 
 class PurchasePackageRequest(BaseModel):
     user_id: str
