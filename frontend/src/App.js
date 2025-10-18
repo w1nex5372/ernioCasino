@@ -1715,30 +1715,26 @@ function App() {
         setUser({...user, city: city});
         setShowCitySelector(false);
         setGiftsAvailable(response.data.can_play);
-        setCityCheckComplete(true); // Mark as complete after city selection
         
-        // Show welcome message AFTER city selection
+        // Show welcome message after city selection
         if (user.token_balance >= 1000) {
-          toast.success(`🎉 Welcome to ${city}, ${user.first_name}! Balance: ${user.token_balance} tokens`);
-        } else if (user.token_balance > 0) {
-          toast.success(`Welcome to ${city}, ${user.first_name}! Balance: ${user.token_balance} tokens`);
+          toast.success(`🎉 Welcome to ${city}, ${user.first_name}!`);
         } else {
-          toast.success(`👋 Welcome to ${city}, ${user.first_name}! Claim your daily tokens to get started.`);
+          toast.success(`Welcome to ${city}! 🏙️`);
         }
         
         if (!response.data.can_play) {
-          toast.error(`No gifts available in ${city} yet. Please check back later or contact casino workers.`);
+          toast.error(`No gifts available in ${city} yet.`);
         }
         
-        // Load user data AFTER city selection
+        // Load user data after city selection
         setTimeout(() => {
           loadUserPrizes();
           loadDerivedWallet();
           loadWelcomeBonusStatus();
         }, 500);
         
-        // Reload rooms to show available games in this city
-        console.log('🔄 Reloading rooms for city:', city);
+        // Reload rooms
         loadRooms();
       } else {
         console.error('❌ City set failed:', response.data);
@@ -1746,11 +1742,7 @@ function App() {
       }
     } catch (error) {
       console.error('❌ Failed to set city:', error);
-      console.error('Error details:', error.response?.data);
-      
-      // Show more specific error message
-      const errorMsg = error.response?.data?.detail || 'Failed to set city. Please try again.';
-      toast.error(errorMsg);
+      toast.error(error.response?.data?.detail || 'Failed to set city. Please try again.');
     }
   };
 
