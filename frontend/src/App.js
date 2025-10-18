@@ -1197,24 +1197,23 @@ function App() {
               if (response.data) {
                 console.log('Found existing user with tokens!', response.data);
                 
-                // CRITICAL: Check city BEFORE setting user
+                setUser(response.data);
+                saveUserSession(response.data);
+                setIsLoading(false);
+                
+                // Check city after setting user
                 if (!response.data.city) {
-                  console.log('⚠️ User has no city - will show city selector immediately');
                   setShowCitySelector(true);
                 } else {
                   setUserCity(response.data.city);
+                  toast.success(`Welcome back, ${response.data.first_name}!`);
+                  
+                  setTimeout(() => {
+                    loadUserPrizes();
+                    loadDerivedWallet();
+                  }, 1000);
                 }
                 
-                setUser(response.data);
-                saveUserSession(response.data);
-                setCityCheckComplete(true); // Mark city check as done
-                setIsLoading(false);
-                toast.success(`Welcome back, ${response.data.first_name}!`);
-                
-                setTimeout(() => {
-                  loadUserPrizes();
-                  loadDerivedWallet();
-                }, 1000);
                 return;
               }
             } catch (lookupError) {
