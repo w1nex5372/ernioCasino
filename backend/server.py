@@ -3328,6 +3328,21 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
         # Each upload is ONE place with X gifts
         gift_ids = []
         for gift_data in request.gifts:
+            # Check for duplicate upload (same coordinates + description in last 5 minutes)
+            five_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=5)
+            existing_gift = await db.gifts.find_one({
+                "creator_user_id": request.user_id,
+                "coordinates": gift_data['coordinates'],
+                "description": gift_data.get('description', ''),
+                "gift_type": folder_name,
+                "created_at": {"$gte": five_minutes_ago.isoformat()}
+            })
+            
+            if existing_gift:
+                logging.warning(f"Duplicate gift upload detected for user {request.user_id} - skipping")
+                gift_ids.append(existing_gift['gift_id'])
+                continue  # Skip creating duplicate
+            
             gift = Gift(
                 creator_user_id=request.user_id,
                 creator_telegram_id=user['telegram_id'],
