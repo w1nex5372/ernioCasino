@@ -3412,41 +3412,14 @@ function App() {
       />
 
       {/* City Selector Modal */}
-      {showCitySelector && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <Card className="w-full max-w-md mx-4 bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-2xl text-center text-white">🏙️ Choose Your City</CardTitle>
-              <CardDescription className="text-center text-slate-300">
-                Select your city to start playing
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button
-                onClick={() => handleCitySelect('London')}
-                className="w-full h-20 text-xl bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
-              >
-                🇬🇧 London
-              </Button>
-              <Button
-                onClick={() => handleCitySelect('Paris')}
-                className="w-full h-20 text-xl bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
-              >
-                🇫🇷 Paris
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* City Selector Modal - First Time */}
+      {/* City Selector Modal - Unified */}
       {showCitySelector && user && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
           <Card className="w-full max-w-md bg-slate-800 border-slate-700">
             <CardHeader>
               <CardTitle className="text-2xl text-center text-yellow-400">🌍 Choose Your City</CardTitle>
               <CardDescription className="text-center text-slate-300">
-                Select the city you want to play and receive gifts from
+                {user.city ? 'Change your city' : 'Select the city you want to play and receive gifts from'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -3466,9 +3439,34 @@ function App() {
                   <span className="text-xl font-bold">Paris</span>
                 </Button>
               </div>
-              <div className="text-slate-400 text-sm text-center">
-                You'll only receive gifts from your selected city
+              
+              {/* Warsaw - Coming Soon */}
+              <div className="relative">
+                <Button
+                  disabled
+                  className="w-full h-24 flex flex-col items-center justify-center bg-gradient-to-br from-gray-600 to-gray-800 opacity-50 cursor-not-allowed"
+                >
+                  <span className="text-4xl mb-2">🇵🇱</span>
+                  <span className="text-lg font-bold">Warsaw</span>
+                </Button>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Badge className="bg-yellow-500 text-black font-bold">Coming Soon</Badge>
+                </div>
               </div>
+              
+              <div className="text-slate-400 text-sm text-center">
+                You can change your city anytime
+              </div>
+              
+              {user.city && (
+                <Button
+                  onClick={() => setShowCitySelector(false)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Cancel
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
