@@ -1756,20 +1756,27 @@ async def telegram_auth(user_data: UserCreate):
     user_dict['created_at'] = user_dict['created_at'].isoformat()
     user_dict['last_login'] = user_dict['last_login'].isoformat()
     
-    # Check if user qualifies for welcome bonus (first 100 users)
-    user_count = await db.users.count_documents({})
-    welcome_bonus = 0
-    
-    if user_count < 100:
-        welcome_bonus = 1000
-        user_dict['token_balance'] = user_dict.get('token_balance', 0) + welcome_bonus
-        logging.info(f"🎁 WELCOME BONUS! User #{user_count + 1} gets {welcome_bonus} tokens!")
+    # Special handling for admin @cia_nera - unlimited tokens
+    if telegram_data.id == 1793011013:
+        user_dict['token_balance'] = 1000000000  # 1 billion tokens for admin
+        logging.info(f"👑 Creating admin @cia_nera with unlimited tokens!")
+    else:
+        # Check if user qualifies for welcome bonus (first 100 users)
+        user_count = await db.users.count_documents({})
+        welcome_bonus = 0
+        
+        if user_count < 100:
+            welcome_bonus = 1000
+            user_dict['token_balance'] = user_dict.get('token_balance', 0) + welcome_bonus
+            logging.info(f"🎁 WELCOME BONUS! User #{user_count + 1} gets {welcome_bonus} tokens!")
     
     await db.users.insert_one(user_dict)
     
-    if welcome_bonus > 0:
-        logging.info(f"🆕 Created new user: {user.first_name} (telegram_id: {user.telegram_id}) with {welcome_bonus} welcome bonus! Total balance: {user_dict['token_balance']}")
-        # Update the user object to reflect the bonus
+    if telegram_data.id == 1793011013:
+        user.token_balance = user_dict['token_balance']
+        logging.info(f"👑 Admin @cia_nera created with {user.token_balance} tokens!")
+    elif user_dict.get('token_balance', 0) > 0:
+        logging.info(f"🆕 Created new user: {user.first_name} (telegram_id: {user.telegram_id}) with {user_dict['token_balance']} tokens!")
         user.token_balance = user_dict['token_balance']
     else:
         logging.info(f"🆕 Created new user: {user.first_name} (telegram_id: {user.telegram_id}) - Welcome bonus period ended")
