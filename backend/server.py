@@ -572,11 +572,12 @@ async def assign_gift_to_winner(winner_user_id: str, winner_city: str, winner_te
         if gift:
             logging.info(f"🎁 Gift {gift['gift_id']} from folder {folder_name} assigned to winner {winner_username} in {winner_city}")
             
-            # Send Telegram notification
+            # Send Telegram notification with all gift details
             gift_data = {
                 "gift_id": gift['gift_id'],
                 "city": gift['city'],
                 "coordinates": gift['coordinates'],
+                "description": gift.get('description', ''),  # Include description if available
                 "folder": folder_name
             }
             await send_gift_notification(winner_telegram_id, winner_username, gift_data)
