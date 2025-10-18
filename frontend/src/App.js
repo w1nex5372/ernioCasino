@@ -3150,7 +3150,7 @@ function App() {
                                   </div>
                                   {isDisabled ? (
                                     <Badge className="bg-red-500 text-white font-bold">
-                                      🚫 No Gifts
+                                      🚫 No Gifts in {userCity}
                                     </Badge>
                                   ) : (
                                     <Badge className="bg-white/20 text-white font-bold">
