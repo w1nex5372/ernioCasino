@@ -4365,10 +4365,10 @@ function App() {
                   {/* Submit Button - Single upload */}
                   <Button
                     onClick={handleSubmitGifts}
-                    disabled={currentGiftMedia.length === 0 || !giftCoordinates.trim()}
+                    disabled={isUploading || currentGiftMedia.length === 0 || !giftCoordinates.trim()}
                     className="w-full h-14 text-lg bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    🚀 Upload {uploadGiftCount} Gift{uploadGiftCount > 1 ? 's' : ''} to This Location
+                    {isUploading ? '⏳ Uploading...' : `🚀 Upload ${uploadGiftCount} Gift${uploadGiftCount > 1 ? 's' : ''} to This Location`}
                   </Button>
 
                   <Button
