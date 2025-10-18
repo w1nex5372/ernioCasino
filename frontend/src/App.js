@@ -2095,6 +2095,18 @@ function App() {
 
 
   // Game functions
+  const checkUserRoomStatus = async () => {
+    if (!user || !user.id) return null;
+    
+    try {
+      const response = await axios.get(`${API}/user-room-status/${user.id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to check room status:', error);
+      return null;
+    }
+  };
+
   const joinRoom = async (roomType) => {
     console.log('🎯 JOIN ROOM CALLED!', { 
       roomType, 
@@ -2107,6 +2119,39 @@ function App() {
       console.error('❌ No user');
       toast.error('Please authenticate first');
       return;
+    }
+    
+    // Check if user is already in a room
+    const roomStatus = await checkUserRoomStatus();
+    if (roomStatus && roomStatus.in_room) {
+      // User is already in a room
+      if (roomStatus.room_type === roomType) {
+        // Same room - just show the lobby with participants
+        console.log('✅ User already in this room, showing lobby');
+        setInLobby(true);
+        setLobbyData({
+          room_type: roomType,
+          room_id: roomStatus.room_id,
+          bet_amount: betAmount
+        });
+        setRoomParticipants(roomStatus.players);
+        
+        // Join Socket.IO room
+        if (socket && socket.connected) {
+          socket.emit('join_game_room', {
+            room_id: roomStatus.room_id,
+            user_id: user.id,
+            platform: platform
+          });
+        }
+        
+        toast.info('You are already in this room!');
+        return;
+      } else {
+        // Different room
+        toast.error(`You are already in ${roomStatus.room_type} room. Please wait for that game to finish.`);
+        return;
+      }
     }
 
     // Parse bet amount
