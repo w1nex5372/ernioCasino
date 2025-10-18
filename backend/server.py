@@ -3553,6 +3553,60 @@ async def wallet_cleanup_scheduler():
         
         # Wait 24 hours before next cleanup
         await asyncio.sleep(86400)
+
+async def assigned_gifts_cleanup_scheduler():
+    """
+    Background task that automatically deletes assigned gifts after 72 hours
+    Runs every 6 hours to check for expired assignments
+    """
+    # Wait 10 minutes after startup before first check
+    await asyncio.sleep(600)
+    
+    logging.info("🗑️ [Gift Cleanup] Assigned gifts auto-delete scheduler started (72h expiration)")
+    
+    while True:
+        try:
+            # Calculate 72 hours ago
+            cutoff_time = datetime.now(timezone.utc) - timedelta(hours=72)
+            
+            # Find assigned gifts older than 72 hours
+            expired_gifts = await db.gifts.find({
+                "status": "assigned",
+                "assigned_at": {"$exists": True}
+            }).to_list(length=None)
+            
+            deleted_count = 0
+            for gift in expired_gifts:
+                # Parse assigned_at (could be string or datetime)
+                assigned_at = gift.get('assigned_at')
+                if isinstance(assigned_at, str):
+                    try:
+                        assigned_at = datetime.fromisoformat(assigned_at.replace('Z', '+00:00'))
+                    except:
+                        continue
+                elif not isinstance(assigned_at, datetime):
+                    continue
+                
+                # Make timezone-aware if needed
+                if assigned_at.tzinfo is None:
+                    assigned_at = assigned_at.replace(tzinfo=timezone.utc)
+                
+                # Check if older than 72 hours
+                if assigned_at < cutoff_time:
+                    await db.gifts.delete_one({"gift_id": gift['gift_id']})
+                    deleted_count += 1
+                    logging.info(f"🗑️ [Gift Cleanup] Deleted expired gift {gift['gift_id']} assigned to {gift.get('winner_name', 'Unknown')}")
+            
+            if deleted_count > 0:
+                logging.info(f"🗑️ [Gift Cleanup] Cleanup complete: {deleted_count} expired gifts deleted")
+            
+        except Exception as e:
+            logging.error(f"❌ [Gift Cleanup] Error: {e}")
+            import traceback
+            logging.error(traceback.format_exc())
+        
+        # Wait 6 hours before next check
+        await asyncio.sleep(21600)
     
 @app.on_event("shutdown")
 async def shutdown_event():
