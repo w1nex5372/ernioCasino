@@ -3764,7 +3764,7 @@ class SolanaCasinoAPITester:
             # Create gifts directly in database since upload endpoint has issues
             # We'll create gifts directly in the database for testing
             import pymongo
-            from datetime import datetime, timezone
+            import datetime as dt
             
             # Connect to MongoDB directly for gift creation
             mongo_client = pymongo.MongoClient("mongodb://localhost:27017")
@@ -3785,7 +3785,7 @@ class SolanaCasinoAPITester:
                     "num_places": 1,
                     "folder_name": "1gift",
                     "status": "available",
-                    "created_at": datetime.now(timezone.utc)
+                    "created_at": dt.datetime.now(dt.timezone.utc)
                 }
                 test_db.gifts.insert_one(gift_doc)
             
@@ -3804,7 +3804,7 @@ class SolanaCasinoAPITester:
                     "num_places": 1,
                     "folder_name": "1gift",
                     "status": "available",
-                    "created_at": datetime.now(timezone.utc)
+                    "created_at": dt.datetime.now(dt.timezone.utc)
                 }
                 test_db.gifts.insert_one(gift_doc)
             
