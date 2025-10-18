@@ -3141,6 +3141,60 @@ async def get_my_packages(user_id: str):
         logging.error(f"Error getting work packages: {e}")
         raise HTTPException(status_code=500, detail="Failed to get packages")
 
+@api_router.get("/work/package-details/{package_id}")
+async def get_package_details(package_id: str):
+    """Get detailed information about a work package including uploaded gifts"""
+    try:
+        # Get package info
+        package = await db.work_packages.find_one({"package_id": package_id})
+        if not package:
+            raise HTTPException(status_code=404, detail="Package not found")
+        
+        # Get user info
+        user = await db.users.find_one({"id": package['user_id']})
+        
+        # Get all gifts uploaded for this package
+        gifts = await db.gifts.find({"package_id": package_id}).to_list(length=None)
+        
+        # Format gifts for display
+        formatted_gifts = []
+        for gift in gifts:
+            formatted_gifts.append({
+                "gift_id": gift.get('gift_id'),
+                "city": gift.get('city'),
+                "coordinates": gift.get('coordinates'),
+                "description": gift.get('description', ''),
+                "media": gift.get('media', []),
+                "status": gift.get('status', 'available'),
+                "created_at": gift.get('created_at')
+            })
+        
+        return {
+            "success": True,
+            "package": {
+                "package_id": package['package_id'],
+                "gift_count": package['gift_count'],
+                "city": package['city'],
+                "paid_amount_eur": package['paid_amount_eur'],
+                "created_at": package['created_at'],
+                "gift_credits_remaining": package.get('gift_credits_remaining', 0)
+            },
+            "user": {
+                "first_name": user.get('first_name', 'Unknown'),
+                "last_name": user.get('last_name', ''),
+                "username": user.get('username', ''),
+                "telegram_id": user.get('telegram_id')
+            },
+            "gifts": formatted_gifts,
+            "total_uploaded": len(formatted_gifts)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error getting package details: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get package details")
+
 @api_router.post("/work/upload-gifts")
 async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
     """Bulk upload gifts (1/2/5/10/20/50 at a time)"""
