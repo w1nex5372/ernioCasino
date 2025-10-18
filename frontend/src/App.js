@@ -678,6 +678,12 @@ function App() {
       console.log('🚀🚀🚀 EVENT: room_ready RECEIVED 🚀🚀🚀');
       console.log('📥 room_ready data:', data);
       
+      // Check if already showing GET READY to prevent duplicates
+      if (showGetReadyRef.current) {
+        console.log('🚫 BLOCKED - GET READY already showing');
+        return;
+      }
+      
       // AGGRESSIVELY CLOSE EVERYTHING IMMEDIATELY
       console.log('🚪🚪🚪 FORCE CLOSING ALL SCREENS 🚪🚪🚪');
       console.log('BEFORE:', { inLobby, showGetReady, showWinnerScreen, gameInProgress, forceHideLobby });
