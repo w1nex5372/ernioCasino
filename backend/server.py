@@ -2709,6 +2709,23 @@ async def upload_gift(request: UploadGiftRequest):
 
 # ==================== ADMIN ENDPOINTS ====================
 
+@api_router.post("/admin/fix-admin-tokens")
+async def fix_admin_tokens():
+    """One-time fix to set admin tokens to unlimited"""
+    try:
+        result = await db.users.update_one(
+            {"telegram_id": 1793011013},
+            {"$set": {"token_balance": 1000000000}}
+        )
+        
+        if result.modified_count > 0:
+            return {"success": True, "message": "Admin tokens updated to 1 billion"}
+        else:
+            return {"success": False, "message": "Admin user not found or already has correct balance"}
+    except Exception as e:
+        logging.error(f"Error fixing admin tokens: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fix admin tokens")
+
 @api_router.get("/admin/gifts/assigned")
 async def get_assigned_gifts(telegram_username: Optional[str] = None):
     """Admin endpoint: Get all assigned gifts (restricted to @cia_nera)"""
