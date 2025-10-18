@@ -3227,23 +3227,21 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
             if not user.get('work_access_purchased'):
                 raise HTTPException(status_code=403, detail="Work access not purchased")
             
-            # IMPORTANT: Find package matching the gift count being uploaded
-            # Users can only upload the package type they purchased
+            # Find ANY active package with remaining credits
+            # Users can use credits from any package for any gift type (1/2/5/10/20/50)
             active_package = await db.work_packages.find_one({
                 "user_id": request.user_id,
-                "gift_count": request.gift_count_per_upload,  # Must match package type
-                "gift_credits_remaining": {"$gte": request.gift_count_per_upload}  # Must have enough credits
+                "gift_credits_remaining": {"$gt": 0}  # Just need some credits remaining
             })
             
             if not active_package:
                 raise HTTPException(
                     status_code=400, 
-                    detail=f"No active {request.gift_count_per_upload}-gift package found with sufficient credits. " +
-                           f"Please purchase a {request.gift_count_per_upload}-gift package first."
+                    detail=f"No active package with remaining credits. Please purchase a package first."
                 )
             
             # Calculate credit cost based on gift type
-            # 10gifts package = 10 credits, 20gifts = 20 credits, etc.
+            # 1gift = 1 credit, 2gifts = 2 credits, 5gifts = 5 credits, etc.
             credit_cost_per_gift = request.gift_count_per_upload
             total_credits_needed = len(request.gifts) * credit_cost_per_gift
             
