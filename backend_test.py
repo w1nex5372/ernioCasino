@@ -3879,7 +3879,7 @@ class SolanaCasinoAPITester:
                 
                 # Create gifts directly in database
                 import pymongo
-                from datetime import datetime, timezone
+                import datetime as dt
                 
                 mongo_client = pymongo.MongoClient("mongodb://localhost:27017")
                 test_db = mongo_client["test_database"]
@@ -3897,7 +3897,7 @@ class SolanaCasinoAPITester:
                     "num_places": 1,
                     "folder_name": "1gift",
                     "status": "available",
-                    "created_at": datetime.now(timezone.utc)
+                    "created_at": dt.datetime.now(dt.timezone.utc)
                 }
                 test_db.gifts.insert_one(gift_doc)
                 mongo_client.close()
