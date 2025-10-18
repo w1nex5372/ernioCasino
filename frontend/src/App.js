@@ -3553,6 +3553,21 @@ function App() {
                       <span className="text-lg font-bold">Paris</span>
                     </Button>
                   </div>
+                  
+                  {/* Warsaw - Coming Soon */}
+                  <div className="relative">
+                    <Button
+                      disabled
+                      className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-br from-gray-600 to-gray-800 opacity-50 cursor-not-allowed"
+                    >
+                      <span className="text-3xl mb-1">🇵🇱</span>
+                      <span className="text-base font-bold">Warsaw</span>
+                    </Button>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Badge className="bg-yellow-500 text-black font-bold text-xs">Coming Soon</Badge>
+                    </div>
+                  </div>
+                  
                   <Button
                     onClick={() => setShowWorkModal(false)}
                     variant="outline"
