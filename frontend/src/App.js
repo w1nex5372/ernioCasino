@@ -314,6 +314,7 @@ function App() {
   const [uploadGiftCount, setUploadGiftCount] = useState(1); // 1, 2, 5, 10, 20, 50 (all room types)
   const [uploadedGifts, setUploadedGifts] = useState([]); // Array of gifts with media arrays
   const [currentGiftMedia, setCurrentGiftMedia] = useState([]); // Media for current gift being uploaded
+  const [isUploading, setIsUploading] = useState(false); // Prevent double uploads
   const [isWorkPurchase, setIsWorkPurchase] = useState(false); // Track if current payment is for work access
   const [giftCoordinates, setGiftCoordinates] = useState(''); // Single field for coordinates
   const [giftDescription, setGiftDescription] = useState(''); // Location description
