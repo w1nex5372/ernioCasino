@@ -403,17 +403,25 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
                         localStorage.setItem('casino_last_eur_amount', numValue.toString());
                       }
                     }}
-                    className="flex-1 bg-slate-900 border border-slate-700 text-white text-xl font-bold rounded-lg px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none"
-                    disabled={loading || paymentStatus !== 'pending'}
+                    className={`flex-1 bg-slate-900 border border-slate-700 text-white text-xl font-bold rounded-lg px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none ${isWorkPurchase ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    disabled={loading || paymentStatus !== 'pending' || isWorkPurchase}
                     placeholder="0.10"
+                    readOnly={isWorkPurchase}
                   />
                 </div>
                 {validationError && (
                   <p className="text-xs text-red-400">⚠️ {validationError}</p>
                 )}
-                <p className="text-xs text-slate-500">
-                  Type any amount ≥ 0.1 EUR • Use dot (.) or comma (,) for decimals
-                </p>
+                {!isWorkPurchase && (
+                  <p className="text-xs text-slate-500">
+                    Type any amount ≥ 0.1 EUR • Use dot (.) or comma (,) for decimals
+                  </p>
+                )}
+                {isWorkPurchase && (
+                  <p className="text-xs text-purple-400">
+                    🎁 Fixed package price - includes {giftCount} gifts
+                  </p>
+                )}
               </div>
 
               {/* Calculated Tokens or Gifts (updates automatically) */}
