@@ -1270,6 +1270,7 @@ function App() {
               
               setUser(response.data);
               saveUserSession(response.data);
+              setCityCheckComplete(true); // Mark city check as done
               setIsLoading(false);
               toast.success(`Welcome back, ${telegramUser.first_name}!`);
               return;
