@@ -569,9 +569,9 @@ function App() {
     newSocket.on('reconnect_attempt', (attemptNumber) => {
       console.log(`🔄 Reconnection attempt ${attemptNumber}...`);
       setIsConnected(false);
-      // Only show reconnection toast every 3 attempts to reduce spam
-      if (attemptNumber % 3 === 0) {
-        toast.info(`Reconnecting...`, { duration: 1500 });
+      // Only show reconnection toast after 5 attempts to reduce spam
+      if (attemptNumber === 5) {
+        toast.info(`Reconnecting...`, { duration: 1000 });
       }
     });
     
@@ -586,7 +586,11 @@ function App() {
     newSocket.on('reconnect', (attemptNumber) => {
       console.log(`✅ Reconnected after ${attemptNumber} attempts!`);
       setIsConnected(true);
-      toast.success('Reconnected!', { duration: 1500 });
+      
+      // Only show success toast if it took more than 2 attempts
+      if (attemptNumber > 2) {
+        toast.success('Reconnected!', { duration: 1000 });
+      }
       
       // Re-register user after reconnection
       const storedUser = JSON.parse(localStorage.getItem('casino_user_session') || '{}');
@@ -612,9 +616,15 @@ function App() {
         newSocket.connect();
       }
       
-      // Only show disconnect toast if it's not a normal close
-      if (reason !== 'io client disconnect') {
-        toast.warning('Connection lost. Reconnecting...', { duration: 2000 });
+      // Don't show disconnect toast for normal disconnects or quick reconnects
+      // Only show if it's a server issue and not a normal close
+      if (reason !== 'io client disconnect' && reason !== 'transport close') {
+        // Delay showing the toast to avoid spam on quick reconnects
+        setTimeout(() => {
+          if (!newSocket.connected) {
+            toast.warning('Connection lost. Reconnecting...', { duration: 1500 });
+          }
+        }, 2000);
       }
     });
 
