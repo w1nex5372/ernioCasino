@@ -1305,7 +1305,7 @@ function App() {
   }, []);
 
 
-  // Check if user needs to select city
+  // Check if user needs to select city - IMMEDIATELY
   useEffect(() => {
     if (user && !isLoading) {
       // Set user city from user data
@@ -1313,10 +1313,8 @@ function App() {
         setUserCity(user.city);
         setHasWorkAccess(user.work_access_purchased || false);
       } else {
-        // User has no city selected, show city selector
-        setTimeout(() => {
-          setShowCitySelector(true);
-        }, 1000); // Small delay to let user see main screen first
+        // User has no city selected, show city selector IMMEDIATELY
+        setShowCitySelector(true);
       }
     }
   }, [user, isLoading]);
