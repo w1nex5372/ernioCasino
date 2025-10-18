@@ -3697,23 +3697,25 @@ function App() {
                   {/* Gift Count Selector */}
                   <div className="space-y-2">
                     <label className="text-white font-semibold">How many gifts to upload?</label>
+                    <p className="text-slate-400 text-sm">All gifts will be uploaded to ONE location</p>
                     <select
                       value={uploadGiftCount}
                       onChange={(e) => setUploadGiftCount(parseInt(e.target.value))}
                       className="w-full p-3 rounded-lg bg-slate-700 text-white border border-slate-600"
                     >
-                      <option value={1}>1 gift (Bronze winners)</option>
-                      <option value={2}>2 gifts (Silver winners)</option>
-                      <option value={5}>5 gifts (Gold winners)</option>
-                      <option value={10}>10 gifts (Future)</option>
-                      <option value={20}>20 gifts (Future)</option>
-                      <option value={50}>50 gifts (Future)</option>
+                      <option value={1}>1 gift (Bronze Room)</option>
+                      <option value={2}>2 gifts (Silver Room)</option>
+                      <option value={5}>5 gifts (Gold Room)</option>
+                      <option value={10}>10 gifts (Platinum Room)</option>
+                      <option value={20}>20 gifts (Diamond Room)</option>
+                      <option value={50}>50 gifts (Elite Room)</option>
                     </select>
                   </div>
 
                   {/* Photo/Video Upload */}
                   <div className="space-y-2">
                     <label className="text-white font-semibold">📸📹 Add Photos/Videos</label>
+                    <p className="text-slate-400 text-sm">Upload {uploadGiftCount} gift photo(s)/video(s) for this location</p>
                     <input
                       type="file"
                       accept="image/*,video/*"
@@ -3728,30 +3730,18 @@ function App() {
                     )}
                   </div>
 
-                  {/* Coordinates */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <label className="text-white font-semibold">📍 Latitude</label>
-                      <input
-                        type="number"
-                        step="any"
-                        value={giftLat}
-                        onChange={(e) => setGiftLat(e.target.value)}
-                        placeholder="51.5074"
-                        className="w-full p-3 rounded-lg bg-slate-700 text-white"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-white font-semibold">📍 Longitude</label>
-                      <input
-                        type="number"
-                        step="any"
-                        value={giftLng}
-                        onChange={(e) => setGiftLng(e.target.value)}
-                        placeholder="-0.1278"
-                        className="w-full p-3 rounded-lg bg-slate-700 text-white"
-                      />
-                    </div>
+                  {/* Single Coordinates Field */}
+                  <div className="space-y-2">
+                    <label className="text-white font-semibold">📍 Coordinates</label>
+                    <p className="text-slate-400 text-sm">Enter or paste coordinates for where all {uploadGiftCount} gifts are located</p>
+                    <textarea
+                      value={giftCoordinates}
+                      onChange={(e) => setGiftCoordinates(e.target.value)}
+                      placeholder="51.5074, -0.1278 – near the fountain"
+                      className="w-full p-3 rounded-lg bg-slate-700 text-white resize-none"
+                      rows={2}
+                    />
+                    <p className="text-slate-500 text-xs">Example: "51.5074, -0.1278" or "51.5074, -0.1278 – behind red door"</p>
                   </div>
 
                   {/* Location Description */}
@@ -3766,38 +3756,14 @@ function App() {
                     />
                   </div>
 
-                  {/* Add Gift Button */}
-                  {uploadedGifts.length < uploadGiftCount && (
-                    <Button
-                      onClick={handleAddGift}
-                      className="w-full bg-blue-600 hover:bg-blue-700"
-                    >
-                      ➕ Add Place ({uploadedGifts.length}/{uploadGiftCount})
-                    </Button>
-                  )}
-
-                  {/* Uploaded Gifts List */}
-                  {uploadedGifts.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="text-white font-semibold">
-                        Gifts Ready ({uploadedGifts.length}/{uploadGiftCount})
-                      </div>
-                      {uploadedGifts.map((gift, idx) => (
-                        <div key={idx} className="p-2 bg-slate-700 rounded-lg text-sm text-slate-300">
-                          Gift {idx + 1}: {gift.media.length} file(s) at {gift.coordinates.lat.toFixed(4)}, {gift.coordinates.lng.toFixed(4)}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Submit Gifts */}
-                  {uploadedGifts.length === uploadGiftCount && (
-                    <Button
-                      onClick={handleSubmitGifts}
-                      className="w-full h-14 text-lg bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900"
-                    >
-                      🚀 Submit All Gifts
-                    </Button>
+                  {/* Submit Button - Single upload */}
+                  <Button
+                    onClick={handleSubmitGifts}
+                    disabled={currentGiftMedia.length === 0 || !giftCoordinates.trim()}
+                    className="w-full h-14 text-lg bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    🚀 Upload {uploadGiftCount} Gift{uploadGiftCount > 1 ? 's' : ''} to This Location
+                  </Button>
                   )}
 
                   <Button
