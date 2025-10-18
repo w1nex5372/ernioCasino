@@ -51,21 +51,48 @@ const ROOM_CONFIGS = {
     icon: '🥉', 
     min: 150, 
     max: 450,
-    gradient: 'from-amber-600 to-amber-800'
+    gradient: 'from-amber-600 to-amber-800',
+    giftsPerPlace: 1
   },
   silver: { 
     name: 'Silver Room', 
     icon: '🥈', 
     min: 500, 
     max: 1500,
-    gradient: 'from-slate-400 to-slate-600'
+    gradient: 'from-slate-400 to-slate-600',
+    giftsPerPlace: 2
   },
   gold: { 
     name: 'Gold Room', 
     icon: '🥇', 
     min: 2000, 
     max: 8000,
-    gradient: 'from-yellow-400 to-yellow-600'
+    gradient: 'from-yellow-400 to-yellow-600',
+    giftsPerPlace: 5
+  },
+  platinum: { 
+    name: 'Platinum Room', 
+    icon: '💎', 
+    min: 10000, 
+    max: 30000,
+    gradient: 'from-purple-400 to-purple-600',
+    giftsPerPlace: 10
+  },
+  diamond: { 
+    name: 'Diamond Room', 
+    icon: '💠', 
+    min: 40000, 
+    max: 100000,
+    gradient: 'from-blue-400 to-blue-600',
+    giftsPerPlace: 20
+  },
+  elite: { 
+    name: 'Elite Room', 
+    icon: '👑', 
+    min: 150000, 
+    max: 500000,
+    gradient: 'from-pink-500 to-red-600',
+    giftsPerPlace: 50
   }
 };
 
