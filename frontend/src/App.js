@@ -3977,7 +3977,8 @@ function App() {
                   {/* Photo/Video Upload */}
                   <div className="space-y-2">
                     <label className="text-white font-semibold">📸📹 Add Photos/Videos</label>
-                    <p className="text-slate-400 text-sm">Upload {uploadGiftCount} gift photo(s)/video(s) for this location</p>
+                    <p className="text-slate-400 text-sm">Upload {uploadGiftCount} gift photo(s)/video(s)</p>
+                    <p className="text-yellow-400 text-xs">⚠️ Photo location data is ignored - you'll enter coordinates manually below</p>
                     <input
                       type="file"
                       accept="image/*,video/*"
