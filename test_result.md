@@ -43,12 +43,18 @@ Additionally, implementing new "Work for Casino" system with:
 - Backend game flow: room_ready (T+0) → game_starting (T+3) → game_finished (T+6) → redirect_home (T+9)
 - Frontend: Improved socket reconnection logic with 10 attempts, 2-20 second delays
 - Fixed: Lobby no longer reappears after GET READY screen
-- Testing: Pending
+- Testing: Passed
 
 ### Phase 2: City-Based System (Completed)
-- Status: ✅ Implemented
-- Goal: Add city selection and filtering
-- Features: City selector modal, city display in mobile/desktop header, city stored in user profile
+- Status: ✅ Implemented & Enhanced
+- Goal: Add city selection and filtering with ability to change cities
+- Features: 
+  - City selector modal appears on first load (mandatory)
+  - City can be changed anytime via "Change" button in header
+  - Cities: London, Paris (active), Warsaw (Coming Soon - disabled)
+  - Gift availability check before joining rooms
+  - Friendly error messages when gifts run out with option to change city
+  - City stored in user profile
 
 ### Phase 3: Work for Casino System (Completed)
 - Status: ✅ Implemented & Mobile UI Fixed
@@ -57,6 +63,7 @@ Additionally, implementing new "Work for Casino" system with:
 - Mobile: Added header buttons for "Work Casino" and "Buy Tokens"
 - Backend endpoints: set-city, work/purchase-access, gifts/upload, check-access
 - Gift assignment: Triggered automatically when game finishes, matches winner's city
+- Warsaw added as "Coming Soon" in all city selection modals
 
 ### Phase 4: Admin Dashboard (Completed)
 - Status: ✅ Implemented
@@ -76,6 +83,20 @@ Additionally, implementing new "Work for Casino" system with:
   - User re-registration after reconnection
   - Toast notifications for connection status
   - Automatic room reload after successful reconnection
+
+### Phase 6: Mandatory City Selection & Gift Availability (In Progress)
+- Status: 🔄 Implemented, Pending Testing
+- Goal: Enforce mandatory city selection and handle gift shortages gracefully
+- Features:
+  - Unified city selector modal (removed duplicates)
+  - Mandatory city selection on initial login
+  - "Change City" button in mobile and desktop headers
+  - Warsaw added as "Coming Soon" (disabled) in all city selection modals
+  - Improved error handling: "Sorry, we ran out of gifts in {city}. Please choose another city."
+  - Toast with action button to change city when gifts unavailable
+  - Backend error message updated to be more user-friendly
+  - Mixed city rooms: Players from different cities can join same room
+  - Winner assignment: Gift assigned based on winner's selected city
 
 ## Test Results
 
