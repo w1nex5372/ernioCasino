@@ -3520,13 +3520,13 @@ function App() {
                               <Input
                                 type="number"
                                 placeholder={`${config.min}-${config.max}`}
-                                value={selectedRoom === roomType ? betAmount : ''}
+                                value={betAmounts[roomType] || ''}
                                 onChange={(e) => {
                                   console.log('📝 Bet amount changed:', e.target.value, 'for room:', roomType);
                                   setSelectedRoom(roomType);
-                                  setBetAmount(e.target.value);
+                                  setBetAmounts(prev => ({ ...prev, [roomType]: e.target.value }));
                                 }}
-                                disabled={isDisabled}
+                                disabled={isDisabled || userActiveRooms[roomType]}
                                 className="bg-slate-700 border-slate-500 text-white text-center h-9 text-sm placeholder:text-slate-400 focus:border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
                               />
                               
@@ -3534,7 +3534,7 @@ function App() {
                                 onClick={async () => {
                                   console.log('🔘 MOBILE Join button clicked!', {
                                     roomType,
-                                    betAmount,
+                                    betAmount: betAmounts[roomType],
                                     selectedRoom,
                                     userBalance: user?.token_balance,
                                     playersCount: room.players_count,
@@ -3543,20 +3543,22 @@ function App() {
                                   await joinRoom(roomType);
                                   console.log('🔘 Join room function completed');
                                 }}
-                                disabled={isDisabled || room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount)}
+                                disabled={isDisabled || (!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType])))}
                                 className={`w-full h-9 text-white font-semibold text-sm ${
-                                  (isDisabled || room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount))
+                                  userActiveRooms[roomType] ? 'bg-blue-600 hover:bg-blue-700' :
+                                  (isDisabled || room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))
                                     ? 'bg-slate-600 cursor-not-allowed' 
                                     : 'bg-green-600 hover:bg-green-700'
                                 }`}
                               >
                                 <Play className="w-3 h-3 mr-1" />
-                                {isDisabled ? `🚫 No Gifts in ${userCity}` :
+                                {userActiveRooms[roomType] ? '↩️ Return to Room' :
+                                 isDisabled ? `🚫 No Gifts in ${userCity}` :
                                  room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
                                  room.players_count >= 3 ? 'Full' : 
-                                 !betAmount ? 'Enter Bet' :
-                                 parseInt(betAmount) < config.min || parseInt(betAmount) > config.max ? 'Invalid' :
-                                 user.token_balance < parseInt(betAmount) ? 'Low Balance' : 'Join'}
+                                 !betAmounts[roomType] ? 'Enter Bet' :
+                                 parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max ? 'Invalid' :
+                                 user.token_balance < parseInt(betAmounts[roomType]) ? 'Low Balance' : 'Join'}
                               </Button>
                             </div>
                           </div>
