@@ -4067,7 +4067,19 @@ class SolanaCasinoAPITester:
                 self.log_test("Gift Shortage - Join After City Change", True, "Successfully joined room after changing city")
             else:
                 error_detail = join_paris_response.json().get('detail', 'Unknown error') if join_paris_response.status_code == 400 else f"HTTP {join_paris_response.status_code}"
-                self.log_test("Gift Shortage - Join After City Change", False, f"Failed to join after city change: {join_paris_response.status_code} - {error_detail}")
+                
+                # If room is full, wait and try again
+                if "Room is full" in error_detail:
+                    print("⏳ Room full, waiting for game to complete...")
+                    time.sleep(6)
+                    join_paris_response = requests.post(f"{self.api_url}/join-room", json=join_paris_data)
+                    
+                    if join_paris_response.status_code == 200:
+                        self.log_test("Gift Shortage - Join After City Change", True, "Successfully joined room after waiting")
+                    else:
+                        self.log_test("Gift Shortage - Join After City Change", False, f"Failed to join even after waiting: {join_paris_response.status_code}")
+                else:
+                    self.log_test("Gift Shortage - Join After City Change", False, f"Failed to join after city change: {join_paris_response.status_code} - {error_detail}")
             
             return True
             
