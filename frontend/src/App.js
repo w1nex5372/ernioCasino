@@ -300,8 +300,7 @@ function App() {
   const [uploadedGifts, setUploadedGifts] = useState([]); // Array of gifts with media arrays
   const [currentGiftMedia, setCurrentGiftMedia] = useState([]); // Media for current gift being uploaded
   const [isWorkPurchase, setIsWorkPurchase] = useState(false); // Track if current payment is for work access
-  const [giftLat, setGiftLat] = useState('');
-  const [giftLng, setGiftLng] = useState('');
+  const [giftCoordinates, setGiftCoordinates] = useState(''); // Single field for coordinates
   const [giftDescription, setGiftDescription] = useState(''); // Location description
   const [giftCity, setGiftCity] = useState(''); // City for gift upload
   const [viewingGift, setViewingGift] = useState(null); // Gift being viewed
