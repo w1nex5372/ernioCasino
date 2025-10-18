@@ -3635,14 +3635,14 @@ function App() {
                                   <Input
                                     type="number"
                                     placeholder={`Bet amount (${config.min}-${config.max})`}
-                                    value={selectedRoom === roomType ? betAmount : ''}
+                                    value={betAmounts[roomType] || ''}
                                     onChange={(e) => {
                                       setSelectedRoom(roomType);
-                                      setBetAmount(e.target.value);
+                                      setBetAmounts(prev => ({ ...prev, [roomType]: e.target.value }));
                                     }}
                                     min={config.min}
                                     max={config.max}
-                                    disabled={isDisabled}
+                                    disabled={isDisabled || userActiveRooms[roomType]}
                                     className="bg-slate-700 border-slate-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                   />
                                   
