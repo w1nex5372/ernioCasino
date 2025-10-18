@@ -1258,19 +1258,18 @@ function App() {
           try {
             const response = await axios.get(`${API}/users/telegram/${telegramUser.id}`);
             if (response.data) {
-              // CRITICAL: Check city BEFORE setting user
+              setUser(response.data);
+              saveUserSession(response.data);
+              setIsLoading(false);
+              
+              // Check city
               if (!response.data.city) {
-                console.log('⚠️ User has no city - will show city selector immediately');
                 setShowCitySelector(true);
               } else {
                 setUserCity(response.data.city);
+                toast.success(`Welcome back, ${telegramUser.first_name}!`);
               }
               
-              setUser(response.data);
-              saveUserSession(response.data);
-              setCityCheckComplete(true); // Mark city check as done
-              setIsLoading(false);
-              toast.success(`Welcome back, ${telegramUser.first_name}!`);
               return;
             }
           } catch (e) {
