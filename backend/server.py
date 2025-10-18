@@ -2837,6 +2837,25 @@ async def get_available_gifts_count(city: str):
         logging.error(f"Error getting available gifts count: {e}")
         raise HTTPException(status_code=500, detail="Failed to get gift count")
 
+@api_router.get("/work/system-ready")
+async def check_work_system_ready():
+    """Check if the work system is ready (any gifts uploaded in the system)"""
+    try:
+        # Check if ANY gifts exist in the system (uploaded by anyone)
+        total_gifts = await db.gifts.count_documents({})
+        
+        # System is ready if there's at least one gift uploaded
+        system_ready = total_gifts > 0
+        
+        return {
+            "system_ready": system_ready,
+            "total_gifts_in_system": total_gifts,
+            "message": "Work for Casino is available" if system_ready else "No gifts uploaded yet. System not ready for workers."
+        }
+    except Exception as e:
+        logging.error(f"Error checking work system readiness: {e}")
+        raise HTTPException(status_code=500, detail="Failed to check system status")
+
 @api_router.get("/work/package-availability/{user_id}")
 async def get_package_availability(user_id: str):
     """Check which packages can be purchased based on remaining upload credits"""
