@@ -1153,18 +1153,8 @@ function App() {
           data: error.response?.data
         });
         
-        // Show user-friendly error message
-        if (error.response?.status === 401) {
-          toast.error('Invalid credentials. Please try again.');
-        } else if (error.response?.status === 500) {
-          toast.error('Server error. Please try again later.');
-        } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-          toast.error('Network timeout. Please check your connection.');
-        } else if (error.message.includes('Network Error')) {
-          toast.error('Cannot reach server. Please check your internet connection.');
-        } else {
-          toast.error('Authentication failed. Creating account...');
-        }
+        // Don't show multiple error toasts - just log and proceed to fallback
+        console.log('⚠️ Auth failed - attempting fallback authentication...');
         
         // If we have Telegram user data, try to find existing account
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
@@ -1179,7 +1169,7 @@ function App() {
                 setUser(response.data);
                 saveUserSession(response.data);
                 setIsLoading(false);
-                toast.success(`Welcome back, ${response.data.first_name}! Your tokens are restored.`);
+                toast.success(`Welcome back, ${response.data.first_name}!`);
                 
                 setTimeout(() => {
                   loadUserPrizes();
@@ -1188,8 +1178,8 @@ function App() {
                 return;
               }
             } catch (lookupError) {
-              console.log('User not found by Telegram ID:', lookupError);
-              toast.error('Account not found. Creating new account...');
+              console.log('User not found by Telegram ID - will create new account');
+              // Don't show error toast here - fallback will handle it
             }
           }
         }
