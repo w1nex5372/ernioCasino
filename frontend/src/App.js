@@ -1195,6 +1195,15 @@ function App() {
               
               if (response.data) {
                 console.log('Found existing user with tokens!', response.data);
+                
+                // CRITICAL: Check city BEFORE setting user
+                if (!response.data.city) {
+                  console.log('⚠️ User has no city - will show city selector immediately');
+                  setShowCitySelector(true);
+                } else {
+                  setUserCity(response.data.city);
+                }
+                
                 setUser(response.data);
                 saveUserSession(response.data);
                 setIsLoading(false);
