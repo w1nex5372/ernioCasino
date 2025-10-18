@@ -1817,11 +1817,18 @@ async def initiate_token_purchase(request: TokenPurchaseRequest):
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
-        # Validate token amount (min 10, max 10000)
-        if request.token_amount < 10:
-            raise HTTPException(status_code=400, detail="Minimum purchase is 10 tokens")
-        if request.token_amount > 10000:
-            raise HTTPException(status_code=400, detail="Maximum purchase is 10,000 tokens")
+        # Validate token amount (min 10, max 10000 for regular purchases)
+        # Work packages have higher amounts (10000, 18000, 40000) - skip validation for them
+        work_package_amounts = [10000, 18000, 40000, 150]  # 100EUR*100, 180EUR*100, 400EUR*100, 1.5EUR*100 (admin)
+        is_work_package = request.token_amount in work_package_amounts
+        
+        if not is_work_package:
+            if request.token_amount < 10:
+                raise HTTPException(status_code=400, detail="Minimum purchase is 10 tokens")
+            if request.token_amount > 10000:
+                raise HTTPException(status_code=400, detail="Maximum purchase is 10,000 tokens")
+        else:
+            logging.info(f"Work package detected: {request.token_amount} tokens (skipping limits)")
         
         # Create payment wallet using Solana processor
         processor = get_processor(db)
