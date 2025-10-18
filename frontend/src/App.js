@@ -3106,22 +3106,34 @@ function App() {
                                       </CardDescription>
                                     </div>
                                   </div>
-                                  <Badge className="bg-white/20 text-white font-bold">
-                                    {room.players_count}/3 players
-                                  </Badge>
+                                  {isDisabled ? (
+                                    <Badge className="bg-red-500 text-white font-bold">
+                                      🚫 No Gifts
+                                    </Badge>
+                                  ) : (
+                                    <Badge className="bg-white/20 text-white font-bold">
+                                      {room.players_count}/3 players
+                                    </Badge>
+                                  )}
                                 </div>
                               </div>
                             </CardHeader>
                             <CardContent className="p-4">
                               <div className="space-y-4">
-                                {room.players_count === 0 && (
-                                  <p className="text-slate-400 text-sm text-center">No players yet. Be the first to join!</p>
-                                )}
-                                {room.players_count === 1 && (
-                                  <p className="text-yellow-400 text-sm text-center font-medium">1 player waiting. Join now!</p>
-                                )}
-                                {room.players_count >= 3 && (
-                                  <p className="text-red-400 text-sm text-center font-medium">Room full - game in progress</p>
+                                {isDisabled ? (
+                                  <p className="text-red-400 text-sm text-center font-medium">No gifts uploaded for this room yet</p>
+                                ) : (
+                                  <>
+                                    {room.players_count === 0 && (
+                                      <p className="text-slate-400 text-sm text-center">No players yet. Be the first to join!</p>
+                                    )}
+                                    {room.players_count === 1 && (
+                                      <p className="text-yellow-400 text-sm text-center font-medium">1 player waiting. Join now!</p>
+                                    )}
+                                    {room.players_count >= 3 && (
+                                      <p className="text-red-400 text-sm text-center font-medium">Room full - game in progress</p>
+                                    )}
+                                  </>
                                 )}
                                 
                                 <div className="space-y-3">
@@ -3135,7 +3147,8 @@ function App() {
                                     }}
                                     min={config.min}
                                     max={config.max}
-                                    className="bg-slate-700 border-slate-600 text-white"
+                                    disabled={isDisabled}
+                                    className="bg-slate-700 border-slate-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                   />
                                   
                                   <Button
@@ -3151,15 +3164,16 @@ function App() {
                                       await joinRoom(roomType);
                                       console.log('🖥️ Join room function completed');
                                     }}
-                                    disabled={room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount)}
+                                    disabled={isDisabled || room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount)}
                                     className={`w-full ${
-                                      (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount))
+                                      (isDisabled || room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount))
                                         ? 'bg-slate-600 cursor-not-allowed' 
                                         : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600'
                                     } text-white font-bold py-3`}
                                   >
                                     <Play className="w-4 h-4 mr-2" />
-                                    {room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
+                                    {isDisabled ? '🚫 No Gifts Available' :
+                                     room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
                                      room.players_count >= 3 ? 'Room Full' : 
                                      !betAmount ? 'Enter Bet Amount' :
                                      parseInt(betAmount) < config.min || parseInt(betAmount) > config.max ? 'Invalid Amount' :
