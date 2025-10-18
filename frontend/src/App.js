@@ -804,7 +804,25 @@ function App() {
       
       console.log('✅ Winner screen displayed');
       
-      // DON'T reload rooms/history here - do it after redirect_home
+      // Auto-redirect to home after 5 seconds
+      setTimeout(() => {
+        console.log('⏰ 5 seconds elapsed - auto-redirecting to home');
+        setShowWinnerScreen(false);
+        setWinnerData(null);
+        setActiveTab('rooms');
+        
+        // Reload user data
+        if (user && user.id) {
+          axios.get(`${API}/user/${user.id}`)
+            .then(response => setUser(response.data))
+            .catch(error => console.error('Failed to reload user:', error));
+        }
+        
+        loadRooms();
+        loadGameHistory();
+      }, 5000);
+      
+      // Load prizes immediately
       if (user) loadUserPrizes();
     });
 
