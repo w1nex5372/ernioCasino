@@ -522,6 +522,12 @@ function App() {
   
   // Socket connection with robust reconnection
   useEffect(() => {
+    // SKIP if in gift viewer mode
+    if (window.isGiftViewerMode) {
+      console.log('🎁 Gift Viewer Mode - Skipping WebSocket connection');
+      return;
+    }
+    
     console.log('🔌🔌🔌 CONNECTING TO WEBSOCKET 🔌🔌🔌');
     console.log('Backend URL:', BACKEND_URL);
     console.log('Platform:', platform);
