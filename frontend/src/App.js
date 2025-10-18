@@ -3999,23 +3999,32 @@ function App() {
               {/* Coordinates */}
               <div className="p-4 bg-slate-700 rounded-lg text-center">
                 <div className="text-white font-semibold mb-2">📍 Location Coordinates</div>
-                <div className="text-yellow-400 text-lg">
-                  {viewingGift.coordinates.lat}, {viewingGift.coordinates.lng}
+                <div className="text-yellow-400 text-lg whitespace-pre-wrap">
+                  {viewingGift.coordinates}
                 </div>
                 {viewingGift.description && (
                   <div className="text-slate-300 text-sm mt-2 italic">
                     "{viewingGift.description}"
                   </div>
                 )}
-                <Button
-                  onClick={() => {
-                    const url = `https://www.google.com/maps?q=${viewingGift.coordinates.lat},${viewingGift.coordinates.lng}`;
-                    window.open(url, '_blank');
-                  }}
-                  className="mt-3 bg-blue-600 hover:bg-blue-700"
-                >
-                  🗺️ Open in Google Maps
-                </Button>
+                {/* Try to extract lat/lng for Google Maps if format is correct */}
+                {(() => {
+                  const coords = viewingGift.coordinates.match(/(-?\d+\.?\d*),\s*(-?\d+\.?\d*)/);
+                  if (coords) {
+                    return (
+                      <Button
+                        onClick={() => {
+                          const url = `https://www.google.com/maps?q=${coords[1]},${coords[2]}`;
+                          window.open(url, '_blank');
+                        }}
+                        className="mt-3 bg-blue-600 hover:bg-blue-700"
+                      >
+                        🗺️ Open in Google Maps
+                      </Button>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
 
               {/* Media Gallery */}
