@@ -2633,34 +2633,6 @@ async def check_if_winner(user_id: str):
 
 # ==================== NEW ENDPOINTS: City Selection & Work for Casino ====================
 
-@api_router.post("/users/set-city")
-async def set_user_city(request: SetCityRequest):
-    """Set user's city selection (London or Paris)"""
-    try:
-        valid_cities = ["London", "Paris"]
-        if request.city not in valid_cities:
-            raise HTTPException(status_code=400, detail=f"Invalid city. Must be one of: {valid_cities}")
-        
-        # Check if user exists first
-        user = await db.users.find_one({"id": request.user_id})
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        
-        # Update user's city (or insert if not present)
-        result = await db.users.update_one(
-            {"id": request.user_id},
-            {"$set": {"city": request.city}}
-        )
-        
-        logging.info(f"✅ User {request.user_id} set city to {request.city}")
-        return {"success": True, "city": request.city}
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logging.error(f"Error setting user city: {e}")
-        raise HTTPException(status_code=500, detail="Failed to set city")
-
 @api_router.post("/work/purchase-access")
 async def purchase_work_access(request: PurchaseWorkAccessRequest):
     """Purchase work access for uploading gifts (1000 tokens symbolic, paid via Solana)"""
