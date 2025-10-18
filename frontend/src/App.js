@@ -2082,6 +2082,8 @@ function App() {
     } catch (error) {
       console.error('Failed to upload gifts:', error);
       toast.error(error.response?.data?.detail || 'Failed to upload gifts');
+    } finally {
+      setIsUploading(false); // Unlock upload
     }
   };
 
