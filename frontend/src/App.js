@@ -3561,7 +3561,7 @@ function App() {
                                   setSelectedRoom(roomType);
                                   setBetAmounts(prev => ({ ...prev, [roomType]: e.target.value }));
                                 }}
-                                disabled={isDisabled || userActiveRooms[roomType]}
+                                disabled={isDisabled || (userActiveRooms[roomType] && userActiveRooms[roomType].city === userCity)}
                                 className="bg-slate-700 border-slate-500 text-white text-center h-9 text-sm placeholder:text-slate-400 focus:border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
                               />
                               
