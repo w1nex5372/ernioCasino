@@ -3488,11 +3488,15 @@ async def startup_event():
     # Start wallet cleanup scheduler with grace period
     asyncio.create_task(wallet_cleanup_scheduler())
     
+    # Start assigned gifts auto-delete scheduler
+    asyncio.create_task(assigned_gifts_cleanup_scheduler())
+    
     logging.info("🎰 Casino Battle Royale API started!")
     logging.info(f"🏠 Active rooms: {len(active_rooms)}")
     logging.info(f"💳 Solana monitoring: {'Enabled' if CASINO_WALLET_ADDRESS != 'YourWalletAddressHere12345678901234567890123456789' else 'Disabled (set CASINO_WALLET_ADDRESS)'}")
     logging.info("🔍 Redundant payment scanner: Enabled (15s interval - FAST detection)")
     logging.info("🧹 Wallet cleanup scheduler: Enabled (72h grace period)")
+    logging.info("🗑️ Assigned gifts cleanup: Enabled (72h auto-delete)")
 
 async def redundant_payment_scanner():
     """
