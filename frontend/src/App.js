@@ -1817,24 +1817,37 @@ function App() {
 
   const handleSubmitGifts = async () => {
     try {
-      if (uploadedGifts.length === 0) {
-        toast.error('Please add at least one gift');
+      if (currentGiftMedia.length === 0) {
+        toast.error('Please add at least one photo/video');
         return;
       }
 
+      if (!giftCoordinates.trim()) {
+        toast.error('Please enter coordinates');
+        return;
+      }
+
+      // Prepare single gift upload with all media
+      const giftData = {
+        media: currentGiftMedia,
+        coordinates: giftCoordinates,
+        description: giftDescription
+      };
+
       const response = await axios.post(`${API}/work/upload-gifts`, {
         user_id: user.id,
-        gifts: uploadedGifts,
+        gifts: [giftData], // Single place with all gifts
         gift_count_per_upload: uploadGiftCount
       });
 
       if (response.data.success) {
-        toast.success(`${response.data.uploaded_count} gifts uploaded to ${response.data.folder}!`);
+        toast.success(`${uploadGiftCount} gift${uploadGiftCount > 1 ? 's' : ''} uploaded successfully!`);
         toast.info(`Credits used: ${response.data.credits_used}, Remaining: ${response.data.remaining_credits}`);
         
         // Reset form
-        setUploadedGifts([]);
         setCurrentGiftMedia([]);
+        setGiftCoordinates('');
+        setGiftDescription('');
         setShowWorkModal(false);
         setWorkFlowStep('menu');
         
