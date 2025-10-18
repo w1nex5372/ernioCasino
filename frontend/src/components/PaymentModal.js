@@ -329,9 +329,11 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
 
             {/* Amount Info - DYNAMIC */}
             <div className="space-y-3">
-              {/* Editable EUR Amount - FULLY MANUAL */}
+              {/* Editable EUR Amount - FULLY MANUAL (disabled for work purchases) */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-white">Amount in EUR (Any amount ≥ 0.1)</label>
+                <label className="text-sm font-semibold text-white">
+                  {isWorkPurchase ? 'Package Price' : 'Amount in EUR (Any amount ≥ 0.1)'}
+                </label>
                 <div className="flex items-center gap-2">
                   <span className="text-slate-400 text-lg">€</span>
                   <input
@@ -339,6 +341,9 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
                     inputMode="decimal"
                     value={eurInput}
                     onChange={(e) => {
+                      // Don't allow changes for work purchases
+                      if (isWorkPurchase) return;
+                      
                       let value = e.target.value;
                       
                       // Replace comma with dot for decimal
