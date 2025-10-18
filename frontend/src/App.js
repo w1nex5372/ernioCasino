@@ -3650,7 +3650,7 @@ function App() {
                                     onClick={async () => {
                                       console.log('🖥️ DESKTOP Join button clicked!', {
                                         roomType,
-                                        betAmount,
+                                        betAmount: betAmounts[roomType],
                                         selectedRoom,
                                         userBalance: user?.token_balance,
                                         playersCount: room.players_count,
@@ -3659,20 +3659,22 @@ function App() {
                                       await joinRoom(roomType);
                                       console.log('🖥️ Join room function completed');
                                     }}
-                                    disabled={isDisabled || room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount)}
+                                    disabled={isDisabled || (!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType])))}
                                     className={`w-full ${
-                                      (isDisabled || room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount))
+                                      userActiveRooms[roomType] ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600' :
+                                      (isDisabled || room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))
                                         ? 'bg-slate-600 cursor-not-allowed' 
                                         : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600'
                                     } text-white font-bold py-3`}
                                   >
                                     <Play className="w-4 h-4 mr-2" />
-                                    {isDisabled ? `🚫 No Gifts in ${userCity}` :
+                                    {userActiveRooms[roomType] ? '↩️ Return to Room' :
+                                     isDisabled ? `🚫 No Gifts in ${userCity}` :
                                      room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
                                      room.players_count >= 3 ? 'Room Full' : 
-                                     !betAmount ? 'Enter Bet Amount' :
-                                     parseInt(betAmount) < config.min || parseInt(betAmount) > config.max ? 'Invalid Amount' :
-                                     user.token_balance < parseInt(betAmount) ? 'Insufficient Tokens' : 'Join Battle'}
+                                     !betAmounts[roomType] ? 'Enter Bet Amount' :
+                                     parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max ? 'Invalid Amount' :
+                                     user.token_balance < parseInt(betAmounts[roomType]) ? 'Insufficient Tokens' : 'Join Battle'}
                                   </Button>
                                 </div>
                               </div>
