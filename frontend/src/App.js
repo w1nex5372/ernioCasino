@@ -3069,15 +3069,16 @@ function App() {
                                   await joinRoom(roomType);
                                   console.log('🔘 Join room function completed');
                                 }}
-                                disabled={room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount)}
+                                disabled={isDisabled || room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount)}
                                 className={`w-full h-9 text-white font-semibold text-sm ${
-                                  (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount))
+                                  (isDisabled || room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmount || parseInt(betAmount) < config.min || parseInt(betAmount) > config.max || user.token_balance < parseInt(betAmount))
                                     ? 'bg-slate-600 cursor-not-allowed' 
                                     : 'bg-green-600 hover:bg-green-700'
                                 }`}
                               >
                                 <Play className="w-3 h-3 mr-1" />
-                                {room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
+                                {isDisabled ? '🚫 No Gifts Available' :
+                                 room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
                                  room.players_count >= 3 ? 'Full' : 
                                  !betAmount ? 'Enter Bet' :
                                  parseInt(betAmount) < config.min || parseInt(betAmount) > config.max ? 'Invalid' :
