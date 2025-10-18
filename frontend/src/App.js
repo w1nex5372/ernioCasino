@@ -1402,6 +1402,18 @@ function App() {
     }
   };
 
+  const checkPackageTypeAvailability = async () => {
+    try {
+      const response = await axios.get(`${API}/work/package-type-availability`);
+      if (response.data.success) {
+        setPackageAvailability(response.data.availability);
+        console.log('📦 Package availability:', response.data.availability);
+      }
+    } catch (error) {
+      console.error('Failed to check package availability:', error);
+    }
+  };
+
   const loadWelcomeBonusStatus = async () => {
     try {
       console.log('🎁🎁🎁 LOADING WELCOME BONUS STATUS 🎁🎁🎁');
