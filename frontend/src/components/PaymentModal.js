@@ -532,7 +532,17 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
               <ul className="text-xs text-slate-300 space-y-1">
                 <li>• Send exactly <strong className="text-green-400">{paymentData.required_sol?.toFixed(6)} SOL</strong> to the address above</li>
                 <li>• Payment will be detected automatically within 1-2 minutes</li>
-                <li>• Tokens will be credited to your account immediately</li>
+                {isWorkPurchase ? (
+                  <>
+                    <li>• Your gift package ({giftCount} gifts) will be activated immediately</li>
+                    <li>• You'll be able to upload gifts after payment confirmation</li>
+                  </>
+                ) : (
+                  <>
+                    <li>• Tokens will be credited to your account immediately</li>
+                    <li>• Use tokens to play in any battle room</li>
+                  </>
+                )}
                 <li>• Do not close this window until payment is confirmed</li>
               </ul>
             </div>
