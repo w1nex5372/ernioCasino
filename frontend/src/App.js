@@ -303,7 +303,7 @@ function App() {
   const [selectedPackage, setSelectedPackage] = useState(null); // {count: 10, price: 100}
   const [userPackages, setUserPackages] = useState([]); // User's purchased packages
   const [showGiftUploadForm, setShowGiftUploadForm] = useState(false); // Show gift upload form
-  const [uploadGiftCount, setUploadGiftCount] = useState(1); // 1, 2, 5, 10, 20, 50
+  const [uploadGiftCount, setUploadGiftCount] = useState(10); // 10, 20, 50 (only purchasable packages)
   const [uploadedGifts, setUploadedGifts] = useState([]); // Array of gifts with media arrays
   const [currentGiftMedia, setCurrentGiftMedia] = useState([]); // Media for current gift being uploaded
   const [isWorkPurchase, setIsWorkPurchase] = useState(false); // Track if current payment is for work access
