@@ -290,6 +290,7 @@ function App() {
     diamond: '',
     elite: ''
   }); // Separate bet amount for each room
+  const [userActiveRooms, setUserActiveRooms] = useState({}); // Track which rooms user is in: {roomType: roomId}
   
   // Payment modal state
   const [showPaymentModal, setShowPaymentModal] = useState(false);
