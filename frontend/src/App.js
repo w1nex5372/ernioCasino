@@ -2000,9 +2000,14 @@ function App() {
         setShowWorkModal(false);
         setWorkFlowStep('menu');
         
-        // Reload packages
-        const packagesResponse = await axios.get(`${API}/work/my-packages/${user.id}`);
-        setUserPackages(packagesResponse.data.packages || []);
+        // Reload packages (wrapped in try-catch to prevent error toast)
+        try {
+          const packagesResponse = await axios.get(`${API}/work/my-packages/${user.id}`);
+          setUserPackages(packagesResponse.data.packages || []);
+        } catch (pkgError) {
+          console.error('Failed to reload packages:', pkgError);
+          // Don't show error toast, upload was successful
+        }
         
         // Refresh work system status and package availability
         checkWorkSystemReady();
