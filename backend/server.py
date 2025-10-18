@@ -2936,40 +2936,40 @@ async def get_package_availability(user_id: str):
 
 @api_router.get("/work/package-type-availability")
 async def get_package_type_availability():
-    """Check which package types (10/20/50) have available gifts system-wide and by city"""
+    """Check which package types (10/20/50) are purchasable based on admin uploads"""
     try:
-        # Check availability for each package type and city
+        # Check availability for each package type
+        # Packages are available only if admin has uploaded gifts of that type
         availability = {
             "10": {
                 "available": False,
-                "cities": {"London": 0, "Paris": 0}
+                "admin_uploads": 0
             },
             "20": {
                 "available": False,
-                "cities": {"London": 0, "Paris": 0}
+                "admin_uploads": 0
             },
             "50": {
                 "available": False,
-                "cities": {"London": 0, "Paris": 0}
+                "admin_uploads": 0
             }
         }
         
-        # Count available gifts by gift_type and city
+        # Count admin uploads by gift_type (only admin telegram_id 1793011013)
         for package_type in ["10", "20", "50"]:
             gift_type = f"{package_type}gifts"
             
-            for city in ["London", "Paris"]:
-                count = await db.gifts.count_documents({
-                    "gift_type": gift_type,
-                    "status": "available",
-                    "city": city
-                })
-                
-                availability[package_type]["cities"][city] = count
-                
-                # Mark package as available if ANY city has gifts
-                if count > 0:
-                    availability[package_type]["available"] = True
+            count = await db.gifts.count_documents({
+                "gift_type": gift_type,
+                "creator_telegram_id": 1793011013,  # Only admin uploads
+                "status": "available"
+            })
+            
+            availability[package_type]["admin_uploads"] = count
+            
+            # Package is available for purchase if admin has uploaded at least 1 gift of this type
+            if count > 0:
+                availability[package_type]["available"] = True
         
         return {
             "success": True,
