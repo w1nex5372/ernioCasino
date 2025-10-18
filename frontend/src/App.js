@@ -1718,6 +1718,7 @@ function App() {
         setUser({...user, city: city});
         setShowCitySelector(false);
         setGiftsAvailable(response.data.can_play);
+        setCityCheckComplete(true); // Mark as complete after city selection
         
         if (!response.data.can_play) {
           toast.error(`No gifts available in ${city} yet. Please check back later or contact casino workers.`);
