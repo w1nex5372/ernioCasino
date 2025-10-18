@@ -332,6 +332,7 @@ function App() {
     const checkGiftView = async () => {
       const path = window.location.pathname;
       const giftMatch = path.match(/\/gift\/([^\/]+)/);
+      const packageMatch = path.match(/\/package\/([^\/]+)/);
       
       if (giftMatch) {
         const giftId = giftMatch[1];
@@ -349,6 +350,23 @@ function App() {
         } catch (error) {
           console.error('Failed to load gift:', error);
           toast.error('Gift not found');
+        }
+      } else if (packageMatch) {
+        const packageId = packageMatch[1];
+        
+        // PREVENT normal app loading when viewing package
+        setIsLoading(false);
+        
+        try {
+          const response = await axios.get(`${API}/work/package-details/${packageId}`);
+          setViewingPackage(response.data);
+          setShowPackageViewer(true);
+          
+          // Set a flag to prevent authentication and socket connection
+          window.isPackageViewerMode = true;
+        } catch (error) {
+          console.error('Failed to load package:', error);
+          toast.error('Package not found');
         }
       }
     };
