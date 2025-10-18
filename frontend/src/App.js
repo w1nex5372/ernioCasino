@@ -2501,9 +2501,7 @@ function App() {
 
                 <Button
                   onClick={handleWorkForCasino}
-                  disabled={!workSystemReady}
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={!workSystemReady ? "No gifts in system yet" : "Work for Casino"}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2"
                 >
                   💼 Work for Casino
                 </Button>
