@@ -5000,8 +5000,13 @@ class SolanaCasinoAPITester:
             return False
 
 def main():
+    # Check if we should run city and gift tests specifically
+    if len(sys.argv) > 1 and sys.argv[1] == "city":
+        tester = SolanaCasinoAPITester()
+        tester.run_city_and_gift_tests()
+        return 0
     # Check if we should run review request tests specifically
-    if len(sys.argv) > 1 and sys.argv[1] == "review":
+    elif len(sys.argv) > 1 and sys.argv[1] == "review":
         tester = SolanaCasinoAPITester()
         success = tester.run_review_request_tests()
         return 0 if success else 1
