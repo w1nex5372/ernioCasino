@@ -473,8 +473,14 @@ async def send_gift_notification(telegram_id: int, username: str, gift_data: dic
     """Send gift notification to winner via Telegram - ONLY ONE MESSAGE"""
     try:
         if gift_data:
-            # Gift is available
-            message = "🎁 Congratulations, you won a gift!"
+            # Gift is available - include coordinates and location in message
+            message = f"🎁 <b>Congratulations {username}!</b>\n\n"
+            message += "You won a gift! Here are the details:\n\n"
+            message += f"📍 <b>Location:</b> {gift_data.get('coordinates', 'Location not provided')}\n"
+            if gift_data.get('description'):
+                message += f"📝 <b>Description:</b> {gift_data['description']}\n"
+            message += f"🏙️ <b>City:</b> {gift_data.get('city', 'Unknown')}\n\n"
+            message += "Click below to view photos/videos of your gift:"
             
             # Get app domain from environment
             app_domain = os.environ.get('REACT_APP_BACKEND_URL', 'https://casino-worker-1.preview.emergentagent.com').replace('/api', '')
@@ -483,7 +489,7 @@ async def send_gift_notification(telegram_id: int, username: str, gift_data: dic
             reply_markup = {
                 "inline_keyboard": [[
                     {
-                        "text": "🎁 View Gift Details",
+                        "text": "📸 View Gift Photos/Videos",
                         "url": f"{app_domain}/gift/{gift_data['gift_id']}"
                     }
                 ]]
