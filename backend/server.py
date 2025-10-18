@@ -3013,10 +3013,21 @@ async def purchase_work_package(request: PurchasePackageRequest):
         if request.paid_amount_eur != valid_packages[request.gift_count]:
             raise HTTPException(status_code=400, detail=f"Invalid price for {request.gift_count} gifts")
         
-        # Get user
-        user = await db.users.find_one({"id": request.user_id})
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+        # IMPORTANT: Check if admin has uploaded gifts of this type
+        # Packages can only be purchased if admin uploaded corresponding gift type
+        if not is_admin:  # Admin can always purchase
+            gift_type = f"{request.gift_count}gifts"
+            admin_gifts_count = await db.gifts.count_documents({
+                "gift_type": gift_type,
+                "creator_telegram_id": 1793011013,  # Only admin uploads
+                "status": "available"
+            })
+            
+            if admin_gifts_count == 0:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"This package is not available yet. The casino must upload {request.gift_count}-gift packages first."
+                )
         
         # Create work package
         package = WorkPackage(
