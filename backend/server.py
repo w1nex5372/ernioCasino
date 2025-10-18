@@ -2268,6 +2268,42 @@ async def get_active_rooms():
     
     return {"rooms": rooms_data, "gift_availability_by_city": gift_availability_by_city}
 
+@api_router.get("/user-room-status/{user_id}")
+async def get_user_room_status(user_id: str):
+    """Check if user is currently in any active room"""
+    try:
+        # Check all active rooms for this user
+        for room in active_rooms.values():
+            for player in room.players:
+                if player.user_id == user_id:
+                    # User is in this room
+                    serialized_players = []
+                    for p in room.players:
+                        player_dict = p.dict()
+                        if 'joined_at' in player_dict and isinstance(player_dict['joined_at'], datetime):
+                            player_dict['joined_at'] = player_dict['joined_at'].isoformat()
+                        serialized_players.append(player_dict)
+                    
+                    return {
+                        "in_room": True,
+                        "room_id": room.id,
+                        "room_type": room.room_type,
+                        "status": room.status,
+                        "players": serialized_players,
+                        "players_count": len(room.players),
+                        "prize_pool": room.prize_pool,
+                        "position": next((i+1 for i, p in enumerate(room.players) if p.user_id == user_id), 0)
+                    }
+        
+        # User is not in any room
+        return {
+            "in_room": False,
+            "room_id": None
+        }
+    except Exception as e:
+        logging.error(f"Error checking user room status: {e}")
+        raise HTTPException(status_code=500, detail="Failed to check room status")
+
 @api_router.post("/join-room")
 async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks):
     """Join a room with a bet"""
