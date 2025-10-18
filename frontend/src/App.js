@@ -282,7 +282,14 @@ function App() {
 
   // Form state
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [betAmount, setBetAmount] = useState('');
+  const [betAmounts, setBetAmounts] = useState({
+    bronze: '',
+    silver: '',
+    gold: '',
+    platinum: '',
+    diamond: '',
+    elite: ''
+  }); // Separate bet amount for each room
   
   // Payment modal state
   const [showPaymentModal, setShowPaymentModal] = useState(false);
