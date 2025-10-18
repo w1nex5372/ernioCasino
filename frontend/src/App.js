@@ -4151,6 +4151,9 @@ function App() {
                       onChange={(e) => setUploadGiftCount(parseInt(e.target.value))}
                       className="w-full p-3 rounded-lg bg-slate-700 text-white border border-slate-600"
                     >
+                      <option value={1}>1 gift (Bronze Room)</option>
+                      <option value={2}>2 gifts (Silver Room)</option>
+                      <option value={5}>5 gifts (Gold Room)</option>
                       <option value={10}>10 gifts (Platinum Room)</option>
                       <option value={20}>20 gifts (Diamond Room)</option>
                       <option value={50}>50 gifts (Elite Room)</option>
