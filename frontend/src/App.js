@@ -1137,6 +1137,15 @@ function App() {
         
         if (response.data) {
           console.log('✅ Telegram authentication successful:', response.data);
+          
+          // CRITICAL: Check city BEFORE setting user to prevent gap
+          if (!response.data.city) {
+            console.log('⚠️ User has no city - will show city selector immediately');
+            setShowCitySelector(true);
+          } else {
+            setUserCity(response.data.city);
+          }
+          
           setUser(response.data);
           saveUserSession(response.data);
           setIsLoading(false);
