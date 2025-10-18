@@ -332,7 +332,7 @@ class PurchasePackageRequest(BaseModel):
 
 class BulkUploadGiftsRequest(BaseModel):
     user_id: str
-    gifts: List[Dict[str, Any]]  # List of {photo_base64, coordinates}
+    gifts: List[Dict[str, Any]]  # List of {photo_base64, coordinates (string)}
     gift_count_per_upload: int  # 1, 2, 5, 10, 20, or 50
 
 class ConfirmDeliveryRequest(BaseModel):
