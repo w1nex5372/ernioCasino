@@ -2022,6 +2022,12 @@ function App() {
   };
 
   const handleSubmitGifts = async () => {
+    // Prevent double uploads
+    if (isUploading) {
+      console.log('Upload already in progress, ignoring...');
+      return;
+    }
+    
     try {
       if (currentGiftMedia.length === 0) {
         toast.error('Please add at least one photo/video');
@@ -2032,6 +2038,8 @@ function App() {
         toast.error('Please enter coordinates');
         return;
       }
+
+      setIsUploading(true); // Lock upload
 
       // Prepare single gift upload with all media
       const giftData = {
