@@ -1145,6 +1145,16 @@ function App() {
             setShowCitySelector(true);
           } else {
             setUserCity(response.data.city);
+            
+            // Only show welcome message if user already has city
+            // Welcome message based on balance
+            if (response.data.token_balance >= 1000) {
+              toast.success(`🎉 Welcome back, ${response.data.first_name}! Balance: ${response.data.token_balance} tokens`);
+            } else if (response.data.token_balance > 0) {
+              toast.success(`Welcome, ${response.data.first_name}! Balance: ${response.data.token_balance} tokens`);
+            } else {
+              toast.success(`👋 Welcome, ${response.data.first_name}! Claim your daily tokens to get started.`);
+            }
           }
           
           setUser(response.data);
@@ -1152,26 +1162,20 @@ function App() {
           setCityCheckComplete(true); // Mark city check as done
           setIsLoading(false);
           
-          // Welcome message based on balance
-          if (response.data.token_balance >= 1000) {
-            toast.success(`🎉 Welcome back, ${response.data.first_name}! Balance: ${response.data.token_balance} tokens`);
-          } else if (response.data.token_balance > 0) {
-            toast.success(`Welcome, ${response.data.first_name}! Balance: ${response.data.token_balance} tokens`);
-          } else {
-            toast.success(`👋 Welcome, ${response.data.first_name}! Claim your daily tokens to get started.`);
-          }
-          
           // Configure WebApp
           webApp.enableClosingConfirmation();
           if (webApp.setHeaderColor) webApp.setHeaderColor('#1e293b');
           if (webApp.setBackgroundColor) webApp.setBackgroundColor('#0f172a');
           
-          // Load additional data after successful auth
-          setTimeout(() => {
-            loadUserPrizes();
-            loadDerivedWallet();
-            loadWelcomeBonusStatus();
-          }, 500);
+          // Load additional data after successful auth (only if city exists)
+          if (response.data.city) {
+            setTimeout(() => {
+              loadUserPrizes();
+              loadDerivedWallet();
+              loadWelcomeBonusStatus();
+            }, 500);
+          }
+          // If no city, these will be loaded after city selection
           
           return; // Exit successfully
         }
