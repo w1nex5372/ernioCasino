@@ -2211,8 +2211,16 @@ function App() {
     
     // Check if user is already in THIS specific room type
     if (userActiveRooms[roomType]) {
-      // User is already in this room - show the lobby (Return to Room)
-      console.log('✅ User already in this room, showing lobby');
+      const roomInfo = userActiveRooms[roomType];
+      
+      // Check if user is in this room in a DIFFERENT city
+      if (roomInfo.city && roomInfo.city !== userCity) {
+        toast.error(`YOU ARE IN THIS ROOM ON ${roomInfo.city.toUpperCase()}`);
+        return;
+      }
+      
+      // Same city - show the lobby (Return to Room)
+      console.log('✅ User already in this room in same city, showing lobby');
       
       // Fetch current room state
       const roomStatus = await checkUserRoomStatus();
@@ -2239,7 +2247,7 @@ function App() {
       return;
     }
     
-    // User can join this room (users from different cities can play together)
+    // User can join this room (not participating yet in this room type)
 
     // Parse bet amount
     const parsedBetAmount = parseInt(betAmount);
