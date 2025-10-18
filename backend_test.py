@@ -3908,7 +3908,8 @@ class SolanaCasinoAPITester:
                 join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
                 
                 if join_response.status_code != 200:
-                    self.log_test("Mixed City Rooms - Join Room", False, f"User {i+1} failed to join: {join_response.status_code}")
+                    error_detail = join_response.json().get('detail', 'Unknown error') if join_response.status_code == 400 else f"HTTP {join_response.status_code}"
+                    self.log_test("Mixed City Rooms - Join Room", False, f"User {i+1} failed to join: {join_response.status_code} - {error_detail}")
                     return False
             
             # Wait for game to complete
