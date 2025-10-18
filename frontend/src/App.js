@@ -2226,9 +2226,19 @@ function App() {
               
               <div className="flex items-center gap-6">
                 {userCity && (
-                  <div className="flex items-center gap-2 px-3 py-1 bg-slate-700/50 rounded-lg">
-                    <span className="text-sm text-slate-400">City:</span>
-                    <span className="text-sm font-semibold text-yellow-400">{userCity} 🏙️</span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-slate-700/50 rounded-lg">
+                      <span className="text-sm text-slate-400">City:</span>
+                      <span className="text-sm font-semibold text-yellow-400">{userCity} 🏙️</span>
+                    </div>
+                    <Button
+                      onClick={() => setShowCitySelector(true)}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                    >
+                      Change
+                    </Button>
                   </div>
                 )}
 
