@@ -1149,6 +1149,7 @@ function App() {
           
           setUser(response.data);
           saveUserSession(response.data);
+          setCityCheckComplete(true); // Mark city check as done
           setIsLoading(false);
           
           // Welcome message based on balance
