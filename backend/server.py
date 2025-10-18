@@ -2691,9 +2691,31 @@ async def upload_gift(request: UploadGiftRequest):
         if request.city not in valid_cities:
             raise HTTPException(status_code=400, detail=f"Invalid city. Must be one of: {valid_cities}")
         
-        # Validate coordinates
-        if 'lat' not in request.coordinates or 'lng' not in request.coordinates:
-            raise HTTPException(status_code=400, detail="Coordinates must include 'lat' and 'lng'")
+        # Validate gift_count
+        valid_gift_counts = [10, 20, 50]
+        if request.gift_count not in valid_gift_counts:
+            raise HTTPException(status_code=400, detail=f"Invalid gift count. Must be one of: {valid_gift_counts}")
+        
+        # Find an active package for this user with remaining credits
+        package = await db.work_packages.find_one({
+            "user_id": request.user_id,
+            "city": request.city,
+            "gift_count": request.gift_count,
+            "gift_credits_remaining": {"$gte": request.gift_count}
+        })
+        
+        if not package:
+            raise HTTPException(
+                status_code=403, 
+                detail=f"No active {request.gift_count}-gift package found for {request.city} with sufficient credits. Please purchase a package first."
+            )
+        
+        # Create gift type string
+        gift_type = f"{request.gift_count}gifts"
+        folder_name = gift_type
+        
+        # Prepare media
+        media = [{"type": "photo", "data": request.photo_base64}] if request.photo_base64 else []
         
         # Create gift document
         gift = Gift(
@@ -2701,19 +2723,44 @@ async def upload_gift(request: UploadGiftRequest):
             creator_telegram_id=user['telegram_id'],
             creator_username=user.get('telegram_username'),
             city=request.city,
-            photo_base64=request.photo_base64,
-            coordinates=request.coordinates
+            media=media,
+            coordinates=request.coordinates,
+            description=request.description or "",
+            gift_type=gift_type,
+            num_places=1,
+            folder_name=folder_name,
+            package_id=package['package_id'],
+            status="available"
         )
         
         # Insert into database
-        await db.gifts.insert_one(gift.dict())
+        gift_dict = gift.dict()
+        gift_dict['created_at'] = gift_dict['created_at'].isoformat()
+        if gift_dict.get('assigned_at'):
+            gift_dict['assigned_at'] = gift_dict['assigned_at'].isoformat()
+        if gift_dict.get('delivered_at'):
+            gift_dict['delivered_at'] = gift_dict['delivered_at'].isoformat()
+            
+        await db.gifts.insert_one(gift_dict)
         
-        logging.info(f"🎁 Gift uploaded by {user.get('first_name')} in {request.city}")
+        # Deduct credits from package
+        await db.work_packages.update_one(
+            {"package_id": package['package_id']},
+            {
+                "$inc": {
+                    "gift_credits_remaining": -request.gift_count,
+                    "gifts_uploaded": 1
+                }
+            }
+        )
+        
+        logging.info(f"🎁 {request.gift_count}-gift package uploaded by {user.get('first_name')} in {request.city}")
         
         return {
             "success": True,
             "gift_id": gift.gift_id,
-            "message": f"Gift successfully uploaded in {request.city}!"
+            "message": f"{request.gift_count} gifts successfully uploaded in {request.city}!",
+            "remaining_credits": package['gift_credits_remaining'] - request.gift_count
         }
         
     except HTTPException:
