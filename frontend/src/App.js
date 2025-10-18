@@ -294,6 +294,7 @@ function App() {
   const [showCitySelector, setShowCitySelector] = useState(false); // Show city selection modal
   const [giftsAvailable, setGiftsAvailable] = useState(true);
   const [giftAvailabilityByCity, setGiftAvailabilityByCity] = useState({}); // Per-city availability
+  const [cityCheckComplete, setCityCheckComplete] = useState(false); // Flag to prevent rendering until city is checked
   
   // Work for Casino state
   const [hasWorkAccess, setHasWorkAccess] = useState(false); // Has user purchased work access
