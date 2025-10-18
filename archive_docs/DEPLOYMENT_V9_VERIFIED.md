@@ -5,7 +5,7 @@
 **Version**: 9.0-SYNC-FIX-GET-READY-20250114182000  
 **Service Worker**: v9.0-SYNC-FIX-20250114-1820  
 **Build Timestamp**: 1736880000 (2025-01-14 18:20:00 UTC)  
-**Domain**: https://casino-worker-1.preview.emergentagent.com  
+**Domain**: https://sol-casino-tg-1.preview.emergentagent.com  
 **Status**: ✅ DEPLOYED & VERIFIED
 
 ## What Changed
@@ -65,31 +65,31 @@ navigator.serviceWorker.addEventListener('message', (event) => {
 
 ### 1. Version Check
 ```bash
-curl -s https://casino-worker-1.preview.emergentagent.com/ | grep "9.0-SYNC-FIX"
+curl -s https://sol-casino-tg-1.preview.emergentagent.com/ | grep "9.0-SYNC-FIX"
 ```
 **Result**: ✅ PASS - `9.0-SYNC-FIX-GET-READY-20250114182000`
 
 ### 2. Service Worker File
 ```bash
-curl -s https://casino-worker-1.preview.emergentagent.com/sw.js | grep "v9.0-SYNC-FIX"
+curl -s https://sol-casino-tg-1.preview.emergentagent.com/sw.js | grep "v9.0-SYNC-FIX"
 ```
 **Result**: ✅ PASS - `v9.0-SYNC-FIX-20250114-1820`
 
 ### 3. Service Worker Registration
 ```bash
-curl -s https://casino-worker-1.preview.emergentagent.com/ | grep "SW v9.0 registered"
+curl -s https://sol-casino-tg-1.preview.emergentagent.com/ | grep "SW v9.0 registered"
 ```
 **Result**: ✅ PASS - Registration code present in HTML
 
 ### 4. GET READY Animation Code
 ```bash
-curl -s https://casino-worker-1.preview.emergentagent.com/static/js/bundle.js | grep "GET READY"
+curl -s https://sol-casino-tg-1.preview.emergentagent.com/static/js/bundle.js | grep "GET READY"
 ```
 **Result**: ✅ PASS - Animation code present in bundle
 
 ### 5. room_ready Event Handler
 ```bash
-curl -s https://casino-worker-1.preview.emergentagent.com/static/js/bundle.js | grep "room_ready"
+curl -s https://sol-casino-tg-1.preview.emergentagent.com/static/js/bundle.js | grep "room_ready"
 ```
 **Result**: ✅ PASS - Event handler present
 
@@ -101,7 +101,7 @@ When opening the app, users should see:
 📦 Version check: 8.0-WINNER-FIX-v5-20250114 → 9.0-SYNC-FIX-GET-READY-20250114182000
 🧹 Clearing old storage for v9.0...
 ✅ Version updated to v9.0
-✅ SW v9.0 registered: https://casino-worker-1.preview.emergentagent.com/
+✅ SW v9.0 registered: https://sol-casino-tg-1.preview.emergentagent.com/
 🚀 SW v9.0 loaded at [timestamp]
 🔧 SW v9.0: Installing v9.0-SYNC-FIX-20250114-1820 at [timestamp]
 ✅ SW v9.0: Activating v9.0-SYNC-FIX-20250114-1820 - DELETING ALL OLD CACHES
@@ -109,7 +109,7 @@ When opening the app, users should see:
 🗑️ SW v9.0: DELETING cache: [cache name]
 🎉 SW v9.0: v9.0-SYNC-FIX-20250114-1820 is now active and controlling all pages
 📢 SW v9.0: Found [N] clients to notify (one-time)
-📤 SW v9.0: Notifying client: https://casino-worker-1.preview.emergentagent.com/
+📤 SW v9.0: Notifying client: https://sol-casino-tg-1.preview.emergentagent.com/
 ✅ SW v9.0: Client notification complete
 📨 Message from SW: {type: "SW_UPDATED", version: "v9.0-SYNC-FIX-20250114-1820", ...}
 ```
@@ -117,7 +117,7 @@ When opening the app, users should see:
 ## Service Worker Update Flow
 
 ### First Visit (Fresh Install)
-1. Browser requests `https://casino-worker-1.preview.emergentagent.com/`
+1. Browser requests `https://sol-casino-tg-1.preview.emergentagent.com/`
 2. HTML loads with SW registration code
 3. `navigator.serviceWorker.register('/sw.js')` called
 4. SW v9.0 installs immediately (`skipWaiting()`)
@@ -145,7 +145,7 @@ When user clears Telegram cache:
 ### Step 1: Update Bot Settings
 Ensure Telegram Bot Father has:
 ```
-https://casino-worker-1.preview.emergentagent.com
+https://sol-casino-tg-1.preview.emergentagent.com
 ```
 
 ### Step 2: Clear Telegram Cache
@@ -220,7 +220,7 @@ if (stored !== V9_VERSION) {
 If v9.0 causes issues, previous stable version was:
 - **Version**: 8.0-WINNER-FIX-v5-20250114
 - **Service Worker**: Disabled (unregistered on load)
-- **Domain**: Same - https://casino-worker-1.preview.emergentagent.com
+- **Domain**: Same - https://sol-casino-tg-1.preview.emergentagent.com
 
 To rollback:
 1. Revert sw.js to v8.0
@@ -268,6 +268,6 @@ After this deployment, expect:
 **Deployment Date**: 2025-01-14 18:20:00 UTC  
 **Service Worker ID**: v9.0-SYNC-FIX-20250114-1820  
 **App Version**: 9.0-SYNC-FIX-GET-READY-20250114182000  
-**Domain**: https://casino-worker-1.preview.emergentagent.com  
+**Domain**: https://sol-casino-tg-1.preview.emergentagent.com  
 **Status**: ✅ LIVE & VERIFIED  
 **Next Action**: User testing in Telegram
