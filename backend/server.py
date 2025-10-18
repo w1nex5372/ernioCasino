@@ -2222,13 +2222,6 @@ async def set_user_city(request: dict):
     except Exception as e:
         logging.error(f"Error setting user city: {e}")
         raise HTTPException(status_code=500, detail="Failed to set city")
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logging.error(f"Error setting user city: {e}")
-        raise HTTPException(status_code=500, detail="Failed to set city")
 
 @api_router.get("/rooms")
 async def get_active_rooms():
