@@ -1724,11 +1724,25 @@ function App() {
         setGiftsAvailable(response.data.can_play);
         setCityCheckComplete(true); // Mark as complete after city selection
         
+        // Show welcome message AFTER city selection
+        if (user.token_balance >= 1000) {
+          toast.success(`🎉 Welcome to ${city}, ${user.first_name}! Balance: ${user.token_balance} tokens`);
+        } else if (user.token_balance > 0) {
+          toast.success(`Welcome to ${city}, ${user.first_name}! Balance: ${user.token_balance} tokens`);
+        } else {
+          toast.success(`👋 Welcome to ${city}, ${user.first_name}! Claim your daily tokens to get started.`);
+        }
+        
         if (!response.data.can_play) {
           toast.error(`No gifts available in ${city} yet. Please check back later or contact casino workers.`);
-        } else {
-          toast.success(`Welcome to ${city}! 🏙️`);
         }
+        
+        // Load user data AFTER city selection
+        setTimeout(() => {
+          loadUserPrizes();
+          loadDerivedWallet();
+          loadWelcomeBonusStatus();
+        }, 500);
         
         // Reload rooms to show available games in this city
         console.log('🔄 Reloading rooms for city:', city);
