@@ -4010,13 +4010,30 @@ class SolanaCasinoAPITester:
             requests.post(f"{self.api_url}/work/purchase-access", 
                 json={"user_id": user['id'], "payment_signature": "test_shortage_sig"})
             
-            gift_data = {
-                "user_id": user['id'],
+            # Create gift directly in database
+            import pymongo
+            from datetime import datetime, timezone
+            
+            mongo_client = pymongo.MongoClient("mongodb://localhost:27017")
+            test_db = mongo_client["test_database"]
+            
+            gift_doc = {
+                "gift_id": "test_shortage_gift",
+                "creator_user_id": user['id'],
+                "creator_telegram_id": user['telegram_id'],
+                "creator_username": user.get('telegram_username'),
                 "city": "Paris",
-                "photo_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=",
-                "coordinates": {"lat": 48.8566, "lng": 2.3522}
+                "media": [{"type": "photo", "data": "test_photo_data"}],
+                "coordinates": {"lat": 48.8566, "lng": 2.3522},
+                "description": "Test shortage gift",
+                "gift_type": "1gift",
+                "num_places": 1,
+                "folder_name": "1gift",
+                "status": "available",
+                "created_at": datetime.now(timezone.utc)
             }
-            requests.post(f"{self.api_url}/gifts/upload", json=gift_data)
+            test_db.gifts.insert_one(gift_doc)
+            mongo_client.close()
             
             # Test 3: Try to join room in Paris (should succeed)
             join_paris_data = {"room_type": "bronze", "user_id": user['id'], "bet_amount": 300}
