@@ -2272,6 +2272,10 @@ async def get_active_rooms():
 async def get_user_room_status(user_id: str):
     """Check if user is currently in any active room"""
     try:
+        # Get user's city from database
+        user_doc = await db.users.find_one({"id": user_id})
+        user_city = user_doc.get('city', 'London') if user_doc else 'London'
+        
         # Check all active rooms for this user
         for room in active_rooms.values():
             for player in room.players:
@@ -2288,6 +2292,7 @@ async def get_user_room_status(user_id: str):
                         "in_room": True,
                         "room_id": room.id,
                         "room_type": room.room_type,
+                        "city": user_city,  # City where user joined this room
                         "status": room.status,
                         "players": serialized_players,
                         "players_count": len(room.players),
