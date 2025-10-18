@@ -2008,7 +2008,21 @@ function App() {
       }
     } catch (error) {
       console.error('Join room error:', error);
-      toast.error(error.response?.data?.detail || 'Failed to join room');
+      const errorDetail = error.response?.data?.detail || 'Failed to join room';
+      
+      // Check if it's a gift availability error
+      if (errorDetail.includes('No gifts available') || errorDetail.includes('no gifts')) {
+        // Show friendly error and offer to change city
+        toast.error(`Sorry, we ran out of gifts in ${user.city}. Would you like to choose another city?`, {
+          duration: 5000,
+          action: {
+            label: 'Change City',
+            onClick: () => setShowCitySelector(true)
+          }
+        });
+      } else {
+        toast.error(errorDetail);
+      }
     }
   };
 
