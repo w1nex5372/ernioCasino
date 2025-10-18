@@ -4026,7 +4026,6 @@ function App() {
                   >
                     🚀 Upload {uploadGiftCount} Gift{uploadGiftCount > 1 ? 's' : ''} to This Location
                   </Button>
-                  )}
 
                   <Button
                     onClick={() => {
