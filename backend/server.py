@@ -2837,6 +2837,35 @@ async def get_available_gifts_count(city: str):
         logging.error(f"Error getting available gifts count: {e}")
         raise HTTPException(status_code=500, detail="Failed to get gift count")
 
+@api_router.get("/work/package-availability/{user_id}")
+async def get_package_availability(user_id: str):
+    """Check which packages can be purchased based on remaining upload credits"""
+    try:
+        # Get all active packages for this user
+        packages = await db.work_packages.find({
+            "user_id": user_id,
+            "gift_credits_remaining": {"$gt": 0}
+        }).to_list(length=None)
+        
+        # Calculate total remaining credits
+        total_credits = sum(pkg.get('gift_credits_remaining', 0) for pkg in packages)
+        
+        # Determine which packages can be purchased
+        # User can buy a package if they have enough credits to upload it
+        can_buy = {
+            10: total_credits >= 10 or total_credits == 0,  # Can buy if have 10+ credits OR no packages yet
+            20: total_credits >= 20 or total_credits == 0,
+            50: total_credits >= 50 or total_credits == 0
+        }
+        
+        return {
+            "total_credits": total_credits,
+            "can_purchase": can_buy
+        }
+    except Exception as e:
+        logging.error(f"Error checking package availability: {e}")
+        raise HTTPException(status_code=500, detail="Failed to check package availability")
+
 @api_router.post("/work/purchase-package")
 async def purchase_work_package(request: PurchasePackageRequest):
     """Purchase a work package (10/20/50 gifts)"""
