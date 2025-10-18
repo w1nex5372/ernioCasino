@@ -2186,7 +2186,15 @@ function App() {
                   <div>
                     <h1 className="text-sm font-bold text-white">Casino Battle</h1>
                     {userCity && (
-                      <div className="text-xs text-yellow-400">{userCity} 🏙️</div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-yellow-400">{userCity} 🏙️</span>
+                        <button
+                          onClick={() => setShowCitySelector(true)}
+                          className="text-xs text-blue-400 hover:text-blue-300 underline"
+                        >
+                          Change
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
