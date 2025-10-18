@@ -3086,19 +3086,22 @@ async def purchase_work_package(request: PurchasePackageRequest):
             bot_token = TELEGRAM_BOT_TOKEN
             admin_telegram_id = 1793011013  # @cia_nera
             
-            admin_message = f"🔔 <b>New Package Purchased!</b>\n\n"
-            admin_message += f"👤 User: {user.get('first_name', 'Unknown')} {user.get('last_name', '')}\n"
-            admin_message += f"🆔 Username: @{user.get('username', 'none')}\n"
-            admin_message += f"📦 Package: {request.gift_count} gifts\n"
-            admin_message += f"📍 City: {request.city}\n"
-            admin_message += f"💰 Paid: {request.paid_amount_eur} EUR\n"
-            admin_message += f"🆔 Package ID: {package.package_id}"
+            # Format purchase date
+            purchase_date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
             
-            # Add "View Details" button that links to package details page
+            admin_message = f"🔔 <b>New Package Purchased!</b>\n\n"
+            admin_message += f"👤 <b>User:</b> {user.get('first_name', 'Unknown')} {user.get('last_name', '')}\n"
+            admin_message += f"🆔 <b>Username:</b> @{user.get('username', 'none')}\n"
+            admin_message += f"📦 <b>Package:</b> {request.gift_count} gifts\n"
+            admin_message += f"📍 <b>City:</b> {request.city}\n"
+            admin_message += f"💰 <b>Amount Paid:</b> {request.paid_amount_eur} EUR\n"
+            admin_message += f"📅 <b>Date:</b> {purchase_date}"
+            
+            # Add "View Gift Details" button that links to package details page
             reply_markup = {
                 "inline_keyboard": [[
                     {
-                        "text": "📋 View Package Details",
+                        "text": "🎁 View Gift Details",
                         "url": f"https://sol-casino-tg-1.preview.emergentagent.com/package/{package.package_id}"
                     }
                 ]]
@@ -3114,7 +3117,7 @@ async def purchase_work_package(request: PurchasePackageRequest):
                         'parse_mode': 'HTML'
                     }
                 )
-            logging.info(f"Sent admin notification about package {package.package_id}")
+            logging.info(f"Sent admin notification about package {package.package_id} purchased by @{user.get('username', 'unknown')}")
         except Exception as e:
             logging.error(f"Failed to send admin notification: {e}")
         
