@@ -2885,6 +2885,51 @@ async def get_package_availability(user_id: str):
         logging.error(f"Error checking package availability: {e}")
         raise HTTPException(status_code=500, detail="Failed to check package availability")
 
+@api_router.get("/work/package-type-availability")
+async def get_package_type_availability():
+    """Check which package types (10/20/50) have available gifts system-wide and by city"""
+    try:
+        # Check availability for each package type and city
+        availability = {
+            "10": {
+                "available": False,
+                "cities": {"London": 0, "Paris": 0}
+            },
+            "20": {
+                "available": False,
+                "cities": {"London": 0, "Paris": 0}
+            },
+            "50": {
+                "available": False,
+                "cities": {"London": 0, "Paris": 0}
+            }
+        }
+        
+        # Count available gifts by gift_type and city
+        for package_type in ["10", "20", "50"]:
+            gift_type = f"{package_type}gifts"
+            
+            for city in ["London", "Paris"]:
+                count = await db.gifts.count_documents({
+                    "gift_type": gift_type,
+                    "status": "available",
+                    "city": city
+                })
+                
+                availability[package_type]["cities"][city] = count
+                
+                # Mark package as available if ANY city has gifts
+                if count > 0:
+                    availability[package_type]["available"] = True
+        
+        return {
+            "success": True,
+            "availability": availability
+        }
+    except Exception as e:
+        logging.error(f"Error checking package type availability: {e}")
+        raise HTTPException(status_code=500, detail="Failed to check package type availability")
+
 @api_router.post("/work/purchase-package")
 async def purchase_work_package(request: PurchasePackageRequest):
     """Purchase a work package (10/20/50 gifts)"""
