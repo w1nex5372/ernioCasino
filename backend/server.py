@@ -171,12 +171,18 @@ class RoomType(str, Enum):
     BRONZE = "bronze"
     SILVER = "silver"
     GOLD = "gold"
+    PLATINUM = "platinum"
+    DIAMOND = "diamond"
+    ELITE = "elite"
 
 # ** EDIT THESE LINES TO ADD YOUR PRIZE LINKS **
 PRIZE_LINKS = {
     RoomType.BRONZE: "https://your-prize-link-1.com",  # Prize link for Bronze room
     RoomType.SILVER: "https://your-prize-link-2.com",  # Prize link for Silver room  
-    RoomType.GOLD: "https://your-prize-link-3.com"     # Prize link for Gold room
+    RoomType.GOLD: "https://your-prize-link-3.com",     # Prize link for Gold room
+    RoomType.PLATINUM: "https://your-prize-link-4.com",  # Prize link for Platinum room
+    RoomType.DIAMOND: "https://your-prize-link-5.com",   # Prize link for Diamond room
+    RoomType.ELITE: "https://your-prize-link-6.com"      # Prize link for Elite room
 }
 
 # ** EDIT THIS LINE TO ADD YOUR TELEGRAM BOT TOKEN **
@@ -186,9 +192,9 @@ ROOM_SETTINGS = {
     RoomType.BRONZE: {"min_bet": 150, "max_bet": 450, "name": "Bronze Room", "gifts_per_place": 1},
     RoomType.SILVER: {"min_bet": 500, "max_bet": 1500, "name": "Silver Room", "gifts_per_place": 2},
     RoomType.GOLD: {"min_bet": 2000, "max_bet": 8000, "name": "Gold Room", "gifts_per_place": 5},
-    "platinum": {"min_bet": 10000, "max_bet": 30000, "name": "Platinum Room", "gifts_per_place": 10},
-    "diamond": {"min_bet": 40000, "max_bet": 100000, "name": "Diamond Room", "gifts_per_place": 20},
-    "elite": {"min_bet": 150000, "max_bet": 500000, "name": "Elite Room", "gifts_per_place": 50}
+    RoomType.PLATINUM: {"min_bet": 10000, "max_bet": 30000, "name": "Platinum Room", "gifts_per_place": 10},
+    RoomType.DIAMOND: {"min_bet": 40000, "max_bet": 100000, "name": "Diamond Room", "gifts_per_place": 20},
+    RoomType.ELITE: {"min_bet": 150000, "max_bet": 500000, "name": "Elite Room", "gifts_per_place": 50}
 }
 
 # Models
