@@ -840,6 +840,15 @@ function App() {
       setShowGetReady(false);
       showGetReadyRef.current = false;
       
+      // Clear user from this room's active tracking
+      if (data.room_type) {
+        setUserActiveRooms(prev => {
+          const updated = { ...prev };
+          delete updated[data.room_type];
+          return updated;
+        });
+      }
+      
       // Prepare winner data
       const winnerInfo = {
         winner: data.winner,
