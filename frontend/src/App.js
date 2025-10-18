@@ -2954,7 +2954,7 @@ function App() {
                       Choose Your Battle Arena
                     </h2>
                     <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-                      Join one of our three exclusive rooms where 3 players battle for the prize!
+                      Join one of our six exclusive rooms where 3 players battle for the prize!
                       <br />
                       <span className="text-yellow-400 font-medium">Higher bet = Better winning odds!</span>
                     </p>
