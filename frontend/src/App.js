@@ -1587,7 +1587,7 @@ function App() {
   };
 
 
-  // City selection handlers
+  // City selection handler - unified version
   const handleCitySelect = async (city) => {
     try {
       if (!user || !user.id) {
@@ -1609,7 +1609,13 @@ function App() {
         setUserCity(city);
         setUser({...user, city: city});
         setShowCitySelector(false);
-        toast.success(`City set to ${city}! 🏙️`);
+        setGiftsAvailable(response.data.can_play);
+        
+        if (!response.data.can_play) {
+          toast.error(`No gifts available in ${city} yet. Please check back later or contact casino workers.`);
+        } else {
+          toast.success(`Welcome to ${city}! 🏙️`);
+        }
         
         // Reload rooms to show available games in this city
         console.log('🔄 Reloading rooms for city:', city);
@@ -1625,31 +1631,6 @@ function App() {
       // Show more specific error message
       const errorMsg = error.response?.data?.detail || 'Failed to set city. Please try again.';
       toast.error(errorMsg);
-    }
-  };
-
-  // City selection handler
-  const handleCitySelect = async (city) => {
-    try {
-      const response = await axios.post(`${API}/users/set-city`, {
-        user_id: user.id,
-        city: city
-      });
-      
-      if (response.data.success) {
-        setUser({...user, city: city});
-        setShowCitySelector(false);
-        setGiftsAvailable(response.data.can_play);
-        
-        if (!response.data.can_play) {
-          toast.error(`No gifts available in ${city} yet. Rooms are locked until gifts are uploaded.`);
-        } else {
-          toast.success(`Welcome to ${city}! You can now play and receive gifts from this city.`);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to set city:', error);
-      toast.error('Failed to set city');
     }
   };
 
