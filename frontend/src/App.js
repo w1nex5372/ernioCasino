@@ -3119,7 +3119,7 @@ function App() {
                                 }`}
                               >
                                 <Play className="w-3 h-3 mr-1" />
-                                {isDisabled ? '🚫 No Gifts Available' :
+                                {isDisabled ? `🚫 No Gifts in ${userCity}` :
                                  room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
                                  room.players_count >= 3 ? 'Full' : 
                                  !betAmount ? 'Enter Bet' :
