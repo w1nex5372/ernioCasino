@@ -2169,6 +2169,8 @@ function App() {
   };
 
   const joinRoom = async (roomType) => {
+    const betAmount = betAmounts[roomType];
+    
     console.log('🎯 JOIN ROOM CALLED!', { 
       roomType, 
       user: user ? 'EXISTS' : 'NULL', 
@@ -2254,9 +2256,15 @@ function App() {
       if (response.data.status === 'joined') {
         // Removed toast - silent room join
         setUser({...user, token_balance: response.data.new_balance});
-        setBetAmount('');
+        setBetAmounts(prev => ({ ...prev, [roomType]: '' })); // Clear only this room's bet
         setSelectedRoom(null);
         setForceHideLobby(false);
+        
+        // Track that user is now in this room
+        setUserActiveRooms(prev => ({
+          ...prev,
+          [roomType]: response.data.room_id
+        }));
         
         // DON'T manually set roomParticipants here - let the player_joined socket event handle it
         console.log('✅ Joined room, waiting for player_joined socket event...');
