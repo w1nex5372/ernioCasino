@@ -1779,24 +1779,20 @@ function App() {
   };
 
   const handleAddGift = () => {
-    if (currentGiftMedia.length === 0 || !giftLat || !giftLng) {
+    if (currentGiftMedia.length === 0 || !giftCoordinates.trim()) {
       toast.error('Please provide at least one media file and coordinates');
       return;
     }
 
     const newGift = {
       media: currentGiftMedia, // Array of {type, data}
-      coordinates: {
-        lat: parseFloat(giftLat),
-        lng: parseFloat(giftLng)
-      },
+      coordinates: giftCoordinates, // Single string field
       description: giftDescription // Optional location description
     };
 
     setUploadedGifts([...uploadedGifts, newGift]);
     setCurrentGiftMedia([]);
-    setGiftLat('');
-    setGiftLng('');
+    setGiftCoordinates('');
     setGiftDescription('');
     
     toast.success(`Place ${uploadedGifts.length + 1} added with ${currentGiftMedia.length} media file(s)`);
