@@ -2191,17 +2191,21 @@ async def set_user_city(request: dict):
         if not user_id or not city:
             raise HTTPException(status_code=400, detail="Missing user_id or city")
         
-        if city not in ['London', 'Paris']:
-            raise HTTPException(status_code=400, detail="Invalid city. Must be London or Paris")
+        if city not in ['London', 'Paris', 'Warsaw']:
+            raise HTTPException(status_code=400, detail="Invalid city. Must be London, Paris, or Warsaw")
         
-        # Update user's city
-        result = await db.users.update_one(
+        # Check if user exists first
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Update user's city (always succeeds if user exists, even if city is same)
+        await db.users.update_one(
             {"id": user_id},
             {"$set": {"city": city}}
         )
         
-        if result.modified_count == 0:
-            raise HTTPException(status_code=404, detail="User not found")
+        logging.info(f"✅ User {user_id} city set to {city}")
         
         # Check if gifts are available in this city
         gift_count = await db.gifts.count_documents({"city": city, "status": "available"})
@@ -2211,6 +2215,13 @@ async def set_user_city(request: dict):
             "city": city,
             "gifts_available": gift_count,
             "can_play": gift_count > 0
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error setting user city: {e}")
+        raise HTTPException(status_code=500, detail="Failed to set city")
         }
         
     except HTTPException:
