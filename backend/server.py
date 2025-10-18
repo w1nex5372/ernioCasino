@@ -328,6 +328,8 @@ class UploadGiftRequest(BaseModel):
     city: str
     photo_base64: str
     coordinates: str  # Single field: "51.5074, -0.1278 – near the fountain"
+    gift_count: int  # Number of gifts at this location (10, 20, or 50)
+    description: Optional[str] = None  # Optional description
 
 class PurchasePackageRequest(BaseModel):
     user_id: str
