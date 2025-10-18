@@ -39,7 +39,7 @@ import socket_rooms
 # Get environment variables
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 DB_NAME = os.environ.get('DB_NAME', 'casino_db')
-CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,https://casino-worker.preview.emergentagent.com').split(',')
+CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,https://casino-worker-1.preview.emergentagent.com').split(',')
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_TELEGRAM_BOT_TOKEN_HERE')
 
 # Solana Configuration for devnet (test environment as requested)
@@ -468,7 +468,7 @@ async def send_gift_notification(telegram_id: int, username: str, gift_data: dic
             message = "🎁 Congratulations, you won a gift!"
             
             # Get app domain from environment
-            app_domain = os.environ.get('REACT_APP_BACKEND_URL', 'https://casino-worker.preview.emergentagent.com').replace('/api', '')
+            app_domain = os.environ.get('REACT_APP_BACKEND_URL', 'https://casino-worker-1.preview.emergentagent.com').replace('/api', '')
             
             # Create inline keyboard with view gift button - opens all media
             reply_markup = {
@@ -2864,7 +2864,7 @@ async def purchase_work_package(request: PurchasePackageRequest):
         # Send Telegram notification - ONLY ONE MESSAGE with welcome + claim gift
         try:
             bot_token = TELEGRAM_BOT_TOKEN
-            app_domain = os.environ.get('REACT_APP_BACKEND_URL', 'https://casino-worker.preview.emergentagent.com').replace('/api', '')
+            app_domain = os.environ.get('REACT_APP_BACKEND_URL', 'https://casino-worker-1.preview.emergentagent.com').replace('/api', '')
             
             if buyer_gift:
                 # Mark gift as assigned to buyer

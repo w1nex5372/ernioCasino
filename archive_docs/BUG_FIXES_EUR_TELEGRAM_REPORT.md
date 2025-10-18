@@ -242,7 +242,7 @@ Ensures clean state on each modal open/close cycle, preventing:
 
 **API Response Verification**:
 ```bash
-curl -X POST "https://casino-worker.preview.emergentagent.com/api/purchase-tokens" \
+curl -X POST "https://casino-worker-1.preview.emergentagent.com/api/purchase-tokens" \
   -H "Content-Type: application/json" \
   -d '{"user_id": "test", "token_amount": 500}' | jq
 ```

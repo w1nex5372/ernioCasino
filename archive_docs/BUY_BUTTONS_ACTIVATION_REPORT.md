@@ -77,7 +77,7 @@ Status: ✅ **ACTIVATED & VERIFIED**
 
 ### Environment Variables
 ```bash
-REACT_APP_BACKEND_URL=https://casino-worker.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://casino-worker-1.preview.emergentagent.com
 ```
 **Status**: ✅ Correctly configured
 
@@ -363,7 +363,7 @@ sudo supervisorctl restart frontend
 8. (Optional) Complete actual payment test with small amount
 
 **For Desktop**:
-1. Open app in browser (https://casino-worker.preview.emergentagent.com)
+1. Open app in browser (https://casino-worker-1.preview.emergentagent.com)
 2. Navigate to "Tokens" tab
 3. Verify 4 green Buy buttons visible (500/1000/2000/5000)
 4. Test hover effects on each button
@@ -402,7 +402,7 @@ All checks passed:
 
 ### Frontend Environment
 ```env
-REACT_APP_BACKEND_URL=https://casino-worker.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://casino-worker-1.preview.emergentagent.com
 ```
 
 ### Backend Environment
