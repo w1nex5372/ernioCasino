@@ -1970,6 +1970,11 @@ function App() {
         // Reload packages
         const packagesResponse = await axios.get(`${API}/work/my-packages/${user.id}`);
         setUserPackages(packagesResponse.data.packages || []);
+        
+        // Refresh work system status and package availability
+        checkWorkSystemReady();
+        checkPackageTypeAvailability();
+        loadRooms(); // Refresh room availability
       }
     } catch (error) {
       console.error('Failed to upload gifts:', error);
