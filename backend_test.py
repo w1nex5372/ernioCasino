@@ -4145,6 +4145,395 @@ class SolanaCasinoAPITester:
         
         print("=" * 80)
 
+    # Package-Specific Availability System Tests
+    def test_work_system_ready(self):
+        """Test GET /api/work/system-ready endpoint"""
+        try:
+            response = requests.get(f"{self.api_url}/work/system-ready")
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                system_ready = data.get('system_ready', False)
+                total_gifts = data.get('total_gifts_in_system', 0)
+                message = data.get('message', '')
+                
+                details = f"System ready: {system_ready}, Total gifts: {total_gifts}, Message: {message}"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test("Work System Ready Check", success, details)
+            return success, data if success else None
+        except Exception as e:
+            self.log_test("Work System Ready Check", False, str(e))
+            return False, None
+
+    def test_package_type_availability(self):
+        """Test GET /api/work/package-type-availability endpoint"""
+        try:
+            response = requests.get(f"{self.api_url}/work/package-type-availability")
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                availability = data.get('availability', {})
+                
+                # Validate structure
+                expected_packages = ["10", "20", "50"]
+                expected_cities = ["London", "Paris"]
+                
+                for package in expected_packages:
+                    if package not in availability:
+                        success = False
+                        details = f"Missing package type: {package}"
+                        break
+                    
+                    pkg_data = availability[package]
+                    if 'available' not in pkg_data or 'cities' not in pkg_data:
+                        success = False
+                        details = f"Invalid structure for package {package}"
+                        break
+                    
+                    for city in expected_cities:
+                        if city not in pkg_data['cities']:
+                            success = False
+                            details = f"Missing city {city} for package {package}"
+                            break
+                
+                if success:
+                    details = f"Package availability: "
+                    for pkg in expected_packages:
+                        pkg_avail = availability[pkg]['available']
+                        london_count = availability[pkg]['cities']['London']
+                        paris_count = availability[pkg]['cities']['Paris']
+                        details += f"{pkg}gifts: {pkg_avail} (L:{london_count}, P:{paris_count}) "
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test("Package Type Availability Check", success, details)
+            return success, data if success else None
+        except Exception as e:
+            self.log_test("Package Type Availability Check", False, str(e))
+            return False, None
+
+    def test_gift_upload_with_package_validation(self):
+        """Test gift upload with package validation - users can only upload their purchased package type"""
+        try:
+            print("\n🎁 Testing Gift Upload with Package Validation...")
+            
+            # Create test user
+            test_user_data = {
+                "telegram_auth_data": {
+                    "id": 555666777,
+                    "first_name": "PackageTest",
+                    "last_name": "User",
+                    "username": "packagetestuser",
+                    "photo_url": "https://example.com/packagetest.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            auth_response = requests.post(f"{self.api_url}/auth/telegram", json=test_user_data)
+            if auth_response.status_code != 200:
+                self.log_test("Gift Upload Package Validation - User Creation", False, 
+                            f"Failed to create test user: {auth_response.status_code}")
+                return False
+            
+            test_user = auth_response.json()
+            
+            # Set user city to London
+            city_data = {"user_id": test_user['id'], "city": "London"}
+            city_response = requests.post(f"{self.api_url}/users/set-city", json=city_data)
+            if city_response.status_code != 200:
+                self.log_test("Gift Upload Package Validation - Set City", False, 
+                            f"Failed to set city: {city_response.status_code}")
+                return False
+            
+            # Purchase work access
+            access_data = {"user_id": test_user['id'], "payment_signature": "test_signature_package_validation"}
+            access_response = requests.post(f"{self.api_url}/work/purchase-access", json=access_data)
+            if access_response.status_code != 200:
+                self.log_test("Gift Upload Package Validation - Purchase Access", False, 
+                            f"Failed to purchase access: {access_response.status_code}")
+                return False
+            
+            # Purchase a 50-gift package
+            package_data = {
+                "user_id": test_user['id'],
+                "city": "London",
+                "gift_count": 50,
+                "paid_amount_eur": 400.0,
+                "payment_signature": "test_signature_50_package"
+            }
+            package_response = requests.post(f"{self.api_url}/work/purchase-package", json=package_data)
+            if package_response.status_code != 200:
+                self.log_test("Gift Upload Package Validation - Purchase Package", False, 
+                            f"Failed to purchase 50-gift package: {package_response.status_code}")
+                return False
+            
+            # Test 1: Try to upload 10 gifts (should FAIL - no 10-gift package purchased)
+            upload_data_10 = {
+                "user_id": test_user['id'],
+                "gifts": [
+                    {
+                        "photo_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/wA==",
+                        "coordinates": "51.5074, -0.1278 - Test location for 10 gifts"
+                    }
+                ],
+                "gift_count_per_upload": 10
+            }
+            
+            upload_response_10 = requests.post(f"{self.api_url}/work/upload-gifts", json=upload_data_10)
+            
+            # Should fail with 400 status
+            if upload_response_10.status_code == 400:
+                error_data = upload_response_10.json()
+                if "No active 10-gift package" in error_data.get('detail', ''):
+                    self.log_test("Gift Upload Package Validation - 10 Gifts Rejection", True, 
+                                "Correctly rejected 10-gift upload (no 10-gift package purchased)")
+                else:
+                    self.log_test("Gift Upload Package Validation - 10 Gifts Rejection", False, 
+                                f"Wrong error message: {error_data.get('detail')}")
+                    return False
+            else:
+                self.log_test("Gift Upload Package Validation - 10 Gifts Rejection", False, 
+                            f"Expected 400 error, got {upload_response_10.status_code}")
+                return False
+            
+            # Test 2: Try to upload 50 gifts (should SUCCEED - has 50-gift package)
+            upload_data_50 = {
+                "user_id": test_user['id'],
+                "gifts": [
+                    {
+                        "photo_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/wA==",
+                        "coordinates": "51.5074, -0.1278 - Test location for 50 gifts"
+                    }
+                ],
+                "gift_count_per_upload": 50
+            }
+            
+            upload_response_50 = requests.post(f"{self.api_url}/work/upload-gifts", json=upload_data_50)
+            
+            if upload_response_50.status_code == 200:
+                upload_result = upload_response_50.json()
+                gift_ids = upload_result.get('gift_ids', [])
+                self.log_test("Gift Upload Package Validation - 50 Gifts Success", True, 
+                            f"Successfully uploaded 50 gifts, IDs: {len(gift_ids)} gifts created")
+            else:
+                self.log_test("Gift Upload Package Validation - 50 Gifts Success", False, 
+                            f"Failed to upload 50 gifts: {upload_response_50.status_code}, {upload_response_50.text}")
+                return False
+            
+            # Test 3: Verify package availability updates after upload
+            avail_response = requests.get(f"{self.api_url}/work/package-type-availability")
+            if avail_response.status_code == 200:
+                avail_data = avail_response.json()
+                availability = avail_data.get('availability', {})
+                
+                # Check if 50-gift package is now available
+                pkg_50_available = availability.get('50', {}).get('available', False)
+                london_count = availability.get('50', {}).get('cities', {}).get('London', 0)
+                
+                if pkg_50_available and london_count > 0:
+                    self.log_test("Gift Upload Package Validation - Availability Update", True, 
+                                f"Package availability updated: 50gifts available in London ({london_count} gifts)")
+                else:
+                    self.log_test("Gift Upload Package Validation - Availability Update", False, 
+                                f"Package availability not updated correctly: available={pkg_50_available}, London count={london_count}")
+                    return False
+            else:
+                self.log_test("Gift Upload Package Validation - Availability Update", False, 
+                            f"Failed to check availability after upload: {avail_response.status_code}")
+                return False
+            
+            return True
+            
+        except Exception as e:
+            self.log_test("Gift Upload Package Validation", False, str(e))
+            return False
+
+    def test_package_type_enforcement(self):
+        """Test that users can only upload the package type they purchased"""
+        try:
+            print("\n🔒 Testing Package Type Enforcement...")
+            
+            # Create three test users for different package types
+            package_types = [10, 20, 50]
+            package_prices = [100.0, 180.0, 400.0]
+            test_users = []
+            
+            for i, (pkg_count, pkg_price) in enumerate(zip(package_types, package_prices)):
+                # Create user
+                user_data = {
+                    "telegram_auth_data": {
+                        "id": 777888999 + i,
+                        "first_name": f"Package{pkg_count}",
+                        "last_name": "User",
+                        "username": f"package{pkg_count}user",
+                        "photo_url": f"https://example.com/package{pkg_count}.jpg",
+                        "auth_date": int(datetime.now().timestamp()),
+                        "hash": "telegram_auto"
+                    }
+                }
+                
+                auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+                if auth_response.status_code != 200:
+                    self.log_test(f"Package Type Enforcement - User {pkg_count} Creation", False, 
+                                f"Failed to create user: {auth_response.status_code}")
+                    return False
+                
+                user = auth_response.json()
+                test_users.append((user, pkg_count, pkg_price))
+                
+                # Set city
+                city_data = {"user_id": user['id'], "city": "Paris"}
+                requests.post(f"{self.api_url}/users/set-city", json=city_data)
+                
+                # Purchase work access
+                access_data = {"user_id": user['id'], "payment_signature": f"test_signature_access_{pkg_count}"}
+                requests.post(f"{self.api_url}/work/purchase-access", json=access_data)
+                
+                # Purchase specific package
+                package_data = {
+                    "user_id": user['id'],
+                    "city": "Paris",
+                    "gift_count": pkg_count,
+                    "paid_amount_eur": pkg_price,
+                    "payment_signature": f"test_signature_package_{pkg_count}"
+                }
+                package_response = requests.post(f"{self.api_url}/work/purchase-package", json=package_data)
+                if package_response.status_code != 200:
+                    self.log_test(f"Package Type Enforcement - Package {pkg_count} Purchase", False, 
+                                f"Failed to purchase package: {package_response.status_code}")
+                    return False
+            
+            # Test enforcement for each user
+            for user, user_pkg_count, _ in test_users:
+                for test_pkg_count in package_types:
+                    upload_data = {
+                        "user_id": user['id'],
+                        "gifts": [
+                            {
+                                "photo_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/wA==",
+                                "coordinates": f"48.8566, 2.3522 - Test location for {test_pkg_count} gifts"
+                            }
+                        ],
+                        "gift_count_per_upload": test_pkg_count
+                    }
+                    
+                    upload_response = requests.post(f"{self.api_url}/work/upload-gifts", json=upload_data)
+                    
+                    if test_pkg_count == user_pkg_count:
+                        # Should succeed - user has this package type
+                        if upload_response.status_code == 200:
+                            self.log_test(f"Package Type Enforcement - User {user_pkg_count} Upload {test_pkg_count}", True, 
+                                        f"Correctly allowed {test_pkg_count}-gift upload for user with {user_pkg_count}-gift package")
+                        else:
+                            self.log_test(f"Package Type Enforcement - User {user_pkg_count} Upload {test_pkg_count}", False, 
+                                        f"Should have allowed upload: {upload_response.status_code}")
+                            return False
+                    else:
+                        # Should fail - user doesn't have this package type
+                        if upload_response.status_code == 400:
+                            error_data = upload_response.json()
+                            if f"No active {test_pkg_count}-gift package" in error_data.get('detail', ''):
+                                self.log_test(f"Package Type Enforcement - User {user_pkg_count} Reject {test_pkg_count}", True, 
+                                            f"Correctly rejected {test_pkg_count}-gift upload for user with {user_pkg_count}-gift package")
+                            else:
+                                self.log_test(f"Package Type Enforcement - User {user_pkg_count} Reject {test_pkg_count}", False, 
+                                            f"Wrong error message: {error_data.get('detail')}")
+                                return False
+                        else:
+                            self.log_test(f"Package Type Enforcement - User {user_pkg_count} Reject {test_pkg_count}", False, 
+                                        f"Should have rejected upload: {upload_response.status_code}")
+                            return False
+            
+            return True
+            
+        except Exception as e:
+            self.log_test("Package Type Enforcement", False, str(e))
+            return False
+
+    def test_package_specific_availability_comprehensive(self):
+        """Comprehensive test of the package-specific availability system"""
+        try:
+            print("\n🎯 Testing Package-Specific Availability System Comprehensively...")
+            
+            # Clean database first
+            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database?admin_key=PRODUCTION_CLEANUP_2025")
+            if cleanup_response.status_code != 200:
+                self.log_test("Package Availability Comprehensive - Cleanup", False, "Database cleanup failed")
+                return False
+            
+            time.sleep(1)
+            
+            # Test 1: Initial system state (no gifts)
+            system_ready_success, system_data = self.test_work_system_ready()
+            if not system_ready_success:
+                return False
+            
+            # Should be not ready initially
+            if system_data.get('system_ready', True):
+                self.log_test("Package Availability Comprehensive - Initial State", False, 
+                            "System should not be ready initially (no gifts)")
+                return False
+            
+            # Test 2: Package type availability (should all be false initially)
+            avail_success, avail_data = self.test_package_type_availability()
+            if not avail_success:
+                return False
+            
+            availability = avail_data.get('availability', {})
+            for pkg in ["10", "20", "50"]:
+                if availability.get(pkg, {}).get('available', True):
+                    self.log_test("Package Availability Comprehensive - Initial Availability", False, 
+                                f"Package {pkg} should not be available initially")
+                    return False
+            
+            # Test 3: Gift upload with package validation
+            upload_success = self.test_gift_upload_with_package_validation()
+            if not upload_success:
+                return False
+            
+            # Test 4: Package type enforcement
+            enforcement_success = self.test_package_type_enforcement()
+            if not enforcement_success:
+                return False
+            
+            # Test 5: Final system state verification
+            final_system_success, final_system_data = self.test_work_system_ready()
+            if not final_system_success:
+                return False
+            
+            # Should be ready now (gifts uploaded)
+            if not final_system_data.get('system_ready', False):
+                self.log_test("Package Availability Comprehensive - Final State", False, 
+                            "System should be ready after gifts uploaded")
+                return False
+            
+            # Test 6: Final package availability verification
+            final_avail_success, final_avail_data = self.test_package_type_availability()
+            if not final_avail_success:
+                return False
+            
+            final_availability = final_avail_data.get('availability', {})
+            
+            # At least some packages should be available now
+            any_available = any(final_availability.get(pkg, {}).get('available', False) for pkg in ["10", "20", "50"])
+            if not any_available:
+                self.log_test("Package Availability Comprehensive - Final Availability", False, 
+                            "At least some packages should be available after uploads")
+                return False
+            
+            self.log_test("Package Availability Comprehensive - Complete Flow", True, 
+                        "All package-specific availability tests passed successfully")
+            return True
+            
+        except Exception as e:
+            self.log_test("Package Availability Comprehensive", False, str(e))
+            return False
+
     def run_all_tests(self):
         """Run all API tests - Updated for Solana Integration and 3-Player System"""
         print("🚀 Starting Solana Casino Backend API Tests...")
