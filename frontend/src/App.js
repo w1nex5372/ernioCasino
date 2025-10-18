@@ -1951,16 +1951,55 @@ function App() {
     const files = Array.from(e.target.files);
     
     files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const mediaType = file.type.startsWith('image/') ? 'photo' : 'video';
-        setCurrentGiftMedia(prev => [...prev, {
-          type: mediaType,
-          data: reader.result
-        }]);
-        toast.success(`${mediaType} added (${currentGiftMedia.length + 1} total)`);
-      };
-      reader.readAsDataURL(file);
+      const mediaType = file.type.startsWith('image/') ? 'photo' : 'video';
+      
+      if (mediaType === 'photo') {
+        // Compress images for faster upload
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Resize if too large (max 1200px width)
+            let width = img.width;
+            let height = img.height;
+            const maxWidth = 1200;
+            
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Compress to JPEG with 0.7 quality
+            const compressedData = canvas.toDataURL('image/jpeg', 0.7);
+            
+            setCurrentGiftMedia(prev => [...prev, {
+              type: mediaType,
+              data: compressedData
+            }]);
+            toast.success(`Photo compressed and added (${currentGiftMedia.length + 1} total)`);
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // Videos - no compression
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setCurrentGiftMedia(prev => [...prev, {
+            type: mediaType,
+            data: reader.result
+          }]);
+          toast.success(`Video added (${currentGiftMedia.length + 1} total)`);
+        };
+        reader.readAsDataURL(file);
+      }
     });
   };
 
