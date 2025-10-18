@@ -3163,7 +3163,26 @@ function App() {
                             <CardContent className="p-4">
                               <div className="space-y-4">
                                 {isDisabled ? (
-                                  <p className="text-red-400 text-sm text-center font-medium">No gifts uploaded for this room yet</p>
+                                  <div className="space-y-2">
+                                    <p className="text-red-400 text-sm text-center font-medium">
+                                      No gifts uploaded for this room in {userCity} yet
+                                    </p>
+                                    {/* Show if gifts exist in other cities */}
+                                    {(() => {
+                                      const otherCitiesWithGifts = Object.entries(giftAvailabilityByCity)
+                                        .filter(([city, availability]) => city !== userCity && availability[roomType])
+                                        .map(([city]) => city);
+                                      
+                                      if (otherCitiesWithGifts.length > 0) {
+                                        return (
+                                          <p className="text-yellow-400 text-xs text-center">
+                                            Available in: {otherCitiesWithGifts.join(', ')}
+                                          </p>
+                                        );
+                                      }
+                                      return null;
+                                    })()}
+                                  </div>
                                 ) : (
                                   <>
                                     {room.players_count === 0 && (
