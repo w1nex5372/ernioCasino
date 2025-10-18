@@ -293,6 +293,7 @@ function App() {
   const [userCity, setUserCity] = useState(null); // London or Paris
   const [showCitySelector, setShowCitySelector] = useState(false); // Show city selection modal
   const [giftsAvailable, setGiftsAvailable] = useState(true);
+  const [giftAvailabilityByCity, setGiftAvailabilityByCity] = useState({}); // Per-city availability
   
   // Work for Casino state
   const [hasWorkAccess, setHasWorkAccess] = useState(false); // Has user purchased work access
