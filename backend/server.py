@@ -526,12 +526,14 @@ def check_admin_access(telegram_username: Optional[str]) -> bool:
 async def assign_gift_to_winner(winner_user_id: str, winner_city: str, winner_telegram_id: int, winner_username: str, room_type: str = 'bronze'):
     """Assign an available gift from the winner's city to the winner - folder based on room type"""
     try:
-        # Map room type to folder name
+        # Map room type to folder name (gift_type)
         folder_map = {
             'bronze': '1gift',
             'silver': '2gifts',
             'gold': '5gifts',
-            'platinum': '10gifts'
+            'platinum': '10gifts',
+            'diamond': '20gifts',
+            'elite': '50gifts'
         }
         folder_name = folder_map.get(room_type, '1gift')
         
