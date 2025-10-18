@@ -2460,9 +2460,7 @@ function App() {
               <div className="flex gap-2 px-3 pb-2">
                 <Button
                   onClick={handleWorkForCasino}
-                  disabled={!workSystemReady}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xs py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={!workSystemReady ? "No gifts in system yet" : "Work for Casino"}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xs py-2"
                 >
                   💼 Work Casino
                 </Button>
