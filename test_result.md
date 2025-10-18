@@ -84,8 +84,8 @@ Additionally, implementing new "Work for Casino" system with:
   - Toast notifications for connection status
   - Automatic room reload after successful reconnection
 
-### Phase 6: Mandatory City Selection & Gift Availability (In Progress)
-- Status: 🔄 Implemented, Pending Testing
+### Phase 6: Mandatory City Selection & Gift Availability (Tested)
+- Status: ✅ Implemented & Tested
 - Goal: Enforce mandatory city selection and handle gift shortages gracefully
 - Features:
   - Unified city selector modal (removed duplicates)
