@@ -321,7 +321,7 @@ function App() {
     }
   }, [roomParticipants, lobbyData]);
 
-  // Check if viewing a gift from URL
+  // Check if viewing a gift from URL - CRITICAL: Check this FIRST before any authentication
   useEffect(() => {
     const checkGiftView = async () => {
       const path = window.location.pathname;
@@ -329,10 +329,17 @@ function App() {
       
       if (giftMatch) {
         const giftId = giftMatch[1];
+        
+        // PREVENT normal app loading when viewing gift
+        setIsLoading(false);
+        
         try {
           const response = await axios.get(`${API}/gifts/view/${giftId}`);
           setViewingGift(response.data);
           setShowGiftViewer(true);
+          
+          // Set a flag to prevent authentication and socket connection
+          window.isGiftViewerMode = true;
         } catch (error) {
           console.error('Failed to load gift:', error);
           toast.error('Gift not found');
