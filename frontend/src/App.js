@@ -1015,6 +1015,13 @@ function App() {
       return;
     }
     
+    // SKIP if in package viewer mode - no authentication needed
+    if (window.isPackageViewerMode) {
+      console.log('📦 Package Viewer Mode - Skipping authentication');
+      setIsLoading(false);
+      return;
+    }
+    
     // Initialize Telegram Web App early
     if (window.Telegram && window.Telegram.WebApp) {
       console.log('🔄 Initializing Telegram Web App...');
