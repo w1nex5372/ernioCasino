@@ -1257,6 +1257,14 @@ function App() {
           try {
             const response = await axios.get(`${API}/users/telegram/${telegramUser.id}`);
             if (response.data) {
+              // CRITICAL: Check city BEFORE setting user
+              if (!response.data.city) {
+                console.log('⚠️ User has no city - will show city selector immediately');
+                setShowCitySelector(true);
+              } else {
+                setUserCity(response.data.city);
+              }
+              
               setUser(response.data);
               saveUserSession(response.data);
               setIsLoading(false);
