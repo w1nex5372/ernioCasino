@@ -4032,6 +4032,33 @@ class SolanaCasinoAPITester:
         # Print results
         self.print_final_results()
 
+    def print_final_results(self):
+        """Print comprehensive test results"""
+        print("\n" + "=" * 80)
+        print("🏁 FINAL TEST RESULTS")
+        print("=" * 80)
+        
+        success_rate = (self.tests_passed / self.tests_run * 100) if self.tests_run > 0 else 0
+        
+        print(f"📊 Tests Run: {self.tests_run}")
+        print(f"✅ Tests Passed: {self.tests_passed}")
+        print(f"❌ Tests Failed: {len(self.failed_tests)}")
+        print(f"📈 Success Rate: {success_rate:.1f}%")
+        
+        if self.failed_tests:
+            print("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                print(f"   {i}. {test['name']}: {test['details']}")
+        
+        print("\n" + "=" * 80)
+        
+        if success_rate >= 80:
+            print("🎉 OVERALL RESULT: PASSED (80%+ success rate)")
+        else:
+            print("⚠️  OVERALL RESULT: NEEDS ATTENTION (Below 80% success rate)")
+        
+        print("=" * 80)
+
     def run_all_tests(self):
         """Run all API tests - Updated for Solana Integration and 3-Player System"""
         print("🚀 Starting Solana Casino Backend API Tests...")
