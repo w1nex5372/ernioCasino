@@ -183,9 +183,12 @@ PRIZE_LINKS = {
 # (Now configured above in environment variables section)
 
 ROOM_SETTINGS = {
-    RoomType.BRONZE: {"min_bet": 150, "max_bet": 450, "name": "Bronze Room"},
-    RoomType.SILVER: {"min_bet": 500, "max_bet": 1500, "name": "Silver Room"},
-    RoomType.GOLD: {"min_bet": 2000, "max_bet": 8000, "name": "Gold Room"}
+    RoomType.BRONZE: {"min_bet": 150, "max_bet": 450, "name": "Bronze Room", "gifts_per_place": 1},
+    RoomType.SILVER: {"min_bet": 500, "max_bet": 1500, "name": "Silver Room", "gifts_per_place": 2},
+    RoomType.GOLD: {"min_bet": 2000, "max_bet": 8000, "name": "Gold Room", "gifts_per_place": 5},
+    "platinum": {"min_bet": 10000, "max_bet": 30000, "name": "Platinum Room", "gifts_per_place": 10},
+    "diamond": {"min_bet": 40000, "max_bet": 100000, "name": "Diamond Room", "gifts_per_place": 20},
+    "elite": {"min_bet": 150000, "max_bet": 500000, "name": "Elite Room", "gifts_per_place": 50}
 }
 
 # Models
