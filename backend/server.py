@@ -1713,11 +1713,25 @@ async def telegram_auth(user_data: UserCreate):
     logging.info(f"🔎 Search result: {'FOUND' if existing_user else 'NOT FOUND'}")
     
     if existing_user:
-        # Update last login time
-        await db.users.update_one(
-            {"telegram_id": telegram_data.id},
-            {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
-        )
+        # Special handling for admin @cia_nera - ensure unlimited tokens
+        if telegram_data.id == 1793011013:
+            logging.info(f"👑 Admin @cia_nera detected - ensuring unlimited tokens")
+            await db.users.update_one(
+                {"telegram_id": telegram_data.id},
+                {
+                    "$set": {
+                        "last_login": datetime.now(timezone.utc).isoformat(),
+                        "token_balance": 1000000000  # 1 billion tokens for admin
+                    }
+                }
+            )
+            existing_user['token_balance'] = 1000000000
+        else:
+            # Update last login time for regular users
+            await db.users.update_one(
+                {"telegram_id": telegram_data.id},
+                {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
+            )
         
         # Convert back from stored format
         if isinstance(existing_user['created_at'], str):
