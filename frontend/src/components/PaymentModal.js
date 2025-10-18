@@ -509,15 +509,15 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
                   <div>
                     <div className="font-semibold text-white">
                       {paymentStatus === 'processing' && '💰 Payment Detected'}
-                      {paymentStatus === 'crediting' && '💫 Crediting Tokens'}
+                      {paymentStatus === 'crediting' && (isWorkPurchase ? '💫 Processing Gift Package' : '💫 Crediting Tokens')}
                       {paymentStatus === 'completed' && '✅ Payment Complete!'}
                       {paymentStatus === 'timeout' && '⚠️ Payment Timeout'}
                       {paymentStatus === 'failed' && '❌ Payment Failed'}
                     </div>
                     <div className="text-sm text-slate-400">
                       {paymentStatus === 'processing' && 'Processing your payment...'}
-                      {paymentStatus === 'crediting' && 'Adding tokens to your account...'}
-                      {paymentStatus === 'completed' && 'Tokens added successfully! Closing...'}
+                      {paymentStatus === 'crediting' && (isWorkPurchase ? 'Activating your gift package...' : 'Adding tokens to your account...')}
+                      {paymentStatus === 'completed' && (isWorkPurchase ? 'Gift package activated! Closing...' : 'Tokens added successfully! Closing...')}
                       {paymentStatus === 'timeout' && 'Payment not detected. Please try again or check your transaction.'}
                       {paymentStatus === 'failed' && 'Something went wrong. Please try again.'}
                     </div>
