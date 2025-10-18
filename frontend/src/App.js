@@ -1208,6 +1208,7 @@ function App() {
                 
                 setUser(response.data);
                 saveUserSession(response.data);
+                setCityCheckComplete(true); // Mark city check as done
                 setIsLoading(false);
                 toast.success(`Welcome back, ${response.data.first_name}!`);
                 
