@@ -2995,12 +2995,16 @@ function App() {
                 )}
                 
                 <div className={`grid gap-3 w-full ${isMobile ? 'grid-cols-1 px-1' : 'lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto'}`}>
-                  {['bronze', 'silver', 'gold'].map((roomType) => {
+                  {['bronze', 'silver', 'gold', 'platinum', 'diamond', 'elite'].map((roomType) => {
                     const room = rooms.find(r => r.room_type === roomType) || { players_count: 0 };
                     const config = ROOM_CONFIGS[roomType];
                     
+                    // Check if gifts are available for this room type
+                    const giftsAvailable = room.gifts_available !== false;
+                    const isDisabled = !giftsAvailable;
+                    
                     return (
-                      <Card key={roomType} className="bg-slate-800/90 border-slate-700 overflow-hidden">
+                      <Card key={roomType} className={`bg-slate-800/90 border-slate-700 overflow-hidden ${isDisabled ? 'opacity-50' : ''}`}>
                         {isMobile ? (
                           // MOBILE: Compact card layout - fixed overflow
                           <div className="w-full max-w-full overflow-hidden">
@@ -3014,19 +3018,27 @@ function App() {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                  <Badge className={`text-xs px-2 py-0.5 flex-shrink-0 ${
-                                    room.status === 'playing' || room.status === 'finished' ? 'bg-red-500 text-white animate-pulse' :
-                                    room.players_count === 0 ? 'bg-slate-500 text-white' :
-                                    room.players_count === 1 ? 'bg-yellow-500 text-black animate-pulse' :
-                                    'bg-green-500 text-black'
-                                  }`}>
-                                    {room.status === 'playing' || room.status === 'finished' ? '🔒 FULL' :
-                                     room.players_count === 0 ? '🎯 Empty' :
-                                     room.players_count === 1 ? '🔥 Filling' :
-                                     room.players_count === 2 ? '⏳ Nearly Ready' :
-                                     '⚡ Ready'}
-                                  </Badge>
-                                  <span className="text-xs text-white/70">{room.players_count}/3</span>
+                                  {isDisabled ? (
+                                    <Badge className="text-xs px-2 py-0.5 flex-shrink-0 bg-gray-600 text-white">
+                                      🚫 No Gifts
+                                    </Badge>
+                                  ) : (
+                                    <>
+                                      <Badge className={`text-xs px-2 py-0.5 flex-shrink-0 ${
+                                        room.status === 'playing' || room.status === 'finished' ? 'bg-red-500 text-white animate-pulse' :
+                                        room.players_count === 0 ? 'bg-slate-500 text-white' :
+                                        room.players_count === 1 ? 'bg-yellow-500 text-black animate-pulse' :
+                                        'bg-green-500 text-black'
+                                      }`}>
+                                        {room.status === 'playing' || room.status === 'finished' ? '🔒 FULL' :
+                                         room.players_count === 0 ? '🎯 Empty' :
+                                         room.players_count === 1 ? '🔥 Filling' :
+                                         room.players_count === 2 ? '⏳ Nearly Ready' :
+                                         '⚡ Ready'}
+                                      </Badge>
+                                      <span className="text-xs text-white/70">{room.players_count}/3</span>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -3040,7 +3052,8 @@ function App() {
                                   setSelectedRoom(roomType);
                                   setBetAmount(e.target.value);
                                 }}
-                                className="bg-slate-700 border-slate-500 text-white text-center h-9 text-sm placeholder:text-slate-400 focus:border-yellow-400"
+                                disabled={isDisabled}
+                                className="bg-slate-700 border-slate-500 text-white text-center h-9 text-sm placeholder:text-slate-400 focus:border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
                               />
                               
                               <Button
