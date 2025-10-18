@@ -2152,6 +2152,15 @@ function App() {
     
     try {
       const response = await axios.get(`${API}/user-room-status/${user.id}`);
+      
+      // Update active rooms state
+      if (response.data.in_room) {
+        setUserActiveRooms(prev => ({
+          ...prev,
+          [response.data.room_type]: response.data.room_id
+        }));
+      }
+      
       return response.data;
     } catch (error) {
       console.error('Failed to check room status:', error);
