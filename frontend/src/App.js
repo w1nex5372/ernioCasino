@@ -3559,16 +3559,16 @@ function App() {
                                   await joinRoom(roomType);
                                   console.log('🔘 Join room function completed');
                                 }}
-                                disabled={isDisabled || (!(userActiveRooms[roomType] && userActiveRooms[roomType].city === userCity) && (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType])))}
+                                disabled={isDisabled || (!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType])))}
                                 className={`w-full h-9 text-white font-semibold text-sm ${
-                                  (userActiveRooms[roomType] && userActiveRooms[roomType].city === userCity) ? 'bg-blue-600 hover:bg-blue-700' :
+                                  userActiveRooms[roomType] ? 'bg-blue-600 hover:bg-blue-700' :
                                   (isDisabled || room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))
                                     ? 'bg-slate-600 cursor-not-allowed' 
                                     : 'bg-green-600 hover:bg-green-700'
                                 }`}
                               >
                                 <Play className="w-3 h-3 mr-1" />
-                                {(userActiveRooms[roomType] && userActiveRooms[roomType].city === userCity) ? '↩️ Return to Room' :
+                                {userActiveRooms[roomType] ? '↩️ Return to Room' :
                                  isDisabled ? `🚫 No Gifts in ${userCity}` :
                                  room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
                                  room.players_count >= 3 ? 'Full' : 
