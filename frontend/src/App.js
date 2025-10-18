@@ -2284,7 +2284,10 @@ function App() {
         // Track that user is now in this room
         setUserActiveRooms(prev => ({
           ...prev,
-          [roomType]: response.data.room_id
+          [roomType]: {
+            roomId: response.data.room_id,
+            city: userCity  // Track which city user joined this room in
+          }
         }));
         
         // DON'T manually set roomParticipants here - let the player_joined socket event handle it
