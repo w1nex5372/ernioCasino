@@ -3679,7 +3679,7 @@ function App() {
                                     }}
                                     min={config.min}
                                     max={config.max}
-                                    disabled={isDisabled || userActiveRooms[roomType]}
+                                    disabled={isDisabled || (userActiveRooms[roomType] && userActiveRooms[roomType].city === userCity)}
                                     className="bg-slate-700 border-slate-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                   />
                                   
