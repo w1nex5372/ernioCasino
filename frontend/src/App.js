@@ -4032,26 +4032,38 @@ function App() {
                   
                   <Button
                     onClick={() => handlePackageSelection(10, 100)}
-                    className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900"
+                    disabled={!packageAvailability["10"]?.available}
+                    className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="text-2xl font-bold">10 Gifts</span>
                     <span className="text-sm">100 EUR (in SOL)</span>
+                    {!packageAvailability["10"]?.available && (
+                      <span className="text-xs text-red-300 mt-1">🔒 Not Available Yet</span>
+                    )}
                   </Button>
                   
                   <Button
                     onClick={() => handlePackageSelection(20, 180)}
-                    className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-r from-gray-400 to-gray-600 hover:from-gray-500 hover:to-gray-700"
+                    disabled={!packageAvailability["20"]?.available}
+                    className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-r from-gray-400 to-gray-600 hover:from-gray-500 hover:to-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="text-2xl font-bold">20 Gifts</span>
                     <span className="text-sm">180 EUR (in SOL)</span>
+                    {!packageAvailability["20"]?.available && (
+                      <span className="text-xs text-red-300 mt-1">🔒 Not Available Yet</span>
+                    )}
                   </Button>
                   
                   <Button
                     onClick={() => handlePackageSelection(50, 400)}
-                    className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-r from-yellow-500 to-yellow-700 hover:from-yellow-600 hover:to-yellow-800"
+                    disabled={!packageAvailability["50"]?.available}
+                    className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-r from-yellow-500 to-yellow-700 hover:from-yellow-600 hover:to-yellow-800 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="text-2xl font-bold">50 Gifts</span>
                     <span className="text-sm">400 EUR (in SOL)</span>
+                    {!packageAvailability["50"]?.available && (
+                      <span className="text-xs text-red-300 mt-1">🔒 Not Available Yet</span>
+                    )}
                   </Button>
                   
                   <Button
