@@ -236,10 +236,6 @@ function App() {
   const blockWinnerScreenRef = React.useRef(false); // Block winner screen after redirect_home
   const [forceHideLobby, setForceHideLobby] = useState(false); // Force hide lobby after redirect
   
-  // City selection
-  const [showCitySelector, setShowCitySelector] = useState(false);
-  const [giftsAvailable, setGiftsAvailable] = useState(true);
-  
   // UI state
   const [activeTab, setActiveTab] = useState('rooms');
   const [isMobile, setIsMobile] = useState(false);
@@ -263,6 +259,7 @@ function App() {
   // City selection state
   const [userCity, setUserCity] = useState(null); // London or Paris
   const [showCitySelector, setShowCitySelector] = useState(false); // Show city selection modal
+  const [giftsAvailable, setGiftsAvailable] = useState(true);
   
   // Work for Casino state
   const [hasWorkAccess, setHasWorkAccess] = useState(false); // Has user purchased work access
