@@ -1332,19 +1332,13 @@ function App() {
   }, []);
 
 
-  // Check if user needs to select city - IMMEDIATELY
+  // Check if user needs to select city - trigger immediately when user loads
   useEffect(() => {
-    if (user && !isLoading) {
-      // Set user city from user data
-      if (user.city) {
-        setUserCity(user.city);
-        setHasWorkAccess(user.work_access_purchased || false);
-      } else {
-        // User has no city selected, show city selector IMMEDIATELY
-        setShowCitySelector(true);
-      }
+    if (user && !isLoading && !user.city && !userCity) {
+      console.log('🏙️ User has no city - showing selector immediately');
+      setShowCitySelector(true);
     }
-  }, [user, isLoading]);
+  }, [user, isLoading, userCity]);
 
 
   // User session management
