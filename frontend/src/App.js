@@ -1386,6 +1386,17 @@ function App() {
     }
   };
 
+  const checkWorkSystemReady = async () => {
+    try {
+      const response = await axios.get(`${API}/work/system-ready`);
+      setWorkSystemReady(response.data.system_ready);
+      console.log('🏭 Work system ready:', response.data.system_ready, 'Total gifts:', response.data.total_gifts_in_system);
+    } catch (error) {
+      console.error('Failed to check work system:', error);
+      setWorkSystemReady(false);
+    }
+  };
+
   const loadWelcomeBonusStatus = async () => {
     try {
       console.log('🎁🎁🎁 LOADING WELCOME BONUS STATUS 🎁🎁🎁');
