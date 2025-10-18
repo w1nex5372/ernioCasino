@@ -49,50 +49,56 @@ const ROOM_CONFIGS = {
   bronze: { 
     name: 'Bronze Room', 
     icon: '🥉', 
-    min: 150, 
+    min: 200, 
     max: 450,
     gradient: 'from-amber-600 to-amber-800',
-    giftsPerPlace: 1
+    giftsPerPlace: 1,
+    giftType: '1gift'
   },
   silver: { 
     name: 'Silver Room', 
     icon: '🥈', 
-    min: 500, 
-    max: 1500,
+    min: 350, 
+    max: 800,
     gradient: 'from-slate-400 to-slate-600',
-    giftsPerPlace: 2
+    giftsPerPlace: 2,
+    giftType: '2gifts'
   },
   gold: { 
     name: 'Gold Room', 
     icon: '🥇', 
-    min: 2000, 
-    max: 8000,
+    min: 650, 
+    max: 1200,
     gradient: 'from-yellow-400 to-yellow-600',
-    giftsPerPlace: 5
+    giftsPerPlace: 5,
+    giftType: '5gifts'
   },
   platinum: { 
     name: 'Platinum Room', 
     icon: '💎', 
-    min: 10000, 
-    max: 30000,
+    min: 1200, 
+    max: 2400,
     gradient: 'from-purple-400 to-purple-600',
-    giftsPerPlace: 10
+    giftsPerPlace: 10,
+    giftType: '10gifts'
   },
   diamond: { 
     name: 'Diamond Room', 
     icon: '💠', 
-    min: 40000, 
-    max: 100000,
+    min: 2400, 
+    max: 4800,
     gradient: 'from-blue-400 to-blue-600',
-    giftsPerPlace: 20
+    giftsPerPlace: 20,
+    giftType: '20gifts'
   },
   elite: { 
     name: 'Elite Room', 
     icon: '👑', 
-    min: 150000, 
-    max: 500000,
+    min: 4500, 
+    max: 8000,
     gradient: 'from-pink-500 to-red-600',
-    giftsPerPlace: 50
+    giftsPerPlace: 50,
+    giftType: '50gifts'
   }
 };
 
