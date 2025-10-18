@@ -274,7 +274,7 @@ class Gift(BaseModel):
     creator_username: Optional[str] = None
     city: str  # London or Paris
     media: List[Dict[str, str]] = Field(default_factory=list)  # [{"type": "photo|video", "data": "base64..."}]
-    coordinates: Dict[str, float]  # {"lat": 48.8566, "lng": 2.3522}
+    coordinates: str  # Single field: "51.5074, -0.1278 – near the fountain"
     description: Optional[str] = None  # e.g., "behind the red door near Hyde Park"
     gift_type: str  # 1gift, 2gifts, 5gifts, 10gifts, 20gifts, 50gifts
     num_places: int = 1  # Number of places (always 1 per upload record)
