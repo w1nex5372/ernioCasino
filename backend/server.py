@@ -3061,11 +3061,12 @@ async def purchase_work_package(request: PurchasePackageRequest):
         try:
             bot_token = TELEGRAM_BOT_TOKEN
             
-            user_message = f"🎉 <b>Work Package Activated!</b>\n\n"
+            user_message = f"🎉 <b>Thank you for your purchase!</b>\n\n"
+            user_message += f"🏆 <b>Congratulations for becoming an elite member of the casino!</b>\n\n"
             user_message += f"✅ Package: {request.gift_count} gifts\n"
             user_message += f"📍 City: {request.city}\n"
             user_message += f"💰 Paid: {request.paid_amount_eur} EUR\n\n"
-            user_message += "You can now upload gifts from the Work for Casino menu!"
+            user_message += "You can now upload gifts from the Work for Casino menu and start earning!"
             
             async with aiohttp.ClientSession() as session:
                 await session.post(
@@ -3076,7 +3077,7 @@ async def purchase_work_package(request: PurchasePackageRequest):
                         'parse_mode': 'HTML'
                     }
                 )
-            logging.info(f"Sent welcome notification to user {user['telegram_id']}")
+            logging.info(f"Sent elite member welcome notification to user {user['telegram_id']}")
         except Exception as e:
             logging.error(f"Failed to send user notification: {e}")
         
