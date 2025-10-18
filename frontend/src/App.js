@@ -1138,15 +1138,19 @@ function App() {
         if (response.data) {
           console.log('✅ Telegram authentication successful:', response.data);
           
-          // CRITICAL: Check city BEFORE setting user to prevent gap
+          setUser(response.data);
+          saveUserSession(response.data);
+          setIsLoading(false);
+          
+          // CRITICAL: Check city and set states synchronously
           if (!response.data.city) {
-            console.log('⚠️ User has no city - will show city selector immediately');
+            console.log('⚠️ User has no city - showing city selector');
             setShowCitySelector(true);
+            // Don't show welcome toast yet
           } else {
             setUserCity(response.data.city);
             
-            // Only show welcome message if user already has city
-            // Welcome message based on balance
+            // Show welcome message for returning users with city
             if (response.data.token_balance >= 1000) {
               toast.success(`🎉 Welcome back, ${response.data.first_name}! Balance: ${response.data.token_balance} tokens`);
             } else if (response.data.token_balance > 0) {
@@ -1154,27 +1158,19 @@ function App() {
             } else {
               toast.success(`👋 Welcome, ${response.data.first_name}! Claim your daily tokens to get started.`);
             }
-          }
-          
-          setUser(response.data);
-          saveUserSession(response.data);
-          setCityCheckComplete(true); // Mark city check as done
-          setIsLoading(false);
-          
-          // Configure WebApp
-          webApp.enableClosingConfirmation();
-          if (webApp.setHeaderColor) webApp.setHeaderColor('#1e293b');
-          if (webApp.setBackgroundColor) webApp.setBackgroundColor('#0f172a');
-          
-          // Load additional data after successful auth (only if city exists)
-          if (response.data.city) {
+            
+            // Load additional data for returning users
             setTimeout(() => {
               loadUserPrizes();
               loadDerivedWallet();
               loadWelcomeBonusStatus();
             }, 500);
           }
-          // If no city, these will be loaded after city selection
+          
+          // Configure WebApp
+          webApp.enableClosingConfirmation();
+          if (webApp.setHeaderColor) webApp.setHeaderColor('#1e293b');
+          if (webApp.setBackgroundColor) webApp.setBackgroundColor('#0f172a');
           
           return; // Exit successfully
         }
