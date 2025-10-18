@@ -3040,9 +3040,10 @@ function App() {
                     const room = rooms.find(r => r.room_type === roomType) || { players_count: 0 };
                     const config = ROOM_CONFIGS[roomType];
                     
-                    // Check if gifts are available for this room type
-                    const giftsAvailable = room.gifts_available !== false;
-                    const isDisabled = !giftsAvailable;
+                    // Check if gifts are available for this room type in user's city
+                    const cityAvailability = giftAvailabilityByCity[userCity] || {};
+                    const giftsAvailableInUserCity = cityAvailability[roomType] === true;
+                    const isDisabled = !giftsAvailableInUserCity;
                     
                     return (
                       <Card key={roomType} className={`bg-slate-800/90 border-slate-700 overflow-hidden ${isDisabled ? 'opacity-50' : ''}`}>
