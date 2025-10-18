@@ -312,6 +312,8 @@ function App() {
   const [giftCity, setGiftCity] = useState(''); // City for gift upload
   const [viewingGift, setViewingGift] = useState(null); // Gift being viewed
   const [showGiftViewer, setShowGiftViewer] = useState(false);
+  const [viewingPackage, setViewingPackage] = useState(null); // Package being viewed
+  const [showPackageViewer, setShowPackageViewer] = useState(false);
   const [workSystemReady, setWorkSystemReady] = useState(false); // Is work system ready (any gifts uploaded)?
   const [packageAvailability, setPackageAvailability] = useState({
     "10": { available: false, cities: { "London": 0, "Paris": 0 } },
