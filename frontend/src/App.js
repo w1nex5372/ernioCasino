@@ -313,6 +313,11 @@ function App() {
   const [viewingGift, setViewingGift] = useState(null); // Gift being viewed
   const [showGiftViewer, setShowGiftViewer] = useState(false);
   const [workSystemReady, setWorkSystemReady] = useState(false); // Is work system ready (any gifts uploaded)?
+  const [packageAvailability, setPackageAvailability] = useState({
+    "10": { available: false, cities: { "London": 0, "Paris": 0 } },
+    "20": { available: false, cities: { "London": 0, "Paris": 0 } },
+    "50": { available: false, cities: { "London": 0, "Paris": 0 } }
+  }); // Track which package types have available gifts
 
   // Debug roomParticipants changes
   useEffect(() => {
