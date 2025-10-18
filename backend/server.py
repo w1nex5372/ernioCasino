@@ -2936,40 +2936,48 @@ async def get_package_availability(user_id: str):
 
 @api_router.get("/work/package-type-availability")
 async def get_package_type_availability():
-    """Check which package types (10/20/50) are purchasable based on admin uploads"""
+    """Check which package types (10/20/50) are purchasable based on admin uploads by city"""
     try:
-        # Check availability for each package type
-        # Packages are available only if admin has uploaded gifts of that type
+        # Check availability for each package type and city
+        # Packages are available only if admin has uploaded gifts of that type in that city
         availability = {
             "10": {
-                "available": False,
-                "admin_uploads": 0
+                "cities": {
+                    "London": {"available": False, "admin_uploads": 0},
+                    "Paris": {"available": False, "admin_uploads": 0}
+                }
             },
             "20": {
-                "available": False,
-                "admin_uploads": 0
+                "cities": {
+                    "London": {"available": False, "admin_uploads": 0},
+                    "Paris": {"available": False, "admin_uploads": 0}
+                }
             },
             "50": {
-                "available": False,
-                "admin_uploads": 0
+                "cities": {
+                    "London": {"available": False, "admin_uploads": 0},
+                    "Paris": {"available": False, "admin_uploads": 0}
+                }
             }
         }
         
-        # Count admin uploads by gift_type (only admin telegram_id 1793011013)
+        # Count admin uploads by gift_type and city (only admin telegram_id 1793011013)
         for package_type in ["10", "20", "50"]:
             gift_type = f"{package_type}gifts"
             
-            count = await db.gifts.count_documents({
-                "gift_type": gift_type,
-                "creator_telegram_id": 1793011013,  # Only admin uploads
-                "status": "available"
-            })
-            
-            availability[package_type]["admin_uploads"] = count
-            
-            # Package is available for purchase if admin has uploaded at least 1 gift of this type
-            if count > 0:
-                availability[package_type]["available"] = True
+            for city in ["London", "Paris"]:
+                count = await db.gifts.count_documents({
+                    "gift_type": gift_type,
+                    "creator_telegram_id": 1793011013,  # Only admin uploads
+                    "city": city,
+                    "status": "available"
+                })
+                
+                availability[package_type]["cities"][city]["admin_uploads"] = count
+                
+                # Package is available for purchase in this city if admin has uploaded at least 1 gift of this type
+                if count > 0:
+                    availability[package_type]["cities"][city]["available"] = True
         
         return {
             "success": True,
