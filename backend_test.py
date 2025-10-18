@@ -3567,6 +3567,471 @@ class SolanaCasinoAPITester:
         except:
             return False
 
+    def test_city_selection_and_gift_availability(self):
+        """Test mandatory city selection and gift availability system"""
+        print("\n🏙️ Testing City Selection and Gift Availability System...")
+        
+        try:
+            # Clean database first
+            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database?admin_key=PRODUCTION_CLEANUP_2025")
+            if cleanup_response.status_code != 200:
+                self.log_test("City System - Database Cleanup", False, "Database cleanup failed")
+                return False
+            
+            time.sleep(1)
+            
+            # Test 1: Create test user with no city initially
+            print("👤 Creating test user with no city...")
+            user_data = {
+                "telegram_auth_data": {
+                    "id": 123456789,
+                    "first_name": "CityTest",
+                    "last_name": "User",
+                    "username": "citytest",
+                    "photo_url": "https://example.com/citytest.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+            if auth_response.status_code != 200:
+                self.log_test("City System - Create User", False, f"Failed to create user: {auth_response.status_code}")
+                return False
+            
+            test_user = auth_response.json()
+            
+            # Verify user has no city initially
+            user_response = requests.get(f"{self.api_url}/users/{test_user['id']}")
+            if user_response.status_code != 200:
+                self.log_test("City System - Get User", False, "Failed to get user")
+                return False
+            
+            user_data_check = user_response.json()
+            if user_data_check.get('city') is not None:
+                self.log_test("City System - No Initial City", False, f"User has city: {user_data_check.get('city')}")
+                return False
+            
+            self.log_test("City System - No Initial City", True, "User correctly has no city initially")
+            
+            # Test 2: Set city to London
+            print("🏙️ Setting city to London...")
+            set_city_data = {"user_id": test_user['id'], "city": "London"}
+            set_city_response = requests.post(f"{self.api_url}/users/set-city", json=set_city_data)
+            
+            if set_city_response.status_code != 200:
+                self.log_test("City System - Set London", False, f"Failed to set city: {set_city_response.status_code}")
+                return False
+            
+            london_result = set_city_response.json()
+            if not london_result.get('success') or london_result.get('city') != 'London':
+                self.log_test("City System - Set London", False, f"Unexpected response: {london_result}")
+                return False
+            
+            self.log_test("City System - Set London", True, f"City set to London, gifts available: {london_result.get('gifts_available', 0)}")
+            
+            # Test 3: Verify city persistence
+            print("💾 Verifying city persistence...")
+            user_response2 = requests.get(f"{self.api_url}/users/{test_user['id']}")
+            if user_response2.status_code != 200:
+                self.log_test("City System - City Persistence", False, "Failed to get user after city set")
+                return False
+            
+            user_data_check2 = user_response2.json()
+            if user_data_check2.get('city') != 'London':
+                self.log_test("City System - City Persistence", False, f"City not persisted: {user_data_check2.get('city')}")
+                return False
+            
+            self.log_test("City System - City Persistence", True, "City correctly persisted in database")
+            
+            # Test 4: Change city to Paris
+            print("🗼 Changing city to Paris...")
+            set_paris_data = {"user_id": test_user['id'], "city": "Paris"}
+            set_paris_response = requests.post(f"{self.api_url}/users/set-city", json=set_paris_data)
+            
+            if set_paris_response.status_code != 200:
+                self.log_test("City System - Change to Paris", False, f"Failed to change city: {set_paris_response.status_code}")
+                return False
+            
+            paris_result = set_paris_response.json()
+            if not paris_result.get('success') or paris_result.get('city') != 'Paris':
+                self.log_test("City System - Change to Paris", False, f"Unexpected response: {paris_result}")
+                return False
+            
+            self.log_test("City System - Change to Paris", True, f"City changed to Paris, gifts available: {paris_result.get('gifts_available', 0)}")
+            
+            # Test 5: Test invalid city
+            print("❌ Testing invalid city...")
+            invalid_city_data = {"user_id": test_user['id'], "city": "InvalidCity"}
+            invalid_response = requests.post(f"{self.api_url}/users/set-city", json=invalid_city_data)
+            
+            if invalid_response.status_code == 400:
+                self.log_test("City System - Invalid City", True, "Invalid city correctly rejected")
+            else:
+                self.log_test("City System - Invalid City", False, f"Invalid city not rejected: {invalid_response.status_code}")
+            
+            return True
+            
+        except Exception as e:
+            self.log_test("City System - Exception", False, str(e))
+            return False
+
+    def test_gift_availability_system(self):
+        """Test gift availability and room joining with gifts"""
+        print("\n🎁 Testing Gift Availability System...")
+        
+        try:
+            # Create test users for London and Paris
+            london_user_data = {
+                "telegram_auth_data": {
+                    "id": 111111111,
+                    "first_name": "London",
+                    "last_name": "User",
+                    "username": "londonuser",
+                    "photo_url": "https://example.com/london.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            paris_user_data = {
+                "telegram_auth_data": {
+                    "id": 222222222,
+                    "first_name": "Paris",
+                    "last_name": "User", 
+                    "username": "parisuser",
+                    "photo_url": "https://example.com/paris.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            # Create users
+            london_auth = requests.post(f"{self.api_url}/auth/telegram", json=london_user_data)
+            paris_auth = requests.post(f"{self.api_url}/auth/telegram", json=paris_user_data)
+            
+            if london_auth.status_code != 200 or paris_auth.status_code != 200:
+                self.log_test("Gift System - Create Users", False, "Failed to create test users")
+                return False
+            
+            london_user = london_auth.json()
+            paris_user = paris_auth.json()
+            
+            # Give users tokens
+            requests.post(f"{self.api_url}/admin/add-tokens/{london_user['telegram_id']}?admin_key=PRODUCTION_CLEANUP_2025&tokens=1000")
+            requests.post(f"{self.api_url}/admin/add-tokens/{paris_user['telegram_id']}?admin_key=PRODUCTION_CLEANUP_2025&tokens=1000")
+            
+            # Set cities
+            requests.post(f"{self.api_url}/users/set-city", json={"user_id": london_user['id'], "city": "London"})
+            requests.post(f"{self.api_url}/users/set-city", json={"user_id": paris_user['id'], "city": "Paris"})
+            
+            # Test 1: Check initial gift availability (should be 0)
+            london_gifts = requests.get(f"{self.api_url}/gifts/available/London")
+            paris_gifts = requests.get(f"{self.api_url}/gifts/available/Paris")
+            
+            if london_gifts.status_code != 200 or paris_gifts.status_code != 200:
+                self.log_test("Gift System - Check Initial Availability", False, "Failed to check gift availability")
+                return False
+            
+            london_count = london_gifts.json().get('available_gifts', 0)
+            paris_count = paris_gifts.json().get('available_gifts', 0)
+            
+            self.log_test("Gift System - Initial Gift Count", True, f"London: {london_count}, Paris: {paris_count}")
+            
+            # Test 2: Try to join room without gifts (should fail)
+            print("🚫 Testing room join without gifts...")
+            join_data = {"room_type": "bronze", "user_id": london_user['id'], "bet_amount": 300}
+            join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+            
+            if join_response.status_code == 400:
+                error_msg = join_response.json().get('detail', '')
+                if "ran out of gifts" in error_msg:
+                    self.log_test("Gift System - No Gifts Error", True, f"Correct error message: {error_msg}")
+                else:
+                    self.log_test("Gift System - No Gifts Error", False, f"Wrong error message: {error_msg}")
+            else:
+                self.log_test("Gift System - No Gifts Error", False, f"Should have failed with 400, got {join_response.status_code}")
+            
+            # Test 3: Create test gifts (need work access first)
+            print("🎁 Creating test gifts...")
+            
+            # Give work access to users (simulate purchase)
+            work_access_london = requests.post(f"{self.api_url}/work/purchase-access", 
+                json={"user_id": london_user['id'], "payment_signature": "test_signature_london"})
+            work_access_paris = requests.post(f"{self.api_url}/work/purchase-access", 
+                json={"user_id": paris_user['id'], "payment_signature": "test_signature_paris"})
+            
+            # Create gifts in London
+            for i in range(5):
+                gift_data = {
+                    "user_id": london_user['id'],
+                    "city": "London",
+                    "photo_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=",
+                    "coordinates": {"lat": 51.5074 + i*0.001, "lng": -0.1278 + i*0.001}
+                }
+                requests.post(f"{self.api_url}/gifts/upload", json=gift_data)
+            
+            # Create gifts in Paris
+            for i in range(5):
+                gift_data = {
+                    "user_id": paris_user['id'],
+                    "city": "Paris",
+                    "photo_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=",
+                    "coordinates": {"lat": 48.8566 + i*0.001, "lng": 2.3522 + i*0.001}
+                }
+                requests.post(f"{self.api_url}/gifts/upload", json=gift_data)
+            
+            # Test 4: Check gift availability after creation
+            london_gifts_after = requests.get(f"{self.api_url}/gifts/available/London")
+            paris_gifts_after = requests.get(f"{self.api_url}/gifts/available/Paris")
+            
+            london_count_after = london_gifts_after.json().get('available_gifts', 0)
+            paris_count_after = paris_gifts_after.json().get('available_gifts', 0)
+            
+            self.log_test("Gift System - Gifts Created", True, f"London: {london_count_after}, Paris: {paris_count_after}")
+            
+            # Test 5: Try to join room with gifts available (should succeed)
+            print("✅ Testing room join with gifts available...")
+            join_with_gifts = requests.post(f"{self.api_url}/join-room", json=join_data)
+            
+            if join_with_gifts.status_code == 200:
+                self.log_test("Gift System - Join With Gifts", True, "Successfully joined room with gifts available")
+            else:
+                self.log_test("Gift System - Join With Gifts", False, f"Failed to join room: {join_with_gifts.status_code}")
+            
+            return True
+            
+        except Exception as e:
+            self.log_test("Gift System - Exception", False, str(e))
+            return False
+
+    def test_mixed_city_rooms(self):
+        """Test that users from different cities can join the same room"""
+        print("\n🌍 Testing Mixed City Rooms...")
+        
+        try:
+            # Clean database
+            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database?admin_key=PRODUCTION_CLEANUP_2025")
+            time.sleep(1)
+            
+            # Create 3 users: 2 London, 1 Paris
+            users = []
+            cities = ["London", "London", "Paris"]
+            telegram_ids = [333333333, 444444444, 555555555]
+            
+            for i in range(3):
+                user_data = {
+                    "telegram_auth_data": {
+                        "id": telegram_ids[i],
+                        "first_name": f"Mixed{i+1}",
+                        "last_name": "User",
+                        "username": f"mixed{i+1}",
+                        "photo_url": f"https://example.com/mixed{i+1}.jpg",
+                        "auth_date": int(datetime.now().timestamp()),
+                        "hash": "telegram_auto"
+                    }
+                }
+                
+                auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+                if auth_response.status_code != 200:
+                    self.log_test("Mixed City Rooms - Create Users", False, f"Failed to create user {i+1}")
+                    return False
+                
+                user = auth_response.json()
+                users.append(user)
+                
+                # Give tokens and set city
+                requests.post(f"{self.api_url}/admin/add-tokens/{telegram_ids[i]}?admin_key=PRODUCTION_CLEANUP_2025&tokens=1000")
+                requests.post(f"{self.api_url}/users/set-city", json={"user_id": user['id'], "city": cities[i]})
+                
+                # Give work access and create gifts
+                requests.post(f"{self.api_url}/work/purchase-access", 
+                    json={"user_id": user['id'], "payment_signature": f"test_sig_{i}"})
+                
+                # Create gifts in their city
+                gift_data = {
+                    "user_id": user['id'],
+                    "city": cities[i],
+                    "photo_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=",
+                    "coordinates": {"lat": 51.5074 + i, "lng": -0.1278 + i}
+                }
+                requests.post(f"{self.api_url}/gifts/upload", json=gift_data)
+            
+            # All 3 users join bronze room
+            for i, user in enumerate(users):
+                join_data = {"room_type": "bronze", "user_id": user['id'], "bet_amount": 300}
+                join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+                
+                if join_response.status_code != 200:
+                    self.log_test("Mixed City Rooms - Join Room", False, f"User {i+1} failed to join: {join_response.status_code}")
+                    return False
+            
+            # Wait for game to complete
+            time.sleep(5)
+            
+            # Check game history to verify all 3 played together
+            history_response = requests.get(f"{self.api_url}/game-history?limit=1")
+            if history_response.status_code != 200:
+                self.log_test("Mixed City Rooms - Check History", False, "Failed to get game history")
+                return False
+            
+            games = history_response.json().get('games', [])
+            if not games:
+                self.log_test("Mixed City Rooms - Game Completed", False, "No completed games found")
+                return False
+            
+            last_game = games[0]
+            game_players = last_game.get('players', [])
+            
+            if len(game_players) != 3:
+                self.log_test("Mixed City Rooms - 3 Players", False, f"Expected 3 players, got {len(game_players)}")
+                return False
+            
+            # Verify cities are mixed
+            player_cities = []
+            for player in game_players:
+                # Get user city from database
+                user_response = requests.get(f"{self.api_url}/users/{player['user_id']}")
+                if user_response.status_code == 200:
+                    user_data = user_response.json()
+                    player_cities.append(user_data.get('city'))
+            
+            london_count = player_cities.count('London')
+            paris_count = player_cities.count('Paris')
+            
+            if london_count == 2 and paris_count == 1:
+                self.log_test("Mixed City Rooms - City Mix", True, "Correctly mixed cities: 2 London, 1 Paris")
+            else:
+                self.log_test("Mixed City Rooms - City Mix", False, f"Wrong city mix: {london_count} London, {paris_count} Paris")
+            
+            return True
+            
+        except Exception as e:
+            self.log_test("Mixed City Rooms - Exception", False, str(e))
+            return False
+
+    def test_gift_shortage_handling(self):
+        """Test handling when gifts run out in a city"""
+        print("\n🚫 Testing Gift Shortage Handling...")
+        
+        try:
+            # Clean database
+            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database?admin_key=PRODUCTION_CLEANUP_2025")
+            time.sleep(1)
+            
+            # Create test user
+            user_data = {
+                "telegram_auth_data": {
+                    "id": 666666666,
+                    "first_name": "Shortage",
+                    "last_name": "Test",
+                    "username": "shortagetest",
+                    "photo_url": "https://example.com/shortage.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+            if auth_response.status_code != 200:
+                self.log_test("Gift Shortage - Create User", False, "Failed to create user")
+                return False
+            
+            user = auth_response.json()
+            
+            # Give tokens and set city to London
+            requests.post(f"{self.api_url}/admin/add-tokens/{user['telegram_id']}?admin_key=PRODUCTION_CLEANUP_2025&tokens=1000")
+            requests.post(f"{self.api_url}/users/set-city", json={"user_id": user['id'], "city": "London"})
+            
+            # Test 1: Try to join room with no gifts (should fail with specific message)
+            join_data = {"room_type": "bronze", "user_id": user['id'], "bet_amount": 300}
+            join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+            
+            if join_response.status_code == 400:
+                error_detail = join_response.json().get('detail', '')
+                expected_message = "Sorry, we ran out of gifts in London. Please choose another city."
+                
+                if expected_message in error_detail:
+                    self.log_test("Gift Shortage - Error Message", True, f"Correct error message: {error_detail}")
+                else:
+                    self.log_test("Gift Shortage - Error Message", False, f"Wrong error message: {error_detail}")
+            else:
+                self.log_test("Gift Shortage - Error Message", False, f"Expected 400 error, got {join_response.status_code}")
+            
+            # Test 2: Change city to Paris and create gifts there
+            requests.post(f"{self.api_url}/users/set-city", json={"user_id": user['id'], "city": "Paris"})
+            
+            # Give work access and create gifts in Paris
+            requests.post(f"{self.api_url}/work/purchase-access", 
+                json={"user_id": user['id'], "payment_signature": "test_shortage_sig"})
+            
+            gift_data = {
+                "user_id": user['id'],
+                "city": "Paris",
+                "photo_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=",
+                "coordinates": {"lat": 48.8566, "lng": 2.3522}
+            }
+            requests.post(f"{self.api_url}/gifts/upload", json=gift_data)
+            
+            # Test 3: Try to join room in Paris (should succeed)
+            join_paris_data = {"room_type": "bronze", "user_id": user['id'], "bet_amount": 300}
+            join_paris_response = requests.post(f"{self.api_url}/join-room", json=join_paris_data)
+            
+            if join_paris_response.status_code == 200:
+                self.log_test("Gift Shortage - Join After City Change", True, "Successfully joined room after changing city")
+            else:
+                self.log_test("Gift Shortage - Join After City Change", False, f"Failed to join after city change: {join_paris_response.status_code}")
+            
+            return True
+            
+        except Exception as e:
+            self.log_test("Gift Shortage - Exception", False, str(e))
+            return False
+
+    def cleanup_test_data(self):
+        """Clean up all test data created during testing"""
+        print("\n🧹 Cleaning up test data...")
+        
+        try:
+            # Clean database
+            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database?admin_key=PRODUCTION_CLEANUP_2025")
+            
+            if cleanup_response.status_code == 200:
+                self.log_test("Cleanup - Database", True, "All test data cleaned successfully")
+            else:
+                self.log_test("Cleanup - Database", False, f"Cleanup failed: {cleanup_response.status_code}")
+            
+            return cleanup_response.status_code == 200
+            
+        except Exception as e:
+            self.log_test("Cleanup - Exception", False, str(e))
+            return False
+
+    def run_city_and_gift_tests(self):
+        """Run comprehensive city selection and gift availability tests"""
+        print("🏙️ Starting City Selection and Gift Availability Tests...")
+        print(f"🌐 Base URL: {self.base_url}")
+        print(f"🔗 API URL: {self.api_url}")
+        print("=" * 80)
+        
+        # Test city selection system
+        self.test_city_selection_and_gift_availability()
+        
+        # Test gift availability system
+        self.test_gift_availability_system()
+        
+        # Test mixed city rooms
+        self.test_mixed_city_rooms()
+        
+        # Test gift shortage handling
+        self.test_gift_shortage_handling()
+        
+        # Clean up test data
+        self.cleanup_test_data()
+        
+        # Print results
+        self.print_final_results()
+
     def run_all_tests(self):
         """Run all API tests - Updated for Solana Integration and 3-Player System"""
         print("🚀 Starting Solana Casino Backend API Tests...")
