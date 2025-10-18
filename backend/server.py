@@ -2249,7 +2249,7 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
     if gifts_available == 0:
         raise HTTPException(
             status_code=400, 
-            detail=f"No gifts available in {user_city} right now. Please check back later or contact casino workers to upload gifts."
+            detail=f"Sorry, we ran out of gifts in {user_city}. Please choose another city."
         )
     
     # Check if user is already in the room
