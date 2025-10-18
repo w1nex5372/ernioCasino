@@ -1341,6 +1341,12 @@ function App() {
     try {
       const response = await axios.get(`${API}/rooms`);
       setRooms(response.data.rooms);
+      
+      // Store gift availability by city
+      if (response.data.gift_availability_by_city) {
+        setGiftAvailabilityByCity(response.data.gift_availability_by_city);
+        console.log('📊 Gift availability by city:', response.data.gift_availability_by_city);
+      }
     } catch (error) {
       console.error('Failed to load rooms:', error);
       // Only show error toast if explicitly requested (not on initial load)
