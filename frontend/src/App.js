@@ -2193,13 +2193,14 @@ function App() {
       return;
     }
     
-    // Check if user is already in a room
-    const roomStatus = await checkUserRoomStatus();
-    if (roomStatus && roomStatus.in_room) {
-      // User is already in a room
-      if (roomStatus.room_type === roomType) {
-        // Same room - just show the lobby with participants
-        console.log('✅ User already in this room, showing lobby');
+    // Check if user is already in THIS SPECIFIC room
+    if (userActiveRooms[roomType]) {
+      // User is already in this room - show the lobby
+      console.log('✅ User already in this room, showing lobby');
+      
+      // Fetch current room state
+      const roomStatus = await checkUserRoomStatus();
+      if (roomStatus && roomStatus.in_room && roomStatus.room_type === roomType) {
         setInLobby(true);
         setLobbyData({
           room_type: roomType,
@@ -2216,15 +2217,13 @@ function App() {
             platform: platform
           });
         }
-        
-        toast.info('You are already in this room!');
-        return;
-      } else {
-        // Different room
-        toast.error(`You are already in ${roomStatus.room_type} room. Please wait for that game to finish.`);
-        return;
       }
+      
+      toast.info('You are already in this room!');
+      return;
     }
+    
+    // User can join this room (even if they're in other rooms)
 
     // Parse bet amount
     const parsedBetAmount = parseInt(betAmount);
