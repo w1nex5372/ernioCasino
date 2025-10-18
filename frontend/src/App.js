@@ -2369,75 +2369,79 @@ function App() {
     );
   }
 
-  // CRITICAL: Don't render anything until city check is complete
-  if (!cityCheckComplete && !window.isGiftViewerMode) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-slate-800/90 border-slate-700">
-          <CardContent className="p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
-            <h3 className="text-xl font-bold text-white mb-2">Loading Casino...</h3>
-            <p className="text-slate-400">Connecting to Telegram Web App</p>
-          </CardContent>
-        </Card>
-        <Toaster richColors position="top-right" />
-      </div>
-    );
-  }
-
-  // Show ONLY city selector if user hasn't selected city yet - prevents gap
-  if (user && !userCity && showCitySelector) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-2xl text-center text-yellow-400">🌍 Choose Your City</CardTitle>
-            <CardDescription className="text-center text-slate-300">
-              Select the city you want to play and receive gifts from
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Button
-                onClick={() => handleCitySelect('London')}
-                className="h-32 flex flex-col items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
-              >
-                <span className="text-5xl mb-3">🇬🇧</span>
-                <span className="text-xl font-bold">London</span>
-              </Button>
-              <Button
-                onClick={() => handleCitySelect('Paris')}
-                className="h-32 flex flex-col items-center justify-center bg-gradient-to-br from-pink-600 to-pink-800 hover:from-pink-700 hover:to-pink-900"
-              >
-                <span className="text-5xl mb-3">🇫🇷</span>
-                <span className="text-xl font-bold">Paris</span>
-              </Button>
-            </div>
-            
-            {/* Warsaw - Coming Soon */}
-            <div className="relative">
-              <Button
-                disabled
-                className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-br from-gray-600 to-gray-800 opacity-50 cursor-not-allowed"
-              >
-                <span className="text-3xl mb-1">🇵🇱</span>
-                <span className="text-base font-bold">Warsaw</span>
-              </Button>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Badge className="bg-yellow-500 text-black font-bold text-xs">Coming Soon</Badge>
+  // CRITICAL: Comprehensive render guard - nothing renders until ready
+  if (!window.isGiftViewerMode) {
+    // Still loading - show loading screen
+    if (isLoading || !cityCheckComplete) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md bg-slate-800/90 border-slate-700">
+            <CardContent className="p-8 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
+              <h3 className="text-xl font-bold text-white mb-2">Loading Casino...</h3>
+              <p className="text-slate-400">Connecting to Telegram Web App</p>
+            </CardContent>
+          </Card>
+          <Toaster richColors position="top-right" />
+        </div>
+      );
+    }
+    
+    // User loaded but no city - MUST show city selector ONLY
+    if (user && !userCity) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-2xl text-center text-yellow-400">🌍 Choose Your City</CardTitle>
+              <CardDescription className="text-center text-slate-300">
+                Select the city you want to play and receive gifts from
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Button
+                  onClick={() => handleCitySelect('London')}
+                  className="h-32 flex flex-col items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
+                >
+                  <span className="text-5xl mb-3">🇬🇧</span>
+                  <span className="text-xl font-bold">London</span>
+                </Button>
+                <Button
+                  onClick={() => handleCitySelect('Paris')}
+                  className="h-32 flex flex-col items-center justify-center bg-gradient-to-br from-pink-600 to-pink-800 hover:from-pink-700 hover:to-pink-900"
+                >
+                  <span className="text-5xl mb-3">🇫🇷</span>
+                  <span className="text-xl font-bold">Paris</span>
+                </Button>
               </div>
-            </div>
-            
-            <div className="text-slate-400 text-sm text-center">
-              You can change your city anytime
-            </div>
-          </CardContent>
-        </Card>
-        <Toaster richColors position="top-right" />
-      </div>
-    );
+              
+              {/* Warsaw - Coming Soon */}
+              <div className="relative">
+                <Button
+                  disabled
+                  className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-br from-gray-600 to-gray-800 opacity-50 cursor-not-allowed"
+                >
+                  <span className="text-3xl mb-1">🇵🇱</span>
+                  <span className="text-base font-bold">Warsaw</span>
+                </Button>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Badge className="bg-yellow-500 text-black font-bold text-xs">Coming Soon</Badge>
+                </div>
+              </div>
+              
+              <div className="text-slate-400 text-sm text-center">
+                You can change your city anytime
+              </div>
+            </CardContent>
+          </Card>
+          <Toaster richColors position="top-right" />
+        </div>
+      );
+    }
   }
 
+  // Only reach here if: user has city OR gift viewer mode
   return (
     <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white ${
       isMobile ? 'overflow-x-hidden max-w-full w-full' : ''
