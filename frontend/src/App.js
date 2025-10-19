@@ -1811,7 +1811,7 @@ function App() {
         // ONLY update userCity state - don't touch user object
         // This prevents any risk of losing telegram_id during state update
         setUserCity(city);
-        setShowCitySelector(false);
+        // Don't set showCitySelector(false) here - modal handles its own closing
         setGiftsAvailable(response.data.can_play);
         
         // Show welcome message after city selection
