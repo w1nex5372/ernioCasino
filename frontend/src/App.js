@@ -1808,20 +1808,9 @@ function App() {
       console.log('✅ City set response:', response.data);
       
       if (response.data.success) {
+        // ONLY update userCity state - don't touch user object
+        // This prevents any risk of losing telegram_id during state update
         setUserCity(city);
-        // Preserve all user fields including telegram_id when updating city
-        const updatedUser = {
-          ...user,
-          city: city,
-          telegram_id: user.telegram_id, // Explicitly preserve telegram_id
-          id: user.id, // Explicitly preserve id
-          first_name: user.first_name,
-          last_name: user.last_name,
-          telegram_username: user.telegram_username,
-          token_balance: user.token_balance
-        };
-        console.log('🔍 Setting user with city:', updatedUser);
-        setUser(updatedUser);
         setShowCitySelector(false);
         setGiftsAvailable(response.data.can_play);
         
