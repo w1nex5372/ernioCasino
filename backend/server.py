@@ -189,12 +189,12 @@ PRIZE_LINKS = {
 # (Now configured above in environment variables section)
 
 ROOM_SETTINGS = {
-    RoomType.BRONZE: {"min_bet": 200, "max_bet": 450, "name": "Bronze Room", "gifts_per_place": 1},
-    RoomType.SILVER: {"min_bet": 350, "max_bet": 800, "name": "Silver Room", "gifts_per_place": 2},
-    RoomType.GOLD: {"min_bet": 650, "max_bet": 1200, "name": "Gold Room", "gifts_per_place": 5},
-    RoomType.PLATINUM: {"min_bet": 1200, "max_bet": 2400, "name": "Platinum Room", "gifts_per_place": 10},
-    RoomType.DIAMOND: {"min_bet": 2400, "max_bet": 4800, "name": "Diamond Room", "gifts_per_place": 20},
-    RoomType.ELITE: {"min_bet": 4500, "max_bet": 8000, "name": "Elite Room", "gifts_per_place": 50}
+    RoomType.BRONZE: {"min_bet": 200, "max_bet": 450, "name": "Bronze Room", "gifts_per_place": 1, "gift_type": "1gift"},
+    RoomType.SILVER: {"min_bet": 350, "max_bet": 800, "name": "Silver Room", "gifts_per_place": 2, "gift_type": "2gifts"},
+    RoomType.GOLD: {"min_bet": 650, "max_bet": 1200, "name": "Gold Room", "gifts_per_place": 5, "gift_type": "5gifts"},
+    RoomType.PLATINUM: {"min_bet": 1200, "max_bet": 2400, "name": "Platinum Room", "gifts_per_place": 10, "gift_type": "10gifts"},
+    RoomType.DIAMOND: {"min_bet": 2400, "max_bet": 4800, "name": "Diamond Room", "gifts_per_place": 20, "gift_type": "20gifts"},
+    RoomType.ELITE: {"min_bet": 4500, "max_bet": 8000, "name": "Elite Room", "gifts_per_place": 50, "gift_type": "50gifts"}
 }
 
 # Models
