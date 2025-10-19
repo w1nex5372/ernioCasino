@@ -5224,6 +5224,10 @@ class SolanaCasinoAPITester:
         print("\n📦 Testing Package-Specific Availability System...")
         self.test_package_specific_availability_comprehensive()
         
+        # Test City-Based Room Rejoining Logic (NEW - Review Request)
+        print("\n🏙️ Testing City-Based Room Rejoining Logic...")
+        self.test_city_based_room_rejoining()
+        
         # Test Enhanced Winner Detection & Broadcast System (NEW)
         print("\n🏆 Testing Enhanced Winner Detection & Broadcast System...")
         self.test_enhanced_winner_detection_broadcast_system()
