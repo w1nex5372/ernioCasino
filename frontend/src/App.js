@@ -4711,7 +4711,7 @@ function AdminGiftTracker({ user, API, onClose }) {
     try {
       setLoading(true);
       const params = new URLSearchParams({
-        telegram_username: user.telegram_username,
+        telegram_id: user.telegram_id,
         skip: (page - 1) * 50,
         limit: 50,
         ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v))
