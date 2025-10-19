@@ -4250,12 +4250,12 @@ function App() {
                   <Button
                     onClick={() => handlePackageSelection(10, 100)}
                     disabled={!packageAvailability["10"]?.cities?.[selectedCity]?.available}
-                    className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full h-20 flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="text-2xl font-bold">10 Gifts</span>
                     <span className="text-sm">100 EUR (in SOL)</span>
                     {!packageAvailability["10"]?.cities?.[selectedCity]?.available && (
-                      <span className="text-xs text-red-300 mt-1">🔒 Locked</span>
+                      <span className="text-xs text-red-300">🔒 Locked</span>
                     )}
                   </Button>
                   
