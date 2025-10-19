@@ -2171,24 +2171,30 @@ function App() {
 
 
   // Game functions
-  const checkUserRoomStatus = async () => {
+  const checkUserRoomStatus = async (specificRoomType = null) => {
     if (!user || !user.id) return null;
     
     try {
       const response = await axios.get(`${API}/user-room-status/${user.id}`);
       
-      // Update active rooms state with city information
-      if (response.data.in_room) {
-        // Get the city for this room from the room data
-        const roomCity = response.data.city || userCity;
-        const roomType = response.data.room_type.toLowerCase(); // Ensure lowercase
-        setUserActiveRooms(prev => ({
-          ...prev,
-          [roomType]: {
-            roomId: response.data.room_id,
+      // Update active rooms state with ALL rooms
+      if (response.data.in_room && response.data.rooms) {
+        const newActiveRooms = {};
+        response.data.rooms.forEach(room => {
+          const roomType = room.room_type.toLowerCase();
+          const roomCity = room.city || userCity;
+          newActiveRooms[roomType] = {
+            roomId: room.room_id,
             city: roomCity
-          }
-        }));
+          };
+        });
+        setUserActiveRooms(newActiveRooms);
+        
+        // If checking for specific room type, return that room's data
+        if (specificRoomType) {
+          const specificRoom = response.data.rooms.find(r => r.room_type.toLowerCase() === specificRoomType);
+          return specificRoom || null;
+        }
       }
       
       return response.data;
