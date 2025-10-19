@@ -2813,6 +2813,15 @@ function App() {
                 >
                   💼 Work Casino
                 </Button>
+                {/* Admin Gift Tracker Button */}
+                {(user?.telegram_username === 'cia_nera' || user?.telegram_username === 'Cia_nera') && (
+                  <Button
+                    onClick={() => setShowAdminDashboard(true)}
+                    className="flex-1 bg-orange-600 hover:bg-orange-700 text-white text-xs py-2"
+                  >
+                    🎁 Gift Tracker
+                  </Button>
+                )}
                 <Button
                   onClick={() => setActiveTab('tokens')}
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs py-2"
