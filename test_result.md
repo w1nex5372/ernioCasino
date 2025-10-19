@@ -851,6 +851,48 @@ Users experiencing 500 Internal Server Error when attempting to join a room. Roo
 - **Startup Process**: Clears existing history for fresh start
 - **Sort Order**: Most recent games first (proper chronological order)
 
+
+
+## Phase 11: Gift Credits & Admin Tracking System (In Progress)
+
+**Date**: 2025-01-27  
+**Status**: 🔄 Backend Complete - Frontend Pending
+
+**Requirements**:
+1. ✅ Gift upload credit system (each upload = 1 credit)
+2. ✅ Credit validation before upload
+3. ✅ Automatic gift assignment tracking
+4. 🔄 Admin dashboard on main screen
+5. 🔄 Display remaining credits in upload UI
+
+**Backend Implementation Complete**:
+
+### 1. User Credit System
+- ✅ Added `gift_credits`, `used_credits`, `remaining_credits` to User model
+- ✅ Credits added immediately on package purchase
+- ✅ GET `/api/users/{user_id}/gift-credits` - Get credit balance
+
+### 2. Upload Validation & Deduction
+- ✅ Validate remaining credits before upload
+- ✅ Block uploads if insufficient: "❌ You have no remaining gift credits"
+- ✅ Deduct credits after successful upload
+- ✅ Each gift upload = 1 credit (regardless of gift type)
+
+### 3. Gift Assignment Tracking
+- ✅ Created `gift_assignments` collection
+- ✅ Automatic save when gift assigned to winner
+- ✅ Tracks: uploader → winner → gift → city → room type
+
+### 4. Admin Dashboard API
+- ✅ GET `/api/admin/gift-assignments` - Get all assignments with filters
+- ✅ Configurable admin list: `ADMIN_USERNAMES` in server.py
+- ✅ Filters: city, room_type, status
+- ✅ Pagination (50 per page)
+
+**Frontend Tasks Remaining**:
+- Display "You have X gift credits left" in upload modal
+- Add "🎁 Gift Tracker" button on main screen (admin only)
+- Create admin dashboard page with table and filters
 **Status**: ✅ **PRODUCTION READY** - All privacy and data management features working correctly
 
 ## Phase 11: City-Based Room Rejoining Logic Testing (Complete)
