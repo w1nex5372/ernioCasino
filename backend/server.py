@@ -579,6 +579,22 @@ async def assign_gift_to_winner(winner_user_id: str, winner_city: str, winner_te
         if gift:
             logging.info(f"🎁 Gift {gift['gift_id']} from folder {folder_name} assigned to winner {winner_username} in {winner_city}")
             
+            # Save to gift_assignments collection for admin tracking
+            assignment_record = {
+                "assignment_id": str(uuid.uuid4()),
+                "uploader_telegram_id": gift.get('creator_telegram_id'),
+                "uploader_username": gift.get('creator_username', 'Unknown'),
+                "winner_telegram_id": winner_telegram_id,
+                "winner_username": winner_username,
+                "gift_id": gift['gift_id'],
+                "city": winner_city,
+                "room_type": room_type,
+                "status": "Delivered",
+                "assigned_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.gift_assignments.insert_one(assignment_record)
+            logging.info(f"✅ Gift assignment tracked in database: {assignment_record['assignment_id']}")
+            
             # Send Telegram notification with all gift details
             gift_data = {
                 "gift_id": gift['gift_id'],
