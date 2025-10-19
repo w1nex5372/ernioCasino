@@ -640,3 +640,34 @@ Additionally, implementing new "Work for Casino" system with:
 - Upload restrictions enforced: Users can only upload the package type they purchased
 - Availability updates correctly after gift uploads
 - All API endpoints return proper JSON structure and error messages
+
+
+## Phase 9: Fix Join-Room 500 Error (In Progress)
+
+**Date**: 2025-01-27  
+**Status**: 🔄 Testing
+
+**Issue Reported**: 
+Users experiencing 500 Internal Server Error when attempting to join a room. Root cause identified: `join-room` endpoint tried to access `ROOM_SETTINGS[request.room_type]['gift_type']` but the key was missing from ROOM_SETTINGS dictionary.
+
+**Fix Applied**:
+1. ✅ Added `gift_type` key to all room types in ROOM_SETTINGS:
+   - BRONZE: "1gift"
+   - SILVER: "2gifts"  
+   - GOLD: "5gifts"
+   - PLATINUM: "10gifts"
+   - DIAMOND: "20gifts"
+   - ELITE: "50gifts"
+2. ✅ Backend service restarted to apply changes
+
+**Testing Plan**:
+- Test join-room endpoint with various room types
+- Verify gift availability checks work correctly  
+- Ensure no 500 errors occur
+- Test with and without available gifts in user's city
+
+**Test Scenarios to Cover**:
+1. Join room with available gifts in user's city
+2. Join room without available gifts (should get proper error message)
+3. Join different room types (Bronze, Silver, Gold, Platinum, Diamond, Elite)
+4. Verify gift_type validation works for all room types
