@@ -1443,10 +1443,15 @@ function App() {
   // User session management
   const saveUserSession = (userData) => {
     try {
+      console.log('💾 Saving user session:', {
+        hasTelegramId: !!userData?.telegram_id,
+        telegram_id: userData?.telegram_id,
+        keys: userData ? Object.keys(userData) : []
+      });
       localStorage.setItem('casino_user', JSON.stringify(userData));
-      console.log('User session saved');
+      console.log('✅ User session saved to localStorage');
     } catch (e) {
-      console.log('Failed to save user session:', e);
+      console.error('❌ Failed to save user session:', e);
     }
   };
 
