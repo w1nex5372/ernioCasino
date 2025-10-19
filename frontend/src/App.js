@@ -1437,6 +1437,9 @@ function App() {
       // Check work system status
       checkWorkSystemReady();
       checkPackageTypeAvailability();
+      
+      // Load user's active rooms
+      loadAllUserRooms();
     } catch (error) {
       console.error('Failed to load rooms:', error);
       // Only show error toast if explicitly requested (not on initial load)
