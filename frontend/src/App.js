@@ -3545,6 +3545,16 @@ function App() {
                     const giftsAvailableInUserCity = cityAvailability[roomType] === true;
                     const isDisabled = !giftsAvailableInUserCity;
                     
+                    // Debug: Log room state
+                    if (userActiveRooms[roomType]) {
+                      console.log(`🐛 [${roomType}] userActiveRooms:`, {
+                        roomId: userActiveRooms[roomType].roomId,
+                        roomCity: userActiveRooms[roomType].city,
+                        currentCity: userCity,
+                        match: userActiveRooms[roomType].city === userCity
+                      });
+                    }
+                    
                     return (
                       <Card key={roomType} className={`bg-slate-800/90 border-slate-700 overflow-hidden ${isDisabled ? 'opacity-50' : ''}`}>
                         {isMobile ? (
