@@ -5850,6 +5850,45 @@ class SolanaCasinoAPITester:
                 
                 # Give tokens to each user
                 requests.post(f"{self.api_url}/admin/add-tokens/{telegram_ids[i]}?admin_key=PRODUCTION_CLEANUP_2025&tokens=2000")
+                
+                # Set city for each user (alternating between London and Paris)
+                city = "London" if i % 2 == 0 else "Paris"
+                city_data = {"user_id": user['id'], "city": city}
+                city_response = requests.post(f"{self.api_url}/users/set-city", json=city_data)
+                if city_response.status_code != 200:
+                    print(f"⚠️ Failed to set city for user {i+1}: {city_response.status_code}")
+                else:
+                    print(f"✅ Set city {city} for user {i+1}")
+            
+            # Create test gifts for Bronze room (1gift type) in both cities
+            print("🎁 Creating test gifts for Bronze rooms...")
+            for city in ["London", "Paris"]:
+                for gift_num in range(10):  # Create 10 gifts per city
+                    gift_data = {
+                        "gift_id": f"test_gift_{city}_{gift_num}",
+                        "creator_user_id": test_users[0]['id'],
+                        "creator_telegram_id": telegram_ids[0],
+                        "city": city,
+                        "media": [{"type": "photo", "data": "base64_test_data"}],
+                        "coordinates": f"51.5074, -0.1278 - Test gift {gift_num} in {city}",
+                        "description": f"Test gift {gift_num} for game history testing",
+                        "gift_type": "1gift",  # Bronze room type
+                        "num_places": 1,
+                        "folder_name": "1gift",
+                        "status": "available"
+                    }
+                    
+                    # Insert directly into database
+                    try:
+                        import pymongo
+                        from pymongo import MongoClient
+                        mongo_client = MongoClient("mongodb://localhost:27017")
+                        test_db = mongo_client["test_database"]
+                        test_db.gifts.insert_one(gift_data)
+                    except Exception as e:
+                        print(f"⚠️ Failed to create gift {gift_num} in {city}: {e}")
+            
+            print("✅ Created test gifts for Bronze rooms in both cities")
             
             print(f"✅ Created {len(test_users)} test users with tokens")
             
