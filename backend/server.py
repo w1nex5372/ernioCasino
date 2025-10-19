@@ -2189,6 +2189,20 @@ async def purchase_tokens(purchase: TokenPurchase):
     return {"success": True, "tokens_added": purchase.token_amount}
 
 @api_router.post("/users/set-city")
+
+@api_router.get("/users/{user_id}/gift-credits")
+async def get_user_gift_credits(user_id: str):
+    """Get user's gift credit balance"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {
+        "gift_credits": user.get('gift_credits', 0),
+        "used_credits": user.get('used_credits', 0),
+        "remaining_credits": user.get('remaining_credits', 0)
+    }
+
 async def set_user_city(request: dict):
     """Set user's city selection"""
     try:
