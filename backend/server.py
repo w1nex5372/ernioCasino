@@ -3328,31 +3328,24 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
             if not user.get('work_access_purchased'):
                 raise HTTPException(status_code=403, detail="Work access not purchased")
             
-            # Find ANY active package with remaining credits
-            # Users can use credits from any package for any gift type (1/2/5/10/20/50)
-            active_package = await db.work_packages.find_one({
-                "user_id": request.user_id,
-                "gift_credits_remaining": {"$gt": 0}  # Just need some credits remaining
-            })
+            # Check user's remaining credits
+            remaining_credits = user.get('remaining_credits', 0)
             
-            if not active_package:
-                raise HTTPException(
-                    status_code=400, 
-                    detail=f"No active package with remaining credits. Please purchase a package first."
-                )
+            # Calculate credit cost: each gift costs 1 credit
+            # Example: uploading 3 gifts of type "5gifts" = 3 credits (not 15)
+            total_credits_needed = len(request.gifts)  # Number of gift uploads
             
-            # Calculate credit cost based on gift type
-            # 1gift = 1 credit, 2gifts = 2 credits, 5gifts = 5 credits, etc.
-            credit_cost_per_gift = request.gift_count_per_upload
-            total_credits_needed = len(request.gifts) * credit_cost_per_gift
-            
-            remaining_credits = active_package.get('gift_credits_remaining', 0)
             if total_credits_needed > remaining_credits:
                 raise HTTPException(
                     status_code=400, 
-                    detail=f"Not enough credits. Need {total_credits_needed}, have {remaining_credits}. " +
-                           f"(Each {request.gift_count_per_upload}-gift upload costs {credit_cost_per_gift} credits)"
+                    detail=f"❌ You have no remaining gift credits. You need {total_credits_needed} credit(s) but have {remaining_credits}. Please purchase another gift package to continue uploading."
                 )
+            
+            # Find active package (for tracking purposes)
+            active_package = await db.work_packages.find_one({
+                "user_id": request.user_id,
+                "gift_credits_remaining": {"$gt": 0}
+            })
         else:
             # For cia nera, no package restrictions
             active_package = None
