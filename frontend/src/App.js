@@ -4682,6 +4682,175 @@ function App() {
           </Card>
         </div>
       )}
+
+      {/* Admin Gift Tracker Dashboard */}
+      {showAdminDashboard && (
+        <AdminGiftTracker
+          user={user}
+          API={API}
+          onClose={() => setShowAdminDashboard(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+// Admin Gift Tracker Component
+function AdminGiftTracker({ user, API, onClose }) {
+  const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({ city: '', room_type: '', status: '' });
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    loadAssignments();
+  }, [filters, page]);
+
+  const loadAssignments = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        telegram_username: user.telegram_username,
+        skip: (page - 1) * 50,
+        limit: 50,
+        ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v))
+      });
+
+      const response = await axios.get(`${API}/admin/gift-assignments?${params}`);
+      setAssignments(response.data.assignments);
+      setTotalPages(response.data.pages);
+    } catch (error) {
+      console.error('Failed to load assignments:', error);
+      toast.error('Failed to load gift assignments');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-6xl max-h-[90vh] overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-yellow-500/30">
+        <CardHeader className="border-b border-slate-700">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl text-yellow-400">🎁 Gift Tracker Dashboard</CardTitle>
+            <Button onClick={onClose} variant="outline" size="sm">Close</Button>
+          </div>
+          <CardDescription className="text-slate-300">
+            Monitor gift assignments between uploaders and winners
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+          {/* Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div>
+              <label className="text-white text-sm font-semibold mb-2 block">City</label>
+              <select
+                value={filters.city}
+                onChange={(e) => setFilters({ ...filters, city: e.target.value })}
+                className="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600"
+              >
+                <option value="">All Cities</option>
+                <option value="London">London</option>
+                <option value="Paris">Paris</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="text-white text-sm font-semibold mb-2 block">Room Type</label>
+              <select
+                value={filters.room_type}
+                onChange={(e) => setFilters({ ...filters, room_type: e.target.value })}
+                className="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600"
+              >
+                <option value="">All Rooms</option>
+                <option value="bronze">Bronze</option>
+                <option value="silver">Silver</option>
+                <option value="gold">Gold</option>
+                <option value="platinum">Platinum</option>
+                <option value="diamond">Diamond</option>
+                <option value="elite">Elite</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="text-white text-sm font-semibold mb-2 block">Status</label>
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                className="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600"
+              >
+                <option value="">All Status</option>
+                <option value="Delivered">Delivered</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Table */}
+          {loading ? (
+            <div className="text-center text-white py-12">Loading...</div>
+          ) : assignments.length === 0 ? (
+            <div className="text-center text-slate-400 py-12">No gift assignments found</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-700">
+                    <th className="text-left text-yellow-400 p-3">Uploader</th>
+                    <th className="text-left text-yellow-400 p-3">Winner</th>
+                    <th className="text-left text-yellow-400 p-3">Gift ID</th>
+                    <th className="text-left text-yellow-400 p-3">City</th>
+                    <th className="text-left text-yellow-400 p-3">Room Type</th>
+                    <th className="text-left text-yellow-400 p-3">Status</th>
+                    <th className="text-left text-yellow-400 p-3">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assignments.map((assignment, idx) => (
+                    <tr key={idx} className="border-b border-slate-800 hover:bg-slate-800/50">
+                      <td className="text-white p-3">@{assignment.uploader_username}</td>
+                      <td className="text-white p-3">@{assignment.winner_username}</td>
+                      <td className="text-slate-400 p-3 font-mono text-xs">{assignment.gift_id.substring(0, 8)}...</td>
+                      <td className="text-white p-3">{assignment.city}</td>
+                      <td className="text-white p-3 capitalize">{assignment.room_type}</td>
+                      <td className="text-green-400 p-3">✅ {assignment.status}</td>
+                      <td className="text-slate-400 p-3 text-xs">
+                        {new Date(assignment.assigned_at).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-6">
+              <Button
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page === 1}
+                size="sm"
+                variant="outline"
+              >
+                Previous
+              </Button>
+              <span className="text-white px-4">
+                Page {page} of {totalPages}
+              </span>
+              <Button
+                onClick={() => setPage(Math.min(totalPages, page + 1))}
+                disabled={page === totalPages}
+                size="sm"
+                variant="outline"
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
