@@ -1440,13 +1440,13 @@ function App() {
   }, []);
 
 
-  // Check if user needs to select city - trigger immediately when user loads
-  useEffect(() => {
-    if (user && !isLoading && !user.city && !userCity) {
-      console.log('🏙️ User has no city - showing selector immediately');
-      setShowCitySelector(true);
-    }
-  }, [user, isLoading, userCity]);
+  // City selector is now handled by early return - this useEffect is redundant
+  // useEffect(() => {
+  //   if (user && !isLoading && !user.city && !userCity) {
+  //     console.log('🏙️ User has no city - showing selector immediately');
+  //     setShowCitySelector(true);
+  //   }
+  // }, [user, isLoading, userCity]);
 
 
   // User session management
