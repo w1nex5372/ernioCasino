@@ -4573,24 +4573,16 @@ function App() {
                     "{viewingGift.description}"
                   </div>
                 )}
-                {/* Try to extract lat/lng for Google Maps if format is correct */}
-                {(() => {
-                  const coords = viewingGift.coordinates.match(/(-?\d+\.?\d*),\s*(-?\d+\.?\d*)/);
-                  if (coords) {
-                    return (
-                      <Button
-                        onClick={() => {
-                          const url = `https://www.google.com/maps?q=${coords[1]},${coords[2]}`;
-                          window.open(url, '_blank');
-                        }}
-                        className="mt-3 bg-blue-600 hover:bg-blue-700"
-                      >
-                        🗺️ Open in Google Maps
-                      </Button>
-                    );
-                  }
-                  return null;
-                })()}
+                {/* Copy Coordinates Button */}
+                <Button
+                  onClick={() => {
+                    navigator.clipboard.writeText(viewingGift.coordinates);
+                    toast.success('Coordinates copied to clipboard!');
+                  }}
+                  className="mt-3 bg-blue-600 hover:bg-blue-700"
+                >
+                  📋 Copy Coordinates
+                </Button>
               </div>
 
               {/* Media Gallery */}
