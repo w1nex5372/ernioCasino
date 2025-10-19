@@ -138,13 +138,13 @@ const SW_VERSION = 'v8.0-WINNER-FIX-20250114';
 **Testing Commands**:
 ```bash
 # Backend version check
-curl https://sol-casino-tg-1.preview.emergentagent.com/api/version
+curl https://betdrop.preview.emergentagent.com/api/version
 
 # Backend health check
-curl https://sol-casino-tg-1.preview.emergentagent.com/api/health
+curl https://betdrop.preview.emergentagent.com/api/health
 
 # Frontend version check
-curl https://sol-casino-tg-1.preview.emergentagent.com/version.json
+curl https://betdrop.preview.emergentagent.com/version.json
 ```
 
 ---
@@ -179,7 +179,7 @@ sio = socketio.AsyncServer(
 #### BotFather URL Configuration
 **Required Format**:
 ```
-https://sol-casino-tg-1.preview.emergentagent.com?v=8003
+https://betdrop.preview.emergentagent.com?v=8003
 ```
 
 **Steps to Update**:
@@ -187,7 +187,7 @@ https://sol-casino-tg-1.preview.emergentagent.com?v=8003
 2. Send `/mybots`
 3. Select your bot
 4. Bot Settings → Menu Button → Edit Menu Button URL
-5. Enter: `https://sol-casino-tg-1.preview.emergentagent.com?v=8003`
+5. Enter: `https://betdrop.preview.emergentagent.com?v=8003`
 6. Confirm
 
 **Note**: Increment version parameter (`v=8003`) each time to bypass Telegram's URL cache
@@ -199,7 +199,7 @@ https://sol-casino-tg-1.preview.emergentagent.com?v=8003
 #### Test A: Browser Direct Access
 ```bash
 # 1. Open in browser
-https://sol-casino-tg-1.preview.emergentagent.com
+https://betdrop.preview.emergentagent.com
 
 # 2. Open DevTools Console
 # Should see:
@@ -241,7 +241,7 @@ navigator.serviceWorker.getRegistration().then(reg => {
 
 // Should show:
 // SW State: "activated"
-// SW Script URL: "https://sol-casino-tg-1.preview.emergentagent.com/sw.js"
+// SW Script URL: "https://betdrop.preview.emergentagent.com/sw.js"
 
 // Check SW console for v8.0 messages:
 // "SW v8.0: Casino Battle Service Worker v8.0-WINNER-FIX-20250114 loaded at [timestamp]"
@@ -291,11 +291,11 @@ navigator.serviceWorker.getRegistrations().then(r =>
 ### Backend Verification
 ```bash
 # Test version endpoint
-curl https://sol-casino-tg-1.preview.emergentagent.com/api/version | jq .version
+curl https://betdrop.preview.emergentagent.com/api/version | jq .version
 # Should return: "8.0-WINNER-FIX-20250114"
 
 # Test health endpoint  
-curl https://sol-casino-tg-1.preview.emergentagent.com/api/health | jq .status
+curl https://betdrop.preview.emergentagent.com/api/health | jq .status
 # Should return: "healthy"
 ```
 
@@ -368,7 +368,7 @@ navigator.serviceWorker.getRegistrations().then(registrations => {
 
 1. **Update BotFather URL** (Required):
    ```
-   https://sol-casino-tg-1.preview.emergentagent.com?v=8003
+   https://betdrop.preview.emergentagent.com?v=8003
    ```
 
 2. **Clear Telegram Cache** (Recommended):
@@ -376,7 +376,7 @@ navigator.serviceWorker.getRegistrations().then(registrations => {
    - Desktop: Close app, clear cache folder
 
 3. **Test in Browser First**:
-   - Open: `https://sol-casino-tg-1.preview.emergentagent.com`
+   - Open: `https://betdrop.preview.emergentagent.com`
    - Check console for v8.0 messages
    - Verify version endpoint: `/version.json`
 

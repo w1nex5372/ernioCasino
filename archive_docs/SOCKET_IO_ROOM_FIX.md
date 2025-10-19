@@ -202,14 +202,14 @@ Frontend: Only winner receives prize link
 - `/app/frontend/src/App.js` - Socket event handlers and room join logic
 
 ## Deployment
-- **Domain**: `https://sol-casino-tg-1.preview.emergentagent.com`
+- **Domain**: `https://betdrop.preview.emergentagent.com`
 - **Status**: ✅ Both backend and frontend running
 - **Ready for Testing**: Yes - user can test via Telegram Mini Web App
 
 ## Next Steps for User
 
 1. **Update Telegram Mini Web App URL** (if needed):
-   - Point to: `https://sol-casino-tg-1.preview.emergentagent.com`
+   - Point to: `https://betdrop.preview.emergentagent.com`
 
 2. **Test Game Flow**:
    - Join Bronze room with 3 different Telegram accounts

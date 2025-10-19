@@ -190,7 +190,7 @@ tail -f /var/log/supervisor/backend.err.log | grep -E "join_game_room|room_ready
 ## Deployment Information
 
 **Version**: 9.1-GET-READY-FIX  
-**Domain**: https://sol-casino-tg-1.preview.emergentagent.com  
+**Domain**: https://betdrop.preview.emergentagent.com  
 **Service Worker**: v9.0-SYNC-FIX-20250114-1820  
 **Backend**: Enhanced logging + 500ms delay  
 **Frontend**: Enhanced console logging  
@@ -229,4 +229,4 @@ tail -f /var/log/supervisor/backend.err.log | grep -E "join_game_room|room_ready
 **Deployment Date**: 2025-01-14 18:30 UTC  
 **Version**: 9.1-GET-READY-FIX  
 **Status**: ✅ READY FOR TESTING  
-**Domain**: https://sol-casino-tg-1.preview.emergentagent.com
+**Domain**: https://betdrop.preview.emergentagent.com

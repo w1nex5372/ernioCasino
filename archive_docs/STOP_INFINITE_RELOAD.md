@@ -92,7 +92,7 @@ navigator.serviceWorker.getRegistrations()
 
 ### Step 2: Load App Fresh
 ```
-Open: https://sol-casino-tg-1.preview.emergentagent.com
+Open: https://betdrop.preview.emergentagent.com
 ```
 
 ### Step 3: Check Console
