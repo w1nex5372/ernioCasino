@@ -1795,7 +1795,13 @@ function App() {
       
       if (response.data.success) {
         setUserCity(city);
+        console.log('🔍 Before setUser in handleCitySelect:', {
+          originalUser: user,
+          hasTelegramId: !!user?.telegram_id,
+          telegramId: user?.telegram_id
+        });
         setUser({...user, city: city});
+        console.log('🔍 After setUser in handleCitySelect - new user:', {...user, city: city});
         setShowCitySelector(false);
         setGiftsAvailable(response.data.can_play);
         
