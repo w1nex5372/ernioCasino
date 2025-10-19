@@ -2948,7 +2948,7 @@ ADMIN_USERNAMES = ["cia_nera", "Cia_nera", "CIA_NERA"]  # Configurable admin lis
 
 @api_router.get("/admin/gift-assignments")
 async def get_gift_assignments(
-    telegram_username: str,
+    telegram_id: int,
     city: Optional[str] = None,
     room_type: Optional[str] = None,
     status: Optional[str] = None,
@@ -2956,8 +2956,8 @@ async def get_gift_assignments(
     skip: int = 0
 ):
     """Get gift assignment records for admin dashboard"""
-    # Check if user is admin
-    if telegram_username not in ADMIN_USERNAMES:
+    # Check if user is admin (using telegram_id)
+    if telegram_id != 1793011013:
         raise HTTPException(status_code=403, detail="Admin access required")
     
     try:
