@@ -2990,21 +2990,6 @@ async def get_gift_assignments(
         logging.error(f"Error fetching gift assignments: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch gift assignments")
 
-                    "assigned": london_assigned
-                },
-                "Paris": {
-                    "uploaded": paris_uploaded,
-                    "assigned": paris_assigned
-                }
-            }
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logging.error(f"Error fetching gift stats: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch gift stats")
-
 @api_router.get("/work/check-access/{user_id}")
 async def check_work_access(user_id: str):
     """Check if user has purchased work access"""
