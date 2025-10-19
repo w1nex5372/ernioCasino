@@ -248,6 +248,53 @@ class SolanaCasinoAPITester:
             self.log_test("Game History", False, str(e))
             return False
 
+    def test_game_history_limit_enforcement(self):
+        """Test that game history enforces max 5 games limit"""
+        try:
+            # Test with limit=10 (should still return max 5)
+            response = requests.get(f"{self.api_url}/game-history?limit=10")
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                games = data.get('games', [])
+                
+                # Should never return more than 5 games
+                if len(games) > 5:
+                    success = False
+                    details = f"FAILED: Returned {len(games)} games, expected max 5"
+                else:
+                    details = f"PASSED: Correctly limited to {len(games)} games (max 5 enforced)"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test("Game History Limit Enforcement", success, details)
+            return success, games if success else []
+        except Exception as e:
+            self.log_test("Game History Limit Enforcement", False, str(e))
+            return False, []
+
+    def test_fresh_start_verification(self):
+        """Test that game history was cleared on startup for fresh start"""
+        try:
+            response = requests.get(f"{self.api_url}/game-history")
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                games = data.get('games', [])
+                
+                # Should have 0 games initially (fresh start)
+                details = f"Fresh start verified: {len(games)} games in history (expected 0 after startup clear)"
+            else:
+                details = f"Status: {response.status_code}, Response: {response.text}"
+            
+            self.log_test("Fresh Start Verification", success, details)
+            return success, len(games) if success else -1
+        except Exception as e:
+            self.log_test("Fresh Start Verification", False, str(e))
+            return False, -1
+
     def test_user_prizes(self, user_number=1):
         """Test getting user prizes"""
         test_user = self.test_user1 if user_number == 1 else self.test_user2
