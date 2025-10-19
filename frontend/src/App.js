@@ -1102,6 +1102,14 @@ function App() {
           return;
         }
         
+        // CRITICAL: Validate telegram_id exists in cached data
+        if (!userData.telegram_id) {
+          console.warn('⚠️ Cached user missing telegram_id - forcing re-authentication');
+          localStorage.removeItem('casino_user');
+          authenticateFromTelegram();
+          return;
+        }
+        
         // Set cached user first for instant UI
         setUser(userData);
         
