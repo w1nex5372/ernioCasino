@@ -4186,65 +4186,8 @@ function App() {
 
       {/* City Selector Modal */}
       {/* City Selector Modal - Unified */}
-      {showCitySelector && user && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-md bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-2xl text-center text-yellow-400">🌍 Choose Your City</CardTitle>
-              <CardDescription className="text-center text-slate-300">
-                {user.city ? 'Change your city' : 'Select the city you want to play and receive gifts from'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  onClick={() => handleCitySelect('London')}
-                  className="h-32 flex flex-col items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
-                >
-                  <span className="text-5xl mb-3">🇬🇧</span>
-                  <span className="text-xl font-bold">London</span>
-                </Button>
-                <Button
-                  onClick={() => handleCitySelect('Paris')}
-                  className="h-32 flex flex-col items-center justify-center bg-gradient-to-br from-pink-600 to-pink-800 hover:from-pink-700 hover:to-pink-900"
-                >
-                  <span className="text-5xl mb-3">🇫🇷</span>
-                  <span className="text-xl font-bold">Paris</span>
-                </Button>
-              </div>
-              
-              {/* Warsaw - Coming Soon */}
-              <div className="relative">
-                <Button
-                  disabled
-                  className="w-full h-24 flex flex-col items-center justify-center bg-gradient-to-br from-gray-600 to-gray-800 opacity-50 cursor-not-allowed"
-                >
-                  <span className="text-4xl mb-2">🇵🇱</span>
-                  <span className="text-lg font-bold">Warsaw</span>
-                </Button>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Badge className="bg-yellow-500 text-black font-bold">Coming Soon</Badge>
-                </div>
-              </div>
-              
-              <div className="text-slate-400 text-sm text-center">
-                You can change your city anytime
-              </div>
-              
-              {user.city && (
-                <Button
-                  onClick={() => setShowCitySelector(false)}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Cancel
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
+      {/* City Selector Modal - REMOVED - Now using early return */}
+      
       {/* Work Access Purchase Modal */}
       {showWorkModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm overflow-y-auto">
