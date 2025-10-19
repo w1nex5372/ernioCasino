@@ -2399,7 +2399,8 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         first_name=user_doc.get('first_name', 'Player'),
         last_name=user_doc.get('last_name', ''),
         photo_url=user_doc.get('photo_url', ''),
-        bet_amount=request.bet_amount
+        bet_amount=request.bet_amount,
+        city=user_city  # Store city where player joined
     )
     target_room.players.append(player)
     target_room.prize_pool += request.bet_amount
