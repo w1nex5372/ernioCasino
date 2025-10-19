@@ -3589,6 +3589,13 @@ async def startup_event():
     # Start assigned gifts auto-delete scheduler
     asyncio.create_task(assigned_gifts_cleanup_scheduler())
     
+    # Clear existing game history for fresh start (as requested)
+    try:
+        deleted_count = await db.completed_games.delete_many({})
+        logging.info(f"🗑️ [Startup] Cleared {deleted_count.deleted_count} existing game history records for fresh start")
+    except Exception as e:
+        logging.error(f"❌ [Startup] Failed to clear game history: {e}")
+    
     logging.info("🎰 Casino Battle Royale API started!")
     logging.info(f"🏠 Active rooms: {len(active_rooms)}")
     logging.info(f"💳 Solana monitoring: {'Enabled' if CASINO_WALLET_ADDRESS != 'YourWalletAddressHere12345678901234567890123456789' else 'Disabled (set CASINO_WALLET_ADDRESS)'}")
