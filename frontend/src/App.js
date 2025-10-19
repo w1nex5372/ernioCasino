@@ -1815,8 +1815,9 @@ function App() {
           loadWelcomeBonusStatus();
         }, 500);
         
-        // Reload rooms
+        // Reload rooms and user's active room status after city change
         loadRooms();
+        await loadAllUserRooms();
       } else {
         console.error('❌ City set failed:', response.data);
         toast.error('Failed to set city. Please try again.');
