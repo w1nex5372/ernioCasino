@@ -2874,17 +2874,12 @@ function App() {
                 </Button>
 
                 {/* Admin Gift Tracker Button - Desktop */}
-                {(() => {
-                  console.log('🔍 Admin button check (desktop):', {
-                    hasTelegramId: !!user?.telegram_id,
-                    telegramId: user?.telegram_id,
-                    isAdmin: user?.telegram_id === 1793011013,
-                    userKeys: user ? Object.keys(user) : []
-                  });
-                  return user?.telegram_id === 1793011013;
-                })() && (
+                {user && user.telegram_id === 1793011013 && (
                   <Button
-                    onClick={() => setShowAdminDashboard(true)}
+                    onClick={() => {
+                      console.log('🎁 Gift Tracker clicked (desktop)');
+                      setShowAdminDashboard(true);
+                    }}
                     className="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-4 py-2"
                   >
                     🎁 Gift Tracker
