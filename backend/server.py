@@ -2361,12 +2361,17 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
     if not user_city:
         raise HTTPException(status_code=400, detail="Please select your city first (London or Paris)")
     
-    # Check if gifts are available in user's city
-    gifts_available = await db.gifts.count_documents({"city": user_city, "status": "available"})
+    # Check if gifts of THIS SPECIFIC TYPE are available in user's city
+    gift_type = ROOM_SETTINGS[request.room_type]["gift_type"]
+    gifts_available = await db.gifts.count_documents({
+        "city": user_city, 
+        "status": "available",
+        "gift_type": gift_type
+    })
     if gifts_available == 0:
         raise HTTPException(
             status_code=400, 
-            detail=f"Sorry, we ran out of gifts in {user_city}. Please choose another city."
+            detail=f"Sorry, no {request.room_type} room gifts available in {user_city}. Try another room or city."
         )
     
     # Check if user is already in the room
