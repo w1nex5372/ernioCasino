@@ -244,6 +244,7 @@ class RoomPlayer(BaseModel):
     last_name: Optional[str] = None  # Telegram last name
     photo_url: Optional[str] = None  # Telegram profile photo
     bet_amount: int
+    city: str  # City where player joined this room
     joined_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class GameResult(BaseModel):
