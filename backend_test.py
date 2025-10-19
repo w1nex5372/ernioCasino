@@ -2,6 +2,7 @@ import requests
 import sys
 import json
 import time
+import uuid
 from datetime import datetime
 
 class SolanaCasinoAPITester:
