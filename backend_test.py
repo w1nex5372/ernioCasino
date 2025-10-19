@@ -4534,6 +4534,259 @@ class SolanaCasinoAPITester:
             self.log_test("Package Availability Comprehensive", False, str(e))
             return False
 
+    def test_join_room_gift_availability(self):
+        """Test join-room endpoint with gift availability validation - Fix for 500 error"""
+        try:
+            print("\n🎁 Testing Join-Room Gift Availability System...")
+            
+            # Clean database first
+            cleanup_response = requests.post(f"{self.api_url}/admin/cleanup-database?admin_key=PRODUCTION_CLEANUP_2025")
+            if cleanup_response.status_code != 200:
+                self.log_test("Join Room Gift Availability - Cleanup", False, "Database cleanup failed")
+                return False
+            
+            time.sleep(1)
+            
+            # Create test user with city set
+            user_data = {
+                "telegram_auth_data": {
+                    "id": 123456789,
+                    "first_name": "GiftTest",
+                    "last_name": "User",
+                    "username": "gifttest",
+                    "photo_url": "https://example.com/gifttest.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+            if auth_response.status_code != 200:
+                self.log_test("Join Room Gift Availability - User Creation", False, f"Failed to create user: {auth_response.status_code}")
+                return False
+            
+            test_user = auth_response.json()
+            
+            # Give user tokens
+            token_response = requests.post(f"{self.api_url}/admin/add-tokens/{test_user['telegram_id']}?admin_key=PRODUCTION_CLEANUP_2025&tokens=10000")
+            
+            # Set user city to London
+            city_data = {"user_id": test_user['id'], "city": "London"}
+            city_response = requests.post(f"{self.api_url}/users/set-city", json=city_data)
+            if city_response.status_code != 200:
+                self.log_test("Join Room Gift Availability - Set City", False, f"Failed to set city: {city_response.status_code}")
+                return False
+            
+            print(f"✅ Created test user with city set to London")
+            
+            # Test all room types without gifts (should get proper error, not 500)
+            room_types = ["bronze", "silver", "gold", "platinum", "diamond", "elite"]
+            bet_amounts = [300, 500, 800, 1500, 3000, 6000]
+            
+            all_tests_passed = True
+            
+            for room_type, bet_amount in zip(room_types, bet_amounts):
+                print(f"🎰 Testing {room_type.title()} room join without gifts...")
+                
+                join_data = {
+                    "room_type": room_type,
+                    "user_id": test_user['id'],
+                    "bet_amount": bet_amount
+                }
+                
+                join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+                
+                # Should NOT get 500 error - should get 400 with proper message
+                if join_response.status_code == 500:
+                    self.log_test(f"Join Room {room_type.title()} - No 500 Error", False, f"Got 500 error: {join_response.text}")
+                    all_tests_passed = False
+                elif join_response.status_code == 400:
+                    error_data = join_response.json()
+                    error_detail = error_data.get('detail', '')
+                    if 'gift' in error_detail.lower() and 'london' in error_detail.lower():
+                        self.log_test(f"Join Room {room_type.title()} - Proper Gift Error", True, f"Correct error message: {error_detail}")
+                    else:
+                        self.log_test(f"Join Room {room_type.title()} - Gift Error Message", False, f"Unexpected error message: {error_detail}")
+                        all_tests_passed = False
+                else:
+                    # Unexpected status code
+                    self.log_test(f"Join Room {room_type.title()} - Status Code", False, f"Unexpected status {join_response.status_code}: {join_response.text}")
+                    all_tests_passed = False
+            
+            # Now create gifts for each room type and test successful joins
+            print(f"\n🎁 Creating gifts for all room types in London...")
+            
+            gift_types = ["1gift", "2gifts", "5gifts", "10gifts", "20gifts", "50gifts"]
+            
+            for gift_type in gift_types:
+                # Create gift directly in database
+                gift_data = {
+                    "gift_id": f"test-{gift_type}-london",
+                    "creator_user_id": test_user['id'],
+                    "creator_telegram_id": test_user['telegram_id'],
+                    "city": "London",
+                    "media": [{"type": "photo", "data": "base64testdata"}],
+                    "coordinates": "51.5074, -0.1278 - Test location",
+                    "description": f"Test {gift_type} gift",
+                    "gift_type": gift_type,
+                    "num_places": 1,
+                    "folder_name": gift_type,
+                    "status": "available",
+                    "created_at": datetime.now().isoformat()
+                }
+                
+                # Insert directly into database
+                insert_response = requests.post(f"{self.api_url}/admin/insert-gift", json=gift_data)
+                
+            print(f"✅ Created gifts for all room types")
+            
+            # Test successful joins with gifts available
+            for room_type, bet_amount in zip(room_types, bet_amounts):
+                print(f"🎰 Testing {room_type.title()} room join WITH gifts...")
+                
+                join_data = {
+                    "room_type": room_type,
+                    "user_id": test_user['id'],
+                    "bet_amount": bet_amount
+                }
+                
+                join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+                
+                if join_response.status_code == 200:
+                    result = join_response.json()
+                    self.log_test(f"Join Room {room_type.title()} - With Gifts", True, f"Successfully joined: position {result.get('position', 'unknown')}")
+                else:
+                    self.log_test(f"Join Room {room_type.title()} - With Gifts", False, f"Failed to join: {join_response.status_code} - {join_response.text}")
+                    all_tests_passed = False
+            
+            # Test user without city set
+            print(f"\n👤 Testing user without city set...")
+            
+            # Create user without city
+            user_no_city_data = {
+                "telegram_auth_data": {
+                    "id": 987654321,
+                    "first_name": "NoCity",
+                    "last_name": "User",
+                    "username": "nocity",
+                    "photo_url": "https://example.com/nocity.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            auth_no_city_response = requests.post(f"{self.api_url}/auth/telegram", json=user_no_city_data)
+            if auth_no_city_response.status_code == 200:
+                no_city_user = auth_no_city_response.json()
+                
+                # Give tokens
+                requests.post(f"{self.api_url}/admin/add-tokens/{no_city_user['telegram_id']}?admin_key=PRODUCTION_CLEANUP_2025&tokens=1000")
+                
+                # Try to join room without city set
+                join_no_city_data = {
+                    "room_type": "bronze",
+                    "user_id": no_city_user['id'],
+                    "bet_amount": 300
+                }
+                
+                join_no_city_response = requests.post(f"{self.api_url}/join-room", json=join_no_city_data)
+                
+                if join_no_city_response.status_code == 400:
+                    error_data = join_no_city_response.json()
+                    if 'city' in error_data.get('detail', '').lower():
+                        self.log_test("Join Room - No City Set", True, f"Correct error for no city: {error_data.get('detail')}")
+                    else:
+                        self.log_test("Join Room - No City Set", False, f"Wrong error message: {error_data.get('detail')}")
+                        all_tests_passed = False
+                else:
+                    self.log_test("Join Room - No City Set", False, f"Expected 400 error, got {join_no_city_response.status_code}")
+                    all_tests_passed = False
+            
+            return all_tests_passed
+            
+        except Exception as e:
+            self.log_test("Join Room Gift Availability", False, str(e))
+            return False
+
+    def test_room_settings_gift_type_fix(self):
+        """Test that ROOM_SETTINGS now includes gift_type for all room types"""
+        try:
+            print("\n🔧 Testing ROOM_SETTINGS gift_type Fix...")
+            
+            # Test by attempting to join each room type - should not get 500 errors
+            room_types = ["bronze", "silver", "gold", "platinum", "diamond", "elite"]
+            expected_gift_types = ["1gift", "2gifts", "5gifts", "10gifts", "20gifts", "50gifts"]
+            
+            # Create test user
+            user_data = {
+                "telegram_auth_data": {
+                    "id": 555666777,
+                    "first_name": "SettingsTest",
+                    "last_name": "User",
+                    "username": "settingstest",
+                    "photo_url": "https://example.com/settingstest.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+            if auth_response.status_code != 200:
+                self.log_test("Room Settings Gift Type Fix - User Creation", False, f"Failed to create user: {auth_response.status_code}")
+                return False
+            
+            test_user = auth_response.json()
+            
+            # Give tokens and set city
+            requests.post(f"{self.api_url}/admin/add-tokens/{test_user['telegram_id']}?admin_key=PRODUCTION_CLEANUP_2025&tokens=50000")
+            
+            city_data = {"user_id": test_user['id'], "city": "Paris"}
+            requests.post(f"{self.api_url}/users/set-city", json=city_data)
+            
+            all_tests_passed = True
+            
+            for i, (room_type, expected_gift_type) in enumerate(zip(room_types, expected_gift_types)):
+                print(f"🎰 Testing {room_type.title()} room (should check for {expected_gift_type})...")
+                
+                bet_amounts = [300, 500, 800, 1500, 3000, 6000]
+                
+                join_data = {
+                    "room_type": room_type,
+                    "user_id": test_user['id'],
+                    "bet_amount": bet_amounts[i]
+                }
+                
+                join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+                
+                # The key test: should NOT get 500 error
+                if join_response.status_code == 500:
+                    self.log_test(f"Room Settings {room_type.title()} - No 500 Error", False, f"Still getting 500 error: {join_response.text}")
+                    all_tests_passed = False
+                else:
+                    # Should get 400 (no gifts) or 200 (success) - both are fine, just not 500
+                    if join_response.status_code in [200, 400]:
+                        if join_response.status_code == 400:
+                            error_data = join_response.json()
+                            error_detail = error_data.get('detail', '')
+                            # Should mention the specific gift type in error
+                            if expected_gift_type.replace('gift', ' gift') in error_detail or 'gift' in error_detail.lower():
+                                self.log_test(f"Room Settings {room_type.title()} - Gift Type Check", True, f"Correctly checking for {expected_gift_type}: {error_detail}")
+                            else:
+                                self.log_test(f"Room Settings {room_type.title()} - Gift Type Check", False, f"Error doesn't mention gifts: {error_detail}")
+                                all_tests_passed = False
+                        else:
+                            # 200 means join succeeded
+                            self.log_test(f"Room Settings {room_type.title()} - Join Success", True, f"Successfully joined {room_type} room")
+                    else:
+                        self.log_test(f"Room Settings {room_type.title()} - Unexpected Status", False, f"Unexpected status {join_response.status_code}: {join_response.text}")
+                        all_tests_passed = False
+            
+            return all_tests_passed
+            
+        except Exception as e:
+            self.log_test("Room Settings Gift Type Fix", False, str(e))
+            return False
+
     def run_all_tests(self):
         """Run all API tests - Updated for Solana Integration and 3-Player System"""
         print("🚀 Starting Solana Casino Backend API Tests...")
