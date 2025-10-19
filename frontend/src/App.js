@@ -2844,6 +2844,12 @@ function App() {
   }
 
   // Main app - only renders if user exists AND has city selected
+  console.log('🔄 Rendering: MAIN APP', { 
+    hasUser: !!user, 
+    userCity, 
+    user_city: user?.city,
+    telegram_id: user?.telegram_id 
+  });
   return (
     <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white ${
       isMobile ? 'overflow-x-hidden max-w-full w-full' : ''
