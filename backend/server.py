@@ -3702,6 +3702,35 @@ async def assigned_gifts_cleanup_scheduler():
         
         # Wait 6 hours before next check
         await asyncio.sleep(21600)
+
+async def cleanup_old_game_history():
+    """
+    Keep only the 5 most recent games in history.
+    Deletes older games to maintain privacy and reduce data storage.
+    """
+    try:
+        # Count total games
+        total_games = await db.completed_games.count_documents({})
+        
+        if total_games > 5:
+            # Get the 5 most recent games
+            recent_games = await db.completed_games.find(
+                {}, {"_id": 1}
+            ).sort("finished_at", -1).limit(5).to_list(5)
+            
+            # Extract IDs of recent games
+            recent_ids = [game["_id"] for game in recent_games]
+            
+            # Delete all games except the recent 5
+            result = await db.completed_games.delete_many(
+                {"_id": {"$nin": recent_ids}}
+            )
+            
+            if result.deleted_count > 0:
+                logging.info(f"🗑️ [Game History] Deleted {result.deleted_count} old games (keeping 5 most recent)")
+        
+    except Exception as e:
+        logging.error(f"❌ [Game History Cleanup] Error: {e}")
     
 @app.on_event("shutdown")
 async def shutdown_event():
