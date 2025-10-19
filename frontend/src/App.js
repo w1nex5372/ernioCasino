@@ -1370,9 +1370,9 @@ function App() {
               saveUserSession(response.data);
               setIsLoading(false);
               
-              // Check city
+              // Check city - early return handles showing selector
               if (!response.data.city) {
-                setShowCitySelector(true);
+                console.log('⚠️ User has no city - early return will handle it');
               } else {
                 setUserCity(response.data.city);
                 toast.success(`Welcome back, ${telegramUser.first_name}!`);
