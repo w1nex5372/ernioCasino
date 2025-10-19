@@ -2943,6 +2943,54 @@ async def get_gift_stats(telegram_username: Optional[str] = None):
             "breakdown_by_city": {
                 "London": {
                     "uploaded": london_uploaded,
+
+# Admin list for gift tracker dashboard
+ADMIN_USERNAMES = ["cia_nera", "Cia_nera", "CIA_NERA"]  # Configurable admin list
+
+@api_router.get("/admin/gift-assignments")
+async def get_gift_assignments(
+    telegram_username: str,
+    city: Optional[str] = None,
+    room_type: Optional[str] = None,
+    status: Optional[str] = None,
+    limit: int = 50,
+    skip: int = 0
+):
+    """Get gift assignment records for admin dashboard"""
+    # Check if user is admin
+    if telegram_username not in ADMIN_USERNAMES:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    try:
+        # Build query filter
+        query = {}
+        if city:
+            query["city"] = city
+        if room_type:
+            query["room_type"] = room_type.lower()
+        if status:
+            query["status"] = status
+        
+        # Get assignments
+        assignments = await db.gift_assignments.find(
+            query,
+            {"_id": 0}
+        ).sort("assigned_at", -1).skip(skip).limit(limit).to_list(limit)
+        
+        # Get total count
+        total_count = await db.gift_assignments.count_documents(query)
+        
+        return {
+            "assignments": assignments,
+            "total": total_count,
+            "page": skip // limit + 1,
+            "pages": (total_count + limit - 1) // limit
+        }
+        
+    except Exception as e:
+        logging.error(f"Error fetching gift assignments: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch gift assignments")
+
                     "assigned": london_assigned
                 },
                 "Paris": {
