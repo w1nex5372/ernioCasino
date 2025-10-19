@@ -1854,8 +1854,12 @@ function App() {
         return;
       }
 
-      // For regular users - check packages
+      // For regular users - check packages and fetch gift credits
       try {
+        // Fetch user's gift credits
+        const creditsResponse = await axios.get(`${API}/users/${user.id}/gift-credits`);
+        setGiftCredits(creditsResponse.data);
+        
         const packagesResponse = await axios.get(`${API}/work/my-packages/${user.id}`);
         const packages = packagesResponse.data.packages || [];
         
