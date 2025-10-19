@@ -2272,21 +2272,21 @@ function App() {
       // Same city - show the lobby (Return to Room)
       console.log('✅ User already in this room in same city, showing lobby');
       
-      // Fetch current room state
-      const roomStatus = await checkUserRoomStatus();
-      if (roomStatus && roomStatus.in_room && roomStatus.room_type === roomType) {
+      // Fetch current room state for this specific room type
+      const specificRoomData = await checkUserRoomStatus(roomType);
+      if (specificRoomData) {
         setInLobby(true);
         setLobbyData({
           room_type: roomType,
-          room_id: roomStatus.room_id,
+          room_id: specificRoomData.room_id,
           bet_amount: betAmount
         });
-        setRoomParticipants(roomStatus.players);
+        setRoomParticipants(specificRoomData.players);
         
         // Join Socket.IO room
         if (socket && socket.connected) {
           socket.emit('join_game_room', {
-            room_id: roomStatus.room_id,
+            room_id: specificRoomData.room_id,
             user_id: user.id,
             platform: platform
           });
