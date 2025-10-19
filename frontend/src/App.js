@@ -4267,7 +4267,7 @@ function App() {
                     <span className="text-2xl font-bold">20 Gifts</span>
                     <span className="text-sm">180 EUR (in SOL)</span>
                     {!packageAvailability["20"]?.cities?.[selectedCity]?.available && (
-                      <span className="text-xs text-red-300 mt-1">🔒 Not Available in {selectedCity}</span>
+                      <span className="text-xs text-red-300 mt-1">🔒 Locked</span>
                     )}
                   </Button>
                   
