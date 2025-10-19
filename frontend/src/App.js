@@ -2264,7 +2264,7 @@ function App() {
       const roomInfo = userActiveRooms[roomType];
       
       // Check if user is in this room in a DIFFERENT city
-      if (roomInfo.city && roomInfo.city !== userCity) {
+      if (roomInfo.city !== userCity) {
         toast.error(`YOU ARE IN THIS ROOM ON ${roomInfo.city.toUpperCase()}`);
         return;
       }
