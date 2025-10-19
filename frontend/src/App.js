@@ -240,6 +240,24 @@ function App() {
   // Core state
   const [socket, setSocket] = useState(null);
   const [user, setUser] = useState(null);
+  
+  // Wrap setUser to always log telegram_id
+  const setUserWithLog = (newUser) => {
+    console.log('🔧 SET_USER CALLED:', {
+      hasTelegramId: !!newUser?.telegram_id,
+      telegram_id: newUser?.telegram_id,
+      isAdmin: newUser?.telegram_id === 1793011013,
+      caller: new Error().stack.split('\n')[2] // Show where it was called from
+    });
+    setUser(newUser);
+  };
+  
+  // Use setUserWithLog everywhere instead of setUser
+  const originalSetUser = setUser;
+  React.useEffect(() => {
+    // Override setUser globally
+    window.__setUserDebug = setUserWithLog;
+  }, []);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [telegramError, setTelegramError] = useState(false);
