@@ -2298,7 +2298,7 @@ async def get_user_room_status(user_id: str):
                     user_rooms.append({
                         "room_id": room.id,
                         "room_type": room.room_type,
-                        "city": user_city,  # City where user joined this room
+                        "city": player.city,  # City where user actually joined this room
                         "status": room.status,
                         "players": serialized_players,
                         "players_count": len(room.players),
