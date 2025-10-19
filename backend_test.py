@@ -5998,6 +5998,11 @@ def main():
         tester = SolanaCasinoAPITester()
         success = tester.run_review_request_tests()
         return 0 if success else 1
+    # Check if we should run game history tests specifically
+    elif len(sys.argv) > 1 and sys.argv[1] == "history":
+        tester = SolanaCasinoAPITester()
+        success = tester.run_game_history_tests_only()
+        return 0 if success else 1
     else:
         tester = SolanaCasinoAPITester()
         success = tester.run_all_tests()
