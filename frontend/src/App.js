@@ -2208,17 +2208,27 @@ function App() {
       // Get current room status
       const response = await axios.get(`${API}/user-room-status/${user.id}`);
       
+      console.log('🔍 API Response for user rooms:', response.data);
+      
       if (response.data.in_room) {
         const roomCity = response.data.city || userCity;
-        newActiveRooms[response.data.room_type] = {
+        const roomType = response.data.room_type.toLowerCase(); // Ensure lowercase
+        
+        newActiveRooms[roomType] = {
           roomId: response.data.room_id,
           city: roomCity
         };
         
-        console.log('✅ User active rooms loaded:', newActiveRooms);
+        console.log('✅ User active rooms loaded:', {
+          roomType: roomType,
+          roomCity: roomCity,
+          currentCity: userCity,
+          fullState: newActiveRooms
+        });
         setUserActiveRooms(newActiveRooms);
       } else {
         // Clear active rooms if user is not in any room
+        console.log('❌ No active rooms');
         setUserActiveRooms({});
       }
     } catch (error) {
