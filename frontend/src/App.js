@@ -3739,8 +3739,8 @@ function App() {
                                     } text-white font-bold py-3`}
                                   >
                                     <Play className="w-4 h-4 mr-2" />
-                                    {(userActiveRooms[roomType] && userActiveRooms[roomType].city !== userCity) ? `🚫 IN ROOM ON ${userActiveRooms[roomType].city.toUpperCase()}` :
-                                     (userActiveRooms[roomType] && userActiveRooms[roomType].city === userCity) ? '↩️ Return to Room' :
+                                    {userActiveRooms[roomType] && userActiveRooms[roomType].city && userActiveRooms[roomType].city !== userCity ? `🚫 IN ROOM ON ${userActiveRooms[roomType].city.toUpperCase()}` :
+                                     userActiveRooms[roomType] && (!userActiveRooms[roomType].city || userActiveRooms[roomType].city === userCity) ? '↩️ Return to Room' :
                                      isDisabled ? `🚫 No Gifts in ${userCity}` :
                                      room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
                                      room.players_count >= 3 ? 'Room Full' : 
