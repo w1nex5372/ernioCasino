@@ -2243,7 +2243,7 @@ function App() {
         }
       }
       
-      toast.info('You are already in this room!');
+      // Silently return to room, no toast needed
       return;
     }
     
