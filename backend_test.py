@@ -4788,10 +4788,16 @@ class SolanaCasinoAPITester:
             return False
 
     def run_all_tests(self):
-        """Run all API tests - Updated for Solana Integration and 3-Player System"""
+        """Run all API tests - Updated for Join-Room 500 Error Fix Testing"""
         print("🚀 Starting Solana Casino Backend API Tests...")
         print(f"🌐 Testing against: {self.base_url}")
         print("=" * 60)
+        
+        # PRIORITY: Test the join-room 500 error fix FIRST
+        print("\n🎯 PRIORITY TESTS: Join-Room 500 Error Fix")
+        print("=" * 50)
+        self.test_room_settings_gift_type_fix()
+        self.test_join_room_gift_availability()
         
         # Basic connectivity
         if not self.test_api_root():
