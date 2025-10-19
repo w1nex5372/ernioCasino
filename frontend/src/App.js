@@ -3613,8 +3613,8 @@ function App() {
                                 }}
                                 disabled={isDisabled || (userActiveRooms[roomType] && userActiveRooms[roomType].city !== userCity) || (!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType])))}
                                 className={`w-full h-9 text-white font-semibold text-sm ${
-                                  (userActiveRooms[roomType] && userActiveRooms[roomType].city === userCity) ? 'bg-blue-600 hover:bg-blue-700' :
-                                  (userActiveRooms[roomType] && userActiveRooms[roomType].city !== userCity) ? 'bg-red-600 cursor-not-allowed' :
+                                  userActiveRooms[roomType] && userActiveRooms[roomType].city && userActiveRooms[roomType].city !== userCity ? 'bg-red-600 cursor-not-allowed' :
+                                  userActiveRooms[roomType] && (!userActiveRooms[roomType].city || userActiveRooms[roomType].city === userCity) ? 'bg-blue-600 hover:bg-blue-700' :
                                   (isDisabled || room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))
                                     ? 'bg-slate-600 cursor-not-allowed' 
                                     : 'bg-green-600 hover:bg-green-700'
