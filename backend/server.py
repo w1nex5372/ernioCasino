@@ -2518,8 +2518,12 @@ async def get_leaderboard():
     return {"leaderboard": leaderboard}
 
 @api_router.get("/game-history")
-async def get_game_history(limit: int = 20):
-    """Get recent completed games"""
+async def get_game_history(limit: int = 5):
+    """Get recent completed games (max 5)"""
+    # Enforce maximum of 5 games
+    if limit > 5:
+        limit = 5
+    
     games = await db.completed_games.find(
         {}, {"_id": 0}
     ).sort("finished_at", -1).limit(limit).to_list(limit)
