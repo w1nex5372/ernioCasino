@@ -1795,13 +1795,19 @@ function App() {
       
       if (response.data.success) {
         setUserCity(city);
-        console.log('🔍 Before setUser in handleCitySelect:', {
-          originalUser: user,
-          hasTelegramId: !!user?.telegram_id,
-          telegramId: user?.telegram_id
-        });
-        setUser({...user, city: city});
-        console.log('🔍 After setUser in handleCitySelect - new user:', {...user, city: city});
+        // Preserve all user fields including telegram_id when updating city
+        const updatedUser = {
+          ...user,
+          city: city,
+          telegram_id: user.telegram_id, // Explicitly preserve telegram_id
+          id: user.id, // Explicitly preserve id
+          first_name: user.first_name,
+          last_name: user.last_name,
+          telegram_username: user.telegram_username,
+          token_balance: user.token_balance
+        };
+        console.log('🔍 Setting user with city:', updatedUser);
+        setUser(updatedUser);
         setShowCitySelector(false);
         setGiftsAvailable(response.data.can_play);
         
