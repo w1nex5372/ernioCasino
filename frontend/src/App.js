@@ -2067,6 +2067,10 @@ function App() {
         toast.success(`${uploadGiftCount} gift${uploadGiftCount > 1 ? 's' : ''} uploaded successfully!`);
         toast.info(`Credits used: ${response.data.credits_used}, Remaining: ${response.data.remaining_credits}`);
         
+        // Update gift credits
+        const creditsResponse = await axios.get(`${API}/users/${user.id}/gift-credits`);
+        setGiftCredits(creditsResponse.data);
+        
         // Reset form
         setCurrentGiftMedia([]);
         setGiftCoordinates('');
