@@ -3410,6 +3410,17 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
                     }
                 }
             )
+            
+            # Also update user's credit balance
+            await db.users.update_one(
+                {"id": request.user_id},
+                {
+                    "$inc": {
+                        "used_credits": total_credits_needed,
+                        "remaining_credits": -total_credits_needed
+                    }
+                }
+            )
         
         logging.info(f"{len(request.gifts)} places uploaded by {user.get('first_name')} - {request.gift_count_per_upload} gifts per place to {folder_name}, used {total_credits_needed} credits")
         
