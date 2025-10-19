@@ -2202,27 +2202,27 @@ function App() {
     if (!user || !user.id) return;
     
     try {
-      // Check all room types to see which ones user is in
-      const roomTypes = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'elite'];
-      const newActiveRooms = {};
-      
       // Get current room status
       const response = await axios.get(`${API}/user-room-status/${user.id}`);
       
       console.log('🔍 API Response for user rooms:', response.data);
       
-      if (response.data.in_room) {
-        const roomCity = response.data.city || userCity;
-        const roomType = response.data.room_type.toLowerCase(); // Ensure lowercase
-        
-        newActiveRooms[roomType] = {
-          roomId: response.data.room_id,
-          city: roomCity
-        };
+      const newActiveRooms = {};
+      
+      if (response.data.in_room && response.data.rooms) {
+        // Loop through all rooms user is in
+        response.data.rooms.forEach(room => {
+          const roomType = room.room_type.toLowerCase(); // Ensure lowercase
+          const roomCity = room.city || userCity;
+          
+          newActiveRooms[roomType] = {
+            roomId: room.room_id,
+            city: roomCity
+          };
+        });
         
         console.log('✅ User active rooms loaded:', {
-          roomType: roomType,
-          roomCity: roomCity,
+          totalRooms: response.data.total_rooms,
           currentCity: userCity,
           fullState: newActiveRooms
         });
