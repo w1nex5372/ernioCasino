@@ -75,7 +75,7 @@ const ROOM_CONFIGS = {
   },
   platinum: { 
     name: 'Platinum Room', 
-    icon: '💎', 
+    icon: '💠', 
     min: 1200, 
     max: 2400,
     gradient: 'from-purple-400 to-purple-600',
@@ -84,7 +84,7 @@ const ROOM_CONFIGS = {
   },
   diamond: { 
     name: 'Diamond Room', 
-    icon: '💠', 
+    icon: '💎', 
     min: 2400, 
     max: 4800,
     gradient: 'from-blue-400 to-blue-600',
