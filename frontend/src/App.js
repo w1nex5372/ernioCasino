@@ -400,6 +400,19 @@ function App() {
     console.log('🏆 winnerData:', winnerData);
   }, [showWinnerScreen, winnerData]);
 
+
+  // Debug user state changes - especially telegram_id
+  useEffect(() => {
+    console.log('👤 USER STATE CHANGED:', {
+      hasTelegram_id: !!user?.telegram_id,
+      telegram_id: user?.telegram_id,
+      isAdmin: user?.telegram_id === 1793011013,
+      hasCity: !!user?.city,
+      city: user?.city,
+      allKeys: user ? Object.keys(user) : []
+    });
+  }, [user]);
+
   // Debug game in progress state
   useEffect(() => {
     console.log('🎮 gameInProgress changed:', gameInProgress);
