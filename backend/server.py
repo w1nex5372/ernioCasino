@@ -1414,6 +1414,9 @@ async def start_game_round(room: GameRoom):
             game_doc['winner']['joined_at'] = game_doc['winner']['joined_at'].isoformat()
         
         await db.completed_games.insert_one(game_doc)
+        
+        # Cleanup old game history (keep only 5 most recent)
+        await cleanup_old_game_history()
     except Exception as e:
         logging.error(f"Failed to save completed game: {e}")
     
