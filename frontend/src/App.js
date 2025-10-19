@@ -1251,8 +1251,8 @@ function App() {
           
           // CRITICAL: Check city and set states synchronously
           if (!response.data.city) {
-            console.log('⚠️ User has no city - showing city selector');
-            setShowCitySelector(true);
+            console.log('⚠️ User has no city - early return will show city selector');
+            // Don't set showCitySelector here - early return handles it
             // Don't show welcome toast yet
           } else {
             setUserCity(response.data.city);
