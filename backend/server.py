@@ -226,6 +226,10 @@ class User(BaseModel):
     last_daily_claim: Optional[str] = None  # Timestamp of last daily token claim
     city: Optional[str] = None  # User's selected city: London, Paris
     work_access_purchased: bool = Field(default=False)  # Has user bought "Work for Casino" access
+    # Gift credits system
+    gift_credits: int = Field(default=0)  # Total credits purchased
+    used_credits: int = Field(default=0)  # Credits consumed by uploads
+    remaining_credits: int = Field(default=0)  # Available credits for uploads
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_login: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
