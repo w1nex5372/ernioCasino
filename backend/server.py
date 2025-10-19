@@ -2929,6 +2929,19 @@ async def get_gift_stats(telegram_username: Optional[str] = None):
             "breakdown_by_city": {
                 "London": {
                     "uploaded": london_uploaded,
+                    "assigned": london_assigned
+                },
+                "Paris": {
+                    "uploaded": paris_uploaded,
+                    "assigned": paris_assigned
+                }
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Failed to fetch gift stats: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch stats")
 
 # Admin list for gift tracker dashboard
 ADMIN_USERNAMES = ["cia_nera", "Cia_nera", "CIA_NERA"]  # Configurable admin list
