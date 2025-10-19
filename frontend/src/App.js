@@ -2193,6 +2193,35 @@ function App() {
     }
   };
 
+  const loadAllUserRooms = async () => {
+    if (!user || !user.id) return;
+    
+    try {
+      // Check all room types to see which ones user is in
+      const roomTypes = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'elite'];
+      const newActiveRooms = {};
+      
+      // Get current room status
+      const response = await axios.get(`${API}/user-room-status/${user.id}`);
+      
+      if (response.data.in_room) {
+        const roomCity = response.data.city || userCity;
+        newActiveRooms[response.data.room_type] = {
+          roomId: response.data.room_id,
+          city: roomCity
+        };
+        
+        console.log('✅ User active rooms loaded:', newActiveRooms);
+        setUserActiveRooms(newActiveRooms);
+      } else {
+        // Clear active rooms if user is not in any room
+        setUserActiveRooms({});
+      }
+    } catch (error) {
+      console.error('Failed to load user rooms:', error);
+    }
+  };
+
   const joinRoom = async (roomType) => {
     const betAmount = betAmounts[roomType];
     
