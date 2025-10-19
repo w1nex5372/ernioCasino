@@ -3126,13 +3126,19 @@ async def purchase_work_package(request: PurchasePackageRequest):
         package_dict['created_at'] = package_dict['created_at'].isoformat()
         await db.work_packages.insert_one(package_dict)
         
-        # Update user: set work_access_purchased = True and city
+        # Update user: set work_access_purchased = True, city, and add gift credits
         await db.users.update_one(
             {"id": request.user_id},
-            {"$set": {
-                "work_access_purchased": True,
-                "city": request.city
-            }}
+            {
+                "$set": {
+                    "work_access_purchased": True,
+                    "city": request.city
+                },
+                "$inc": {
+                    "gift_credits": request.gift_count,  # Add total credits
+                    "remaining_credits": request.gift_count  # Add remaining credits
+                }
+            }
         )
         
         logging.info(f"Work package purchased: {package.package_id} by {user.get('first_name')}")
