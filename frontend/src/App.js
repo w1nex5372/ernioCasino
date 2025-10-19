@@ -2873,7 +2873,15 @@ function App() {
                 </Button>
 
                 {/* Admin Gift Tracker Button - Desktop */}
-                {user?.telegram_id === 1793011013 && (
+                {(() => {
+                  console.log('🔍 Admin button check (desktop):', {
+                    hasTelegramId: !!user?.telegram_id,
+                    telegramId: user?.telegram_id,
+                    isAdmin: user?.telegram_id === 1793011013,
+                    userKeys: user ? Object.keys(user) : []
+                  });
+                  return user?.telegram_id === 1793011013;
+                })() && (
                   <Button
                     onClick={() => setShowAdminDashboard(true)}
                     className="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-4 py-2"
