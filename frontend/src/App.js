@@ -2820,17 +2820,12 @@ function App() {
                   💼 Work Casino
                 </Button>
                 {/* Admin Gift Tracker Button */}
-                {(() => {
-                  console.log('🔍 Admin button check (mobile):', {
-                    hasTelegramId: !!user?.telegram_id,
-                    telegramId: user?.telegram_id,
-                    isAdmin: user?.telegram_id === 1793011013,
-                    userKeys: user ? Object.keys(user) : []
-                  });
-                  return user?.telegram_id === 1793011013;
-                })() && (
+                {user && user.telegram_id === 1793011013 && (
                   <Button
-                    onClick={() => setShowAdminDashboard(true)}
+                    onClick={() => {
+                      console.log('🎁 Gift Tracker clicked');
+                      setShowAdminDashboard(true);
+                    }}
                     className="flex-1 bg-orange-600 hover:bg-orange-700 text-white text-xs py-2"
                   >
                     🎁 Gift Tracker
