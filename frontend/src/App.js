@@ -2181,9 +2181,10 @@ function App() {
       if (response.data.in_room) {
         // Get the city for this room from the room data
         const roomCity = response.data.city || userCity;
+        const roomType = response.data.room_type.toLowerCase(); // Ensure lowercase
         setUserActiveRooms(prev => ({
           ...prev,
-          [response.data.room_type]: {
+          [roomType]: {
             roomId: response.data.room_id,
             city: roomCity
           }
