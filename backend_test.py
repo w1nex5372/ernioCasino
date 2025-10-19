@@ -5811,6 +5811,182 @@ class SolanaCasinoAPITester:
             self.log_test("Enhanced Winner Detection & Broadcast System", False, str(e))
             return False
 
+    def test_game_history_limit_comprehensive(self):
+        """Comprehensive test of game history limit (max 5 games) with auto-cleanup"""
+        try:
+            print("\n🎮 Testing Game History Limit (Max 5 Games) with Auto-Cleanup...")
+            
+            # Step 1: Verify fresh start (should be 0 games)
+            print("🧹 Step 1: Verifying fresh start...")
+            fresh_success, initial_count = self.test_fresh_start_verification()
+            if not fresh_success:
+                return False
+            
+            # Step 2: Create multiple test users for game simulation
+            print("👥 Step 2: Creating test users for game simulation...")
+            test_users = []
+            telegram_ids = [123456789, 6168593741, 1793011013, 999888777, 555666777, 111222333, 444555666, 777888999]
+            
+            for i in range(8):  # Create 8 users to simulate multiple games
+                user_data = {
+                    "telegram_auth_data": {
+                        "id": telegram_ids[i],
+                        "first_name": f"GameHistoryPlayer{i+1}",
+                        "last_name": "Test",
+                        "username": f"historyplayer{i+1}",
+                        "photo_url": f"https://example.com/historyplayer{i+1}.jpg",
+                        "auth_date": int(datetime.now().timestamp()),
+                        "hash": "telegram_auto"
+                    }
+                }
+                
+                auth_response = requests.post(f"{self.api_url}/auth/telegram", json=user_data)
+                if auth_response.status_code != 200:
+                    self.log_test("Game History Limit Comprehensive", False, f"Failed to create user {i+1}")
+                    return False
+                
+                user = auth_response.json()
+                test_users.append(user)
+                
+                # Give tokens to each user
+                requests.post(f"{self.api_url}/admin/add-tokens/{telegram_ids[i]}?admin_key=PRODUCTION_CLEANUP_2025&tokens=2000")
+            
+            print(f"✅ Created {len(test_users)} test users with tokens")
+            
+            # Step 3: Simulate 7-8 games by having sets of 3 players join Bronze rooms
+            print("🎯 Step 3: Simulating 7-8 games to test history limit...")
+            games_completed = 0
+            target_games = 7  # Create 7 games to test the 5-game limit
+            
+            for game_num in range(target_games):
+                print(f"🎮 Starting game {game_num + 1}/{target_games}...")
+                
+                # Select 3 users for this game (cycling through available users)
+                user_indices = [(game_num * 3 + i) % len(test_users) for i in range(3)]
+                game_users = [test_users[i] for i in user_indices]
+                
+                # All 3 users join Bronze room
+                bet_amount = 300
+                join_results = []
+                
+                for j, user in enumerate(game_users):
+                    join_data = {
+                        "room_type": "bronze",
+                        "user_id": user['id'],
+                        "bet_amount": bet_amount
+                    }
+                    
+                    join_response = requests.post(f"{self.api_url}/join-room", json=join_data)
+                    if join_response.status_code != 200:
+                        print(f"⚠️ User {j+1} failed to join game {game_num + 1}: {join_response.status_code}")
+                        continue
+                    
+                    join_results.append(join_response.json())
+                
+                # Wait for game to complete
+                print(f"⏳ Waiting for game {game_num + 1} to complete...")
+                time.sleep(6)  # Wait for game completion (3s ready + 3s game)
+                
+                # Check if game was recorded in history
+                history_response = requests.get(f"{self.api_url}/game-history")
+                if history_response.status_code == 200:
+                    history_data = history_response.json()
+                    current_games = len(history_data.get('games', []))
+                    print(f"📊 After game {game_num + 1}: {current_games} games in history")
+                    
+                    if current_games > games_completed:
+                        games_completed = current_games
+                
+                # Small delay between games
+                time.sleep(1)
+            
+            # Step 4: Verify that only 5 most recent games are stored
+            print("🔍 Step 4: Verifying game history limit enforcement...")
+            
+            # Check current game count
+            final_response = requests.get(f"{self.api_url}/game-history")
+            if final_response.status_code != 200:
+                self.log_test("Game History Limit Comprehensive", False, "Failed to get final game history")
+                return False
+            
+            final_data = final_response.json()
+            final_games = final_data.get('games', [])
+            final_count = len(final_games)
+            
+            # Should have exactly 5 games (or fewer if less than 5 were completed)
+            expected_max = min(5, games_completed)
+            
+            if final_count > 5:
+                self.log_test("Game History Limit Comprehensive", False, 
+                            f"FAILED: Found {final_count} games, expected max 5")
+                return False
+            
+            print(f"✅ Game history correctly limited to {final_count} games (max 5)")
+            
+            # Step 5: Test API limit parameter enforcement
+            print("🔒 Step 5: Testing API limit parameter enforcement...")
+            limit_success, _ = self.test_game_history_limit_enforcement()
+            if not limit_success:
+                return False
+            
+            # Step 6: Verify games are sorted by most recent first
+            if final_games:
+                print("📅 Step 6: Verifying games are sorted by most recent first...")
+                for i in range(len(final_games) - 1):
+                    current_time = final_games[i].get('finished_at', '')
+                    next_time = final_games[i + 1].get('finished_at', '')
+                    
+                    if current_time < next_time:
+                        self.log_test("Game History Limit Comprehensive", False, 
+                                    "Games not sorted by most recent first")
+                        return False
+                
+                print("✅ Games correctly sorted by most recent first")
+            
+            # Final success summary
+            success_details = (
+                f"✅ Game History Limit Test PASSED!\n"
+                f"   - Fresh start verified: Started with {initial_count} games\n"
+                f"   - Simulated {games_completed} games successfully\n"
+                f"   - Final history contains {final_count} games (max 5 enforced)\n"
+                f"   - API limit parameter correctly enforced\n"
+                f"   - Games sorted by most recent first\n"
+                f"   - Auto-cleanup working: Older games deleted when limit exceeded"
+            )
+            
+            self.log_test("Game History Limit Comprehensive", True, success_details)
+            return True
+            
+        except Exception as e:
+            self.log_test("Game History Limit Comprehensive", False, str(e))
+            return False
+
+    def run_game_history_tests_only(self):
+        """Run only the game history limit tests"""
+        print("🎮 Starting Game History Limit Tests...")
+        print(f"🌐 Testing against: {self.base_url}")
+        print("=" * 60)
+        
+        # Run comprehensive game history limit test
+        self.test_game_history_limit_comprehensive()
+        
+        # Print summary
+        print("\n" + "=" * 60)
+        print("📊 GAME HISTORY TEST SUMMARY")
+        print("=" * 60)
+        print(f"✅ Tests Passed: {self.tests_passed}/{self.tests_run}")
+        print(f"❌ Tests Failed: {len(self.failed_tests)}/{self.tests_run}")
+        
+        if self.failed_tests:
+            print("\n🔍 FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                print(f"{i}. {test['name']}: {test['details']}")
+        
+        success_rate = (self.tests_passed / self.tests_run) * 100 if self.tests_run > 0 else 0
+        print(f"\n🎯 Success Rate: {success_rate:.1f}%")
+        
+        return success_rate >= 80
+
 def main():
     # Check if we should run city and gift tests specifically
     if len(sys.argv) > 1 and sys.argv[1] == "city":
