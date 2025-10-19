@@ -388,11 +388,12 @@ function App() {
   }, []);
 
   // Check if user has selected a city
-  useEffect(() => {
-    if (user && user.id && !user.city) {
-      setShowCitySelector(true);
-    }
-  }, [user]);
+  // City selector is now handled in early return above
+  // useEffect(() => {
+  //   if (user && user.id && !user.city) {
+  //     setShowCitySelector(true);
+  //   }
+  // }, [user]);
 
   // Debug winner screen state
   useEffect(() => {
