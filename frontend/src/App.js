@@ -1310,7 +1310,8 @@ function App() {
                 
                 // Check city after setting user
                 if (!response.data.city) {
-                  setShowCitySelector(true);
+                  // Early return will handle showing city selector
+                  console.log('⚠️ User has no city - early return will handle it');
                 } else {
                   setUserCity(response.data.city);
                   toast.success(`Welcome back, ${response.data.first_name}!`);
