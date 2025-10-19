@@ -325,6 +325,7 @@ function App() {
   const [showPackageViewer, setShowPackageViewer] = useState(false);
   const [workSystemReady, setWorkSystemReady] = useState(false); // Is work system ready (any gifts uploaded)?
   const [giftCredits, setGiftCredits] = useState({ gift_credits: 0, used_credits: 0, remaining_credits: 0 }); // User's gift credit balance
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false); // Show admin gift tracker
   const [packageAvailability, setPackageAvailability] = useState({
     "10": { available: false, cities: { "London": 0, "Paris": 0 } },
     "20": { available: false, cities: { "London": 0, "Paris": 0 } },
