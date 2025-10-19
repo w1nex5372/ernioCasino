@@ -4000,7 +4000,7 @@ function App() {
                                 <span className="text-lg">{ROOM_CONFIGS[game.room_type]?.icon}</span>
                                 <span className="font-medium text-white capitalize">{game.room_type} Room</span>
                               </div>
-                              <Badge className={isUserWinner ? 'bg-gold-500 text-slate-900' : 'bg-slate-500 text-white'}>
+                              <Badge className={isUserWinner ? 'bg-gradient-to-r from-yellow-400 to-gold-500 text-slate-900 font-bold border border-gold-600' : 'bg-slate-600 text-white border border-slate-500'}>
                                 {isUserWinner ? '🏆 Won' : 'Lost'}
                               </Badge>
                             </div>
