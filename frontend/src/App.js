@@ -4368,6 +4368,32 @@ function App() {
                     </div>
                   </div>
 
+                  {/* Gift Credits Display */}
+                  {user.telegram_id !== 1793011013 && (
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-blue-400 text-lg">🎫</span>
+                          <div>
+                            <p className="text-blue-400 text-sm font-semibold">Gift Credits</p>
+                            <p className="text-slate-300 text-xs">
+                              You have <span className="font-bold text-green-400">{giftCredits.remaining_credits}</span> credit{giftCredits.remaining_credits !== 1 ? 's' : ''} left
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-slate-400">Total: {giftCredits.gift_credits}</p>
+                          <p className="text-xs text-slate-400">Used: {giftCredits.used_credits}</p>
+                        </div>
+                      </div>
+                      {giftCredits.remaining_credits === 0 && (
+                        <p className="text-red-400 text-xs mt-2">
+                          ❌ No credits remaining. Purchase another package to upload more gifts.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Gift Count Selector */}
                   <div className="space-y-2">
                     <label className="text-white font-semibold">How many gifts to upload?</label>
