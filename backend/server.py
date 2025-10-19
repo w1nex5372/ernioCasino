@@ -2205,11 +2205,11 @@ async def purchase_tokens(purchase: TokenPurchase):
     return {"success": True, "tokens_added": purchase.token_amount}
 
 @api_router.post("/users/set-city")
-async def set_user_city(request: dict):
+async def set_user_city(request: SetCityRequest):
     """Set user's city selection"""
     try:
-        user_id = request.get('user_id')
-        city = request.get('city')
+        user_id = request.user_id
+        city = request.city
         
         if not user_id or not city:
             raise HTTPException(status_code=400, detail="Missing user_id or city")
