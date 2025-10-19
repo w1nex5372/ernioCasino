@@ -2270,17 +2270,20 @@ async def get_active_rooms():
 
 @api_router.get("/user-room-status/{user_id}")
 async def get_user_room_status(user_id: str):
-    """Check if user is currently in any active room"""
+    """Check if user is currently in any active rooms (can be multiple)"""
     try:
         # Get user's city from database
         user_doc = await db.users.find_one({"id": user_id})
         user_city = user_doc.get('city', 'London') if user_doc else 'London'
         
+        # Collect ALL rooms user is in
+        user_rooms = []
+        
         # Check all active rooms for this user
         for room in active_rooms.values():
             for player in room.players:
                 if player.user_id == user_id:
-                    # User is in this room
+                    # User is in this room - add to list
                     serialized_players = []
                     for p in room.players:
                         player_dict = p.dict()
@@ -2288,8 +2291,7 @@ async def get_user_room_status(user_id: str):
                             player_dict['joined_at'] = player_dict['joined_at'].isoformat()
                         serialized_players.append(player_dict)
                     
-                    return {
-                        "in_room": True,
+                    user_rooms.append({
                         "room_id": room.id,
                         "room_type": room.room_type,
                         "city": user_city,  # City where user joined this room
@@ -2298,13 +2300,23 @@ async def get_user_room_status(user_id: str):
                         "players_count": len(room.players),
                         "prize_pool": room.prize_pool,
                         "position": next((i+1 for i, p in enumerate(room.players) if p.user_id == user_id), 0)
-                    }
+                    })
+                    break  # Found user in this room, move to next room
         
-        # User is not in any room
-        return {
-            "in_room": False,
-            "room_id": None
-        }
+        # Return all rooms user is in
+        if len(user_rooms) > 0:
+            return {
+                "in_room": True,
+                "rooms": user_rooms,  # Array of all rooms
+                "total_rooms": len(user_rooms)
+            }
+        else:
+            # User is not in any room
+            return {
+                "in_room": False,
+                "rooms": [],
+                "total_rooms": 0
+            }
     except Exception as e:
         logging.error(f"Error checking user room status: {e}")
         raise HTTPException(status_code=500, detail="Failed to check room status")
