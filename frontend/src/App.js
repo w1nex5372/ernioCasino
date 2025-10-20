@@ -2794,8 +2794,16 @@ function App() {
 
   // CRITICAL: Show city selector BEFORE main app if user has no city
   // This ensures proper flow: auth -> city -> rooms (not auth -> rooms -> city)
-  if (user && !user.city && !userCity) {
+  // SPECIAL: Admin always goes through city selection for clean testing
+  const needsCitySelection = user && (!user.city || !userCity || user.telegram_id === 1793011013);
+  
+  if (needsCitySelection && user.telegram_id === 1793011013) {
+    console.log('🌍 Early return: Admin always sees city selector (forced)', { user_city: user.city, userCity });
+  } else if (needsCitySelection) {
     console.log('🌍 Early return: Showing city selector', { user_city: user.city, userCity });
+  }
+  
+  if (needsCitySelection) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-slate-800 border-slate-700">
