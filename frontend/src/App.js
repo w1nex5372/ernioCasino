@@ -2796,6 +2796,14 @@ function App() {
   // CRITICAL: Show city selector BEFORE main app if user has no city
   // This ensures proper flow: auth -> city -> rooms (not auth -> rooms -> city)
   // Check both user.city AND userCity - user needs city selector if BOTH are missing
+  console.log('🔍 City selector check:', {
+    hasUser: !!user,
+    user_city: user?.city,
+    userCity: userCity,
+    shouldShowSelector: user && !user.city && !userCity,
+    telegram_id: user?.telegram_id
+  });
+  
   if (user && !user.city && !userCity) {
     console.log('🌍 Early return: Showing city selector', { user_city: user.city, userCity });
     return (
