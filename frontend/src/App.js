@@ -1111,12 +1111,13 @@ function App() {
         }
         
         // CRITICAL: For admin, always force fresh authentication to prevent stale data
-        if (userData.telegram_id === 1793011013) {
-          console.warn('👑 Admin detected in cache - forcing fresh authentication for data integrity');
-          localStorage.removeItem('casino_user');
-          authenticateFromTelegram();
-          return;
-        }
+        // DISABLED: This prevents admin from staying logged in
+        // if (userData.telegram_id === 1793011013) {
+        //   console.warn('👑 Admin detected in cache - forcing fresh authentication for data integrity');
+        //   localStorage.removeItem('casino_user');
+        //   authenticateFromTelegram();
+        //   return;
+        // }
         
         // Set cached user first for instant UI
         setUser(userData);
