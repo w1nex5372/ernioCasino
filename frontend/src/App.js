@@ -1460,8 +1460,14 @@ function App() {
         telegram_id: userData?.telegram_id,
         keys: userData ? Object.keys(userData) : []
       });
-      localStorage.setItem('casino_user', JSON.stringify(userData));
-      console.log('✅ User session saved to localStorage');
+      
+      // CRITICAL: Remove city before saving to localStorage
+      // City is session-only, should never be persisted
+      const userToSave = {...userData};
+      delete userToSave.city;
+      
+      localStorage.setItem('casino_user', JSON.stringify(userToSave));
+      console.log('✅ User session saved to localStorage (city removed)');
     } catch (e) {
       console.error('❌ Failed to save user session:', e);
     }
