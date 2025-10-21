@@ -1493,13 +1493,32 @@ async def start_game_round(room: GameRoom):
     logging.info(f"✅ Game cycle complete for {room.room_type} room")
 
 # Initialize rooms
-def initialize_rooms():
-    """Create initial rooms for each type"""
-    # Create rooms for all 6 types
+async def initialize_rooms_with_gifts():
+    """Create initial rooms only for types that have available gifts"""
+    folder_map = {
+        'bronze': '1gift',
+        'silver': '2gifts',
+        'gold': '5gifts',
+        'platinum': '10gifts',
+        'diamond': '20gifts',
+        'elite': '50gifts'
+    }
+    
     room_types = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'elite']
     for room_type in room_types:
-        room = GameRoom(room_type=room_type)
-        active_rooms[room.id] = room
+        gift_type = folder_map[room_type]
+        # Check if gifts are available for this room type
+        available_gifts = await db.gifts.count_documents({
+            "status": "available",
+            "gift_type": gift_type
+        })
+        
+        if available_gifts > 0:
+            room = GameRoom(room_type=room_type)
+            active_rooms[room.id] = room
+            logging.info(f"✅ Created {room_type} room - {available_gifts} {gift_type} gifts available")
+        else:
+            logging.info(f"⏭️ Skipped {room_type} room - no {gift_type} gifts available")
 
 # API Routes
 @api_router.get("/")
