@@ -4251,8 +4251,13 @@ function App() {
       />
 
       {/* City Selector Modal - For changing city */}
-      {showCitySelector && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+      {console.log('🔍 About to render modal, showCitySelector =', showCitySelector)}
+      {showCitySelector ? (
+        <div 
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+          style={{ display: 'flex' }}
+        >
+          {console.log('✅ Modal DIV is rendering')}
           <Card className="w-full max-w-md bg-slate-800 border-slate-700">
             <CardHeader>
               <CardTitle className="text-2xl text-center text-yellow-400">🌍 Change Your City</CardTitle>
