@@ -1334,11 +1334,10 @@ function App() {
                 // Always show welcome without city
                 toast.success(`Welcome back, ${response.data.first_name}!`);
                   
-                  setTimeout(() => {
-                    loadUserPrizes();
-                    loadDerivedWallet();
-                  }, 1000);
-                }
+                setTimeout(() => {
+                  loadUserPrizes();
+                  loadDerivedWallet();
+                }, 1000);
                 
                 return;
               }
