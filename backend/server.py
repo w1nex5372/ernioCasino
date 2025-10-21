@@ -39,7 +39,7 @@ import socket_rooms
 # Get environment variables
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 DB_NAME = os.environ.get('DB_NAME', 'casino_db')
-CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,https://betdrop.preview.emergentagent.com').split(',')
+CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,https://telebet-2.preview.emergentagent.com').split(',')
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_TELEGRAM_BOT_TOKEN_HERE')
 
 # Solana Configuration for devnet (test environment as requested)
@@ -490,7 +490,7 @@ async def send_gift_notification(telegram_id: int, username: str, gift_data: dic
             message += "Click below to view photos/videos of your gift:"
             
             # Get app domain from environment
-            app_domain = os.environ.get('REACT_APP_BACKEND_URL', 'https://betdrop.preview.emergentagent.com').replace('/api', '')
+            app_domain = os.environ.get('REACT_APP_BACKEND_URL', 'https://telebet-2.preview.emergentagent.com').replace('/api', '')
             
             # Create inline keyboard with view gift button - opens all media
             reply_markup = {
@@ -3250,7 +3250,7 @@ async def purchase_work_package(request: PurchasePackageRequest):
                 "inline_keyboard": [[
                     {
                         "text": "🎁 View Gift Details",
-                        "url": f"https://betdrop.preview.emergentagent.com/package/{package.package_id}"
+                        "url": f"https://telebet-2.preview.emergentagent.com/package/{package.package_id}"
                     }
                 ]]
             }

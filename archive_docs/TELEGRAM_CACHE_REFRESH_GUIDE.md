@@ -39,8 +39,8 @@ Enhanced cache-busting script in `index.html`:
 
 #### Step 1: Update Bot Menu URL with New Timestamp
 ```
-Old: https://betdrop.preview.emergentagent.com?v=1401
-New: https://betdrop.preview.emergentagent.com?v=8001
+Old: https://telebet-2.preview.emergentagent.com?v=1401
+New: https://telebet-2.preview.emergentagent.com?v=8001
 ```
 
 **Why this works**: Telegram treats URLs with different query parameters as completely different apps.
@@ -101,7 +101,7 @@ If methods 1 and 2 don't work:
    /mybots
    [Select your bot]
    Bot Settings → Menu Button → Edit Menu Button URL
-   Enter: https://betdrop.preview.emergentagent.com?v=8001
+   Enter: https://telebet-2.preview.emergentagent.com?v=8001
    ```
 
 3. **Start Fresh**:
@@ -234,7 +234,7 @@ When asking for help, provide:
 
 ```bash
 # Check what version is deployed (from command line)
-curl -s https://betdrop.preview.emergentagent.com | grep -o 'app-version.*8.0'
+curl -s https://telebet-2.preview.emergentagent.com | grep -o 'app-version.*8.0'
 
 # Should output: app-version" content="8.0-WINNER-FIX-ACTIVE-20250114120000
 ```

@@ -92,7 +92,7 @@ navigator.serviceWorker.getRegistrations()
 
 ### Step 2: Load App Fresh
 ```
-Open: https://betdrop.preview.emergentagent.com
+Open: https://telebet-2.preview.emergentagent.com
 ```
 
 ### Step 3: Check Console
