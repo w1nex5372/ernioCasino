@@ -2909,16 +2909,13 @@ function App() {
                       <div className="flex items-center gap-1">
                         <span className="text-xs text-yellow-400">{userCity} 🏙️</span>
                         <Button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            console.log('🔘 Change City button clicked, current showCitySelector:', showCitySelector);
-                            setShowCitySelector(prev => {
-                              console.log('🔘 Setting showCitySelector from', prev, 'to true');
-                              return true;
-                            });
+                          onClick={() => {
+                            console.log('🔘 CHANGE BUTTON CLICKED');
+                            setShowCitySelector(true);
+                            console.log('🔘 showCitySelector NOW:', true);
                           }}
                           variant="link"
+                          size="sm"
                           className="text-xs text-blue-400 hover:text-blue-300 underline p-0 h-auto"
                         >
                           Change
