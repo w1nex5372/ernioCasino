@@ -4250,8 +4250,12 @@ function App() {
       {/* City Selector Modal */}
       {/* City Selector Modal - Unified */}
       {/* City Selector Modal - For changing city only (not initial selection) */}
-      {showCitySelector && (
+      {(() => {
+        console.log('🔍 Modal render check:', { showCitySelector });
+        return showCitySelector;
+      })() && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+          {console.log('✅ Modal IS rendering')}
           <Card className="w-full max-w-md bg-slate-800 border-slate-700">
             <CardHeader>
               <CardTitle className="text-2xl text-center text-yellow-400">🌍 Change Your City</CardTitle>
