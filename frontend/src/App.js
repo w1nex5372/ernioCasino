@@ -2983,11 +2983,6 @@ function App() {
                     >
                       Change City
                     </button>
-                      size="sm"
-                      className="text-xs"
-                    >
-                      Change
-                    </Button>
                   </div>
                 )}
 
