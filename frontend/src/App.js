@@ -2398,7 +2398,8 @@ function App() {
       const response = await axios.post(`${API}/join-room`, {
         room_type: roomType,
         user_id: user.id,
-        bet_amount: parsedBetAmount
+        bet_amount: parsedBetAmount,
+        city: userCity  // Send user's selected city
       });
       console.log('✅ API Response:', response.data);
 
