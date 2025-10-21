@@ -1446,25 +1446,46 @@ async def start_game_round(room: GameRoom):
     # Wait a moment before cleaning up room to ensure redirect_home is processed
     await asyncio.sleep(0.5)
     
-    # Remove room from active rooms and create new one
+    # Remove room from active rooms
     if room.id in active_rooms:
         del active_rooms[room.id]
     
-    # Create new room of same type
-    new_room = GameRoom(
-        room_type=room.room_type,
-        round_number=room.round_number + 1
-    )
-    active_rooms[new_room.id] = new_room
+    # Check if gifts are still available for this room type
+    folder_map = {
+        'bronze': '1gift',
+        'silver': '2gifts',
+        'gold': '5gifts',
+        'platinum': '10gifts',
+        'diamond': '20gifts',
+        'elite': '50gifts'
+    }
+    gift_type = folder_map.get(room.room_type, '1gift')
     
-    logging.info(f"🆕 Created new {room.room_type} room {new_room.id}, round #{new_room.round_number}")
-    
-    # Notify clients about new room (global broadcast)
-    await sio.emit('new_room_available', {
-        'room_id': new_room.id,
-        'room_type': new_room.room_type,
-        'round_number': new_room.round_number
+    # Count available gifts of this type across all cities
+    available_gifts = await db.gifts.count_documents({
+        "status": "available",
+        "gift_type": gift_type
     })
+    
+    if available_gifts > 0:
+        # Create new room only if gifts are available
+        new_room = GameRoom(
+            room_type=room.room_type,
+            round_number=room.round_number + 1
+        )
+        active_rooms[new_room.id] = new_room
+        
+        logging.info(f"🆕 Created new {room.room_type} room {new_room.id}, round #{new_room.round_number} ({available_gifts} gifts available)")
+        
+        # Notify clients about new room (global broadcast)
+        await sio.emit('new_room_available', {
+            'room_id': new_room.id,
+            'room_type': new_room.room_type,
+            'round_number': new_room.round_number
+        })
+    else:
+        logging.info(f"⚠️ No more {gift_type} gifts available - not creating new {room.room_type} room")
+    
     
     # Broadcast updated room states (global broadcast)
     await broadcast_room_updates()
