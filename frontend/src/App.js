@@ -2971,13 +2971,12 @@ function App() {
                       <span className="text-sm text-slate-400">City:</span>
                       <span className="text-sm font-semibold text-yellow-400">{userCity} 🏙️</span>
                     </div>
-                    <Button
-                      onClick={() => {
-                        console.log('🔘 DESKTOP CHANGE BUTTON CLICKED');
-                        setShowCitySelector(true);
-                        console.log('🔘 showCitySelector NOW:', true);
-                      }}
-                      variant="outline"
+                    <button
+                      onClick={() => setShowCitySelector(true)}
+                      className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded"
+                    >
+                      Change City
+                    </button>
                       size="sm"
                       className="text-xs"
                     >
