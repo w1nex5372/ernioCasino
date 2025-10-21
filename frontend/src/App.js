@@ -1312,12 +1312,16 @@ function App() {
                 setIsLoading(false);
                 
                 // Check city after setting user
-                if (!response.data.city) {
-                  // Early return will handle showing city selector
-                  console.log('⚠️ User has no city - early return will handle it');
-                } else {
-                  setUserCity(response.data.city);
-                  toast.success(`Welcome back, ${response.data.first_name}!`);
+                // DON'T set city from backend - city is session-only
+                // if (!response.data.city) {
+                //   console.log('⚠️ User has no city - early return will handle it');
+                // } else {
+                //   setUserCity(response.data.city);
+                //   toast.success(`Welcome back, ${response.data.first_name}!`);
+                // }
+                
+                // Always show welcome without city
+                toast.success(`Welcome back, ${response.data.first_name}!`);
                   
                   setTimeout(() => {
                     loadUserPrizes();
