@@ -3384,9 +3384,16 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
             raise HTTPException(status_code=404, detail="User not found")
         
         # Special handling for REAL @Cia_nera admin only - telegram_id 1793011013
+        # CHECK THIS FIRST before any other validations
         is_cia_nera = user.get('telegram_id') == 1793011013
         
-        if not is_cia_nera:
+        if is_cia_nera:
+            # Admin has unlimited uploads, no restrictions
+            active_package = None
+            remaining_credits = 999999  # Unlimited
+            total_credits_needed = 0
+        else:
+            # Regular user validations
             if not user.get('work_access_purchased'):
                 raise HTTPException(status_code=403, detail="Work access not purchased")
             
@@ -3394,7 +3401,6 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
             remaining_credits = user.get('remaining_credits', 0)
             
             # Calculate credit cost: each gift costs 1 credit
-            # Example: uploading 3 gifts of type "5gifts" = 3 credits (not 15)
             total_credits_needed = len(request.gifts)  # Number of gift uploads
             
             if total_credits_needed > remaining_credits:
@@ -3408,16 +3414,8 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
                 "user_id": request.user_id,
                 "gift_credits_remaining": {"$gt": 0}
             })
-        else:
-            # For cia nera, no package restrictions
-            active_package = None
-            remaining_credits = 999999  # Unlimited
-            credit_cost_per_gift = 0
-            total_credits_needed = 0
         
         # Create gift documents with media array
-        # Each upload is ONE place with X gifts
-        gift_ids = []
         for gift_data in request.gifts:
             # Check for duplicate upload (same coordinates + description in last 5 minutes)
             five_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=5)
