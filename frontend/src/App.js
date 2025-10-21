@@ -2910,9 +2910,8 @@ function App() {
                         <span className="text-xs text-yellow-400">{userCity} 🏙️</span>
                         <Button
                           onClick={() => {
-                            console.log('🔘 CHANGE BUTTON CLICKED');
+                            alert('Change button clicked! Current city: ' + userCity);
                             setShowCitySelector(true);
-                            console.log('🔘 showCitySelector NOW:', true);
                           }}
                           variant="link"
                           size="sm"
