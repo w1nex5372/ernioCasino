@@ -1892,6 +1892,18 @@ function App() {
           first_name: user.first_name,
           telegram_id: user.telegram_id
         });
+        
+        // Fetch admin's gift credits (unlimited)
+        try {
+          const creditsResponse = await axios.get(`${API}/users/${user.id}/gift-credits`);
+          setGiftCredits(creditsResponse.data);
+          console.log('✅ Admin gift credits loaded:', creditsResponse.data);
+        } catch (creditsError) {
+          console.error('Failed to fetch admin gift credits:', creditsError);
+          // Set default unlimited credits for admin
+          setGiftCredits({ gift_credits: 999999, used_credits: 0, remaining_credits: 999999 });
+        }
+        
         setHasWorkAccess(true);
         setWorkFlowStep('menu');
         setUserPackages([]); // Empty packages for admin
