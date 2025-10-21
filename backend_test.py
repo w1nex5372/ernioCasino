@@ -5051,6 +5051,434 @@ class SolanaCasinoAPITester:
             self.log_test("City-Based Room Rejoining Logic - Complete Test", False, str(e))
             return False
 
+    def test_admin_gift_upload_without_access(self):
+        """Test admin user (telegram_id: 1793011013) can upload gifts without work_access_purchased"""
+        try:
+            print("\n🔑 Testing Admin Gift Upload Without Work Access...")
+            
+            # Create admin user with telegram_id 1793011013
+            admin_data = {
+                "telegram_auth_data": {
+                    "id": 1793011013,  # Admin telegram_id from review request
+                    "first_name": "Admin",
+                    "last_name": "User",
+                    "username": "admin_user",
+                    "photo_url": "https://example.com/admin.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            auth_response = requests.post(f"{self.api_url}/auth/telegram", json=admin_data)
+            if auth_response.status_code != 200:
+                self.log_test("Admin Gift Upload Without Access - Admin Creation", False, 
+                            f"Failed to create admin user: {auth_response.status_code}")
+                return False
+            
+            admin_user = auth_response.json()
+            print(f"✅ Created admin user: {admin_user['first_name']} (Telegram ID: {admin_user['telegram_id']})")
+            
+            # Verify admin's work_access_purchased is False (default)
+            user_response = requests.get(f"{self.api_url}/users/{admin_user['id']}")
+            if user_response.status_code != 200:
+                self.log_test("Admin Gift Upload Without Access - Get Admin", False, 
+                            "Failed to get admin user data")
+                return False
+            
+            user_data = user_response.json()
+            work_access = user_data.get('work_access_purchased', False)
+            print(f"📊 Admin work_access_purchased: {work_access}")
+            
+            # Set admin city to London
+            city_data = {"user_id": admin_user['id'], "city": "London"}
+            city_response = requests.post(f"{self.api_url}/users/set-city", json=city_data)
+            if city_response.status_code != 200:
+                self.log_test("Admin Gift Upload Without Access - Set City", False, 
+                            f"Failed to set admin city: {city_response.status_code}")
+                return False
+            
+            # Create test photo data (simple base64 encoded 1x1 pixel PNG)
+            test_photo_base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+            
+            # Try to upload 10 gifts to London (should succeed for admin)
+            upload_data = {
+                "user_id": admin_user['id'],
+                "gifts": [
+                    {
+                        "coordinates": "51.5074, -0.1278 – near the fountain",
+                        "media": [{"type": "photo", "data": test_photo_base64}],
+                        "description": f"Test gift {i+1} by admin"
+                    } for i in range(10)
+                ],
+                "gift_count_per_upload": 10
+            }
+            
+            upload_response = requests.post(f"{self.api_url}/work/upload-gifts", json=upload_data)
+            success = upload_response.status_code == 200
+            
+            if success:
+                result = upload_response.json()
+                uploaded_count = result.get('uploaded_count', 0)
+                credits_used = result.get('credits_used', 0)
+                remaining_credits = result.get('remaining_credits', 0)
+                
+                # Admin should upload successfully with unlimited credits
+                if uploaded_count == 10 and credits_used == 0 and remaining_credits == 999999:
+                    details = f"Admin successfully uploaded {uploaded_count} gifts without work access. Credits used: {credits_used}, Remaining: {remaining_credits}"
+                else:
+                    success = False
+                    details = f"Admin upload succeeded but with wrong credit handling: uploaded={uploaded_count}, used={credits_used}, remaining={remaining_credits}"
+            else:
+                error_response = upload_response.json() if upload_response.headers.get('content-type', '').startswith('application/json') else {"detail": upload_response.text}
+                details = f"Admin upload failed: Status {upload_response.status_code}, Error: {error_response.get('detail', 'Unknown error')}"
+            
+            self.log_test("Admin Gift Upload Without Access", success, details)
+            return success, admin_user if success else None
+            
+        except Exception as e:
+            self.log_test("Admin Gift Upload Without Access", False, str(e))
+            return False, None
+
+    def test_admin_unlimited_credits(self):
+        """Test admin user has unlimited gift credits"""
+        try:
+            print("\n💳 Testing Admin Unlimited Credits...")
+            
+            # Use existing admin user or create new one
+            admin_success, admin_user = self.test_admin_gift_upload_without_access()
+            if not admin_success or not admin_user:
+                self.log_test("Admin Unlimited Credits - Admin Setup", False, "Failed to setup admin user")
+                return False
+            
+            # Test photo data
+            test_photo_base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+            
+            # Upload multiple batches to test unlimited credits
+            total_uploaded = 0
+            for batch in range(3):  # Upload 3 batches of 10 gifts each
+                upload_data = {
+                    "user_id": admin_user['id'],
+                    "gifts": [
+                        {
+                            "coordinates": f"51.{5074 + batch}, -0.{1278 + batch} – batch {batch+1} gift {i+1}",
+                            "media": [{"type": "photo", "data": test_photo_base64}],
+                            "description": f"Batch {batch+1} gift {i+1} by admin"
+                        } for i in range(10)
+                    ],
+                    "gift_count_per_upload": 10
+                }
+                
+                upload_response = requests.post(f"{self.api_url}/work/upload-gifts", json=upload_data)
+                if upload_response.status_code != 200:
+                    self.log_test("Admin Unlimited Credits", False, 
+                                f"Batch {batch+1} upload failed: {upload_response.status_code}")
+                    return False
+                
+                result = upload_response.json()
+                total_uploaded += result.get('uploaded_count', 0)
+                remaining_credits = result.get('remaining_credits', 0)
+                
+                # Admin should always have unlimited credits (999999)
+                if remaining_credits != 999999:
+                    self.log_test("Admin Unlimited Credits", False, 
+                                f"Admin credits not unlimited after batch {batch+1}: {remaining_credits}")
+                    return False
+            
+            details = f"Admin successfully uploaded {total_uploaded} gifts across 3 batches with unlimited credits"
+            self.log_test("Admin Unlimited Credits", True, details)
+            return True
+            
+        except Exception as e:
+            self.log_test("Admin Unlimited Credits", False, str(e))
+            return False
+
+    def test_regular_user_without_credits(self):
+        """Test regular user without credits cannot upload gifts"""
+        try:
+            print("\n🚫 Testing Regular User Without Credits...")
+            
+            # Create regular user
+            regular_data = {
+                "telegram_auth_data": {
+                    "id": 987654321,  # Non-admin telegram_id
+                    "first_name": "Regular",
+                    "last_name": "User",
+                    "username": "regular_user",
+                    "photo_url": "https://example.com/regular.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            auth_response = requests.post(f"{self.api_url}/auth/telegram", json=regular_data)
+            if auth_response.status_code != 200:
+                self.log_test("Regular User Without Credits - User Creation", False, 
+                            f"Failed to create regular user: {auth_response.status_code}")
+                return False
+            
+            regular_user = auth_response.json()
+            print(f"✅ Created regular user: {regular_user['first_name']} (Telegram ID: {regular_user['telegram_id']})")
+            
+            # Set user city
+            city_data = {"user_id": regular_user['id'], "city": "London"}
+            requests.post(f"{self.api_url}/users/set-city", json=city_data)
+            
+            # Try to upload without work access (should fail)
+            test_photo_base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+            
+            upload_data = {
+                "user_id": regular_user['id'],
+                "gifts": [
+                    {
+                        "coordinates": "51.5074, -0.1278 – regular user test",
+                        "media": [{"type": "photo", "data": test_photo_base64}],
+                        "description": "Test gift by regular user"
+                    }
+                ],
+                "gift_count_per_upload": 10
+            }
+            
+            upload_response = requests.post(f"{self.api_url}/work/upload-gifts", json=upload_data)
+            success = upload_response.status_code == 403  # Should be blocked
+            
+            if success:
+                error_response = upload_response.json()
+                error_detail = error_response.get('detail', '')
+                if 'Work access not purchased' in error_detail:
+                    details = f"Regular user correctly blocked: {error_detail}"
+                else:
+                    success = False
+                    details = f"Wrong error message: {error_detail}"
+            else:
+                details = f"Regular user was not blocked! Status: {upload_response.status_code}, Response: {upload_response.text}"
+            
+            self.log_test("Regular User Without Credits", success, details)
+            return success, regular_user if success else None
+            
+        except Exception as e:
+            self.log_test("Regular User Without Credits", False, str(e))
+            return False, None
+
+    def test_regular_user_with_credits(self):
+        """Test regular user with credits can upload gifts"""
+        try:
+            print("\n✅ Testing Regular User With Credits...")
+            
+            # Create regular user
+            regular_data = {
+                "telegram_auth_data": {
+                    "id": 555666777,  # Different non-admin telegram_id
+                    "first_name": "CreditUser",
+                    "last_name": "Test",
+                    "username": "credit_user",
+                    "photo_url": "https://example.com/credit.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            auth_response = requests.post(f"{self.api_url}/auth/telegram", json=regular_data)
+            if auth_response.status_code != 200:
+                self.log_test("Regular User With Credits - User Creation", False, 
+                            f"Failed to create user: {auth_response.status_code}")
+                return False
+            
+            credit_user = auth_response.json()
+            print(f"✅ Created credit user: {credit_user['first_name']} (Telegram ID: {credit_user['telegram_id']})")
+            
+            # Set user city
+            city_data = {"user_id": credit_user['id'], "city": "Paris"}
+            requests.post(f"{self.api_url}/users/set-city", json=city_data)
+            
+            # Purchase work package to get credits
+            package_data = {
+                "user_id": credit_user['id'],
+                "city": "Paris",
+                "gift_count": 10,
+                "paid_amount_eur": 100.0,
+                "payment_signature": "test_signature_12345"
+            }
+            
+            package_response = requests.post(f"{self.api_url}/work/purchase-package", json=package_data)
+            if package_response.status_code != 200:
+                self.log_test("Regular User With Credits - Package Purchase", False, 
+                            f"Failed to purchase package: {package_response.status_code}")
+                return False
+            
+            # Try to upload gifts (should succeed)
+            test_photo_base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+            
+            upload_data = {
+                "user_id": credit_user['id'],
+                "gifts": [
+                    {
+                        "coordinates": "48.8566, 2.3522 – Paris test location",
+                        "media": [{"type": "photo", "data": test_photo_base64}],
+                        "description": "Test gift by credit user"
+                    }
+                ],
+                "gift_count_per_upload": 10
+            }
+            
+            upload_response = requests.post(f"{self.api_url}/work/upload-gifts", json=upload_data)
+            success = upload_response.status_code == 200
+            
+            if success:
+                result = upload_response.json()
+                uploaded_count = result.get('uploaded_count', 0)
+                credits_used = result.get('credits_used', 0)
+                remaining_credits = result.get('remaining_credits', 0)
+                
+                # Regular user should use credits and have them deducted
+                if uploaded_count == 1 and credits_used == 1 and remaining_credits == 9:
+                    details = f"Regular user successfully uploaded {uploaded_count} gifts. Credits used: {credits_used}, Remaining: {remaining_credits}"
+                else:
+                    success = False
+                    details = f"Credit handling incorrect: uploaded={uploaded_count}, used={credits_used}, remaining={remaining_credits}"
+            else:
+                error_response = upload_response.json() if upload_response.headers.get('content-type', '').startswith('application/json') else {"detail": upload_response.text}
+                details = f"Regular user upload failed: Status {upload_response.status_code}, Error: {error_response.get('detail', 'Unknown error')}"
+            
+            self.log_test("Regular User With Credits", success, details)
+            return success
+            
+        except Exception as e:
+            self.log_test("Regular User With Credits", False, str(e))
+            return False
+
+    def test_gift_database_creation(self):
+        """Test that gifts are correctly created in database"""
+        try:
+            print("\n🗄️ Testing Gift Database Creation...")
+            
+            # Create admin user for testing
+            admin_data = {
+                "telegram_auth_data": {
+                    "id": 1793011013,
+                    "first_name": "DatabaseTest",
+                    "last_name": "Admin",
+                    "username": "db_test_admin",
+                    "photo_url": "https://example.com/dbtest.jpg",
+                    "auth_date": int(datetime.now().timestamp()),
+                    "hash": "telegram_auto"
+                }
+            }
+            
+            auth_response = requests.post(f"{self.api_url}/auth/telegram", json=admin_data)
+            if auth_response.status_code != 200:
+                self.log_test("Gift Database Creation - Admin Setup", False, 
+                            f"Failed to create admin: {auth_response.status_code}")
+                return False
+            
+            admin_user = auth_response.json()
+            
+            # Set city
+            city_data = {"user_id": admin_user['id'], "city": "London"}
+            requests.post(f"{self.api_url}/users/set-city", json=city_data)
+            
+            # Upload a unique gift
+            import random
+            unique_coords = f"51.{random.randint(5000, 5999)}, -0.{random.randint(1000, 1999)} – unique test location"
+            test_photo_base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+            
+            upload_data = {
+                "user_id": admin_user['id'],
+                "gifts": [
+                    {
+                        "coordinates": unique_coords,
+                        "media": [{"type": "photo", "data": test_photo_base64}],
+                        "description": "Database verification test gift"
+                    }
+                ],
+                "gift_count_per_upload": 10
+            }
+            
+            upload_response = requests.post(f"{self.api_url}/work/upload-gifts", json=upload_data)
+            if upload_response.status_code != 200:
+                self.log_test("Gift Database Creation - Upload", False, 
+                            f"Upload failed: {upload_response.status_code}")
+                return False
+            
+            result = upload_response.json()
+            gift_ids = result.get('gift_ids', [])
+            
+            if not gift_ids:
+                self.log_test("Gift Database Creation", False, "No gift IDs returned")
+                return False
+            
+            # Verify gift exists in database by checking available gifts
+            available_response = requests.get(f"{self.api_url}/gifts/available/London")
+            if available_response.status_code != 200:
+                self.log_test("Gift Database Creation - Verification", False, 
+                            f"Failed to check available gifts: {available_response.status_code}")
+                return False
+            
+            available_data = available_response.json()
+            gift_count = available_data.get('count', 0)
+            
+            # Should have at least 1 gift available
+            success = gift_count >= 1
+            
+            if success:
+                details = f"Gift successfully created in database. Gift ID: {gift_ids[0]}, Available gifts in London: {gift_count}"
+            else:
+                details = f"Gift not found in database. Available gifts: {gift_count}"
+            
+            self.log_test("Gift Database Creation", success, details)
+            return success
+            
+        except Exception as e:
+            self.log_test("Gift Database Creation", False, str(e))
+            return False
+
+    def test_admin_gift_upload_comprehensive(self):
+        """Comprehensive test of admin gift upload fix"""
+        try:
+            print("\n🔧 Running Comprehensive Admin Gift Upload Tests...")
+            
+            # Test 1: Admin bypass works without work access
+            print("1️⃣ Testing admin bypass without work access...")
+            admin_success = self.test_admin_gift_upload_without_access()
+            
+            # Test 2: Admin unlimited credits
+            print("2️⃣ Testing admin unlimited credits...")
+            credits_success = self.test_admin_unlimited_credits()
+            
+            # Test 3: Regular user blocked without credits
+            print("3️⃣ Testing regular user blocked without credits...")
+            blocked_success = self.test_regular_user_without_credits()
+            
+            # Test 4: Regular user works with credits
+            print("4️⃣ Testing regular user with credits...")
+            credits_user_success = self.test_regular_user_with_credits()
+            
+            # Test 5: Database creation verification
+            print("5️⃣ Testing gift database creation...")
+            db_success = self.test_gift_database_creation()
+            
+            # Summary
+            total_tests = 5
+            passed_tests = sum([admin_success[0] if isinstance(admin_success, tuple) else admin_success,
+                              credits_success, 
+                              blocked_success[0] if isinstance(blocked_success, tuple) else blocked_success,
+                              credits_user_success, 
+                              db_success])
+            
+            success = passed_tests == total_tests
+            
+            details = f"Admin Gift Upload Comprehensive Test: {passed_tests}/{total_tests} tests passed"
+            if success:
+                details += " - All admin bypass functionality working correctly"
+            else:
+                details += f" - {total_tests - passed_tests} tests failed"
+            
+            self.log_test("Admin Gift Upload Comprehensive", success, details)
+            return success
+            
+        except Exception as e:
+            self.log_test("Admin Gift Upload Comprehensive", False, str(e))
+            return False
+
     def run_all_tests(self):
         """Run all API tests - Updated for Join-Room 500 Error Fix Testing"""
         print("🚀 Starting Solana Casino Backend API Tests...")
