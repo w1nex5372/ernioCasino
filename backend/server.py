@@ -1344,23 +1344,25 @@ async def start_game_round(room: GameRoom):
     # NEW: Assign gift to winner based on their city
     assigned_gift = None
     try:
-        # Get winner's data from database
+        # Get winner's telegram_id from database
         winner_user = await db.users.find_one({"id": winner.user_id})
         if winner_user:
-            winner_city = winner_user.get('city')
             winner_telegram_id = winner_user.get('telegram_id')
             
-            if winner_city:
+            # Use city from winner object (stored when they joined the room)
+            if winner.city and winner_telegram_id:
                 # Try to assign a gift from the winner's city based on room type
                 assigned_gift = await assign_gift_to_winner(
                     winner_user_id=winner.user_id,
-                    winner_city=winner_city,
+                    winner_city=winner.city,  # Use city from RoomPlayer object
                     winner_telegram_id=winner_telegram_id,
                     winner_username=winner.username,
                     room_type=room.room_type  # Pass room type for folder selection
                 )
             else:
-                logging.info(f"Winner {winner.username} has no city selected - no gift assigned")
+                logging.info(f"Winner {winner.username} has no city or telegram_id - no gift assigned")
+        else:
+            logging.warning(f"Winner user not found in database: {winner.user_id}")
     except Exception as e:
         logging.error(f"Error in gift assignment: {e}")
     
