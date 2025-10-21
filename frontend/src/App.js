@@ -1256,9 +1256,11 @@ function App() {
             // Don't set showCitySelector here - early return handles it
             // Don't show welcome toast yet
           } else {
-            setUserCity(response.data.city);
+            // DON'T set userCity from backend - city is session-only
+            // User must select city every session via city selector
+            // setUserCity(response.data.city);  // REMOVED
             
-            // Show welcome message for returning users with city
+            // Show welcome message for returning users
             if (response.data.token_balance >= 1000) {
               toast.success(`🎉 Welcome back, ${response.data.first_name}! Balance: ${response.data.token_balance} tokens`);
             } else if (response.data.token_balance > 0) {
