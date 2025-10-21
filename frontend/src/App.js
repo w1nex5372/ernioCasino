@@ -2927,20 +2927,6 @@ function App() {
                   💼 Work Casino
                 </Button>
                 
-                {/* City Change Button - Standalone */}
-                {userCity && (
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setShowCitySelector(true);
-                    }}
-                    className="w-full bg-slate-700 hover:bg-slate-600 text-white text-xs py-2 rounded"
-                  >
-                    📍 Change City ({userCity})
-                  </button>
-                )}
-                
                 {/* Admin Gift Tracker Button */}
                 {user && user.telegram_id === 1793011013 && (
                   <Button
