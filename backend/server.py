@@ -3703,7 +3703,7 @@ logger = logging.getLogger(__name__)
 @app.on_event("startup")
 async def startup_event():
     """Initialize the application"""
-    initialize_rooms()
+    await initialize_rooms_with_gifts()
     
     # Create database indexes for optimal performance
     try:
