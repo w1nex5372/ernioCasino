@@ -4249,56 +4249,51 @@ function App() {
         giftCount={selectedPackage?.count || 0}
       />
 
-      {/* City Selector Modal - For changing city */}
-      {console.log('🔍 About to render modal, showCitySelector =', showCitySelector)}
-      {showCitySelector ? (
+      {/* City Change Modal - SIMPLE VERSION */}
+      {showCitySelector && (
         <div 
-          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
-          style={{ display: 'flex' }}
+          className="fixed inset-0 z-[99999] bg-black bg-opacity-90 flex items-center justify-center p-4"
+          onClick={() => setShowCitySelector(false)}
         >
-          {console.log('✅ Modal DIV is rendering')}
-          <Card className="w-full max-w-md bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-2xl text-center text-yellow-400">🌍 Change Your City</CardTitle>
-              <CardDescription className="text-center text-slate-300">
-                Select a different city to play in
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  onClick={async () => {
-                    await handleCitySelect('London');
-                    setShowCitySelector(false);
-                  }}
-                  className="h-32 flex flex-col items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
-                >
-                  <span className="text-5xl mb-3">🇬🇧</span>
-                  <span className="text-xl font-bold">London</span>
-                </Button>
-                <Button
-                  onClick={async () => {
-                    await handleCitySelect('Paris');
-                    setShowCitySelector(false);
-                  }}
-                  className="h-32 flex flex-col items-center justify-center bg-gradient-to-br from-pink-600 to-pink-800 hover:from-pink-700 hover:to-pink-900"
-                >
-                  <span className="text-5xl mb-3">🇫🇷</span>
-                  <span className="text-xl font-bold">Paris</span>
-                </Button>
-              </div>
-              
-              <Button
-                onClick={() => setShowCitySelector(false)}
-                variant="outline"
-                className="w-full"
+          <div 
+            className="bg-slate-800 rounded-lg p-6 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-2xl text-yellow-400 text-center mb-4">🌍 Change City</h2>
+            
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <button
+                onClick={() => {
+                  handleCitySelect('London');
+                  setShowCitySelector(false);
+                }}
+                className="h-32 flex flex-col items-center justify-center bg-blue-600 hover:bg-blue-700 rounded-lg"
               >
-                Cancel
-              </Button>
-            </CardContent>
-          </Card>
+                <span className="text-5xl mb-3">🇬🇧</span>
+                <span className="text-xl font-bold text-white">London</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  handleCitySelect('Paris');
+                  setShowCitySelector(false);
+                }}
+                className="h-32 flex flex-col items-center justify-center bg-pink-600 hover:bg-pink-700 rounded-lg"
+              >
+                <span className="text-5xl mb-3">🇫🇷</span>
+                <span className="text-xl font-bold text-white">Paris</span>
+              </button>
+            </div>
+            
+            <button
+              onClick={() => setShowCitySelector(false)}
+              className="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white rounded"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
-      ) : console.log('❌ Modal NOT rendering, showCitySelector is false')}
+      )}
       
       {/* Work Access Purchase Modal */}
       {showWorkModal && (
