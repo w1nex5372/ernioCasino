@@ -1246,8 +1246,12 @@ function App() {
         if (response.data) {
           console.log('✅ Telegram authentication successful:', response.data);
           
-          setUser(response.data);
-          saveUserSession(response.data);
+          // CRITICAL: Remove city from user object (city is session-only)
+          const userData = {...response.data};
+          delete userData.city;
+          
+          setUser(userData);
+          saveUserSession(userData);
           setIsLoading(false);
           
           // CRITICAL: Check city and set states synchronously
