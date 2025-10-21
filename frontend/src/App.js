@@ -4244,27 +4244,6 @@ function App() {
         giftCount={selectedPackage?.count || 0}
       />
 
-      {/* TEMPORARY TEST - LARGE VISIBLE BUTTON */}
-      <div style={{
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 99999,
-        padding: '20px',
-        background: 'red',
-        color: 'white',
-        fontSize: '24px',
-        cursor: 'pointer',
-        border: '5px solid yellow'
-      }}
-      onClick={() => {
-        alert('BUTTON CLICKED');
-        setShowCitySelector(true);
-      }}>
-        CLICK ME TO CHANGE CITY
-      </div>
-
       {/* City Change Modal - SIMPLE VERSION */}
       {showCitySelector && (
         <div 
