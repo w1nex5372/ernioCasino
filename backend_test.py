@@ -5229,6 +5229,10 @@ class SolanaCasinoAPITester:
         print("\n🏙️ Testing City-Based Room Rejoining Logic...")
         self.test_city_based_room_rejoining()
         
+        # Test Admin Gift Upload Fix (NEW - Review Request)
+        print("\n🔑 Testing Admin Gift Upload Fix...")
+        self.test_admin_gift_upload_comprehensive()
+        
         # Test Enhanced Winner Detection & Broadcast System (NEW)
         print("\n🏆 Testing Enhanced Winner Detection & Broadcast System...")
         self.test_enhanced_winner_detection_broadcast_system()
