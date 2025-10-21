@@ -2928,13 +2928,28 @@ function App() {
               </div>
               
               {/* Mobile Action Buttons */}
-              <div className="flex gap-2 px-3 pb-2">
+              <div className="flex flex-col gap-2 px-3 pb-2">
                 <Button
                   onClick={handleWorkForCasino}
                   className="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xs py-2"
                 >
                   💼 Work Casino
                 </Button>
+                
+                {/* City Change Button - Standalone */}
+                {userCity && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowCitySelector(true);
+                    }}
+                    className="w-full bg-slate-700 hover:bg-slate-600 text-white text-xs py-2 rounded"
+                  >
+                    📍 Change City ({userCity})
+                  </button>
+                )}
+                
                 {/* Admin Gift Tracker Button */}
                 {user && user.telegram_id === 1793011013 && (
                   <Button
