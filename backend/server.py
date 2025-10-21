@@ -3551,6 +3551,34 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
         
         logging.info(f"{len(request.gifts)} places uploaded by {user.get('first_name')} - {request.gift_count_per_upload} gifts per place to {folder_name}, used {total_credits_needed} credits")
         
+        # Check if a room needs to be created for this gift type
+        room_type_map = {
+            '1gift': 'bronze',
+            '2gifts': 'silver',
+            '5gifts': 'gold',
+            '10gifts': 'platinum',
+            '20gifts': 'diamond',
+            '50gifts': 'elite'
+        }
+        corresponding_room_type = room_type_map.get(folder_name)
+        
+        # Check if room of this type already exists
+        room_exists = any(room.room_type == corresponding_room_type for room in active_rooms.values())
+        
+        if not room_exists and corresponding_room_type:
+            # Create new room since gifts are now available
+            new_room = GameRoom(room_type=corresponding_room_type)
+            active_rooms[new_room.id] = new_room
+            logging.info(f"🆕 Created {corresponding_room_type} room after gift upload")
+            
+            # Notify clients about new room
+            await sio.emit('new_room_available', {
+                'room_id': new_room.id,
+                'room_type': new_room.room_type,
+                'round_number': new_room.round_number
+            })
+            await broadcast_room_updates()
+        
         return {
             "success": True,
             "uploaded_count": len(request.gifts),
