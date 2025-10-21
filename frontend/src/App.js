@@ -1833,56 +1833,22 @@ function App() {
   // City selection handler - unified version
   const handleCitySelect = async (city) => {
     try {
-      if (!user || !user.id) {
-        console.error('❌ Cannot set city - user not authenticated:', user);
-        toast.error('User not authenticated. Please refresh the page.');
-        return;
-      }
+      console.log(`🏙️ Setting city to ${city} (SESSION ONLY - not saving to database)`);
       
-      console.log(`🏙️ Setting city to ${city} for user:`, user.id);
+      // ONLY set local state - DO NOT save to database
+      // City is session-only, users can switch freely
+      setUserCity(city);
       
-      const response = await axios.post(`${API}/users/set-city`, {
-        user_id: user.id,
-        city: city
-      });
+      // Show welcome message
+      toast.success(`Welcome to ${city}! 🏙️`);
       
-      console.log('✅ City set response:', response.data);
+      // Reload rooms for new city
+      loadRooms();
+      await loadAllUserRooms();
       
-      if (response.data.success) {
-        // ONLY update userCity state - don't touch user object
-        // This prevents any risk of losing telegram_id during state update
-        setUserCity(city);
-        // Don't set showCitySelector(false) here - modal handles its own closing
-        setGiftsAvailable(response.data.can_play);
-        
-        // Show welcome message after city selection
-        if (user.token_balance >= 1000) {
-          toast.success(`🎉 Welcome to ${city}, ${user.first_name}!`);
-        } else {
-          toast.success(`Welcome to ${city}! 🏙️`);
-        }
-        
-        if (!response.data.can_play) {
-          toast.error(`No gifts available in ${city} yet.`);
-        }
-        
-        // Load user data after city selection
-        setTimeout(() => {
-          loadUserPrizes();
-          loadDerivedWallet();
-          loadWelcomeBonusStatus();
-        }, 500);
-        
-        // Reload rooms and user's active room status after city change
-        loadRooms();
-        await loadAllUserRooms();
-      } else {
-        console.error('❌ City set failed:', response.data);
-        toast.error('Failed to set city. Please try again.');
-      }
     } catch (error) {
       console.error('❌ Failed to set city:', error);
-      toast.error(error.response?.data?.detail || 'Failed to set city. Please try again.');
+      toast.error('Failed to switch city. Please try again.');
     }
   };
 
