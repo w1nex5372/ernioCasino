@@ -1120,7 +1120,10 @@ function App() {
         // }
         
         // Set cached user first for instant UI
-        setUser(userData);
+        // CRITICAL: Remove city even from cache (city is session-only)
+        const userFromCache = {...userData};
+        delete userFromCache.city;
+        setUser(userFromCache);
         
         // Load fresh data
         loadRooms();
