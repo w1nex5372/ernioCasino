@@ -274,6 +274,7 @@ class JoinRoomRequest(BaseModel):
     room_type: RoomType
     user_id: str
     bet_amount: int
+    city: Optional[str] = None  # User's selected city
 
 
 class Gift(BaseModel):
