@@ -2184,6 +2184,35 @@ async def get_user(user_id: str):
     
     return User(**user_doc)
 
+
+@api_router.get("/users/{user_id}/gift-credits")
+async def get_user_gift_credits(user_id: str):
+    """Get user's gift credit balance"""
+    try:
+        user_doc = await db.users.find_one({"id": user_id}, {"_id": 0})
+        if not user_doc:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Check if admin user (unlimited credits)
+        if user_doc.get('telegram_id') == 1793011013:
+            return {
+                "gift_credits": 999999,
+                "used_credits": 0,
+                "remaining_credits": 999999
+            }
+        
+        # Return regular user credits
+        return {
+            "gift_credits": user_doc.get('gift_credits', 0),
+            "used_credits": user_doc.get('used_credits', 0),
+            "remaining_credits": user_doc.get('remaining_credits', 0)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error fetching gift credits: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch gift credits: {str(e)}")
+
 @api_router.post("/purchase-tokens")
 async def purchase_tokens(purchase: TokenPurchase):
     """Mock token purchase - in real implementation, verify Solana transaction"""
