@@ -2877,16 +2877,21 @@ function App() {
                     {userCity && (
                       <div className="flex items-center gap-1">
                         <span className="text-xs text-yellow-400">{userCity} 🏙️</span>
-                        <button
-                          onClick={() => {
-                            console.log('🔘 Change City button clicked');
-                            setShowCitySelector(true);
-                            console.log('🔘 showCitySelector set to true');
+                        <Button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('🔘 Change City button clicked, current showCitySelector:', showCitySelector);
+                            setShowCitySelector(prev => {
+                              console.log('🔘 Setting showCitySelector from', prev, 'to true');
+                              return true;
+                            });
                           }}
-                          className="text-xs text-blue-400 hover:text-blue-300 underline"
+                          variant="link"
+                          className="text-xs text-blue-400 hover:text-blue-300 underline p-0 h-auto"
                         >
                           Change
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </div>
