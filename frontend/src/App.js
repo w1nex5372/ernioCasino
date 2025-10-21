@@ -4299,7 +4299,7 @@ function App() {
             </CardContent>
           </Card>
         </div>
-      )}
+      ) : console.log('❌ Modal NOT rendering, showCitySelector is false')}
       
       {/* Work Access Purchase Modal */}
       {showWorkModal && (
