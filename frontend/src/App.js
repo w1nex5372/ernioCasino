@@ -1311,8 +1311,12 @@ function App() {
               if (response.data) {
                 console.log('Found existing user with tokens!', response.data);
                 
-                setUser(response.data);
-                saveUserSession(response.data);
+                // CRITICAL: Remove city from user object (city is session-only)
+                const userData = {...response.data};
+                delete userData.city;
+                
+                setUser(userData);
+                saveUserSession(userData);
                 setIsLoading(false);
                 
                 // Check city after setting user
