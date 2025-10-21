@@ -1381,8 +1381,12 @@ function App() {
           try {
             const response = await axios.get(`${API}/users/telegram/${telegramUser.id}`);
             if (response.data) {
-              setUser(response.data);
-              saveUserSession(response.data);
+              // CRITICAL: Remove city from user object (city is session-only)
+              const userData = {...response.data};
+              delete userData.city;
+              
+              setUser(userData);
+              saveUserSession(userData);
               setIsLoading(false);
               
               // DON'T set city from backend - city is session-only
