@@ -2767,9 +2767,17 @@ function App() {
   console.log('🔍 City selector check:', {
     hasUser: !!user,
     user_city: user?.city,
+    user_city_type: typeof user?.city,
     userCity: userCity,
+    userCity_type: typeof userCity,
     shouldShowSelector: user && !user.city && !userCity,
-    telegram_id: user?.telegram_id
+    telegram_id: user?.telegram_id,
+    condition_breakdown: {
+      'user exists': !!user,
+      '!user.city': !user?.city,
+      '!userCity': !userCity,
+      'all_three_true': user && !user.city && !userCity
+    }
   });
   
   if (user && !user.city && !userCity) {
