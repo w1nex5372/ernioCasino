@@ -2966,7 +2966,15 @@ function App() {
                       <span className="text-sm font-semibold text-yellow-400">{userCity} 🏙️</span>
                     </div>
                     <Button
-                      onClick={() => setShowCitySelector(true)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🔘 Change City button clicked (desktop), current showCitySelector:', showCitySelector);
+                        setShowCitySelector(prev => {
+                          console.log('🔘 Setting showCitySelector from', prev, 'to true');
+                          return true;
+                        });
+                      }}
                       variant="outline"
                       size="sm"
                       className="text-xs"
