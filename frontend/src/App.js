@@ -2957,14 +2957,14 @@ function App() {
                       console.log('🎁 Gift Tracker clicked');
                       setShowAdminDashboard(true);
                     }}
-                    className="flex-1 bg-orange-600 hover:bg-orange-700 text-white text-xs py-2"
+                    className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs py-2"
                   >
                     🎁 Gift Tracker
                   </Button>
                 )}
                 <Button
                   onClick={() => setActiveTab('tokens')}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs py-2"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white text-xs py-2"
                 >
                   💰 Buy Tokens
                 </Button>
