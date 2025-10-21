@@ -1377,13 +1377,9 @@ function App() {
               saveUserSession(response.data);
               setIsLoading(false);
               
-              // Check city - early return handles showing selector
-              if (!response.data.city) {
-                console.log('⚠️ User has no city - early return will handle it');
-              } else {
-                setUserCity(response.data.city);
-                toast.success(`Welcome back, ${telegramUser.first_name}!`);
-              }
+              // DON'T set city from backend - city is session-only
+              // User must select city every session
+              toast.success(`Welcome back, ${telegramUser.first_name}!`);
               
               return;
             }
