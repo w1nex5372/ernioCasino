@@ -3467,7 +3467,7 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
                 creator_user_id=request.user_id,
                 creator_telegram_id=user['telegram_id'],
                 creator_username=user.get('username'),
-                city=user.get('city', 'London'),
+                city=request.city or 'London',  # Use city from request
                 media=gift_data.get('media', []),  # Array of media objects
                 coordinates=gift_data['coordinates'],
                 description=gift_data.get('description', ''),
