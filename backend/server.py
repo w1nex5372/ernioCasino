@@ -3416,6 +3416,7 @@ async def upload_gifts_bulk(request: BulkUploadGiftsRequest):
             })
         
         # Create gift documents with media array
+        gift_ids = []  # Initialize gift_ids list
         for gift_data in request.gifts:
             # Check for duplicate upload (same coordinates + description in last 5 minutes)
             five_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=5)
