@@ -2116,6 +2116,7 @@ function App() {
 
       const response = await axios.post(`${API}/work/upload-gifts`, {
         user_id: user.id,
+        city: workCity, // Send the city selected in work flow
         gifts: [giftData], // Single place with all gifts
         gift_count_per_upload: uploadGiftCount
       });
