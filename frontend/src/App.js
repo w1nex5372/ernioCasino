@@ -2931,7 +2931,7 @@ function App() {
               <div className="flex flex-col gap-2 px-3 pb-2">
                 <Button
                   onClick={handleWorkForCasino}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-xs py-2"
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs py-2"
                 >
                   💼 Work Casino
                 </Button>
