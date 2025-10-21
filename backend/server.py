@@ -2412,7 +2412,7 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         raise HTTPException(status_code=400, detail="Insufficient token balance")
     
     # Check if user has selected a city
-    user_city = user_doc.get('city')
+    user_city = request.city or user_doc.get('city')
     if not user_city:
         raise HTTPException(status_code=400, detail="Please select your city first (London or Paris)")
     
