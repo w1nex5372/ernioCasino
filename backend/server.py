@@ -24,6 +24,7 @@ from solders.keypair import Keypair
 from solders.system_program import transfer, TransferParams
 import time
 import base58
+import uvicorn
 
 # Load environment variables FIRST before importing modules that read them
 ROOT_DIR = Path(__file__).parent
@@ -3931,3 +3932,8 @@ async def shutdown_event():
     logging.info("🛑 Casino Battle Royale API shutting down")
 
 # Export the socket app for uvicorn
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8001))
+    uvicorn.run("server:app", host="0.0.0.0", port=port)
+
