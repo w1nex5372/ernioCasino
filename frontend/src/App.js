@@ -240,7 +240,25 @@ function App() {
   // Core state
   const [socket, setSocket] = useState(null);
   const [user, setUser] = useState(null);
-  
+  const userRef = React.useRef(null);
+  const isLoadingRef = React.useRef(true);
+  const authTimeoutRef = React.useRef(null);
+  const fallbackTimeoutRef = React.useRef(null);
+
+  const cancelAuthTimeout = () => {
+    if (authTimeoutRef.current) {
+      clearTimeout(authTimeoutRef.current);
+      authTimeoutRef.current = null;
+    }
+  };
+
+  const cancelFallbackTimeout = () => {
+    if (fallbackTimeoutRef.current) {
+      clearTimeout(fallbackTimeoutRef.current);
+      fallbackTimeoutRef.current = null;
+    }
+  };
+
   // Wrap setUser to always log telegram_id
   const setUserWithLog = (newUser) => {
     console.log('🔧 SET_USER CALLED:', {
@@ -249,6 +267,7 @@ function App() {
       isAdmin: newUser?.telegram_id === 1793011013,
       caller: new Error().stack.split('\n')[2] // Show where it was called from
     });
+    userRef.current = newUser;
     setUser(newUser);
   };
   
@@ -261,6 +280,14 @@ function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [telegramError, setTelegramError] = useState(false);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  }, [isLoading]);
 
   // Data state
   const [rooms, setRooms] = useState([]);
@@ -1248,15 +1275,16 @@ function App() {
         
         if (response.data) {
           console.log('✅ Telegram authentication successful:', response.data);
-          
+
           // CRITICAL: Remove city from user object (city is session-only)
           const userData = {...response.data};
           delete userData.city;
-          
+
+          cancelFallbackTimeout();
           setUser(userData);
           saveUserSession(userData);
           setIsLoading(false);
-          
+
           // CRITICAL: Check city and set states synchronously
           if (!response.data.city) {
             console.log('⚠️ User has no city - early return will show city selector');
@@ -1288,7 +1316,8 @@ function App() {
           webApp.enableClosingConfirmation();
           if (webApp.setHeaderColor) webApp.setHeaderColor('#1e293b');
           if (webApp.setBackgroundColor) webApp.setBackgroundColor('#0f172a');
-          
+
+          cancelAuthTimeout();
           return; // Exit successfully
         }
         
@@ -1313,15 +1342,17 @@ function App() {
               
               if (response.data) {
                 console.log('Found existing user with tokens!', response.data);
-                
+
                 // CRITICAL: Remove city from user object (city is session-only)
                 const userData = {...response.data};
                 delete userData.city;
-                
+
+                cancelFallbackTimeout();
                 setUser(userData);
                 saveUserSession(userData);
                 setIsLoading(false);
-                
+                cancelAuthTimeout();
+
                 // Check city after setting user
                 // DON'T set city from backend - city is session-only
                 // if (!response.data.city) {
@@ -1355,16 +1386,22 @@ function App() {
     };
 
     // Start authentication immediately
-    const authTimeout = setTimeout(authenticateFromTelegram, 100);
-    
+    authTimeoutRef.current = setTimeout(authenticateFromTelegram, 100);
+
     // Fallback timeout - ALWAYS ensures loading completes (reduced to 3s for better UX)
-    const fallbackTimeout = setTimeout(async () => {
-      console.log(`⏰ Fallback timeout triggered! user=${user ? 'exists' : 'null'}, isLoading=${isLoading}`);
-      
+    fallbackTimeoutRef.current = setTimeout(async () => {
+      const currentUser = userRef.current;
+      const currentLoading = isLoadingRef.current;
+      console.log(`⏰ Fallback timeout triggered! user=${currentUser ? 'exists' : 'null'}, isLoading=${currentLoading}`);
+
+      // Ensure we don't run fallback twice
+      cancelFallbackTimeout();
+
       // If user already exists, just stop loading
-      if (user) {
+      if (currentUser) {
         console.log('✅ User already exists - just stopping loading state');
         setIsLoading(false);
+        cancelAuthTimeout();
         return;
       }
       
@@ -1387,21 +1424,23 @@ function App() {
               const userData = {...response.data};
               delete userData.city;
               
+              cancelFallbackTimeout();
               setUser(userData);
               saveUserSession(userData);
               setIsLoading(false);
-              
+              cancelAuthTimeout();
+
               // DON'T set city from backend - city is session-only
               // User must select city every session
               toast.success(`Welcome back, ${telegramUser.first_name}!`);
-              
+
               return;
             }
           } catch (e) {
             console.log('User not found in database, will create fallback');
           }
         }
-        
+
         // Last resort fallback - create and save to backend
         const fallbackTelegramData = {
           id: telegramUser?.id || Date.now(),
@@ -1421,9 +1460,11 @@ function App() {
           // Save fallback user to backend database
           const response = await axios.post(`${API}/auth/telegram`, fallbackUserCreate);
           if (response.data) {
+            cancelFallbackTimeout();
             setUser(response.data);
             saveUserSession(response.data);
-            
+            cancelAuthTimeout();
+
             // Check if user got welcome bonus
             if (response.data.token_balance >= 1000) {
               toast.success('🎉 Welcome! You got 1000 FREE tokens!', { duration: 5000 });
@@ -1447,9 +1488,11 @@ function App() {
                 const userData = { ...retryResponse.data };
                 delete userData.city;
 
+                cancelFallbackTimeout();
                 setUser(userData);
                 saveUserSession(userData);
                 setIsLoading(false);
+                cancelAuthTimeout();
                 toast.success(`Welcome back, ${telegramUser.first_name}!`);
                 return;
               }
@@ -1459,6 +1502,7 @@ function App() {
           }
 
           // If backend save fails, use frontend-only fallback
+          cancelFallbackTimeout();
           setUser({
             id: 'fallback-' + Date.now(),
             first_name: fallbackTelegramData.first_name,
@@ -1467,15 +1511,16 @@ function App() {
             telegram_id: fallbackTelegramData.id,
             username: fallbackTelegramData.username
           });
+          cancelAuthTimeout();
           toast.warning('Using temporary account - limited functionality');
         }
       // Always ensure loading is stopped
       setIsLoading(false);
     }, 3000); // 3 seconds - gives real auth time to complete, but not too long
-    
+
     return () => {
-      clearTimeout(authTimeout);
-      clearTimeout(fallbackTimeout);
+      cancelAuthTimeout();
+      cancelFallbackTimeout();
     };
   }, []);
 
