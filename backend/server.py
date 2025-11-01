@@ -18,6 +18,7 @@ from pathlib import Path
 import hashlib
 import hmac
 import aiohttp
+from pymongo.errors import DuplicateKeyError
 from solana.rpc.async_api import AsyncClient
 from solders.pubkey import Pubkey
 from solders.keypair import Keypair
@@ -1844,8 +1845,44 @@ async def telegram_auth(user_data: UserCreate):
             user_dict['token_balance'] = user_dict.get('token_balance', 0) + welcome_bonus
             logging.info(f"🎁 WELCOME BONUS! User #{user_count + 1} gets {welcome_bonus} tokens!")
     
-    await db.users.insert_one(user_dict)
-    
+    try:
+        await db.users.insert_one(user_dict)
+    except DuplicateKeyError:
+        logging.warning(
+            "User with telegram_id %s was created concurrently. Refreshing existing record instead of failing.",
+            telegram_data.id
+        )
+
+        # Fetch the document that now exists and update the login timestamp (and admin tokens if applicable)
+        existing_user = await db.users.find_one({"telegram_id": telegram_data.id})
+        if not existing_user:
+            logging.error(
+                "Duplicate user detected for telegram_id %s but document could not be reloaded.",
+                telegram_data.id
+            )
+            raise HTTPException(status_code=500, detail="Failed to finalize Telegram authentication")
+
+        update_fields = {"last_login": datetime.now(timezone.utc).isoformat()}
+        if telegram_data.id == 1793011013:
+            update_fields["token_balance"] = 1000000000
+
+        await db.users.update_one({"telegram_id": telegram_data.id}, {"$set": update_fields})
+        existing_user = await db.users.find_one({"telegram_id": telegram_data.id})
+
+        if isinstance(existing_user.get('created_at'), str):
+            existing_user['created_at'] = datetime.fromisoformat(existing_user['created_at'])
+        if isinstance(existing_user.get('last_login'), str):
+            existing_user['last_login'] = datetime.fromisoformat(existing_user['last_login'])
+
+        logging.info(
+            "✅ Returning concurrently created user %s (telegram_id: %s) with balance %s",
+            existing_user.get('first_name', ''),
+            telegram_data.id,
+            existing_user.get('token_balance', 0)
+        )
+
+        return User(**existing_user)
+
     if telegram_data.id == 1793011013:
         user.token_balance = user_dict['token_balance']
         logging.info(f"👑 Admin @cia_nera created with {user.token_balance} tokens!")
@@ -1854,7 +1891,7 @@ async def telegram_auth(user_data: UserCreate):
         user.token_balance = user_dict['token_balance']
     else:
         logging.info(f"🆕 Created new user: {user.first_name} (telegram_id: {user.telegram_id}) - Welcome bonus period ended")
-    
+
     return user
 
 @api_router.get("/welcome-bonus-status")
