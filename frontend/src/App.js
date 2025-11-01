@@ -1435,6 +1435,29 @@ function App() {
             loadWelcomeBonusStatus();
           }
         } catch (error) {
+          console.error('Fallback account creation failed:', error);
+
+          // Small delay before retrying fetch in case the user was created concurrently
+          if (telegramUser && telegramUser.id) {
+            try {
+              await new Promise((resolve) => setTimeout(resolve, 500));
+              const retryResponse = await axios.get(`${API}/users/telegram/${telegramUser.id}`);
+
+              if (retryResponse.data) {
+                const userData = { ...retryResponse.data };
+                delete userData.city;
+
+                setUser(userData);
+                saveUserSession(userData);
+                setIsLoading(false);
+                toast.success(`Welcome back, ${telegramUser.first_name}!`);
+                return;
+              }
+            } catch (retryError) {
+              console.error('Retry lookup after fallback failure also failed:', retryError);
+            }
+          }
+
           // If backend save fails, use frontend-only fallback
           setUser({
             id: 'fallback-' + Date.now(),
