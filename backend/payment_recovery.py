@@ -5,8 +5,10 @@ Handles missed payment detection and automatic crediting
 
 import asyncio
 import logging
+import os
+from pathlib import Path
 from datetime import datetime, timezone, timedelta
-from typing import List, Dict, Any
+from typing import Dict
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 logger = logging.getLogger(__name__)
@@ -17,12 +19,16 @@ class PaymentRecoverySystem:
     def __init__(self, db: AsyncIOMotorDatabase, processor):
         self.db = db
         self.processor = processor
-        self.recovery_log_path = "/app/backend/logs/payment_recovery.log"
-        
+        logs_root = os.environ.get("CASINO_LOG_DIR")
+        if logs_root:
+            self.logs_dir = Path(logs_root)
+        else:
+            self.logs_dir = Path(__file__).resolve().parent / "logs"
+        self.recovery_log_path = self.logs_dir / "payment_recovery.log"
+
     async def initialize_logging(self):
         """Ensure recovery log directory exists"""
-        import os
-        os.makedirs("/app/backend/logs", exist_ok=True)
+        self.logs_dir.mkdir(parents=True, exist_ok=True)
         
     def log_recovery(self, message: str):
         """Log recovery actions to dedicated file"""

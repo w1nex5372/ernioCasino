@@ -4,6 +4,8 @@ Tracks all manual token adjustments for audit purposes
 """
 
 import logging
+import os
+from pathlib import Path
 from datetime import datetime, timezone
 from typing import Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -15,7 +17,12 @@ class ManualCreditLogger:
     
     def __init__(self, db: AsyncIOMotorDatabase):
         self.db = db
-        self.log_path = "/app/backend/logs/manual_credits.log"
+        logs_root = os.environ.get("CASINO_LOG_DIR")
+        if logs_root:
+            self.logs_dir = Path(logs_root)
+        else:
+            self.logs_dir = Path(__file__).resolve().parent / "logs"
+        self.log_path = self.logs_dir / "manual_credits.log"
         
     async def log_manual_credit(self, 
                                user_id: str,
@@ -65,9 +72,8 @@ class ManualCreditLogger:
                 "  " + "-" * 60
             )
             
-            import os
-            os.makedirs("/app/backend/logs", exist_ok=True)
-            
+            self.logs_dir.mkdir(parents=True, exist_ok=True)
+
             with open(self.log_path, 'a') as f:
                 f.write(log_message + "\n")
             
