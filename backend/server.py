@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks, Request
-from fastapi.responses import Response
+from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import socketio
 from dotenv import load_dotenv
@@ -171,6 +171,23 @@ sio = socketio.AsyncServer(
 
 # FastAPI app
 app = FastAPI(title="Solana Casino Battle Royale")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://erniocasino.vercel.app",
+        "https://www.erniocasino.vercel.app",
+        "http://localhost:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.options("/{rest_of_path:path}")
+async def preflight_handler(rest_of_path: str):
+    return JSONResponse(status_code=200)
 api_router = APIRouter(prefix="/api")
 
 # Room types and settings
