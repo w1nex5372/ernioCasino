@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks
+from fastapi import FastAPI, APIRouter, HTTPException, BackgroundTasks, Request
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 import socketio
 from dotenv import load_dotenv
@@ -41,7 +42,11 @@ import socket_rooms
 # Get environment variables
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 DB_NAME = os.environ.get('DB_NAME', 'casino_db')
-CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,https://telebet-2.preview.emergentagent.com').split(',')
+CORS_ORIGINS = os.environ.get(
+    'CORS_ORIGINS',
+    'http://localhost:3000,https://telebet-2.preview.emergentagent.com,https://erniocasino.vercel.app'
+).split(',')
+CORS_ORIGINS = [origin.strip() for origin in CORS_ORIGINS if origin.strip()]
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_TELEGRAM_BOT_TOKEN_HERE')
 
 # Solana Configuration for devnet (test environment as requested)
@@ -3738,6 +3743,12 @@ async def view_gift_details(gift_id: str):
 
 # Include the router
 app.include_router(api_router)
+
+# Provide a catch-all handler so OPTIONS preflight requests always succeed
+@app.options("/{full_path:path}")
+async def preflight_handler(full_path: str) -> Response:
+    """Return an empty 200 response for CORS preflight requests."""
+    return Response(status_code=200)
 
 # Add CORS middleware
 app.add_middleware(
