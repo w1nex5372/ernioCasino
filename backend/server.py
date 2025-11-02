@@ -42,11 +42,17 @@ import socket_rooms
 # Get environment variables
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 DB_NAME = os.environ.get('DB_NAME', 'casino_db')
-CORS_ORIGINS = os.environ.get(
+CORS_ORIGINS_ENV = os.environ.get(
     'CORS_ORIGINS',
     'http://localhost:3000,https://telebet-2.preview.emergentagent.com,https://erniocasino.vercel.app'
 ).split(',')
-CORS_ORIGINS = [origin.strip() for origin in CORS_ORIGINS if origin.strip()]
+CORS_ORIGINS_ENV = [origin.strip() for origin in CORS_ORIGINS_ENV if origin.strip()]
+REQUIRED_CORS_ORIGINS = [
+    "https://erniocasino.vercel.app",
+    "https://www.erniocasino.vercel.app",
+    "http://localhost:3000",
+]
+CORS_ORIGINS = list(dict.fromkeys(CORS_ORIGINS_ENV + REQUIRED_CORS_ORIGINS))
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_TELEGRAM_BOT_TOKEN_HERE')
 
 # Solana Configuration for devnet (test environment as requested)
@@ -157,6 +163,23 @@ logging.info(f"🗄️  MongoDB: Connected to database '{DB_NAME}' at {MONGO_URL
 logging.info(f"🔧 Connection pool: min={10}, max={200}")
 logging.info(f"🔍 Database config: DB_NAME from env = {os.environ.get('DB_NAME', 'NOT SET')}")
 
+# FastAPI app
+app = FastAPI(title="Solana Casino Battle Royale")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
+
+
+@app.options("/{rest_of_path:path}")
+async def preflight_handler(rest_of_path: str):
+    return JSONResponse(status_code=200)
+
+
 # Socket.IO setup
 sio = socketio.AsyncServer(
     cors_allowed_origins="*",
@@ -168,26 +191,6 @@ sio = socketio.AsyncServer(
     max_http_buffer_size=10000000  # 10MB for large payloads
     # engineio_path is set via ASGIApp's socketio_path parameter
 )
-
-# FastAPI app
-app = FastAPI(title="Solana Casino Battle Royale")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://erniocasino.vercel.app",
-        "https://www.erniocasino.vercel.app",
-        "http://localhost:3000",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.options("/{rest_of_path:path}")
-async def preflight_handler(rest_of_path: str):
-    return JSONResponse(status_code=200)
 api_router = APIRouter(prefix="/api")
 
 # Room types and settings
@@ -3760,21 +3763,6 @@ async def view_gift_details(gift_id: str):
 
 # Include the router
 app.include_router(api_router)
-
-# Provide a catch-all handler so OPTIONS preflight requests always succeed
-@app.options("/{full_path:path}")
-async def preflight_handler(full_path: str) -> Response:
-    """Return an empty 200 response for CORS preflight requests."""
-    return Response(status_code=200)
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Create Socket.IO ASGI app with custom path
 # socketio_path='/' means the Socket.IO server will handle requests at the mounted path
