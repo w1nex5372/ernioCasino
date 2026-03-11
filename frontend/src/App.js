@@ -810,9 +810,11 @@ function App() {
 
       // Atomic: set players + show wheel in ONE state update — no timing issues
       showGetReadyRef.current = true;
-      setRouletteConfig({ players: data.players || [], winner: null });
+      const roomPlayers = data.players || [];
+      setRouletteConfig({ players: roomPlayers, winner: null });
 
-      console.log('✅ Roulette config set with', (data.players || []).length, 'players');
+      // DEBUG TOAST - remove after testing
+      toast.info(`🎡 Roulette: ${roomPlayers.length} players loaded`, { duration: 4000 });
     });
 
     newSocket.on('game_starting', (data) => {
@@ -900,10 +902,14 @@ function App() {
         // Roulette is spinning - inject winner into existing config atomically
         console.log('🎡 Roulette active - injecting winner into wheel');
         setRouletteConfig(prev => prev ? { ...prev, winner: data.winner } : prev);
+        // DEBUG TOAST - remove after testing
+        toast.success(`🏆 Winner: ${data.winner?.first_name || '?'}`, { duration: 4000 });
         setWinnerDisplayedForGame(matchId);
         if (user) loadUserPrizes();
       } else {
         // No roulette - show winner screen directly
+        // DEBUG TOAST - remove after testing
+        toast.error(`⚠️ No roulette active when winner arrived`, { duration: 5000 });
         setRouletteConfig(null);
         showGetReadyRef.current = false;
         setWinnerData(winnerInfo);
