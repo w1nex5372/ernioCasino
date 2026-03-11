@@ -271,7 +271,7 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
       animatingRef.current = false;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const isUserWinner = winner && currentUser && (
     String(currentUser.id) === String(winner.user_id) ||
