@@ -570,7 +570,10 @@ function App() {
     newSocket.on('room_ready', (data) => {
       console.log('🚀🚀🚀 EVENT: room_ready RECEIVED 🚀🚀🚀');
       console.log('📥 room_ready data:', data);
-      
+
+      // Reset block flag for new game
+      blockWinnerScreenRef.current = false;
+
       // Check if already showing GET READY to prevent duplicates
       if (showGetReadyRef.current) {
         console.log('🚫 BLOCKED - GET READY already showing');

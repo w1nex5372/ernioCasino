@@ -1163,9 +1163,9 @@ async def start_game_round(room: GameRoom):
     })
     logging.info(f"✅ Emitted game_finished to room {room.id}, winner: {winner.username}, match_id: {match_id}")
     
-    # Wait for winner announcement screen (2 seconds as requested)
-    logging.info(f"⏱️ Waiting 2 seconds for winner announcement...")
-    await asyncio.sleep(2)
+    # Wait for winner announcement screen (8 seconds so players can see it)
+    logging.info(f"⏱️ Waiting 8 seconds for winner announcement...")
+    await asyncio.sleep(8)
     
     # EVENT 4: redirect_home - Redirect all players back to home screen
     final_sockets = socket_rooms.room_to_sockets.get(room.id, set())
@@ -2404,12 +2404,13 @@ async def add_fake_player(room_type: str, player_name: str, bet_amount: int, adm
     if len(target_room.players) >= 3:
         raise HTTPException(status_code=400, detail="Room is already full")
 
+    bot_seed = str(uuid.uuid4())[:8]
     fake_player = RoomPlayer(
-        user_id=f"bot_{str(uuid.uuid4())[:8]}",
+        user_id=f"bot_{bot_seed}",
         username=f"@{player_name.lower().replace(' ', '_')}",
         first_name=player_name,
-        last_name="[BOT]",
-        photo_url="",
+        last_name="",
+        photo_url=f"https://pravatar.cc/150?u={bot_seed}",
         bet_amount=bet_amount
     )
     target_room.players.append(fake_player)
