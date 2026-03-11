@@ -121,6 +121,235 @@ function CountdownTimer({ onComplete }) {
   );
 }
 
+// Roulette Wheel Component
+function RouletteWheel({ players, winner, onComplete, currentUser }) {
+  const canvasRef = React.useRef(null);
+  const rotRef = React.useRef(0);
+  const targetRotRef = React.useRef(null);
+  const animatingRef = React.useRef(true);
+  const rafRef = React.useRef(null);
+  const [displayRot, setDisplayRot] = React.useState(0);
+  const [showResult, setShowResult] = React.useState(false);
+
+  const COLORS = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#e91e63'];
+
+  const playerData = React.useMemo(() => {
+    if (!players || players.length === 0) return [];
+    const totalBets = players.reduce((sum, p) => sum + (Number(p.bet_amount) || 1), 0);
+    let cum = 0;
+    return players.map((p, i) => {
+      const bet = Number(p.bet_amount) || 1;
+      const angleDeg = (bet / totalBets) * 360;
+      const start = cum;
+      cum += angleDeg;
+      return { ...p, bet, pct: ((bet / totalBets) * 100).toFixed(1), angleDeg, startDeg: start, color: COLORS[i % COLORS.length] };
+    });
+  }, [players]);
+
+  // Draw wheel segments once
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || playerData.length === 0) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const cx = W / 2, cy = W / 2, R = W / 2 - 6;
+    ctx.clearRect(0, 0, W, W);
+
+    playerData.forEach(p => {
+      const startRad = (p.startDeg * Math.PI) / 180;
+      const endRad = ((p.startDeg + p.angleDeg) * Math.PI) / 180;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, R, startRad, endRad);
+      ctx.closePath();
+      ctx.fillStyle = p.color;
+      ctx.fill();
+      ctx.strokeStyle = '#0f0f23';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      if (p.angleDeg > 18) {
+        const midRad = startRad + (endRad - startRad) / 2;
+        const lr = R * 0.64;
+        ctx.save();
+        ctx.translate(cx + lr * Math.cos(midRad), cy + lr * Math.sin(midRad));
+        ctx.rotate(midRad + Math.PI / 2);
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText((p.first_name || 'P').substring(0, 8), 0, -6);
+        ctx.font = '9px Arial';
+        ctx.fillText(p.pct + '%', 0, 6);
+        ctx.restore();
+      }
+    });
+
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.strokeStyle = '#7c3aed';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    // Decorative inner ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, R - 8, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(124,58,237,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Center circle
+    ctx.beginPath();
+    ctx.arc(cx, cy, 32, 0, Math.PI * 2);
+    ctx.fillStyle = '#1a1a3e';
+    ctx.fill();
+    ctx.strokeStyle = '#7c3aed';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }, [playerData]);
+
+  // Set target rotation when winner arrives
+  React.useEffect(() => {
+    if (winner && targetRotRef.current === null && playerData.length > 0) {
+      const idx = playerData.findIndex(p =>
+        String(p.user_id) === String(winner.user_id) ||
+        String(p.telegram_id) === String(winner.telegram_id)
+      );
+      const i = idx >= 0 ? idx : 0;
+      const midDeg = playerData[i].startDeg + playerData[i].angleDeg / 2;
+      // CSS rotate(R): segment at canvas-angle midDeg will appear at top (270°) when:
+      // midDeg + R ≡ 270 (mod 360)  →  R = (270 - midDeg + 360k) mod 360
+      const currentMod = rotRef.current % 360;
+      const targetMod = ((270 - midDeg) % 360 + 360) % 360;
+      const delta = ((targetMod - currentMod) + 360) % 360;
+      targetRotRef.current = rotRef.current + 360 * 4 + (delta === 0 ? 360 : delta);
+    }
+  }, [winner, playerData]);
+
+  // Animation loop
+  React.useEffect(() => {
+    animatingRef.current = true;
+    const animate = () => {
+      if (!animatingRef.current) return;
+      if (targetRotRef.current !== null) {
+        const remaining = targetRotRef.current - rotRef.current;
+        if (remaining <= 0.3) {
+          rotRef.current = targetRotRef.current;
+          setDisplayRot(rotRef.current);
+          animatingRef.current = false;
+          setTimeout(() => {
+            setShowResult(true);
+            setTimeout(onComplete, 3500);
+          }, 300);
+          return;
+        }
+        const speed = Math.max(0.2, Math.min(8, remaining / 25));
+        rotRef.current += speed;
+      } else {
+        const accel = rotRef.current < 720 ? 0.2 : 0;
+        rotRef.current += Math.min(8, (rotRef.current < 720 ? rotRef.current / 90 + 1 : 8) + accel);
+      }
+      setDisplayRot(rotRef.current);
+      rafRef.current = requestAnimationFrame(animate);
+    };
+    rafRef.current = requestAnimationFrame(animate);
+    return () => {
+      animatingRef.current = false;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [onComplete]);
+
+  const isUserWinner = winner && currentUser && (
+    String(currentUser.id) === String(winner.user_id) ||
+    String(currentUser.telegram_id) === String(winner.telegram_id)
+  );
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)' }}>
+
+      {/* Animated stars */}
+      <div className="absolute inset-0 pointer-events-none">
+        {[...Array(25)].map((_, i) => (
+          <div key={i} className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+            style={{ left: `${(i * 37 + 11) % 100}%`, top: `${(i * 53 + 7) % 100}%`, opacity: 0.3 + (i % 5) * 0.1, animationDelay: `${i * 0.3}s` }} />
+        ))}
+      </div>
+
+      {/* Title */}
+      <h2 className="text-xl font-bold text-white mb-3 z-10 tracking-wider">
+        {showResult ? '🏆 WINNER REVEALED!' : '🎰 SPINNING...'}
+      </h2>
+
+      {/* Wheel */}
+      <div className="relative flex items-center justify-center z-10">
+        {/* Pointer triangle (top) */}
+        <div className="absolute -top-1 left-1/2 -translate-x-1/2 z-20"
+          style={{ width: 0, height: 0, borderLeft: '12px solid transparent', borderRight: '12px solid transparent', borderTop: '24px solid #f59e0b', filter: 'drop-shadow(0 0 10px rgba(245,158,11,1))' }} />
+
+        {/* Spinning wheel */}
+        <div style={{ transform: `rotate(${displayRot}deg)`, borderRadius: '50%', boxShadow: '0 0 50px rgba(124,58,237,0.6), 0 0 20px rgba(124,58,237,0.3)' }}>
+          <canvas ref={canvasRef} width={260} height={260} style={{ borderRadius: '50%', display: 'block' }} />
+        </div>
+
+        {/* Center overlay - does NOT rotate */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden shadow-lg"
+            style={{ background: '#1a1a3e', border: '3px solid #7c3aed', boxShadow: '0 0 15px rgba(124,58,237,0.5)' }}>
+            {showResult && winner?.photo_url ? (
+              <img src={winner.photo_url} alt="winner" className="w-full h-full object-cover"
+                onError={e => { e.target.style.display = 'none'; }} />
+            ) : showResult && winner ? (
+              <span className="text-white font-black text-2xl">{(winner.first_name || '?').charAt(0)}</span>
+            ) : (
+              <span className="text-2xl">🎰</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Result text */}
+      <div className="mt-4 text-center z-10 px-6 min-h-[70px]">
+        {showResult && winner ? (
+          <div>
+            <p className="text-2xl font-black text-yellow-400 animate-bounce">
+              🏆 {winner.first_name} {winner.last_name || ''} 🏆
+            </p>
+            <p className={`mt-2 text-base font-semibold ${isUserWinner ? 'text-green-400' : 'text-slate-300'}`}>
+              {isUserWinner ? '🎉 Congratulations! You Won!' : 'You lose this time... 🍀'}
+            </p>
+            {!isUserWinner && (
+              <p className="text-slate-400 text-sm mt-1">Next time will be your time! Keep going!</p>
+            )}
+          </div>
+        ) : (
+          <p className="text-purple-300 text-sm animate-pulse mt-2">Determining the winner...</p>
+        )}
+      </div>
+
+      {/* Players list */}
+      <div className="mt-3 w-full max-w-xs px-4 z-10">
+        <div className="bg-black/40 backdrop-blur rounded-xl p-3 border border-purple-500/20">
+          <p className="text-purple-300 text-xs text-center mb-2 font-semibold tracking-wider">PLAYERS</p>
+          {playerData.map((p, i) => (
+            <div key={p.user_id || i} className="flex items-center gap-2 py-0.5">
+              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+              <span className="text-white text-sm flex-1 truncate">
+                {p.first_name} {p.last_name || ''}
+                {currentUser && String(currentUser.id) === String(p.user_id) && (
+                  <span className="text-blue-400 text-xs ml-1">(you)</span>
+                )}
+              </span>
+              <span className="text-xs font-bold" style={{ color: p.color }}>{p.pct}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   // Core state
   const [socket, setSocket] = useState(null);
@@ -192,9 +421,11 @@ function App() {
   const [currentGameData, setCurrentGameData] = useState(null); // Store current game info
   
   // New synchronization states
-  const [showGetReady, setShowGetReady] = useState(false); // Show "GET READY!" animation
+  const [showGetReady, setShowGetReady] = useState(false); // Show roulette wheel animation
+  const [roulettePlayers, setRoulettePlayers] = useState([]); // Players for roulette
+  const [rouletteWinnerData, setRouletteWinnerData] = useState(null); // Winner to reveal in roulette
   const [shownMatchIds, setShownMatchIds] = useState(new Set()); // Track shown match IDs to prevent duplicates
-  const [getReadyCountdown, setGetReadyCountdown] = useState(3); // Countdown for GET READY screen
+  const [getReadyCountdown, setGetReadyCountdown] = useState(3); // Countdown (kept for compat)
   const showGetReadyRef = React.useRef(false); // Ref to track GET READY state for socket listeners
   const blockWinnerScreenRef = React.useRef(false); // Block winner screen after redirect_home
   const [forceHideLobby, setForceHideLobby] = useState(false); // Force hide lobby after redirect
@@ -593,9 +824,11 @@ function App() {
       
       console.log('AFTER setting states');
       
-      // THEN show GET READY
+      // THEN show roulette wheel
       setShowGetReady(true);
       showGetReadyRef.current = true;
+      setRoulettePlayers(data.players || []);
+      setRouletteWinnerData(null);
       setGetReadyCountdown(data.countdown || 3);
       
       console.log('GET READY SHOWN');
@@ -673,15 +906,13 @@ function App() {
         String(user.telegram_id) === String(data.winner?.telegram_id)
       );
       
-      // FORCE CLOSE ALL OTHER SCREENS
+      // Close game/lobby screens
       setGameInProgress(false);
       setCurrentGameData(null);
       setInLobby(false);
       setLobbyData(null);
       setActiveRoom(null);
-      setShowGetReady(false);
-      showGetReadyRef.current = false;
-      
+
       // Prepare winner data
       const winnerInfo = {
         winner: data.winner,
@@ -698,34 +929,38 @@ function App() {
         game_time: gameTime,
         match_id: matchId
       };
-      
-      // Set winner screen state
-      setWinnerData(winnerInfo);
-      setShowWinnerScreen(true);
-      setWinnerDisplayedForGame(matchId);
-      
-      console.log('✅ Winner screen displayed');
-      
-      // Auto-redirect to home after 5 seconds
-      setTimeout(() => {
-        console.log('⏰ 5 seconds elapsed - auto-redirecting to home');
-        setShowWinnerScreen(false);
-        setWinnerData(null);
-        setActiveTab('rooms');
-        
-        // Reload user data
-        if (user && user.id) {
-          axios.get(`${API}/user/${user.id}`)
-            .then(response => setUser(response.data))
-            .catch(error => console.error('Failed to reload user:', error));
-        }
-        
-        loadRooms();
-        loadGameHistory();
-      }, 5000);
-      
-      // Load prizes immediately
-      if (user) loadUserPrizes();
+
+      if (showGetReadyRef.current) {
+        // Roulette is spinning - pass winner to wheel animation
+        console.log('🎡 Roulette active - passing winner to wheel');
+        setRouletteWinnerData(data.winner);
+        setWinnerDisplayedForGame(matchId);
+        if (user) loadUserPrizes();
+      } else {
+        // No roulette - show winner screen directly
+        setShowGetReady(false);
+        showGetReadyRef.current = false;
+        setWinnerData(winnerInfo);
+        setShowWinnerScreen(true);
+        setWinnerDisplayedForGame(matchId);
+        console.log('✅ Winner screen displayed');
+
+        setTimeout(() => {
+          console.log('⏰ 5 seconds elapsed - auto-redirecting to home');
+          setShowWinnerScreen(false);
+          setWinnerData(null);
+          setActiveTab('rooms');
+          if (user && user.id) {
+            axios.get(`${API}/user/${user.id}`)
+              .then(response => setUser(response.data))
+              .catch(error => console.error('Failed to reload user:', error));
+          }
+          loadRooms();
+          loadGameHistory();
+        }, 5000);
+
+        if (user) loadUserPrizes();
+      }
     });
 
     newSocket.on('prize_won', (data) => {
@@ -1870,37 +2105,29 @@ function App() {
       isMobile ? 'overflow-x-hidden max-w-full w-full' : ''
     }`} style={isMobile ? {maxWidth: '100vw', width: '100vw'} : {}}>
       
-      {/* GET READY! Full-Screen Animation */}
+      {/* Roulette Wheel Animation */}
       {showGetReady && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 animate-pulse">
-          <div className="text-center">
-            <div className="text-8xl font-black mb-8 animate-bounce" style={{
-              background: 'linear-gradient(135deg, #22c55e, #10b981, #22c55e)',
-              backgroundSize: '200% 200%',
-              animation: 'gradient 2s ease infinite, bounce 0.5s ease infinite',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              textShadow: '0 0 40px rgba(34, 197, 94, 0.5)'
-            }}>
-              🚀 GET READY! 🚀
-            </div>
-            <div className="text-6xl font-bold text-white animate-pulse">
-              {getReadyCountdown}
-            </div>
-            <div className="mt-8 text-2xl text-green-400 font-semibold animate-pulse">
-              BATTLE STARTS SOON...
-            </div>
-          </div>
-          
-          {/* Add gradient animation keyframes */}
-          <style>{`
-            @keyframes gradient {
-              0% { background-position: 0% 50%; }
-              50% { background-position: 100% 50%; }
-              100% { background-position: 0% 50%; }
+        <RouletteWheel
+          players={roulettePlayers}
+          winner={rouletteWinnerData}
+          currentUser={user}
+          onComplete={() => {
+            setShowGetReady(false);
+            showGetReadyRef.current = false;
+            setRoulettePlayers([]);
+            setRouletteWinnerData(null);
+            setActiveTab('rooms');
+            setInLobby(false);
+            setGameInProgress(false);
+            if (user && user.id) {
+              axios.get(`${API}/user/${user.id}`)
+                .then(response => setUser(response.data))
+                .catch(() => {});
             }
-          `}</style>
-        </div>
+            loadRooms();
+            loadGameHistory();
+          }}
+        />
       )}
       
       {/* Header */}

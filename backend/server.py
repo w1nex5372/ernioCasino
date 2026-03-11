@@ -1107,8 +1107,8 @@ async def start_game_round(room: GameRoom):
     logging.info(f"✅ Emitted room_ready to room {room.id} with match_id {match_id}")
     logging.info(f"📤 Delivered room_ready to {final_socket_count} clients successfully")
     
-    # Wait for "GET READY!" animation (3 seconds)
-    await asyncio.sleep(3)
+    # Wait for roulette wheel animation (5 seconds - enough time to spin)
+    await asyncio.sleep(5)
     
     # Select winner immediately after GET READY (no game_starting event needed)
     room.status = "playing"
