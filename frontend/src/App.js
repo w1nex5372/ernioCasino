@@ -434,12 +434,10 @@ function App() {
   const [currentGameData, setCurrentGameData] = useState(null); // Store current game info
   
   // New synchronization states
-  const [showGetReady, setShowGetReady] = useState(false); // Show roulette wheel animation
-  const [roulettePlayers, setRoulettePlayers] = useState([]); // Players for roulette
-  const [rouletteWinnerData, setRouletteWinnerData] = useState(null); // Winner to reveal in roulette
+  // Single atomic roulette state - null=hidden, {players,winner}=show wheel
+  const [rouletteConfig, setRouletteConfig] = useState(null);
   const [shownMatchIds, setShownMatchIds] = useState(new Set()); // Track shown match IDs to prevent duplicates
-  const [getReadyCountdown, setGetReadyCountdown] = useState(3); // Countdown (kept for compat)
-  const showGetReadyRef = React.useRef(false); // Ref to track GET READY state for socket listeners
+  const showGetReadyRef = React.useRef(false); // Ref to track roulette state for socket listeners
   const blockWinnerScreenRef = React.useRef(false); // Block winner screen after redirect_home
   const [forceHideLobby, setForceHideLobby] = useState(false); // Force hide lobby after redirect
   
@@ -602,33 +600,13 @@ function App() {
       console.log(`📊 [Room Monitor] ${lobbyData.room_type} room has ${currentRoomPlayers.length}/3 players`);
       console.log('📊 [Room Monitor] Players:', currentRoomPlayers.map(p => p.username).join(', '));
       
-      if (currentRoomPlayers.length === 3) {
-        console.log('✅ [Room Monitor] ROOM IS FULL - Triggering game flow...');
-        
-        // CRITICAL: Show GET READY immediately
-        console.log('🎬 SHOWING GET READY ANIMATION');
-        setInLobby(false);  // Hide lobby
+      if (currentRoomPlayers.length === 3 && !showGetReadyRef.current) {
+        console.log('✅ [Room Monitor] ROOM IS FULL - room_ready socket event will handle roulette');
+        // The room_ready socket event handles showing the roulette with proper player data
+        // This polling fallback only hides the lobby - no roulette logic here
+        setInLobby(false);
         setLobbyData(null);
-        setForceHideLobby(true);  // Prevent lobby from reappearing
-        setShowGetReady(true);
-        setGetReadyCountdown(3);
-        
-        // Countdown
-        let countdown = 3;
-        const countdownInterval = setInterval(() => {
-          countdown--;
-          setGetReadyCountdown(countdown);
-          if (countdown <= 0) {
-            clearInterval(countdownInterval);
-          }
-        }, 1000);
-        
-        // After 3 seconds, hide GET READY and wait for winner
-        setTimeout(() => {
-          console.log('🎬 Hiding GET READY, waiting for winner...');
-          setShowGetReady(false);
-          // Winner will be detected by polling and shown automatically
-        }, 3000);
+        setForceHideLobby(true);
       }
     }
   }, [roomParticipants, inLobby, lobbyData])
@@ -826,41 +804,20 @@ function App() {
       
       // AGGRESSIVELY CLOSE EVERYTHING IMMEDIATELY
       console.log('🚪🚪🚪 FORCE CLOSING ALL SCREENS 🚪🚪🚪');
-      console.log('BEFORE:', { inLobby, showGetReady, showWinnerScreen, gameInProgress, forceHideLobby });
-      
+      console.log('BEFORE:', { inLobby, rouletteActive: showGetReadyRef.current, showWinnerScreen, gameInProgress, forceHideLobby });
+
       setInLobby(false);
       setLobbyData(null);
       setGameInProgress(false);
       setShowWinnerScreen(false);
       setWinnerData(null);
       setForceHideLobby(true);
-      
-      console.log('AFTER setting states');
-      
-      // Set players FIRST so they're available when roulette mounts
-      setRoulettePlayers(data.players || []);
-      setRouletteWinnerData(null);
-      setGetReadyCountdown(data.countdown || 3);
-      // Show roulette LAST (so it mounts with players already in state)
-      setShowGetReady(true);
+
+      // Atomic: set players + show wheel in ONE state update — no timing issues
       showGetReadyRef.current = true;
-      
-      console.log('GET READY SHOWN');
-      
-      // Start countdown
-      let count = data.countdown || 3;
-      const countdownInterval = setInterval(() => {
-        count--;
-        console.log(`⏱️ Countdown: ${count}`);
-        setGetReadyCountdown(count);
-        if (count <= 0) {
-          clearInterval(countdownInterval);
-          console.log('⏱️ Countdown complete - waiting for winner screen');
-        }
-      }, 1000);
-      
-      // DON'T hide GET READY manually - let game_finished event replace it immediately
-      console.log('✅ room_ready handler complete - GET READY stays visible until winner screen');
+      setRouletteConfig({ players: data.players || [], winner: null });
+
+      console.log('✅ Roulette config set with', (data.players || []).length, 'players');
     });
 
     newSocket.on('game_starting', (data) => {
@@ -945,14 +902,14 @@ function App() {
       };
 
       if (showGetReadyRef.current) {
-        // Roulette is spinning - pass winner to wheel animation
-        console.log('🎡 Roulette active - passing winner to wheel');
-        setRouletteWinnerData(data.winner);
+        // Roulette is spinning - inject winner into existing config atomically
+        console.log('🎡 Roulette active - injecting winner into wheel');
+        setRouletteConfig(prev => prev ? { ...prev, winner: data.winner } : prev);
         setWinnerDisplayedForGame(matchId);
         if (user) loadUserPrizes();
       } else {
         // No roulette - show winner screen directly
-        setShowGetReady(false);
+        setRouletteConfig(null);
         showGetReadyRef.current = false;
         setWinnerData(winnerInfo);
         setShowWinnerScreen(true);
@@ -1046,7 +1003,7 @@ function App() {
       setForceHideLobby(false);
       // Don't close roulette if it's actively spinning - let it complete naturally
       if (!showGetReadyRef.current) {
-        setShowGetReady(false);
+        setRouletteConfig(null);
         setActiveTab('rooms');
       }
       
@@ -2123,16 +2080,14 @@ function App() {
     }`} style={isMobile ? {maxWidth: '100vw', width: '100vw'} : {}}>
       
       {/* Roulette Wheel Animation */}
-      {showGetReady && (
+      {rouletteConfig && (
         <RouletteWheel
-          players={roulettePlayers}
-          winner={rouletteWinnerData}
+          players={rouletteConfig.players}
+          winner={rouletteConfig.winner}
           currentUser={user}
           onComplete={() => {
-            setShowGetReady(false);
+            setRouletteConfig(null);
             showGetReadyRef.current = false;
-            setRoulettePlayers([]);
-            setRouletteWinnerData(null);
             setActiveTab('rooms');
             setInLobby(false);
             setGameInProgress(false);
@@ -2664,7 +2619,7 @@ function App() {
             )}
 
             {/* LOBBY SCREEN - Show when player is waiting in room - HIDDEN when GET READY animation is showing */}
-            {!showWinnerScreen && !gameInProgress && inLobby && !showGetReady && !forceHideLobby && lobbyData && (
+            {!showWinnerScreen && !gameInProgress && inLobby && !rouletteConfig && !forceHideLobby && lobbyData && (
               <Card className="bg-slate-800/90 border-2 border-yellow-500/50">
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl text-yellow-400 flex items-center justify-center gap-2">
