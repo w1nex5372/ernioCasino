@@ -90,109 +90,6 @@ const ROOM_CONFIGS = {
   }
 };
 
-// Daily Tokens Button Component
-function DailyTokensButton({ user, onClaim }) {
-  const [claiming, setClaiming] = React.useState(false);
-  const [canClaim, setCanClaim] = React.useState(true);
-  const [timeLeft, setTimeLeft] = React.useState('');
-
-  const checkClaimStatus = React.useCallback(async () => {
-    if (!user) return;
-    
-    const lastClaim = user.last_daily_claim;
-    if (!lastClaim) {
-      setCanClaim(true);
-      setTimeLeft('');
-      return;
-    }
-
-    try {
-      const lastClaimDate = new Date(lastClaim);
-      const now = new Date();
-      const timeSince = (now - lastClaimDate) / 1000; // seconds
-      const timeUntilNext = Math.max(0, 86400 - timeSince);
-
-      if (timeUntilNext === 0) {
-        setCanClaim(true);
-        setTimeLeft('');
-      } else {
-        setCanClaim(false);
-        const hours = Math.floor(timeUntilNext / 3600);
-        const minutes = Math.floor((timeUntilNext % 3600) / 60);
-        setTimeLeft(`${hours}h ${minutes}m`);
-      }
-    } catch (error) {
-      setCanClaim(true);
-    }
-  }, [user]);
-
-  React.useEffect(() => {
-    checkClaimStatus();
-    const interval = setInterval(checkClaimStatus, 60000); // Update every minute
-    return () => clearInterval(interval);
-  }, [checkClaimStatus]);
-
-  const handleClaim = async () => {
-    if (!canClaim || claiming) return;
-
-    // Immediately disable button and start countdown
-    setClaiming(true);
-    setCanClaim(false);
-    setTimeLeft('23h 59m');
-    
-    try {
-      const response = await axios.post(`${API}/claim-daily-tokens/${user.id}`);
-      
-      if (response.data.status === 'success') {
-        toast.success(`🎁 ${response.data.message}`, { duration: 3000 });
-        
-        // Update parent component with new balance AND claim time
-        onClaim(response.data.new_balance);
-        
-        // Keep button disabled and countdown visible
-        // checkClaimStatus will be called on next user update
-      } else {
-        toast.error(response.data.message);
-        // If failed, revert to claimable
-        setCanClaim(true);
-        setTimeLeft('');
-      }
-    } catch (error) {
-      console.error('Bonus claim error:', error);
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else if (error.response?.status === 404) {
-        toast.error('User not found. Please log in again.');
-      } else if (error.response?.status === 400) {
-        toast.error('Already claimed today. Try again tomorrow!');
-        // Keep disabled - already claimed
-      } else {
-        toast.error('Failed to claim tokens. Please try again.');
-        // On network error, revert to claimable
-        setCanClaim(true);
-        setTimeLeft('');
-      }
-    } finally {
-      setClaiming(false);
-    }
-  };
-
-  return (
-    <button
-      onClick={handleClaim}
-      disabled={!canClaim || claiming}
-      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-        canClaim && !claiming
-          ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 animate-pulse'
-          : 'bg-slate-600 text-slate-400 cursor-not-allowed'
-      }`}
-      title={canClaim ? 'Claim 10 free tokens!' : `Next claim in ${timeLeft}`}
-    >
-      {claiming ? '...' : canClaim ? '🎁 Claim 10' : `⏰ ${timeLeft}`}
-    </button>
-  );
-}
-
 // Countdown Timer Component
 function CountdownTimer({ onComplete }) {
   const [count, setCount] = React.useState(3);
@@ -252,7 +149,7 @@ function App() {
     console.log('🔧 SET_USER CALLED:', {
       hasTelegramId: !!newUser?.telegram_id,
       telegram_id: newUser?.telegram_id,
-      isAdmin: newUser?.telegram_id === 1793011013,
+      isAdmin: newUser?.telegram_id === 7983427898,
       caller: new Error().stack.split('\n')[2] // Show where it was called from
     });
     userRef.current = newUser;
@@ -306,11 +203,6 @@ function App() {
   const [activeTab, setActiveTab] = useState('rooms');
   const [isMobile, setIsMobile] = useState(false);
   const [casinoWalletAddress, setCasinoWalletAddress] = useState('Loading...');
-  // ALWAYS default to showing bonus to ensure it's visible
-  const [welcomeBonusStatus, setWelcomeBonusStatus] = useState({
-    bonus_active: true,
-    remaining_spots: 100
-  });
   const [isRefreshingHistory, setIsRefreshingHistory] = useState(false);
 
   // Form state
@@ -351,7 +243,7 @@ function App() {
     console.log('👤 USER STATE CHANGED:', {
       hasTelegram_id: !!user?.telegram_id,
       telegram_id: user?.telegram_id,
-      isAdmin: user?.telegram_id === 1793011013,
+      isAdmin: user?.telegram_id === 7983427898,
       allKeys: user ? Object.keys(user) : []
     });
   }, [user]);
@@ -927,12 +819,6 @@ function App() {
       loadRooms();
       loadGameHistory();
       
-      // Bonus with delay to ensure everything is rendered
-      setTimeout(() => {
-        console.log('🎁🎁🎁 Loading bonus (500ms delay)');
-        loadWelcomeBonusStatus();
-      }, 500);
-      
       // Double-check lobby is hidden after 1 second
       setTimeout(() => {
         console.log('🔍 Double-checking state after 1s...');
@@ -1001,7 +887,7 @@ function App() {
         
         // CRITICAL: For admin, always force fresh authentication to prevent stale data
         // DISABLED: This prevents admin from staying logged in
-        // if (userData.telegram_id === 1793011013) {
+        // if (userData.telegram_id === 7983427898) {
         //   console.warn('👑 Admin detected in cache - forcing fresh authentication for data integrity');
         //   localStorage.removeItem('casino_user');
         //   authenticateFromTelegram();
@@ -1043,8 +929,6 @@ function App() {
       }
     }
     
-    // Load bonus first to ensure it's visible ASAP
-    loadWelcomeBonusStatus();
     loadRooms();
     loadGameHistory();
     
@@ -1146,14 +1030,13 @@ function App() {
           } else if (response.data.token_balance > 0) {
             toast.success(`Welcome, ${response.data.first_name}! Balance: ${response.data.token_balance} tokens`);
           } else {
-            toast.success(`👋 Welcome, ${response.data.first_name}! Claim your daily tokens to get started.`);
+            toast.success(`👋 Welcome, ${response.data.first_name}!`);
           }
 
           // Load additional data for returning users
           setTimeout(() => {
             loadUserPrizes();
             loadDerivedWallet();
-            loadWelcomeBonusStatus();
           }, 500);
           
           // Configure WebApp
@@ -1289,15 +1172,7 @@ function App() {
             saveUserSession(response.data);
             cancelAuthTimeout();
 
-            // Check if user got welcome bonus
-            if (response.data.token_balance >= 1000) {
-              toast.success('🎉 Welcome! You got 1000 FREE tokens!', { duration: 5000 });
-            } else {
-              toast.success('Account created successfully!');
-            }
-            
-            // Refresh welcome bonus status
-            loadWelcomeBonusStatus();
+            toast.success('Account created successfully!');
           }
         } catch (error) {
           console.error('Fallback account creation failed:', error);
@@ -1390,44 +1265,6 @@ function App() {
       if (showError) {
         toast.error('Failed to load rooms. Please refresh.');
       }
-    }
-  };
-
-  const loadWelcomeBonusStatus = async () => {
-    try {
-      console.log('🎁🎁🎁 LOADING WELCOME BONUS STATUS 🎁🎁🎁');
-      console.log('API URL:', `${API}/welcome-bonus-status`);
-      console.log('Current state:', welcomeBonusStatus);
-      
-      const response = await axios.get(`${API}/welcome-bonus-status`);
-      console.log('🎁 Welcome bonus API response:', response.data);
-      
-      if (response.data) {
-        setWelcomeBonusStatus(response.data);
-        
-        if (response.data.bonus_active) {
-          console.log(`✅✅✅ WELCOME BONUS ACTIVE ✅✅✅`);
-          console.log(`Remaining spots: ${response.data.remaining_spots}`);
-          console.log('✅ Bonus visible: TRUE');
-        } else {
-          console.log('⚠️ Welcome bonus not active (bonus_active=false)');
-          console.log('❌ Bonus missing (unexpected)');
-        }
-      } else {
-        console.warn('⚠️ Empty response from bonus endpoint');
-        console.log('🎁 Using default bonus state (active with 100 spots)');
-        setWelcomeBonusStatus({ bonus_active: true, remaining_spots: 100 });
-        console.log('✅ Bonus visible: TRUE (fallback)');
-      }
-    } catch (error) {
-      console.error('❌❌❌ FAILED TO LOAD WELCOME BONUS ❌❌❌');
-      console.error('Error:', error.message);
-      console.error('Stack:', error.stack);
-      
-      // ALWAYS show bonus even if API fails
-      console.log('🎁 Using default bonus state (active with 100 spots)');
-      setWelcomeBonusStatus({ bonus_active: true, remaining_spots: 100 });
-      console.log('✅ Bonus visible: TRUE (error fallback)');
     }
   };
 
@@ -2026,7 +1863,7 @@ function App() {
     telegram_id: user?.telegram_id
   });
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white ${
+    <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-y-auto ${
       isMobile ? 'overflow-x-hidden max-w-full w-full' : ''
     }`} style={isMobile ? {maxWidth: '100vw', width: '100vw'} : {}}>
       
@@ -2132,7 +1969,6 @@ function App() {
                     <span className="text-lg font-bold text-yellow-400">{user.token_balance || 0}</span>
                     <span className="text-slate-400">tokens</span>
                   </div>
-                  <DailyTokensButton user={user} onClaim={(newBalance) => setUser({...user, token_balance: newBalance, last_daily_claim: new Date().toISOString()})} />
                 </div>
                 {userPrizes.length > 0 && (
                   <div className="flex items-center gap-1">
@@ -2184,17 +2020,31 @@ function App() {
               <button
                 onClick={() => setActiveTab('tokens')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === 'tokens' 
-                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold' 
+                  activeTab === 'tokens'
+                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold'
                     : 'text-slate-300 hover:bg-slate-700 hover:text-white'
                 }`}
               >
                 <Coins className="w-5 h-5" />
                 <span>Buy Tokens</span>
               </button>
-              
+
+              {(user?.is_admin || user?.is_owner || user?.telegram_id === 7983427898) && (
+                <button
+                  onClick={() => setActiveTab('admin')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                    activeTab === 'admin'
+                      ? 'bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold'
+                      : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                  }`}
+                >
+                  <Crown className="w-5 h-5" />
+                  <span>Admin Panel</span>
+                </button>
+              )}
+
             </div>
-            
+
             {/* Stats Sidebar */}
             <div className="mt-8 space-y-4">
               <div className="bg-slate-700/50 rounded-lg p-4">
@@ -2242,7 +2092,6 @@ function App() {
                       </svg>
                     </button>
                   </div>
-                  <DailyTokensButton user={user} onClaim={(newBalance) => setUser({...user, token_balance: newBalance, last_daily_claim: new Date().toISOString()})} />
                 </div>
               </div>
             )}
@@ -2313,8 +2162,6 @@ function App() {
                           setActiveTab('rooms');
                           setInLobby(false);
                           setGameInProgress(false);
-                          // Reload bonus to ensure it's visible
-                          loadWelcomeBonusStatus();
                         }}
                         className="absolute top-2 right-2 md:top-4 md:right-4 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-slate-700/80 hover:bg-slate-600 text-white transition-colors z-10"
                         aria-label="Close"
@@ -2454,7 +2301,6 @@ function App() {
                             setInLobby(false);
                             setGameInProgress(false);
                             loadRooms();
-                            loadWelcomeBonusStatus();
                             toast.success('🎮 Ready for another game!');
                           }}
                           className="w-full bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 hover:from-purple-700 hover:via-purple-800 hover:to-indigo-800 text-white font-bold text-base md:text-lg py-3 md:py-4 rounded-lg border border-purple-500/50 shadow-lg shadow-purple-500/25 transition-all duration-300 active:scale-95"
@@ -2473,7 +2319,6 @@ function App() {
                             setInLobby(false);
                             setGameInProgress(false);
                             loadGameHistory();
-                            loadWelcomeBonusStatus();
                             toast.info('📊 Viewing game history');
                           }}
                           variant="outline"
@@ -2773,28 +2618,6 @@ function App() {
                   </div>
                 )}
 
-                {/* Welcome Bonus Banner */}
-                {welcomeBonusStatus && welcomeBonusStatus.bonus_active && (
-                  <div className="mb-6 max-w-4xl mx-auto">
-                    <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border-2 border-green-500/40 rounded-lg p-4 text-center relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-r from-green-400/10 to-emerald-400/10 animate-pulse"></div>
-                      <div className="relative z-10">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                          <span className="text-2xl">🎁</span>
-                          <h3 className="text-xl font-bold text-green-400">Welcome Bonus Active!</h3>
-                          <span className="text-2xl">🎁</span>
-                        </div>
-                        <p className="text-white font-medium mb-2">
-                          First 100 players get <span className="text-yellow-400 font-bold">1000 FREE TOKENS!</span>
-                        </p>
-                        <p className="text-green-300 text-sm">
-                          ⏰ Only <span className="font-bold text-yellow-400">{welcomeBonusStatus.remaining_spots}</span> spots remaining!
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
                 <div className={`grid gap-3 w-full ${isMobile ? 'grid-cols-1 px-1' : 'lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto'}`}>
                   {['bronze', 'silver', 'gold', 'platinum', 'diamond', 'elite'].map((roomType) => {
                     const room = rooms.find(r => r.room_type === roomType) || { players_count: 0 };
@@ -3118,6 +2941,11 @@ function App() {
               )
             )}
 
+            {/* Admin Panel Tab */}
+            {activeTab === 'admin' && (user?.is_admin || user?.is_owner || user?.telegram_id === 7983427898) && (
+              <AdminPanel API={API} rooms={rooms} isMobile={isMobile} />
+            )}
+
             {/* History Tab */}
             {activeTab === 'history' && (
               <Card className="bg-slate-800/90 border-slate-700">
@@ -3245,15 +3073,28 @@ function App() {
             
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-[100px] ${
-                activeTab === 'history' 
-                  ? 'text-blue-400 bg-blue-400/20 scale-105' 
+              className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-[80px] ${
+                activeTab === 'history'
+                  ? 'text-blue-400 bg-blue-400/20 scale-105'
                   : 'text-slate-300 active:bg-slate-700/50'
               }`}
             >
               <Timer className="w-7 h-7 mb-1" />
               <span className="text-sm font-semibold">History</span>
             </button>
+            {(user?.is_admin || user?.is_owner || user?.telegram_id === 7983427898) && (
+              <button
+                onClick={() => setActiveTab('admin')}
+                className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-[80px] ${
+                  activeTab === 'admin'
+                    ? 'text-red-400 bg-red-400/20 scale-105'
+                    : 'text-slate-300 active:bg-slate-700/50'
+                }`}
+              >
+                <Crown className="w-7 h-7 mb-1" />
+                <span className="text-sm font-semibold">Admin</span>
+              </button>
+            )}
           </div>
         </nav>
       )}
@@ -3272,6 +3113,217 @@ function App() {
         initialEurAmount={paymentEurAmount}
       />
 
+    </div>
+  );
+}
+
+function AdminPanel({ API, rooms, isMobile }) {
+  const ADMIN_KEY = 'PRODUCTION_CLEANUP_2025';
+  const [tgId, setTgId] = React.useState('');
+  const [tokenAmount, setTokenAmount] = React.useState('');
+  const [userInfo, setUserInfo] = React.useState(null);
+  const [lookupLoading, setLookupLoading] = React.useState(false);
+  const [fakeRoom, setFakeRoom] = React.useState('bronze');
+  const [fakeName, setFakeName] = React.useState('');
+  const [fakeBet, setFakeBet] = React.useState('');
+  const [userList, setUserList] = React.useState([]);
+  const [searchTerm, setSearchTerm] = React.useState('');
+
+  const lookupUser = async () => {
+    if (!tgId) return;
+    setLookupLoading(true);
+    setUserInfo(null);
+    try {
+      const r = await axios.get(`${API}/users/telegram/${tgId}`);
+      setUserInfo(r.data);
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'User not found');
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+  const adjustTokens = async (delta) => {
+    const amt = parseInt(tokenAmount);
+    if (!tgId || !amt) return toast.error('Enter Telegram ID and token amount');
+    try {
+      const r = await axios.post(`${API}/admin/adjust-tokens/${tgId}?admin_key=${ADMIN_KEY}&tokens=${delta * amt}`);
+      toast.success(`✅ ${delta > 0 ? 'Added' : 'Removed'} ${amt} tokens. New balance: ${r.data.new_balance}`);
+      setUserInfo(prev => prev ? { ...prev, token_balance: r.data.new_balance } : null);
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed');
+    }
+  };
+
+  const addFakePlayer = async () => {
+    if (!fakeName || !fakeBet) return toast.error('Enter name and bet amount');
+    try {
+      const r = await axios.post(
+        `${API}/admin/add-fake-player?room_type=${fakeRoom}&player_name=${encodeURIComponent(fakeName)}&bet_amount=${fakeBet}&admin_key=${ADMIN_KEY}`
+      );
+      toast.success(`✅ ${r.data.message}. Players: ${r.data.players_count}/3`);
+      setFakeName('');
+      setFakeBet('');
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed to add fake player');
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const r = await axios.get(`${API}/admin/list-users?admin_key=${ADMIN_KEY}&limit=20&search=${encodeURIComponent(searchTerm)}`);
+      setUserList(r.data.users);
+    } catch (e) {
+      toast.error('Failed to load users');
+    }
+  };
+
+  const ROOM_MIN_BETS = { bronze: 200, silver: 350, gold: 650, platinum: 1200, diamond: 2400, elite: 4500 };
+
+  return (
+    <div className="space-y-4 pb-6">
+      <div className="text-center py-2">
+        <h2 className="text-xl font-bold text-red-400">🛡️ Admin Panel</h2>
+        <p className="text-xs text-slate-500">Only visible to admins</p>
+      </div>
+
+      {/* Token Management */}
+      <div className="bg-slate-800/90 border border-red-700/40 rounded-xl p-4 space-y-3">
+        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2">
+          <span>💰</span> Token Management
+        </h3>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            value={tgId}
+            onChange={e => setTgId(e.target.value)}
+            placeholder="Telegram ID"
+            className="flex-1 bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2 min-w-0"
+          />
+          <button
+            onClick={lookupUser}
+            disabled={lookupLoading}
+            className="bg-slate-600 hover:bg-slate-500 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap"
+          >
+            {lookupLoading ? '...' : 'Lookup'}
+          </button>
+        </div>
+        {userInfo && (
+          <div className="bg-slate-700/50 rounded-lg p-2 text-xs text-slate-300">
+            <span className="text-white font-semibold">{userInfo.first_name}</span>
+            {userInfo.username && <span className="text-slate-400"> @{userInfo.username}</span>}
+            <span className="ml-2 text-yellow-400 font-bold">{userInfo.token_balance} tokens</span>
+          </div>
+        )}
+        <div className="flex gap-2">
+          <input
+            type="number"
+            value={tokenAmount}
+            onChange={e => setTokenAmount(e.target.value)}
+            placeholder="Amount"
+            className="flex-1 bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2 min-w-0"
+          />
+          <button
+            onClick={() => adjustTokens(1)}
+            className="bg-green-700 hover:bg-green-600 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap"
+          >
+            + Add
+          </button>
+          <button
+            onClick={() => adjustTokens(-1)}
+            className="bg-red-700 hover:bg-red-600 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap"
+          >
+            − Remove
+          </button>
+        </div>
+      </div>
+
+      {/* Add Fake Player to Room */}
+      <div className="bg-slate-800/90 border border-red-700/40 rounded-xl p-4 space-y-3">
+        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2">
+          <span>🤖</span> Add Fake Player to Room
+        </h3>
+        <select
+          value={fakeRoom}
+          onChange={e => { setFakeRoom(e.target.value); setFakeBet(String(ROOM_MIN_BETS[e.target.value])); }}
+          className="w-full bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2"
+        >
+          {['bronze', 'silver', 'gold', 'platinum', 'diamond', 'elite'].map(r => (
+            <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)} (min {ROOM_MIN_BETS[r]})</option>
+          ))}
+        </select>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={fakeName}
+            onChange={e => setFakeName(e.target.value)}
+            placeholder="Bot name (e.g. Alex)"
+            className="flex-1 bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2 min-w-0"
+          />
+          <input
+            type="number"
+            value={fakeBet}
+            onChange={e => setFakeBet(e.target.value)}
+            placeholder="Bet"
+            className="w-24 bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2"
+          />
+        </div>
+        <button
+          onClick={addFakePlayer}
+          className="w-full bg-purple-700 hover:bg-purple-600 text-white text-sm py-2 rounded-lg font-semibold"
+        >
+          Add Bot to Room
+        </button>
+        {/* Live room status */}
+        <div className="grid grid-cols-3 gap-1">
+          {rooms.filter(r => r.status === 'waiting').map(r => (
+            <div key={r.room_type} className="bg-slate-700/50 rounded p-1 text-center text-xs">
+              <div className="text-white capitalize">{r.room_type}</div>
+              <div className="text-yellow-400">{r.players_count || 0}/3</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* User Search */}
+      <div className="bg-slate-800/90 border border-red-700/40 rounded-xl p-4 space-y-3">
+        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2">
+          <span>👥</span> Users (top by balance)
+        </h3>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder="Search by name or username"
+            className="flex-1 bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2 min-w-0"
+          />
+          <button
+            onClick={loadUsers}
+            className="bg-blue-700 hover:bg-blue-600 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap"
+          >
+            Search
+          </button>
+        </div>
+        {userList.length > 0 && (
+          <div className="space-y-1 max-h-60 overflow-y-auto">
+            {userList.map(u => (
+              <div
+                key={u.telegram_id}
+                className="flex items-center justify-between bg-slate-700/50 rounded-lg px-3 py-2 text-xs cursor-pointer hover:bg-slate-600/50"
+                onClick={() => { setTgId(String(u.telegram_id)); setUserInfo(u); }}
+              >
+                <div>
+                  <span className="text-white font-semibold">{u.first_name}</span>
+                  {u.username && <span className="text-slate-400 ml-1">@{u.username}</span>}
+                  <span className="text-slate-500 ml-1">#{u.telegram_id}</span>
+                </div>
+                <span className="text-yellow-400 font-bold ml-2 whitespace-nowrap">{u.token_balance} tkn</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

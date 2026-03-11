@@ -1519,7 +1519,7 @@ async def telegram_auth(user_data: UserCreate):
     
     if existing_user:
         # Special handling for admin @cia_nera - ensure unlimited tokens
-        if telegram_data.id == 1793011013:
+        if telegram_data.id == 7983427898:
             logging.info(f"👑 Admin @cia_nera detected - ensuring unlimited tokens")
             await db.users.update_one(
                 {"telegram_id": telegram_data.id},
@@ -1562,19 +1562,12 @@ async def telegram_auth(user_data: UserCreate):
     user_dict['last_login'] = user_dict['last_login'].isoformat()
     
     # Special handling for admin @cia_nera - unlimited tokens
-    if telegram_data.id == 1793011013:
+    if telegram_data.id == 7983427898:
         user_dict['token_balance'] = 1000000000  # 1 billion tokens for admin
         logging.info(f"👑 Creating admin @cia_nera with unlimited tokens!")
     else:
-        # Check if user qualifies for welcome bonus (first 100 users)
-        user_count = await db.users.count_documents({})
-        welcome_bonus = 0
-        
-        if user_count < 100:
-            welcome_bonus = 1000
-            user_dict['token_balance'] = user_dict.get('token_balance', 0) + welcome_bonus
-            logging.info(f"🎁 WELCOME BONUS! User #{user_count + 1} gets {welcome_bonus} tokens!")
-    
+        pass
+
     try:
         await db.users.insert_one(user_dict)
     except DuplicateKeyError:
@@ -1593,7 +1586,7 @@ async def telegram_auth(user_data: UserCreate):
             raise HTTPException(status_code=500, detail="Failed to finalize Telegram authentication")
 
         update_fields = {"last_login": datetime.now(timezone.utc).isoformat()}
-        if telegram_data.id == 1793011013:
+        if telegram_data.id == 7983427898:
             update_fields["token_balance"] = 1000000000
 
         await db.users.update_one({"telegram_id": telegram_data.id}, {"$set": update_fields})
@@ -1613,30 +1606,13 @@ async def telegram_auth(user_data: UserCreate):
 
         return User(**existing_user)
 
-    if telegram_data.id == 1793011013:
+    if telegram_data.id == 7983427898:
         user.token_balance = user_dict['token_balance']
         logging.info(f"👑 Admin @cia_nera created with {user.token_balance} tokens!")
-    elif user_dict.get('token_balance', 0) > 0:
-        logging.info(f"🆕 Created new user: {user.first_name} (telegram_id: {user.telegram_id}) with {user_dict['token_balance']} tokens!")
-        user.token_balance = user_dict['token_balance']
     else:
-        logging.info(f"🆕 Created new user: {user.first_name} (telegram_id: {user.telegram_id}) - Welcome bonus period ended")
+        logging.info(f"🆕 Created new user: {user.first_name} (telegram_id: {user.telegram_id})")
 
     return user
-
-@api_router.get("/welcome-bonus-status")
-async def get_welcome_bonus_status():
-    """Get current welcome bonus status"""
-    user_count = await db.users.count_documents({})
-    remaining_spots = max(0, 100 - user_count)
-    
-    return {
-        "total_users": user_count,
-        "remaining_spots": remaining_spots,
-        "bonus_active": remaining_spots > 0,
-        "bonus_amount": 1000,
-        "message": f"🎁 First 100 players get 1000 free tokens! {remaining_spots} spots left!" if remaining_spots > 0 else "🚫 Welcome bonus period has ended"
-    }
 
 # Solana Token Purchase Endpoints
 class TokenPurchaseRequest(BaseModel):
@@ -2321,71 +2297,6 @@ async def get_user_by_telegram_id(telegram_id: int):
         "role": user_doc.get('role', 'user')
     }
 
-@api_router.post("/claim-daily-tokens/{user_id}")
-async def claim_daily_tokens(user_id: str):
-    """Claim daily free tokens (10 tokens every 24 hours)"""
-    try:
-        user_doc = await db.users.find_one({"id": user_id})
-        if not user_doc:
-            raise HTTPException(status_code=404, detail="User not found")
-        
-        now = datetime.now(timezone.utc)
-        last_claim = user_doc.get('last_daily_claim')
-        
-        # Check if user can claim (24 hours passed or never claimed)
-        can_claim = True
-        time_until_next_claim = 0
-        
-        if last_claim:
-            try:
-                last_claim_dt = datetime.fromisoformat(last_claim)
-                time_since_claim = (now - last_claim_dt).total_seconds()
-                time_until_next_claim = max(0, 86400 - time_since_claim)  # 86400 seconds = 24 hours
-                can_claim = time_since_claim >= 86400
-            except:
-                can_claim = True
-        
-        if not can_claim:
-            hours_left = int(time_until_next_claim // 3600)
-            minutes_left = int((time_until_next_claim % 3600) // 60)
-            return {
-                "status": "already_claimed",
-                "message": f"Already claimed today. Next claim in {hours_left}h {minutes_left}m",
-                "time_until_next_claim": time_until_next_claim,
-                "can_claim": False
-            }
-        
-        # Give 10 tokens
-        daily_tokens = 10
-        new_balance = user_doc.get('token_balance', 0) + daily_tokens
-        
-        await db.users.update_one(
-            {"id": user_id},
-            {
-                "$set": {
-                    "last_daily_claim": now.isoformat(),
-                    "token_balance": new_balance
-                }
-            }
-        )
-        
-        logging.info(f"User {user_doc.get('first_name')} claimed {daily_tokens} daily tokens. New balance: {new_balance}")
-        
-        return {
-            "status": "success",
-            "message": f"Claimed {daily_tokens} tokens!",
-            "tokens_claimed": daily_tokens,
-            "new_balance": new_balance,
-            "can_claim": False,
-            "time_until_next_claim": 86400
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logging.error(f"Failed to claim daily tokens: {e}")
-        raise HTTPException(status_code=500, detail="Failed to claim daily tokens")
-
 @api_router.get("/user/{user_id}")
 async def get_user_data(user_id: str):
     """Get user data including current balance"""
@@ -2430,6 +2341,151 @@ async def check_if_winner(user_id: str):
     ).sort("won_at", -1).limit(5).to_list(5)
     
     return {"recent_prizes": recent_prizes}
+
+
+@api_router.post("/admin/adjust-tokens/{telegram_id}")
+async def adjust_tokens(telegram_id: int, tokens: int, admin_key: str = ""):
+    """Add or remove tokens from a user by Telegram ID. Use negative tokens to remove."""
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    try:
+        user_doc = await db.users.find_one({"telegram_id": telegram_id})
+        if not user_doc:
+            raise HTTPException(status_code=404, detail="User not found")
+        current = user_doc.get('token_balance', 0)
+        new_balance = max(0, current + tokens)
+        await db.users.update_one(
+            {"telegram_id": telegram_id},
+            {"$set": {"token_balance": new_balance}}
+        )
+        action = "Added" if tokens >= 0 else "Removed"
+        logging.info(f"Admin {action} {abs(tokens)} tokens for user {telegram_id}. New balance: {new_balance}")
+        return {
+            "status": "success",
+            "telegram_id": telegram_id,
+            "username": user_doc.get('telegram_username', ''),
+            "first_name": user_doc.get('first_name', ''),
+            "previous_balance": current,
+            "tokens_changed": tokens,
+            "new_balance": new_balance
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Failed to adjust tokens: {e}")
+        raise HTTPException(status_code=500, detail="Failed to adjust tokens")
+
+
+@api_router.post("/admin/add-fake-player")
+async def add_fake_player(room_type: str, player_name: str, bet_amount: int, admin_key: str = "", background_tasks: BackgroundTasks = None):
+    """Add a fake/bot player to a room to fill it up."""
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
+    room_type_enum = None
+    for rt in RoomType:
+        if rt.value == room_type:
+            room_type_enum = rt
+            break
+    if room_type_enum is None:
+        raise HTTPException(status_code=400, detail=f"Invalid room type: {room_type}")
+
+    settings = ROOM_SETTINGS[room_type_enum]
+    if bet_amount < settings["min_bet"] or bet_amount > settings["max_bet"]:
+        raise HTTPException(status_code=400, detail=f"Bet must be between {settings['min_bet']} and {settings['max_bet']}")
+
+    target_room = None
+    for room in active_rooms.values():
+        if room.room_type == room_type and room.status == "waiting":
+            target_room = room
+            break
+    if not target_room:
+        raise HTTPException(status_code=404, detail=f"No waiting room found for {room_type}")
+    if len(target_room.players) >= 3:
+        raise HTTPException(status_code=400, detail="Room is already full")
+
+    fake_player = RoomPlayer(
+        user_id=f"bot_{str(uuid.uuid4())[:8]}",
+        username=f"@{player_name.lower().replace(' ', '_')}",
+        first_name=player_name,
+        last_name="[BOT]",
+        photo_url="",
+        bet_amount=bet_amount
+    )
+    target_room.players.append(fake_player)
+    target_room.prize_pool += bet_amount
+
+    serialized_players = []
+    for p in target_room.players:
+        pd = p.dict()
+        if 'joined_at' in pd and isinstance(pd['joined_at'], datetime):
+            pd['joined_at'] = pd['joined_at'].isoformat()
+        serialized_players.append(pd)
+
+    fake_dict = fake_player.dict()
+    if 'joined_at' in fake_dict and isinstance(fake_dict['joined_at'], datetime):
+        fake_dict['joined_at'] = fake_dict['joined_at'].isoformat()
+
+    await socket_rooms.broadcast_to_room(sio, target_room.id, 'player_joined', {
+        'room_id': target_room.id,
+        'room_type': target_room.room_type,
+        'player': fake_dict,
+        'players_count': len(target_room.players),
+        'prize_pool': target_room.prize_pool,
+        'all_players': serialized_players,
+        'room_status': 'filling' if len(target_room.players) < 3 else 'full',
+        'timestamp': datetime.now(timezone.utc).isoformat()
+    })
+    await broadcast_room_updates()
+
+    if len(target_room.players) == 3:
+        await socket_rooms.broadcast_to_room(sio, target_room.id, 'room_full', {
+            'room_id': target_room.id,
+            'room_type': target_room.room_type,
+            'players': serialized_players,
+            'players_count': 3,
+            'message': '🚀 ROOM IS FULL! GET READY FOR THE BATTLE!',
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        })
+        if background_tasks:
+            background_tasks.add_task(start_game_round, target_room)
+
+    return {
+        "status": "success",
+        "message": f"Fake player '{player_name}' added to {room_type} room",
+        "room_id": target_room.id,
+        "players_count": len(target_room.players),
+        "prize_pool": target_room.prize_pool
+    }
+
+
+@api_router.get("/admin/list-users")
+async def list_users(admin_key: str = "", limit: int = 20, search: str = ""):
+    """List users with optional search by name/username."""
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    try:
+        query = {}
+        if search:
+            query = {"$or": [
+                {"first_name": {"$regex": search, "$options": "i"}},
+                {"telegram_username": {"$regex": search, "$options": "i"}},
+            ]}
+        users = await db.users.find(query).sort("token_balance", -1).limit(limit).to_list(limit)
+        result = []
+        for u in users:
+            result.append({
+                "id": u.get("id"),
+                "telegram_id": u.get("telegram_id"),
+                "first_name": u.get("first_name", ""),
+                "username": u.get("telegram_username", ""),
+                "token_balance": u.get("token_balance", 0),
+            })
+        return {"users": result, "count": len(result)}
+    except Exception as e:
+        logging.error(f"Failed to list users: {e}")
+        raise HTTPException(status_code=500, detail="Failed to list users")
+
 
 # Include the router
 app.include_router(api_router)
