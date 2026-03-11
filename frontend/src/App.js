@@ -128,6 +128,8 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
   const targetRotRef = React.useRef(null);
   const animatingRef = React.useRef(true);
   const rafRef = React.useRef(null);
+  const onCompleteRef = React.useRef(onComplete);
+  onCompleteRef.current = onComplete;
   const [displayRot, setDisplayRot] = React.useState(0);
   const [showResult, setShowResult] = React.useState(false);
 
@@ -227,7 +229,19 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
     }
   }, [winner, playerData]);
 
-  // Animation loop
+  // Safety fallback: if winner never arrives within 15s, call onComplete anyway
+  React.useEffect(() => {
+    const safeguard = setTimeout(() => {
+      if (animatingRef.current) {
+        animatingRef.current = false;
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        onCompleteRef.current();
+      }
+    }, 15000);
+    return () => clearTimeout(safeguard);
+  }, []);
+
+  // Animation loop - runs once on mount, uses refs for callbacks
   React.useEffect(() => {
     animatingRef.current = true;
     const animate = () => {
@@ -240,15 +254,14 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
           animatingRef.current = false;
           setTimeout(() => {
             setShowResult(true);
-            setTimeout(onComplete, 3500);
+            setTimeout(() => onCompleteRef.current(), 3500);
           }, 300);
           return;
         }
         const speed = Math.max(0.2, Math.min(8, remaining / 25));
         rotRef.current += speed;
       } else {
-        const accel = rotRef.current < 720 ? 0.2 : 0;
-        rotRef.current += Math.min(8, (rotRef.current < 720 ? rotRef.current / 90 + 1 : 8) + accel);
+        rotRef.current += Math.min(8, rotRef.current < 720 ? rotRef.current / 90 + 1 : 8);
       }
       setDisplayRot(rotRef.current);
       rafRef.current = requestAnimationFrame(animate);
@@ -258,7 +271,7 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
       animatingRef.current = false;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [onComplete]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isUserWinner = winner && currentUser && (
     String(currentUser.id) === String(winner.user_id) ||
@@ -824,12 +837,13 @@ function App() {
       
       console.log('AFTER setting states');
       
-      // THEN show roulette wheel
-      setShowGetReady(true);
-      showGetReadyRef.current = true;
+      // Set players FIRST so they're available when roulette mounts
       setRoulettePlayers(data.players || []);
       setRouletteWinnerData(null);
       setGetReadyCountdown(data.countdown || 3);
+      // Show roulette LAST (so it mounts with players already in state)
+      setShowGetReady(true);
+      showGetReadyRef.current = true;
       
       console.log('GET READY SHOWN');
       
@@ -1029,9 +1043,12 @@ function App() {
       setGameInProgress(false);
       setActiveRoom(null);
       setRoomParticipants({});
-      setShowGetReady(false);
       setForceHideLobby(false);
-      setActiveTab('rooms');
+      // Don't close roulette if it's actively spinning - let it complete naturally
+      if (!showGetReadyRef.current) {
+        setShowGetReady(false);
+        setActiveTab('rooms');
+      }
       
       console.log('AFTER - inLobby:', false, 'showWinner:', false, 'gameInProgress:', false);
       console.log('AFTER - activeTab:', 'rooms');
