@@ -51,6 +51,9 @@ REQUIRED_CORS_ORIGINS = [
     "https://erniocasino.vercel.app",
     "https://www.erniocasino.vercel.app",
     "http://localhost:3000",
+    # Telegram WebApp origins — required for Mini App preflight requests
+    "https://web.telegram.org",
+    "https://telegram.org",
 ]
 CORS_ORIGINS = list(dict.fromkeys(CORS_ORIGINS_ENV + REQUIRED_CORS_ORIGINS))
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', 'YOUR_TELEGRAM_BOT_TOKEN_HERE')
@@ -176,8 +179,20 @@ app.add_middleware(
 
 
 @app.options("/{rest_of_path:path}")
-async def preflight_handler(rest_of_path: str):
-    return JSONResponse(status_code=200)
+async def preflight_handler(request: Request, rest_of_path: str):
+    """Return 200 with CORS headers for any preflight, including Telegram WebApp webviews
+    that send no Origin header (which CORSMiddleware would otherwise reject with 400)."""
+    origin = request.headers.get("origin", "*")
+    return JSONResponse(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Max-Age": "600",
+        },
+    )
 
 
 # Socket.IO setup
@@ -2294,31 +2309,34 @@ async def health_check():
 
 @api_router.get("/users/telegram/{telegram_id}")
 async def get_user_by_telegram_id(telegram_id: int):
-    """Find user by Telegram ID"""
+    """Find user by Telegram ID. Returns 404 if not found, never 500 for missing user."""
+    # DB query is isolated so HTTPException(404) is never caught as a generic error
     try:
         user_doc = await db.users.find_one({"telegram_id": telegram_id})
-        if not user_doc:
-            raise HTTPException(status_code=404, detail="User not found")
-        
-        return {
-            "id": user_doc.get('id'),
-            "telegram_id": user_doc.get('telegram_id'),
-            "first_name": user_doc.get('first_name'),
-            "last_name": user_doc.get('last_name', ''),
-            "username": user_doc.get('telegram_username', ''),
-            "photo_url": user_doc.get('photo_url', ''),
-            "token_balance": user_doc.get('token_balance', 0),
-            "created_at": user_doc.get('created_at'),
-            "last_login": user_doc.get('last_login'),
-            "last_daily_claim": user_doc.get('last_daily_claim'),
-            "is_verified": user_doc.get('is_verified', False),
-            "is_admin": user_doc.get('is_admin', False),
-            "is_owner": user_doc.get('is_owner', False),
-            "role": user_doc.get('role', 'user')
-        }
     except Exception as e:
-        logging.error(f"Failed to find user by Telegram ID: {e}")
-        raise HTTPException(status_code=500, detail="Failed to find user")
+        logging.error(f"DB error looking up telegram_id={telegram_id}: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
+
+    if not user_doc:
+        logging.info(f"User not found for telegram_id={telegram_id}")
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "id": user_doc.get('id'),
+        "telegram_id": user_doc.get('telegram_id'),
+        "first_name": user_doc.get('first_name'),
+        "last_name": user_doc.get('last_name', ''),
+        "username": user_doc.get('telegram_username', ''),
+        "photo_url": user_doc.get('photo_url', ''),
+        "token_balance": user_doc.get('token_balance', 0),
+        "created_at": user_doc.get('created_at'),
+        "last_login": user_doc.get('last_login'),
+        "last_daily_claim": user_doc.get('last_daily_claim'),
+        "is_verified": user_doc.get('is_verified', False),
+        "is_admin": user_doc.get('is_admin', False),
+        "is_owner": user_doc.get('is_owner', False),
+        "role": user_doc.get('role', 'user')
+    }
 
 @api_router.post("/claim-daily-tokens/{user_id}")
 async def claim_daily_tokens(user_id: str):

@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sed -n '40,80p' \"C:/Users/Puras/OneDrive/Desktop/roullete_tg/ernioCasino/backend/server.py\" && sed -n '165,240p' \"C:/Users/Puras/OneDrive/Desktop/roullete_tg/ernioCasino/backend/server.py\")"
+    ]
+  }
+}
