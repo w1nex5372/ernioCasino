@@ -793,14 +793,9 @@ function App() {
       console.log('🚀🚀🚀 EVENT: room_ready RECEIVED 🚀🚀🚀');
       console.log('📥 room_ready data:', data);
 
-      // Reset block flag for new game
+      // Reset all block flags for new game
       blockWinnerScreenRef.current = false;
-
-      // Check if already showing GET READY to prevent duplicates
-      if (showGetReadyRef.current) {
-        console.log('🚫 BLOCKED - GET READY already showing');
-        return;
-      }
+      showGetReadyRef.current = false; // force-clear any stuck state from previous game
       
       // AGGRESSIVELY CLOSE EVERYTHING IMMEDIATELY
       console.log('🚪🚪🚪 FORCE CLOSING ALL SCREENS 🚪🚪🚪');
@@ -1001,11 +996,10 @@ function App() {
       setActiveRoom(null);
       setRoomParticipants({});
       setForceHideLobby(false);
-      // Don't close roulette if it's actively spinning - let it complete naturally
-      if (!showGetReadyRef.current) {
-        setRouletteConfig(null);
-        setActiveTab('rooms');
-      }
+      // Always reset roulette ref + config on redirect_home (game is fully over)
+      showGetReadyRef.current = false;
+      setRouletteConfig(null);
+      setActiveTab('rooms');
       
       console.log('AFTER - inLobby:', false, 'showWinner:', false, 'gameInProgress:', false);
       console.log('AFTER - activeTab:', 'rooms');
