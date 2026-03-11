@@ -171,28 +171,11 @@ app = FastAPI(title="Solana Casino Battle Royale")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
-
-
-@app.options("/{rest_of_path:path}")
-async def preflight_handler(request: Request, rest_of_path: str):
-    """Return 200 with CORS headers for any preflight, including Telegram WebApp webviews
-    that send no Origin header (which CORSMiddleware would otherwise reject with 400)."""
-    origin = request.headers.get("origin", "*")
-    return JSONResponse(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": origin,
-            "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "*",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Max-Age": "600",
-        },
-    )
 
 
 # Socket.IO setup
@@ -2397,6 +2380,8 @@ async def claim_daily_tokens(user_id: str):
             "time_until_next_claim": 86400
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error(f"Failed to claim daily tokens: {e}")
         raise HTTPException(status_code=500, detail="Failed to claim daily tokens")
