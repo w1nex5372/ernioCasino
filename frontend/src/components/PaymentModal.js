@@ -6,7 +6,7 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: initialTokenAmount, initialEurAmount, onConfirm, isWorkPurchase = false, giftCount = 0 }) {
+export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: initialTokenAmount, initialEurAmount, onConfirm }) {
   const [paymentData, setPaymentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -167,45 +167,26 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
             toast.success('💰 Payment detected! Processing...');
           }
         } else if (status.tokens_credited) {
-          // State 2: Tokens credited (for token purchase) OR payment confirmed (for work purchase)
           setPaymentStatus('completed');
-          
-          if (isWorkPurchase) {
-            // Work for Casino purchase - no tokens, just access
-            toast.success('🎉 Payment successful! Work access granted.');
-            
-            // Call the confirmation callback with payment signature
-            if (onConfirm && paymentData?.wallet_address) {
-              await onConfirm(paymentData.wallet_address);
+          toast.success('🎉 Payment successful! Tokens credited.');
+
+          // Close modal after 2 seconds with animation
+          setTimeout(() => {
+            onClose();
+
+            // Refresh user data without full page reload
+            if (window.location.hash !== '#tokens') {
+              window.location.hash = '#tokens';
             }
-            
-            // Close modal after 2 seconds
+
+            // Trigger app to reload user data
+            window.dispatchEvent(new CustomEvent('payment-completed'));
+
+            // Fallback: full reload if no event listener
             setTimeout(() => {
-              onClose();
-              // No page reload for work purchase
-            }, 2000);
-          } else {
-            // Regular token purchase
-            toast.success('🎉 Payment successful! Tokens credited.');
-            
-            // Close modal after 2 seconds with animation
-            setTimeout(() => {
-              onClose();
-              
-              // Refresh user data without full page reload
-              if (window.location.hash !== '#tokens') {
-                window.location.hash = '#tokens';
-              }
-              
-              // Trigger app to reload user data
-              window.dispatchEvent(new CustomEvent('payment-completed'));
-              
-              // Fallback: full reload if no event listener
-              setTimeout(() => {
-                window.location.reload();
-              }, 500);
-            }, 2000);
-          }
+              window.location.reload();
+            }, 500);
+          }, 2000);
         }
       } catch (error) {
         console.error('Status check error:', error);
@@ -329,10 +310,10 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
 
             {/* Amount Info - DYNAMIC */}
             <div className="space-y-3">
-              {/* Editable EUR Amount - FULLY MANUAL (disabled for work purchases) */}
+              {/* Editable EUR Amount */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-white">
-                  {isWorkPurchase ? 'Package Price' : 'Amount in EUR (Any amount ≥ 0.1)'}
+                  Amount in EUR (Any amount ≥ 0.1)
                 </label>
                 <div className="flex items-center gap-2">
                   <span className="text-slate-400 text-lg">€</span>
@@ -341,9 +322,6 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
                     inputMode="decimal"
                     value={eurInput}
                     onChange={(e) => {
-                      // Don't allow changes for work purchases
-                      if (isWorkPurchase) return;
-                      
                       let value = e.target.value;
                       
                       // Replace comma with dot for decimal
@@ -403,37 +381,24 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
                         localStorage.setItem('casino_last_eur_amount', numValue.toString());
                       }
                     }}
-                    className={`flex-1 bg-slate-900 border border-slate-700 text-white text-xl font-bold rounded-lg px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none ${isWorkPurchase ? 'opacity-70 cursor-not-allowed' : ''}`}
-                    disabled={loading || paymentStatus !== 'pending' || isWorkPurchase}
+                    className="flex-1 bg-slate-900 border border-slate-700 text-white text-xl font-bold rounded-lg px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 outline-none"
+                    disabled={loading || paymentStatus !== 'pending'}
                     placeholder="0.10"
-                    readOnly={isWorkPurchase}
                   />
                 </div>
                 {validationError && (
                   <p className="text-xs text-red-400">⚠️ {validationError}</p>
                 )}
-                {!isWorkPurchase && (
-                  <p className="text-xs text-slate-500">
-                    Type any amount ≥ 0.1 EUR • Use dot (.) or comma (,) for decimals
-                  </p>
-                )}
-                {isWorkPurchase && (
-                  <p className="text-xs text-purple-400">
-                    🎁 Fixed package price - includes {giftCount} gifts
-                  </p>
-                )}
+                <p className="text-xs text-slate-500">
+                  Type any amount ≥ 0.1 EUR • Use dot (.) or comma (,) for decimals
+                </p>
               </div>
 
-              {/* Calculated Tokens or Gifts (updates automatically) */}
+              {/* Calculated Tokens (updates automatically) */}
               <div className="flex justify-between items-center p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-                <span className="text-purple-300">
-                  {isWorkPurchase ? "Gifts You'll Receive" : "Tokens You'll Get"}
-                </span>
+                <span className="text-purple-300">Tokens You'll Get</span>
                 <span className="text-purple-400 font-bold">
-                  {isWorkPurchase 
-                    ? `${giftCount} gifts` 
-                    : `${recalculating ? '...' : Math.floor(eurAmount * 100)} tokens`
-                  }
+                  {recalculating ? '...' : Math.floor(eurAmount * 100)} tokens
                 </span>
               </div>
 
@@ -509,15 +474,15 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
                   <div>
                     <div className="font-semibold text-white">
                       {paymentStatus === 'processing' && '💰 Payment Detected'}
-                      {paymentStatus === 'crediting' && (isWorkPurchase ? '💫 Processing Gift Package' : '💫 Crediting Tokens')}
+                      {paymentStatus === 'crediting' && '💫 Crediting Tokens'}
                       {paymentStatus === 'completed' && '✅ Payment Complete!'}
                       {paymentStatus === 'timeout' && '⚠️ Payment Timeout'}
                       {paymentStatus === 'failed' && '❌ Payment Failed'}
                     </div>
                     <div className="text-sm text-slate-400">
                       {paymentStatus === 'processing' && 'Processing your payment...'}
-                      {paymentStatus === 'crediting' && (isWorkPurchase ? 'Activating your gift package...' : 'Adding tokens to your account...')}
-                      {paymentStatus === 'completed' && (isWorkPurchase ? 'Gift package activated! Closing...' : 'Tokens added successfully! Closing...')}
+                      {paymentStatus === 'crediting' && 'Adding tokens to your account...'}
+                      {paymentStatus === 'completed' && 'Tokens added successfully! Closing...'}
                       {paymentStatus === 'timeout' && 'Payment not detected. Please try again or check your transaction.'}
                       {paymentStatus === 'failed' && 'Something went wrong. Please try again.'}
                     </div>
@@ -532,17 +497,8 @@ export default function PaymentModal({ isOpen, onClose, userId, tokenAmount: ini
               <ul className="text-xs text-slate-300 space-y-1">
                 <li>• Send exactly <strong className="text-green-400">{paymentData.required_sol?.toFixed(6)} SOL</strong> to the address above</li>
                 <li>• Payment will be detected automatically within 1-2 minutes</li>
-                {isWorkPurchase ? (
-                  <>
-                    <li>• Your gift package ({giftCount} gifts) will be activated immediately</li>
-                    <li>• You'll be able to upload gifts after payment confirmation</li>
-                  </>
-                ) : (
-                  <>
-                    <li>• Tokens will be credited to your account immediately</li>
-                    <li>• Use tokens to play in any battle room</li>
-                  </>
-                )}
+                <li>• Tokens will be credited to your account immediately</li>
+                <li>• Use tokens to play in any battle room</li>
                 <li>• Do not close this window until payment is confirmed</li>
               </ul>
             </div>

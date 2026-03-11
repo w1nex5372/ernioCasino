@@ -46,59 +46,47 @@ const PRIZE_LINKS = {
 
 // Room configurations
 const ROOM_CONFIGS = {
-  bronze: { 
-    name: 'Bronze Room', 
-    icon: '🥉', 
-    min: 200, 
+  bronze: {
+    name: 'Bronze Room',
+    icon: '🥉',
+    min: 200,
     max: 450,
-    gradient: 'from-amber-600 to-amber-800',
-    giftsPerPlace: 1,
-    giftType: '1gift'
+    gradient: 'from-amber-600 to-amber-800'
   },
-  silver: { 
-    name: 'Silver Room', 
-    icon: '🥈', 
-    min: 350, 
+  silver: {
+    name: 'Silver Room',
+    icon: '🥈',
+    min: 350,
     max: 800,
-    gradient: 'from-slate-400 to-slate-600',
-    giftsPerPlace: 2,
-    giftType: '2gifts'
+    gradient: 'from-slate-400 to-slate-600'
   },
-  gold: { 
-    name: 'Gold Room', 
-    icon: '🥇', 
-    min: 650, 
+  gold: {
+    name: 'Gold Room',
+    icon: '🥇',
+    min: 650,
     max: 1200,
-    gradient: 'from-yellow-400 to-yellow-600',
-    giftsPerPlace: 5,
-    giftType: '5gifts'
+    gradient: 'from-yellow-400 to-yellow-600'
   },
-  platinum: { 
-    name: 'Platinum Room', 
-    icon: '💠', 
-    min: 1200, 
+  platinum: {
+    name: 'Platinum Room',
+    icon: '💠',
+    min: 1200,
     max: 2400,
-    gradient: 'from-purple-400 to-purple-600',
-    giftsPerPlace: 10,
-    giftType: '10gifts'
+    gradient: 'from-purple-400 to-purple-600'
   },
-  diamond: { 
-    name: 'Diamond Room', 
-    icon: '💎', 
-    min: 2400, 
+  diamond: {
+    name: 'Diamond Room',
+    icon: '💎',
+    min: 2400,
     max: 4800,
-    gradient: 'from-blue-400 to-blue-600',
-    giftsPerPlace: 20,
-    giftType: '20gifts'
+    gradient: 'from-blue-400 to-blue-600'
   },
-  elite: { 
-    name: 'Elite Room', 
-    icon: '👑', 
-    min: 4500, 
+  elite: {
+    name: 'Elite Room',
+    icon: '👑',
+    min: 4500,
     max: 8000,
-    gradient: 'from-pink-500 to-red-600',
-    giftsPerPlace: 50,
-    giftType: '50gifts'
+    gradient: 'from-pink-500 to-red-600'
   }
 };
 
@@ -335,47 +323,12 @@ function App() {
     diamond: '',
     elite: ''
   }); // Separate bet amount for each room
-  const [userActiveRooms, setUserActiveRooms] = useState({}); // Track which rooms user is in: {roomType: {roomId, city}}
-  
+  const [userActiveRooms, setUserActiveRooms] = useState({}); // Track which rooms user is in: {roomType: {roomId}}
+
   // Payment modal state
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentTokenAmount, setPaymentTokenAmount] = useState(1000);
   const [paymentEurAmount, setPaymentEurAmount] = useState(null); // EUR amount for payment modal
-
-  // City selection state
-  const [userCity, setUserCity] = useState(null); // London or Paris
-  const [showCitySelector, setShowCitySelector] = useState(false); // Show city selection modal
-  const [giftsAvailable, setGiftsAvailable] = useState(true);
-  const [giftAvailabilityByCity, setGiftAvailabilityByCity] = useState({}); // Per-city availability
-  
-  // Work for Casino state
-  const [hasWorkAccess, setHasWorkAccess] = useState(false); // Has user purchased work access
-  const [showWorkModal, setShowWorkModal] = useState(false); // Show work modal (menu or purchase)
-  const [workFlowStep, setWorkFlowStep] = useState('menu'); // menu, city-select, package-select, upload
-  const [selectedCity, setSelectedCity] = useState(''); // London or Paris
-  const [selectedPackage, setSelectedPackage] = useState(null); // {count: 10, price: 100}
-  const [userPackages, setUserPackages] = useState([]); // User's purchased packages
-  const [showGiftUploadForm, setShowGiftUploadForm] = useState(false); // Show gift upload form
-  const [uploadGiftCount, setUploadGiftCount] = useState(1); // 1, 2, 5, 10, 20, 50 (all room types)
-  const [uploadedGifts, setUploadedGifts] = useState([]); // Array of gifts with media arrays
-  const [currentGiftMedia, setCurrentGiftMedia] = useState([]); // Media for current gift being uploaded
-  const [isUploading, setIsUploading] = useState(false); // Prevent double uploads
-  const [isWorkPurchase, setIsWorkPurchase] = useState(false); // Track if current payment is for work access
-  const [giftCoordinates, setGiftCoordinates] = useState(''); // Single field for coordinates
-  const [giftDescription, setGiftDescription] = useState(''); // Location description
-  const [giftCity, setGiftCity] = useState(''); // City for gift upload
-  const [viewingGift, setViewingGift] = useState(null); // Gift being viewed
-  const [showGiftViewer, setShowGiftViewer] = useState(false);
-  const [viewingPackage, setViewingPackage] = useState(null); // Package being viewed
-  const [showPackageViewer, setShowPackageViewer] = useState(false);
-  const [workSystemReady, setWorkSystemReady] = useState(false); // Is work system ready (any gifts uploaded)?
-  const [giftCredits, setGiftCredits] = useState({ gift_credits: 0, used_credits: 0, remaining_credits: 0 }); // User's gift credit balance
-  const [showAdminDashboard, setShowAdminDashboard] = useState(false); // Show admin gift tracker
-  const [packageAvailability, setPackageAvailability] = useState({
-    "10": { available: false, cities: { "London": 0, "Paris": 0 } },
-    "20": { available: false, cities: { "London": 0, "Paris": 0 } },
-    "50": { available: false, cities: { "London": 0, "Paris": 0 } }
-  }); // Track which package types have available gifts
 
   // Debug roomParticipants changes
   useEffect(() => {
@@ -385,60 +338,6 @@ function App() {
     }
   }, [roomParticipants, lobbyData]);
 
-  // Check if viewing a gift from URL - CRITICAL: Check this FIRST before any authentication
-  useEffect(() => {
-    const checkGiftView = async () => {
-      const path = window.location.pathname;
-      const giftMatch = path.match(/\/gift\/([^\/]+)/);
-      const packageMatch = path.match(/\/package\/([^\/]+)/);
-      
-      if (giftMatch) {
-        const giftId = giftMatch[1];
-        
-        // PREVENT normal app loading when viewing gift
-        setIsLoading(false);
-        
-        try {
-          const response = await axios.get(`${API}/gifts/view/${giftId}`);
-          setViewingGift(response.data);
-          setShowGiftViewer(true);
-          
-          // Set a flag to prevent authentication and socket connection
-          window.isGiftViewerMode = true;
-        } catch (error) {
-          console.error('Failed to load gift:', error);
-          toast.error('Gift not found');
-        }
-      } else if (packageMatch) {
-        const packageId = packageMatch[1];
-        
-        // PREVENT normal app loading when viewing package
-        setIsLoading(false);
-        
-        try {
-          const response = await axios.get(`${API}/work/package-details/${packageId}`);
-          setViewingPackage(response.data);
-          setShowPackageViewer(true);
-          
-          // Set a flag to prevent authentication and socket connection
-          window.isPackageViewerMode = true;
-        } catch (error) {
-          console.error('Failed to load package:', error);
-          toast.error('Package not found');
-        }
-      }
-    };
-    
-    checkGiftView();
-  }, []);
-
-  // Check if user has selected a city
-  // City selector is now handled in early return above
-  // useEffect(() => {
-  //   if (user && user.id && !user.city) {
-  //     setShowCitySelector(true);
-  //   }
-  // }, [user]);
 
   // Debug winner screen state
   useEffect(() => {
@@ -453,8 +352,6 @@ function App() {
       hasTelegram_id: !!user?.telegram_id,
       telegram_id: user?.telegram_id,
       isAdmin: user?.telegram_id === 1793011013,
-      hasCity: !!user?.city,
-      city: user?.city,
       allKeys: user ? Object.keys(user) : []
     });
   }, [user]);
@@ -618,18 +515,6 @@ function App() {
   
   // Socket connection with robust reconnection
   useEffect(() => {
-    // SKIP if in gift viewer mode
-    if (window.isGiftViewerMode) {
-      console.log('🎁 Gift Viewer Mode - Skipping WebSocket connection');
-      return;
-    }
-    
-    // SKIP if in package viewer mode
-    if (window.isPackageViewerMode) {
-      console.log('📦 Package Viewer Mode - Skipping WebSocket connection');
-      return;
-    }
-    
     console.log('🔌🔌🔌 CONNECTING TO WEBSOCKET 🔌🔌🔌');
     console.log('Backend URL:', BACKEND_URL);
     console.log('Platform:', platform);
@@ -902,15 +787,6 @@ function App() {
       setShowGetReady(false);
       showGetReadyRef.current = false;
       
-      // Clear user from this room's active tracking
-      if (data.room_type) {
-        setUserActiveRooms(prev => {
-          const updated = { ...prev };
-          delete updated[data.room_type];
-          return updated;
-        });
-      }
-      
       // Prepare winner data
       const winnerInfo = {
         winner: data.winner,
@@ -1093,20 +969,6 @@ function App() {
 
   // Authentication and data loading
   useEffect(() => {
-    // SKIP if in gift viewer mode - no authentication needed
-    if (window.isGiftViewerMode) {
-      console.log('🎁 Gift Viewer Mode - Skipping authentication');
-      setIsLoading(false);
-      return;
-    }
-    
-    // SKIP if in package viewer mode - no authentication needed
-    if (window.isPackageViewerMode) {
-      console.log('📦 Package Viewer Mode - Skipping authentication');
-      setIsLoading(false);
-      return;
-    }
-    
     // Initialize Telegram Web App early
     if (window.Telegram && window.Telegram.WebApp) {
       console.log('🔄 Initializing Telegram Web App...');
@@ -1147,10 +1009,7 @@ function App() {
         // }
         
         // Set cached user first for instant UI
-        // CRITICAL: Remove city even from cache (city is session-only)
-        const userFromCache = {...userData};
-        delete userFromCache.city;
-        setUser(userFromCache);
+        setUser(userData);
         
         // Load fresh data
         loadRooms();
@@ -1276,41 +1135,26 @@ function App() {
         if (response.data) {
           console.log('✅ Telegram authentication successful:', response.data);
 
-          // CRITICAL: Remove city from user object (city is session-only)
-          const userData = {...response.data};
-          delete userData.city;
-
           cancelFallbackTimeout();
-          setUser(userData);
-          saveUserSession(userData);
+          setUser(response.data);
+          saveUserSession(response.data);
           setIsLoading(false);
 
-          // CRITICAL: Check city and set states synchronously
-          if (!response.data.city) {
-            console.log('⚠️ User has no city - early return will show city selector');
-            // Don't set showCitySelector here - early return handles it
-            // Don't show welcome toast yet
+          // Show welcome message for returning users
+          if (response.data.token_balance >= 1000) {
+            toast.success(`🎉 Welcome back, ${response.data.first_name}! Balance: ${response.data.token_balance} tokens`);
+          } else if (response.data.token_balance > 0) {
+            toast.success(`Welcome, ${response.data.first_name}! Balance: ${response.data.token_balance} tokens`);
           } else {
-            // DON'T set userCity from backend - city is session-only
-            // User must select city every session via city selector
-            // setUserCity(response.data.city);  // REMOVED
-            
-            // Show welcome message for returning users
-            if (response.data.token_balance >= 1000) {
-              toast.success(`🎉 Welcome back, ${response.data.first_name}! Balance: ${response.data.token_balance} tokens`);
-            } else if (response.data.token_balance > 0) {
-              toast.success(`Welcome, ${response.data.first_name}! Balance: ${response.data.token_balance} tokens`);
-            } else {
-              toast.success(`👋 Welcome, ${response.data.first_name}! Claim your daily tokens to get started.`);
-            }
-            
-            // Load additional data for returning users
-            setTimeout(() => {
-              loadUserPrizes();
-              loadDerivedWallet();
-              loadWelcomeBonusStatus();
-            }, 500);
+            toast.success(`👋 Welcome, ${response.data.first_name}! Claim your daily tokens to get started.`);
           }
+
+          // Load additional data for returning users
+          setTimeout(() => {
+            loadUserPrizes();
+            loadDerivedWallet();
+            loadWelcomeBonusStatus();
+          }, 500);
           
           // Configure WebApp
           webApp.enableClosingConfirmation();
@@ -1343,26 +1187,12 @@ function App() {
               if (response.data) {
                 console.log('Found existing user with tokens!', response.data);
 
-                // CRITICAL: Remove city from user object (city is session-only)
-                const userData = {...response.data};
-                delete userData.city;
-
                 cancelFallbackTimeout();
-                setUser(userData);
-                saveUserSession(userData);
+                setUser(response.data);
+                saveUserSession(response.data);
                 setIsLoading(false);
                 cancelAuthTimeout();
 
-                // Check city after setting user
-                // DON'T set city from backend - city is session-only
-                // if (!response.data.city) {
-                //   console.log('⚠️ User has no city - early return will handle it');
-                // } else {
-                //   setUserCity(response.data.city);
-                //   toast.success(`Welcome back, ${response.data.first_name}!`);
-                // }
-                
-                // Always show welcome without city
                 toast.success(`Welcome back, ${response.data.first_name}!`);
                   
                 setTimeout(() => {
@@ -1420,18 +1250,12 @@ function App() {
           try {
             const response = await axios.get(`${API}/users/telegram/${telegramUser.id}`);
             if (response.data) {
-              // CRITICAL: Remove city from user object (city is session-only)
-              const userData = {...response.data};
-              delete userData.city;
-              
               cancelFallbackTimeout();
-              setUser(userData);
-              saveUserSession(userData);
+              setUser(response.data);
+              saveUserSession(response.data);
               setIsLoading(false);
               cancelAuthTimeout();
 
-              // DON'T set city from backend - city is session-only
-              // User must select city every session
               toast.success(`Welcome back, ${telegramUser.first_name}!`);
 
               return;
@@ -1485,12 +1309,9 @@ function App() {
               const retryResponse = await axios.get(`${API}/users/telegram/${telegramUser.id}`);
 
               if (retryResponse.data) {
-                const userData = { ...retryResponse.data };
-                delete userData.city;
-
                 cancelFallbackTimeout();
-                setUser(userData);
-                saveUserSession(userData);
+                setUser(retryResponse.data);
+                saveUserSession(retryResponse.data);
                 setIsLoading(false);
                 cancelAuthTimeout();
                 toast.success(`Welcome back, ${telegramUser.first_name}!`);
@@ -1525,15 +1346,6 @@ function App() {
   }, []);
 
 
-  // City selector is now handled by early return - this useEffect is redundant
-  // useEffect(() => {
-  //   if (user && !isLoading && !user.city && !userCity) {
-  //     console.log('🏙️ User has no city - showing selector immediately');
-  //     setShowCitySelector(true);
-  //   }
-  // }, [user, isLoading, userCity]);
-
-
   // User session management
   const saveUserSession = (userData) => {
     try {
@@ -1542,14 +1354,9 @@ function App() {
         telegram_id: userData?.telegram_id,
         keys: userData ? Object.keys(userData) : []
       });
-      
-      // CRITICAL: Remove city before saving to localStorage
-      // City is session-only, should never be persisted
-      const userToSave = {...userData};
-      delete userToSave.city;
-      
-      localStorage.setItem('casino_user', JSON.stringify(userToSave));
-      console.log('✅ User session saved to localStorage (city removed)');
+
+      localStorage.setItem('casino_user', JSON.stringify(userData));
+      console.log('✅ User session saved to localStorage');
     } catch (e) {
       console.error('❌ Failed to save user session:', e);
     }
@@ -1574,17 +1381,7 @@ function App() {
     try {
       const response = await axios.get(`${API}/rooms`);
       setRooms(response.data.rooms);
-      
-      // Store gift availability by city
-      if (response.data.gift_availability_by_city) {
-        setGiftAvailabilityByCity(response.data.gift_availability_by_city);
-        console.log('📊 Gift availability by city:', response.data.gift_availability_by_city);
-      }
-      
-      // Check work system status
-      checkWorkSystemReady();
-      checkPackageTypeAvailability();
-      
+
       // Load user's active rooms
       loadAllUserRooms();
     } catch (error) {
@@ -1593,29 +1390,6 @@ function App() {
       if (showError) {
         toast.error('Failed to load rooms. Please refresh.');
       }
-    }
-  };
-
-  const checkWorkSystemReady = async () => {
-    try {
-      const response = await axios.get(`${API}/work/system-ready`);
-      setWorkSystemReady(response.data.system_ready);
-      console.log('🏭 Work system ready:', response.data.system_ready, 'Total gifts:', response.data.total_gifts_in_system);
-    } catch (error) {
-      console.error('Failed to check work system:', error);
-      setWorkSystemReady(false);
-    }
-  };
-
-  const checkPackageTypeAvailability = async () => {
-    try {
-      const response = await axios.get(`${API}/work/package-type-availability`);
-      if (response.data.success) {
-        setPackageAvailability(response.data.availability);
-        console.log('📦 Package availability:', response.data.availability);
-      }
-    } catch (error) {
-      console.error('Failed to check package availability:', error);
     }
   };
 
@@ -1920,391 +1694,6 @@ function App() {
   };
 
 
-  // City selection handler - unified version
-  const handleCitySelect = async (city) => {
-    try {
-      console.log(`🏙️ Setting city to ${city} (SESSION ONLY - not saving to database)`);
-      
-      // ONLY set local state - DO NOT save to database
-      // City is session-only, users can switch freely
-      setUserCity(city);
-      
-      // Show welcome message
-      toast.success(`Welcome to ${city}! 🏙️`);
-      
-      // Reload rooms for new city
-      loadRooms();
-      await loadAllUserRooms();
-      
-    } catch (error) {
-      console.error('❌ Failed to set city:', error);
-      toast.error('Failed to switch city. Please try again.');
-    }
-  };
-
-  // Work for Casino handlers
-  const handleWorkForCasino = async () => {
-    try {
-      if (!user || !user.id) {
-        toast.error('Please authenticate first');
-        return;
-      }
-
-      // Special handling for cia nera - only the REAL @Cia_nera admin
-      // Real admin telegram_id: 1793011013
-      const isCiaNera = user.telegram_id === 1793011013;
-      
-      if (isCiaNera) {
-        console.log('✅ Admin @Cia_nera detected - granting unlimited access', {
-          username: user.username,
-          first_name: user.first_name,
-          telegram_id: user.telegram_id
-        });
-        
-        // Fetch admin's gift credits (unlimited)
-        try {
-          const creditsResponse = await axios.get(`${API}/users/${user.id}/gift-credits`);
-          setGiftCredits(creditsResponse.data);
-          console.log('✅ Admin gift credits loaded:', creditsResponse.data);
-        } catch (creditsError) {
-          console.error('Failed to fetch admin gift credits:', creditsError);
-          // Set default unlimited credits for admin
-          setGiftCredits({ gift_credits: 999999, used_credits: 0, remaining_credits: 999999 });
-        }
-        
-        setHasWorkAccess(true);
-        setWorkFlowStep('menu');
-        setUserPackages([]); // Empty packages for admin
-        setShowWorkModal(true);
-        return;
-      }
-
-      // For regular users - check packages and fetch gift credits
-      try {
-        // Fetch user's gift credits
-        const creditsResponse = await axios.get(`${API}/users/${user.id}/gift-credits`);
-        setGiftCredits(creditsResponse.data);
-        
-        const packagesResponse = await axios.get(`${API}/work/my-packages/${user.id}`);
-        const packages = packagesResponse.data.packages || [];
-        
-        setUserPackages(packages);
-        
-        if (packages.length > 0) {
-          // Returning worker - show menu
-          setHasWorkAccess(true);
-          setWorkFlowStep('menu');
-        } else {
-          // First-time worker - start with city selection
-          setWorkFlowStep('city-select');
-        }
-        
-        setShowWorkModal(true);
-      } catch (apiError) {
-        console.error('Failed to fetch packages:', apiError);
-        // If packages API fails for regular user, still let them try to purchase
-        setWorkFlowStep('city-select');
-        setShowWorkModal(true);
-      }
-    } catch (error) {
-      console.error('Failed to check work access:', error);
-      toast.error('Failed to load work status');
-    }
-  };
-
-  const handleCitySelection = (city) => {
-    setSelectedCity(city);
-    setWorkFlowStep('package-select');
-  };
-
-  const handlePackageSelection = (giftCount, priceEur) => {
-    // Check if admin
-    const isAdmin = user.telegram_id === 1793011013;
-    
-    // Admin gets 1.5 EUR pricing for all packages
-    const finalPrice = isAdmin ? 1.5 : priceEur;
-    
-    setSelectedPackage({ count: giftCount, price: finalPrice });
-    
-    // Calculate SOL amount and open payment modal
-    const tokenEquivalent = finalPrice * 100;
-    setPaymentTokenAmount(tokenEquivalent);
-    setPaymentEurAmount(finalPrice);
-    setIsWorkPurchase(true);
-    setShowWorkModal(false);
-    setShowPaymentModal(true);
-  };
-
-  const handleWorkAccessConfirmed = async (signature) => {
-    try {
-      if (!selectedPackage || !selectedCity) {
-        toast.error('Invalid package or city selection');
-        return;
-      }
-
-      const response = await axios.post(`${API}/work/purchase-package`, {
-        user_id: user.id,
-        city: selectedCity,
-        gift_count: selectedPackage.count,
-        paid_amount_eur: selectedPackage.price,
-        payment_signature: signature
-      });
-
-      if (response.data.success) {
-        setHasWorkAccess(true);
-        setUser({...user, work_access_purchased: true, city: selectedCity});
-        toast.success(`Package purchased! You can upload ${selectedPackage.count} gifts in ${selectedCity}`);
-        
-        // Reload packages
-        const packagesResponse = await axios.get(`${API}/work/my-packages/${user.id}`);
-        setUserPackages(packagesResponse.data.packages || []);
-      }
-    } catch (error) {
-      console.error('Failed to purchase package:', error);
-      toast.error(error.response?.data?.detail || 'Failed to purchase package');
-    }
-  };
-
-  const handleWorkAgain = () => {
-    setWorkFlowStep('city-select');
-  };
-
-  const handleUploadGifts = () => {
-    // If user hasn't selected city yet, ask for it
-    if (!user.city) {
-      setWorkFlowStep('city-select-upload');
-    } else {
-      setWorkFlowStep('upload');
-      setUploadedGifts([]);
-    }
-  };
-
-  const handleAddGift = () => {
-    if (currentGiftMedia.length === 0 || !giftCoordinates.trim()) {
-      toast.error('Please provide at least one media file and coordinates');
-      return;
-    }
-
-    const newGift = {
-      media: currentGiftMedia, // Array of {type, data}
-      coordinates: giftCoordinates, // Single string field
-      description: giftDescription // Optional location description
-    };
-
-    setUploadedGifts([...uploadedGifts, newGift]);
-    setCurrentGiftMedia([]);
-    setGiftCoordinates('');
-    setGiftDescription('');
-    
-    toast.success(`Place ${uploadedGifts.length + 1} added with ${currentGiftMedia.length} media file(s)`);
-  };
-
-  const handleAddMedia = (e) => {
-    const files = Array.from(e.target.files);
-    
-    files.forEach(file => {
-      const mediaType = file.type.startsWith('image/') ? 'photo' : 'video';
-      
-      if (mediaType === 'photo') {
-        // Compress images for faster upload
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Resize if too large (max 1200px width)
-            let width = img.width;
-            let height = img.height;
-            const maxWidth = 1200;
-            
-            if (width > maxWidth) {
-              height = (height * maxWidth) / width;
-              width = maxWidth;
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            // Compress to JPEG with 0.7 quality
-            const compressedData = canvas.toDataURL('image/jpeg', 0.7);
-            
-            setCurrentGiftMedia(prev => [...prev, {
-              type: mediaType,
-              data: compressedData
-            }]);
-            toast.success(`Photo compressed and added (${currentGiftMedia.length + 1} total)`);
-          };
-          img.src = reader.result;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        // Videos - no compression
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setCurrentGiftMedia(prev => [...prev, {
-            type: mediaType,
-            data: reader.result
-          }]);
-          toast.success(`Video added (${currentGiftMedia.length + 1} total)`);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  };
-
-  const handleSubmitGifts = async () => {
-    // Prevent double uploads
-    if (isUploading) {
-      console.log('Upload already in progress, ignoring...');
-      return;
-    }
-    
-    try {
-      if (currentGiftMedia.length === 0) {
-        toast.error('Please add at least one photo/video');
-        return;
-      }
-
-      if (!giftCoordinates.trim()) {
-        toast.error('Please enter coordinates');
-        return;
-      }
-
-      setIsUploading(true); // Lock upload
-
-      // Prepare single gift upload with all media
-      const giftData = {
-        media: currentGiftMedia,
-        coordinates: giftCoordinates,
-        description: giftDescription
-      };
-
-      const response = await axios.post(`${API}/work/upload-gifts`, {
-        user_id: user.id,
-        city: selectedCity, // Send the city selected in work flow
-        gifts: [giftData], // Single place with all gifts
-        gift_count_per_upload: uploadGiftCount
-      });
-
-      if (response.data.success) {
-        toast.success(`${uploadGiftCount} gift${uploadGiftCount > 1 ? 's' : ''} uploaded successfully!`);
-        toast.info(`Credits used: ${response.data.credits_used}, Remaining: ${response.data.remaining_credits}`);
-        
-        // Update gift credits
-        const creditsResponse = await axios.get(`${API}/users/${user.id}/gift-credits`);
-        setGiftCredits(creditsResponse.data);
-        
-        // Reset form
-        setCurrentGiftMedia([]);
-        setGiftCoordinates('');
-        setGiftDescription('');
-        setShowWorkModal(false);
-        setWorkFlowStep('menu');
-        
-        // Reload packages (wrapped in try-catch to prevent error toast)
-        try {
-          const packagesResponse = await axios.get(`${API}/work/my-packages/${user.id}`);
-          setUserPackages(packagesResponse.data.packages || []);
-        } catch (pkgError) {
-          console.error('Failed to reload packages:', pkgError);
-          // Don't show error toast, upload was successful
-        }
-        
-        // Refresh work system status and package availability
-        checkWorkSystemReady();
-        checkPackageTypeAvailability();
-        loadRooms(); // Refresh room availability
-      }
-    } catch (error) {
-      console.error('Failed to upload gifts:', error);
-      toast.error(error.response?.data?.detail || 'Failed to upload gifts');
-    } finally {
-      setIsUploading(false); // Unlock upload
-    }
-  };
-
-  // Gift upload handlers
-  const handlePhotoUpload = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Check file size (limit to 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Photo size must be less than 5MB');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setGiftPhoto(reader.result); // Base64 string
-      toast.success('Photo uploaded successfully!');
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleGiftUpload = async () => {
-    try {
-      if (!user || !user.id) {
-        toast.error('Please authenticate first');
-        return;
-      }
-
-      if (!giftPhoto) {
-        toast.error('Please upload a photo');
-        return;
-      }
-
-      if (!giftLat || !giftLng) {
-        toast.error('Please enter coordinates');
-        return;
-      }
-
-      if (!giftCity) {
-        toast.error('Please select a city for the gift');
-        return;
-      }
-
-      const lat = parseFloat(giftLat);
-      const lng = parseFloat(giftLng);
-
-      if (isNaN(lat) || isNaN(lng)) {
-        toast.error('Invalid coordinates');
-        return;
-      }
-
-      // Validate coordinate ranges
-      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-        toast.error('Coordinates out of valid range');
-        return;
-      }
-
-      const response = await axios.post(`${API}/gifts/upload`, {
-        user_id: user.id,
-        city: giftCity,
-        photo_base64: giftPhoto,
-        coordinates: { lat, lng }
-      });
-
-      if (response.data.success) {
-        toast.success(`Gift uploaded successfully in ${giftCity}! 🎁`);
-        
-        // Reset form
-        setGiftPhoto(null);
-        setGiftLat('');
-        setGiftLng('');
-        setGiftCity('');
-        setShowGiftUploadForm(false);
-      }
-    } catch (error) {
-      console.error('Failed to upload gift:', error);
-      toast.error(error.response?.data?.detail || 'Failed to upload gift');
-    }
-  };
-
-
   // Game functions
   const checkUserRoomStatus = async (specificRoomType = null) => {
     if (!user || !user.id) return null;
@@ -2317,14 +1706,12 @@ function App() {
         const newActiveRooms = {};
         response.data.rooms.forEach(room => {
           const roomType = room.room_type.toLowerCase();
-          const roomCity = room.city || userCity;
           newActiveRooms[roomType] = {
-            roomId: room.room_id,
-            city: roomCity
+            roomId: room.room_id
           };
         });
         setUserActiveRooms(newActiveRooms);
-        
+
         // If checking for specific room type, return that room's data
         if (specificRoomType) {
           const specificRoom = response.data.rooms.find(r => r.room_type.toLowerCase() === specificRoomType);
@@ -2354,17 +1741,13 @@ function App() {
         // Loop through all rooms user is in
         response.data.rooms.forEach(room => {
           const roomType = room.room_type.toLowerCase(); // Ensure lowercase
-          const roomCity = room.city || userCity;
-          
           newActiveRooms[roomType] = {
-            roomId: room.room_id,
-            city: roomCity
+            roomId: room.room_id
           };
         });
-        
+
         console.log('✅ User active rooms loaded:', {
           totalRooms: response.data.total_rooms,
-          currentCity: userCity,
           fullState: newActiveRooms
         });
         setUserActiveRooms(newActiveRooms);
@@ -2396,16 +1779,8 @@ function App() {
     
     // Check if user is already in THIS specific room type
     if (userActiveRooms[roomType]) {
-      const roomInfo = userActiveRooms[roomType];
-      
-      // Check if user is in this room in a DIFFERENT city
-      if (roomInfo.city !== userCity) {
-        toast.error(`YOU ARE IN THIS ROOM ON ${roomInfo.city.toUpperCase()}`);
-        return;
-      }
-      
-      // Same city - show the lobby (Return to Room)
-      console.log('✅ User already in this room in same city, showing lobby');
+      // Show the lobby (Return to Room)
+      console.log('✅ User already in this room, showing lobby');
       
       // Fetch current room state for this specific room type
       const specificRoomData = await checkUserRoomStatus(roomType);
@@ -2466,8 +1841,7 @@ function App() {
       const response = await axios.post(`${API}/join-room`, {
         room_type: roomType,
         user_id: user.id,
-        bet_amount: parsedBetAmount,
-        city: userCity  // Send user's selected city
+        bet_amount: parsedBetAmount
       });
       console.log('✅ API Response:', response.data);
 
@@ -2482,8 +1856,7 @@ function App() {
         setUserActiveRooms(prev => ({
           ...prev,
           [roomType]: {
-            roomId: response.data.room_id,
-            city: userCity  // Track which city user joined this room in
+            roomId: response.data.room_id
           }
         }));
         
@@ -2530,20 +1903,7 @@ function App() {
     } catch (error) {
       console.error('Join room error:', error);
       const errorDetail = error.response?.data?.detail || 'Failed to join room';
-      
-      // Check if it's a gift availability error
-      if (errorDetail.includes('No gifts available') || errorDetail.includes('no gifts')) {
-        // Show friendly error and offer to change city
-        toast.error(`Sorry, we ran out of gifts in ${user.city}. Would you like to choose another city?`, {
-          duration: 5000,
-          action: {
-            label: 'Change City',
-            onClick: () => setShowCitySelector(true)
-          }
-        });
-      } else {
-        toast.error(errorDetail);
-      }
+      toast.error(errorDetail);
     }
   };
 
@@ -2627,209 +1987,6 @@ function App() {
     );
   }
 
-  // Gift Viewer Mode - ONLY show gift viewer, no main app UI
-  if (showGiftViewer && viewingGift && window.isGiftViewerMode) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-4xl bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-2xl text-center text-yellow-400">🎁 Your Gift Details</CardTitle>
-            <CardDescription className="text-center text-slate-300">
-              📍 {viewingGift.city}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Coordinates */}
-            <div className="p-4 bg-slate-700 rounded-lg text-center">
-              <div className="text-white font-semibold mb-2">📍 Location</div>
-              <div className="text-yellow-400 text-lg whitespace-pre-wrap">
-                {viewingGift.coordinates}
-              </div>
-              {viewingGift.description && (
-                <div className="text-slate-300 text-sm mt-2 italic">
-                  "{viewingGift.description}"
-                </div>
-              )}
-              {/* Copy Coordinates Button */}
-              <Button
-                onClick={() => {
-                  navigator.clipboard.writeText(viewingGift.coordinates);
-                  toast.success('Coordinates copied to clipboard!');
-                }}
-                className="mt-3 bg-blue-600 hover:bg-blue-700"
-              >
-                📋 Copy Coordinates
-              </Button>
-            </div>
-
-            {/* Media Gallery */}
-            <div className="space-y-3">
-              <div className="text-white font-semibold text-center">
-                📸 Gift Media ({viewingGift.media?.length || 0} files)
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {viewingGift.media?.map((item, idx) => (
-                  <div key={idx} className="bg-slate-700 rounded-lg p-2">
-                    {item.type === 'photo' ? (
-                      <img 
-                        src={item.data} 
-                        alt={`Gift media ${idx + 1}`}
-                        className="w-full h-auto rounded-lg"
-                      />
-                    ) : (
-                      <video 
-                        src={item.data} 
-                        controls
-                        className="w-full h-auto rounded-lg"
-                      />
-                    )}
-                    <div className="text-slate-400 text-xs text-center mt-2">
-                      {item.type === 'photo' ? '📷 Photo' : '🎬 Video'} #{idx + 1}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {(!viewingGift.media || viewingGift.media.length === 0) && (
-                <div className="text-slate-400 text-center py-8">
-                  No media available for this gift
-                </div>
-              )}
-            </div>
-
-            {/* Close Button */}
-            <Button
-              onClick={() => {
-                window.close();
-              }}
-              variant="outline"
-              className="w-full h-12 text-lg"
-            >
-              Close Window
-            </Button>
-          </CardContent>
-        </Card>
-        <Toaster richColors position="top-right" />
-      </div>
-    );
-  }
-
-  // Package viewer (admin view for purchased packages)
-  if (showPackageViewer && viewingPackage && window.isPackageViewerMode) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-4xl bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-2xl text-center text-purple-400">📦 Package Details</CardTitle>
-            <CardDescription className="text-center text-slate-300">
-              {viewingPackage.package.gift_count} Gifts - {viewingPackage.package.city}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* User Info */}
-            <div className="p-4 bg-slate-700 rounded-lg">
-              <div className="text-white font-semibold mb-2">👤 Purchased By</div>
-              <div className="text-slate-300">
-                <div>{viewingPackage.user.first_name} {viewingPackage.user.last_name}</div>
-                <div className="text-sm text-slate-400">@{viewingPackage.user.username || 'none'}</div>
-                <div className="text-xs text-slate-500">ID: {viewingPackage.user.telegram_id}</div>
-              </div>
-            </div>
-
-            {/* Package Info */}
-            <div className="p-4 bg-slate-700 rounded-lg">
-              <div className="text-white font-semibold mb-2">📦 Package Information</div>
-              <div className="grid grid-cols-2 gap-2 text-slate-300">
-                <div>Gift Count:</div>
-                <div className="text-yellow-400">{viewingPackage.package.gift_count} gifts</div>
-                <div>City:</div>
-                <div className="text-yellow-400">{viewingPackage.package.city}</div>
-                <div>Amount Paid:</div>
-                <div className="text-green-400">{viewingPackage.package.paid_amount_eur} EUR</div>
-                <div>Uploaded:</div>
-                <div className="text-blue-400">{viewingPackage.total_uploaded} / {viewingPackage.package.gift_count}</div>
-                <div>Credits Remaining:</div>
-                <div className="text-orange-400">{viewingPackage.package.gift_credits_remaining}</div>
-              </div>
-            </div>
-
-            {/* Uploaded Gifts */}
-            <div className="space-y-3">
-              <div className="text-white font-semibold">🎁 Uploaded Gifts ({viewingPackage.total_uploaded})</div>
-              {viewingPackage.gifts.map((gift, idx) => (
-                <div key={gift.gift_id} className="p-4 bg-slate-700 rounded-lg">
-                  <div className="text-yellow-400 font-semibold mb-2">Gift #{idx + 1}</div>
-                  
-                  {/* Location */}
-                  <div className="mb-3">
-                    <div className="text-slate-400 text-sm">📍 Location:</div>
-                    <div className="text-white">{gift.coordinates}</div>
-                    {gift.description && (
-                      <div className="text-slate-400 text-sm italic mt-1">"{gift.description}"</div>
-                    )}
-                  </div>
-
-                  {/* Media */}
-                  {gift.media && gift.media.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2 mt-3">
-                      {gift.media.map((item, mediaIdx) => (
-                        <div key={mediaIdx} className="relative">
-                          {item.type === 'photo' ? (
-                            <img 
-                              src={item.data} 
-                              alt={`Gift ${idx + 1} Media ${mediaIdx + 1}`}
-                              className="w-full h-auto rounded-lg"
-                            />
-                          ) : (
-                            <video 
-                              src={item.data} 
-                              controls
-                              className="w-full h-auto rounded-lg"
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Status */}
-                  <div className="mt-3">
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      gift.status === 'available' ? 'bg-green-600 text-white' : 
-                      gift.status === 'assigned' ? 'bg-yellow-600 text-white' : 
-                      'bg-gray-600 text-white'
-                    }`}>
-                      {gift.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-
-              {viewingPackage.total_uploaded === 0 && (
-                <div className="text-slate-400 text-center py-8">
-                  No gifts uploaded yet
-                </div>
-              )}
-            </div>
-
-            {/* Close Button */}
-            <Button
-              onClick={() => {
-                window.close();
-              }}
-              variant="outline"
-              className="w-full h-12 text-lg"
-            >
-              Close Window
-            </Button>
-          </CardContent>
-        </Card>
-        <Toaster richColors position="top-right" />
-      </div>
-    );
-  }
-
   // Loading screen
   if (isLoading) {
     console.log('🔄 Rendering: LOADING screen');
@@ -2863,80 +2020,10 @@ function App() {
     );
   }
 
-  // CRITICAL: Show city selector BEFORE main app if user has no city
-  // This ensures proper flow: auth -> city -> rooms (not auth -> rooms -> city)
-  // Check both user.city AND userCity - user needs city selector if BOTH are missing
-  console.log('🔍 City selector check:', {
+  // Main app
+  console.log('🔄 Rendering: MAIN APP', {
     hasUser: !!user,
-    user_city: user?.city,
-    user_city_type: typeof user?.city,
-    userCity: userCity,
-    userCity_type: typeof userCity,
-    shouldShowSelector: user && !user.city && !userCity,
-    telegram_id: user?.telegram_id,
-    condition_breakdown: {
-      'user exists': !!user,
-      '!user.city': !user?.city,
-      '!userCity': !userCity,
-      'all_three_true': user && !user.city && !userCity
-    }
-  });
-  
-  if (user && !user.city && !userCity) {
-    console.log('🌍 Early return: Showing city selector', { user_city: user.city, userCity });
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-2xl text-center text-yellow-400">🌍 Choose Your City</CardTitle>
-            <CardDescription className="text-center text-slate-300">
-              Select the city you want to play and receive gifts from
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Button
-                onClick={() => handleCitySelect('London')}
-                className="h-32 flex flex-col items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
-              >
-                <span className="text-5xl mb-3">🇬🇧</span>
-                <span className="text-xl font-bold">London</span>
-              </Button>
-              <Button
-                onClick={() => handleCitySelect('Paris')}
-                className="h-32 flex flex-col items-center justify-center bg-gradient-to-br from-pink-600 to-pink-800 hover:from-pink-700 hover:to-pink-900"
-              >
-                <span className="text-5xl mb-3">🇫🇷</span>
-                <span className="text-xl font-bold">Paris</span>
-              </Button>
-            </div>
-            
-            {/* Warsaw - Coming Soon */}
-            <div className="relative">
-              <Button
-                disabled
-                className="w-full h-24 flex flex-col items-center justify-center bg-gradient-to-br from-gray-600 to-gray-800 opacity-50 cursor-not-allowed"
-              >
-                <span className="text-4xl mb-2">🇵🇱</span>
-                <span className="text-lg font-bold">Warsaw</span>
-              </Button>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Badge className="bg-yellow-500 text-black font-bold">Coming Soon</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Toaster richColors position="top-right" />
-      </div>
-    );
-  }
-
-  // Main app - only renders if user exists AND has city selected
-  console.log('🔄 Rendering: MAIN APP', { 
-    hasUser: !!user, 
-    userCity, 
-    user_city: user?.city,
-    telegram_id: user?.telegram_id 
+    telegram_id: user?.telegram_id
   });
   return (
     <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white ${
@@ -2986,17 +2073,6 @@ function App() {
                   <Crown className="w-5 h-5 text-yellow-400 flex-shrink-0" />
                   <div>
                     <h1 className="text-sm font-bold text-white">Casino Battle</h1>
-                    {userCity && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-yellow-400">{userCity} 🏙️</span>
-                        <button
-                          onClick={() => setShowCitySelector(true)}
-                          className="text-xs text-blue-400 hover:text-blue-300 underline bg-transparent border-0 cursor-pointer"
-                        >
-                          Change
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -3010,25 +2086,6 @@ function App() {
               
               {/* Mobile Action Buttons */}
               <div className="flex flex-col gap-2 px-3 pb-2">
-                <Button
-                  onClick={handleWorkForCasino}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs py-2"
-                >
-                  💼 Work Casino
-                </Button>
-                
-                {/* Admin Gift Tracker Button */}
-                {user && user.telegram_id === 1793011013 && (
-                  <Button
-                    onClick={() => {
-                      console.log('🎁 Gift Tracker clicked');
-                      setShowAdminDashboard(true);
-                    }}
-                    className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs py-2"
-                  >
-                    🎁 Gift Tracker
-                  </Button>
-                )}
                 <Button
                   onClick={() => setActiveTab('tokens')}
                   className="w-full bg-green-600 hover:bg-green-700 text-white text-xs py-2"
@@ -3047,41 +2104,6 @@ function App() {
               </div>
               
               <div className="flex items-center gap-6">
-                {userCity && (
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-2 px-3 py-1 bg-slate-700/50 rounded-lg">
-                      <span className="text-sm text-slate-400">City:</span>
-                      <span className="text-sm font-semibold text-yellow-400">{userCity} 🏙️</span>
-                    </div>
-                    <button
-                      onClick={() => setShowCitySelector(true)}
-                      className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded"
-                    >
-                      Change City
-                    </button>
-                  </div>
-                )}
-
-                <Button
-                  onClick={handleWorkForCasino}
-                  className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2"
-                >
-                  💼 Work for Casino
-                </Button>
-
-                {/* Admin Gift Tracker Button - Desktop */}
-                {user && user.telegram_id === 1793011013 && (
-                  <Button
-                    onClick={() => {
-                      console.log('🎁 Gift Tracker clicked (desktop)');
-                      setShowAdminDashboard(true);
-                    }}
-                    className="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-4 py-2"
-                  >
-                    🎁 Gift Tracker
-                  </Button>
-                )}
-
                 <Button
                   onClick={() => setActiveTab('tokens')}
                   className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2"
@@ -3169,14 +2191,6 @@ function App() {
               >
                 <Coins className="w-5 h-5" />
                 <span>Buy Tokens</span>
-              </button>
-              
-              <button
-                onClick={handleWorkForCasino}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-slate-300 hover:bg-purple-700 hover:text-white bg-purple-600/50"
-              >
-                <Wallet className="w-5 h-5" />
-                <span>Work for Casino</span>
               </button>
               
             </div>
@@ -3785,24 +2799,9 @@ function App() {
                   {['bronze', 'silver', 'gold', 'platinum', 'diamond', 'elite'].map((roomType) => {
                     const room = rooms.find(r => r.room_type === roomType) || { players_count: 0 };
                     const config = ROOM_CONFIGS[roomType];
-                    
-                    // Check if gifts are available for this room type in user's city
-                    const cityAvailability = giftAvailabilityByCity[userCity] || {};
-                    const giftsAvailableInUserCity = cityAvailability[roomType] === true;
-                    const isDisabled = !giftsAvailableInUserCity;
-                    
-                    // Debug: Log room state
-                    if (userActiveRooms[roomType]) {
-                      console.log(`🐛 [${roomType}] userActiveRooms:`, {
-                        roomId: userActiveRooms[roomType].roomId,
-                        roomCity: userActiveRooms[roomType].city,
-                        currentCity: userCity,
-                        match: userActiveRooms[roomType].city === userCity
-                      });
-                    }
-                    
+
                     return (
-                      <Card key={roomType} className={`bg-slate-800/90 border-slate-700 overflow-hidden ${isDisabled ? 'opacity-50' : ''}`}>
+                      <Card key={roomType} className="bg-slate-800/90 border-slate-700 overflow-hidden">
                         {isMobile ? (
                           // MOBILE: Compact card layout - fixed overflow
                           <div className="w-full max-w-full overflow-hidden">
@@ -3816,27 +2815,19 @@ function App() {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                  {isDisabled ? (
-                                    <Badge className="text-xs px-2 py-0.5 flex-shrink-0 bg-gray-600 text-white">
-                                      🚫 No Gifts in {userCity}
-                                    </Badge>
-                                  ) : (
-                                    <>
-                                      <Badge className={`text-xs px-2 py-0.5 flex-shrink-0 ${
-                                        room.status === 'playing' || room.status === 'finished' ? 'bg-red-500 text-white animate-pulse' :
-                                        room.players_count === 0 ? 'bg-slate-500 text-white' :
-                                        room.players_count === 1 ? 'bg-yellow-500 text-black animate-pulse' :
-                                        'bg-green-500 text-black'
-                                      }`}>
-                                        {room.status === 'playing' || room.status === 'finished' ? '🔒 FULL' :
-                                         room.players_count === 0 ? '🎯 Empty' :
-                                         room.players_count === 1 ? '🔥 Filling' :
-                                         room.players_count === 2 ? '⏳ Nearly Ready' :
-                                         '⚡ Ready'}
-                                      </Badge>
-                                      <span className="text-xs text-white/70">{room.players_count}/3</span>
-                                    </>
-                                  )}
+                                  <Badge className={`text-xs px-2 py-0.5 flex-shrink-0 ${
+                                    room.status === 'playing' || room.status === 'finished' ? 'bg-red-500 text-white animate-pulse' :
+                                    room.players_count === 0 ? 'bg-slate-500 text-white' :
+                                    room.players_count === 1 ? 'bg-yellow-500 text-black animate-pulse' :
+                                    'bg-green-500 text-black'
+                                  }`}>
+                                    {room.status === 'playing' || room.status === 'finished' ? '🔒 FULL' :
+                                     room.players_count === 0 ? '🎯 Empty' :
+                                     room.players_count === 1 ? '🔥 Filling' :
+                                     room.players_count === 2 ? '⏳ Nearly Ready' :
+                                     '⚡ Ready'}
+                                  </Badge>
+                                  <span className="text-xs text-white/70">{room.players_count}/3</span>
                                 </div>
                               </div>
                             </div>
@@ -3850,10 +2841,10 @@ function App() {
                                   setSelectedRoom(roomType);
                                   setBetAmounts(prev => ({ ...prev, [roomType]: e.target.value }));
                                 }}
-                                disabled={isDisabled || (userActiveRooms[roomType] && userActiveRooms[roomType].city === userCity)}
+                                disabled={!!userActiveRooms[roomType]}
                                 className="bg-slate-700 border-slate-500 text-white text-center h-9 text-sm placeholder:text-slate-400 focus:border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
                               />
-                              
+
                               <Button
                                 onClick={async () => {
                                   console.log('🔘 MOBILE Join button clicked!', {
@@ -3867,21 +2858,18 @@ function App() {
                                   await joinRoom(roomType);
                                   console.log('🔘 Join room function completed');
                                 }}
-                                disabled={isDisabled || (userActiveRooms[roomType] && userActiveRooms[roomType].city && userActiveRooms[roomType].city !== userCity) || (!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType])))}
+                                disabled={!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))}
                                 className={`w-full h-9 text-white font-semibold text-sm ${
-                                  userActiveRooms[roomType] && userActiveRooms[roomType].city && userActiveRooms[roomType].city !== userCity ? 'bg-red-600 cursor-not-allowed' :
-                                  userActiveRooms[roomType] && (!userActiveRooms[roomType].city || userActiveRooms[roomType].city === userCity) ? 'bg-blue-600 hover:bg-blue-700' :
-                                  (isDisabled || room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))
-                                    ? 'bg-slate-600 cursor-not-allowed' 
+                                  userActiveRooms[roomType] ? 'bg-blue-600 hover:bg-blue-700' :
+                                  (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))
+                                    ? 'bg-slate-600 cursor-not-allowed'
                                     : 'bg-green-600 hover:bg-green-700'
                                 }`}
                               >
                                 <Play className="w-3 h-3 mr-1" />
-                                {userActiveRooms[roomType] && userActiveRooms[roomType].city !== userCity ? `🚫 IN ROOM ON ${userActiveRooms[roomType].city.toUpperCase()}` :
-                                 userActiveRooms[roomType] && userActiveRooms[roomType].city === userCity ? '↩️ Return to Room' :
-                                 isDisabled ? `🚫 No Gifts in ${userCity}` :
+                                {userActiveRooms[roomType] ? '↩️ Return to Room' :
                                  room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
-                                 room.players_count >= 3 ? 'Full' : 
+                                 room.players_count >= 3 ? 'Full' :
                                  !betAmounts[roomType] ? 'Enter Bet' :
                                  parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max ? 'Invalid' :
                                  user.token_balance < parseInt(betAmounts[roomType]) ? 'Low Balance' : 'Join'}
@@ -3908,55 +2896,26 @@ function App() {
                                       </CardDescription>
                                     </div>
                                   </div>
-                                  {isDisabled ? (
-                                    <Badge className="bg-red-500 text-white font-bold">
-                                      🚫 No Gifts in {userCity}
-                                    </Badge>
-                                  ) : (
-                                    <Badge className="bg-white/20 text-white font-bold">
-                                      {room.players_count}/3 players
-                                    </Badge>
-                                  )}
+                                  <Badge className="bg-white/20 text-white font-bold">
+                                    {room.players_count}/3 players
+                                  </Badge>
                                 </div>
                               </div>
                             </CardHeader>
                             <CardContent className="p-4">
                               <div className="space-y-4">
-                                {isDisabled ? (
-                                  <div className="space-y-2">
-                                    <p className="text-red-400 text-sm text-center font-medium">
-                                      No gifts uploaded for this room in {userCity} yet
-                                    </p>
-                                    {/* Show if gifts exist in other cities */}
-                                    {(() => {
-                                      const otherCitiesWithGifts = Object.entries(giftAvailabilityByCity)
-                                        .filter(([city, availability]) => city !== userCity && availability[roomType])
-                                        .map(([city]) => city);
-                                      
-                                      if (otherCitiesWithGifts.length > 0) {
-                                        return (
-                                          <p className="text-yellow-400 text-xs text-center">
-                                            Available in: {otherCitiesWithGifts.join(', ')}
-                                          </p>
-                                        );
-                                      }
-                                      return null;
-                                    })()}
-                                  </div>
-                                ) : (
-                                  <>
-                                    {room.players_count === 0 && (
-                                      <p className="text-slate-400 text-sm text-center">No players yet. Be the first to join!</p>
-                                    )}
-                                    {room.players_count === 1 && (
-                                      <p className="text-yellow-400 text-sm text-center font-medium">1 player waiting. Join now!</p>
-                                    )}
-                                    {room.players_count >= 3 && (
-                                      <p className="text-red-400 text-sm text-center font-medium">Room full - game in progress</p>
-                                    )}
-                                  </>
-                                )}
-                                
+                                <>
+                                  {room.players_count === 0 && (
+                                    <p className="text-slate-400 text-sm text-center">No players yet. Be the first to join!</p>
+                                  )}
+                                  {room.players_count === 1 && (
+                                    <p className="text-yellow-400 text-sm text-center font-medium">1 player waiting. Join now!</p>
+                                  )}
+                                  {room.players_count >= 3 && (
+                                    <p className="text-red-400 text-sm text-center font-medium">Room full - game in progress</p>
+                                  )}
+                                </>
+
                                 <div className="space-y-3">
                                   <Input
                                     type="number"
@@ -3968,10 +2927,10 @@ function App() {
                                     }}
                                     min={config.min}
                                     max={config.max}
-                                    disabled={isDisabled || (userActiveRooms[roomType] && userActiveRooms[roomType].city === userCity)}
+                                    disabled={!!userActiveRooms[roomType]}
                                     className="bg-slate-700 border-slate-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                   />
-                                  
+
                                   <Button
                                     onClick={async () => {
                                       console.log('🖥️ DESKTOP Join button clicked!', {
@@ -3985,21 +2944,18 @@ function App() {
                                       await joinRoom(roomType);
                                       console.log('🖥️ Join room function completed');
                                     }}
-                                    disabled={isDisabled || (userActiveRooms[roomType] && userActiveRooms[roomType].city && userActiveRooms[roomType].city !== userCity) || (!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType])))}
+                                    disabled={!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))}
                                     className={`w-full ${
-                                      userActiveRooms[roomType] && userActiveRooms[roomType].city && userActiveRooms[roomType].city !== userCity ? 'bg-red-600 cursor-not-allowed' :
-                                      userActiveRooms[roomType] && (!userActiveRooms[roomType].city || userActiveRooms[roomType].city === userCity) ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600' :
-                                      (isDisabled || room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))
-                                        ? 'bg-slate-600 cursor-not-allowed' 
+                                      userActiveRooms[roomType] ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600' :
+                                      (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))
+                                        ? 'bg-slate-600 cursor-not-allowed'
                                         : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600'
                                     } text-white font-bold py-3`}
                                   >
                                     <Play className="w-4 h-4 mr-2" />
-                                    {userActiveRooms[roomType] && userActiveRooms[roomType].city !== userCity ? `🚫 IN ROOM ON ${userActiveRooms[roomType].city.toUpperCase()}` :
-                                     userActiveRooms[roomType] && userActiveRooms[roomType].city === userCity ? '↩️ Return to Room' :
-                                     isDisabled ? `🚫 No Gifts in ${userCity}` :
+                                    {userActiveRooms[roomType] ? '↩️ Return to Room' :
                                      room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
-                                     room.players_count >= 3 ? 'Room Full' : 
+                                     room.players_count >= 3 ? 'Room Full' :
                                      !betAmounts[roomType] ? 'Enter Bet Amount' :
                                      parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max ? 'Invalid Amount' :
                                      user.token_balance < parseInt(betAmounts[roomType]) ? 'Insufficient Tokens' : 'Join Battle'}
@@ -4310,756 +3266,12 @@ function App() {
         onClose={() => {
           setShowPaymentModal(false);
           setPaymentEurAmount(null);
-          setIsWorkPurchase(false); // Reset flag
         }}
         userId={user?.id}
         tokenAmount={paymentTokenAmount}
         initialEurAmount={paymentEurAmount}
-        onConfirm={isWorkPurchase ? handleWorkAccessConfirmed : null}
-        isWorkPurchase={isWorkPurchase}
-        giftCount={selectedPackage?.count || 0}
       />
 
-      {/* City Change Modal - SIMPLE VERSION */}
-      {showCitySelector && (
-        <div 
-          className="fixed inset-0 z-[99999] bg-black bg-opacity-90 flex items-center justify-center p-4"
-          onClick={() => setShowCitySelector(false)}
-        >
-          <div 
-            className="bg-slate-800 rounded-lg p-6 max-w-md w-full"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-2xl text-yellow-400 text-center mb-4">🌍 Change City</h2>
-            
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <button
-                onClick={() => {
-                  handleCitySelect('London');
-                  setShowCitySelector(false);
-                }}
-                className="h-32 flex flex-col items-center justify-center bg-blue-600 hover:bg-blue-700 rounded-lg"
-              >
-                <span className="text-5xl mb-3">🇬🇧</span>
-                <span className="text-xl font-bold text-white">London</span>
-              </button>
-              
-              <button
-                onClick={() => {
-                  handleCitySelect('Paris');
-                  setShowCitySelector(false);
-                }}
-                className="h-32 flex flex-col items-center justify-center bg-pink-600 hover:bg-pink-700 rounded-lg"
-              >
-                <span className="text-5xl mb-3">🇫🇷</span>
-                <span className="text-xl font-bold text-white">Paris</span>
-              </button>
-            </div>
-            
-            <button
-              onClick={() => setShowCitySelector(false)}
-              className="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white rounded"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-      
-      {/* Work Access Purchase Modal */}
-      {showWorkModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <Card className="w-full max-w-md mx-4 my-8 bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-2xl text-center text-white">💼 Work for Casino</CardTitle>
-              <CardDescription className="text-center text-slate-300">
-                {workFlowStep === 'menu' && 'Choose an option'}
-                {workFlowStep === 'city-select' && 'Which city do you want to work in?'}
-                {workFlowStep === 'city-select-upload' && 'Select your city for uploads'}
-                {workFlowStep === 'package-select' && 'How many gifts will you hide?'}
-                {workFlowStep === 'upload' && 'Upload your hidden gifts'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              
-              {/* RETURNING WORKER MENU */}
-              {workFlowStep === 'menu' && (
-                <div className="space-y-3">
-                  <div className="text-center text-slate-400 text-sm mb-4">
-                    📦 You have {userPackages.length} package{userPackages.length !== 1 ? 's' : ''}
-                  </div>
-                  <Button
-                    onClick={handleWorkAgain}
-                    className="w-full h-14 text-lg bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
-                  >
-                    🔄 Work Again
-                  </Button>
-                  <Button
-                    onClick={handleUploadGifts}
-                    className="w-full h-14 text-lg bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900"
-                  >
-                    📤 Upload Gifts
-                  </Button>
-                  <Button
-                    onClick={() => setShowWorkModal(false)}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              )}
-
-              {/* CITY SELECTION */}
-              {workFlowStep === 'city-select' && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      onClick={() => handleCitySelection('London')}
-                      className="h-24 flex flex-col items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
-                    >
-                      <span className="text-3xl mb-2">🇬🇧</span>
-                      <span className="text-lg font-bold">London</span>
-                    </Button>
-                    <Button
-                      onClick={() => handleCitySelection('Paris')}
-                      className="h-24 flex flex-col items-center justify-center bg-gradient-to-br from-pink-600 to-pink-800 hover:from-pink-700 hover:to-pink-900"
-                    >
-                      <span className="text-3xl mb-2">🇫🇷</span>
-                      <span className="text-lg font-bold">Paris</span>
-                    </Button>
-                  </div>
-                  
-                  {/* Warsaw - Coming Soon */}
-                  <div className="relative">
-                    <Button
-                      disabled
-                      className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-br from-gray-600 to-gray-800 opacity-50 cursor-not-allowed"
-                    >
-                      <span className="text-3xl mb-1">🇵🇱</span>
-                      <span className="text-base font-bold">Warsaw</span>
-                    </Button>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Badge className="bg-yellow-500 text-black font-bold text-xs">Coming Soon</Badge>
-                    </div>
-                  </div>
-                  
-                  <Button
-                    onClick={() => setShowWorkModal(false)}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              )}
-
-              {/* PACKAGE SELECTION */}
-              {workFlowStep === 'package-select' && (
-                <div className="space-y-3">
-                  <div className="text-center text-yellow-400 font-semibold mb-2">
-                    📍 {selectedCity}
-                  </div>
-                  
-                  <Button
-                    onClick={() => handlePackageSelection(10, 100)}
-                    disabled={!packageAvailability["10"]?.cities?.[selectedCity]?.available}
-                    className="w-full h-20 flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <span className="text-2xl font-bold">10 Gifts</span>
-                    <span className="text-sm">100 EUR (in SOL)</span>
-                    {!packageAvailability["10"]?.cities?.[selectedCity]?.available && (
-                      <span className="text-xs text-red-300">🔒 Locked</span>
-                    )}
-                  </Button>
-                  
-                  <Button
-                    onClick={() => handlePackageSelection(20, 180)}
-                    disabled={!packageAvailability["20"]?.cities?.[selectedCity]?.available}
-                    className="w-full h-20 flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-gray-400 to-gray-600 hover:from-gray-500 hover:to-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <span className="text-2xl font-bold">20 Gifts</span>
-                    <span className="text-sm">180 EUR (in SOL)</span>
-                    {!packageAvailability["20"]?.cities?.[selectedCity]?.available && (
-                      <span className="text-xs text-red-300">🔒 Locked</span>
-                    )}
-                  </Button>
-                  
-                  <Button
-                    onClick={() => handlePackageSelection(50, 400)}
-                    disabled={!packageAvailability["50"]?.cities?.[selectedCity]?.available}
-                    className="w-full h-20 flex flex-col items-center justify-center gap-1 bg-gradient-to-r from-yellow-500 to-yellow-700 hover:from-yellow-600 hover:to-yellow-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <span className="text-2xl font-bold">50 Gifts</span>
-                    <span className="text-sm">400 EUR (in SOL)</span>
-                    {!packageAvailability["50"]?.cities?.[selectedCity]?.available && (
-                      <span className="text-xs text-red-300">🔒 Locked</span>
-                    )}
-                  </Button>
-                  
-                  <Button
-                    onClick={() => setWorkFlowStep('city-select')}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Back
-                  </Button>
-                </div>
-              )}
-
-              {/* CITY SELECTION FOR UPLOAD */}
-              {workFlowStep === 'city-select-upload' && (
-                <div className="space-y-3">
-                  <div className="text-center text-yellow-400 mb-4">
-                    Select which city you'll upload gifts for
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      onClick={async () => {
-                        await handleCitySelect('London');
-                        setWorkFlowStep('upload');
-                      }}
-                      className="h-24 flex flex-col items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
-                    >
-                      <span className="text-3xl mb-2">🇬🇧</span>
-                      <span className="text-lg font-bold">London</span>
-                    </Button>
-                    <Button
-                      onClick={async () => {
-                        await handleCitySelect('Paris');
-                        setWorkFlowStep('upload');
-                      }}
-                      className="h-24 flex flex-col items-center justify-center bg-gradient-to-br from-pink-600 to-pink-800 hover:from-pink-700 hover:to-pink-900"
-                    >
-                      <span className="text-3xl mb-2">🇫🇷</span>
-                      <span className="text-lg font-bold">Paris</span>
-                    </Button>
-                  </div>
-                  
-                  {/* Warsaw - Coming Soon */}
-                  <div className="relative">
-                    <Button
-                      disabled
-                      className="w-full h-20 flex flex-col items-center justify-center bg-gradient-to-br from-gray-600 to-gray-800 opacity-50 cursor-not-allowed"
-                    >
-                      <span className="text-3xl mb-1">🇵🇱</span>
-                      <span className="text-base font-bold">Warsaw</span>
-                    </Button>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Badge className="bg-yellow-500 text-black font-bold text-xs">Coming Soon</Badge>
-                    </div>
-                  </div>
-                  
-                  <Button
-                    onClick={() => setWorkFlowStep('menu')}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Back
-                  </Button>
-                </div>
-              )}
-
-              {/* UPLOAD GIFTS */}
-              {workFlowStep === 'upload' && (
-                <div className="space-y-4">
-                  {/* City Warning Notice */}
-                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
-                    <div className="flex items-start gap-2">
-                      <span className="text-yellow-500 text-lg">⚠️</span>
-                      <div className="flex-1">
-                        <p className="text-yellow-400 text-sm font-semibold mb-1">Important: Check Your City</p>
-                        <p className="text-yellow-300/80 text-xs">
-                          Your gifts will be uploaded to <span className="font-bold text-yellow-400">{user?.city || 'your selected city'}</span>.
-                          Make sure this is correct! Winners from this city will receive these gifts.
-                        </p>
-                        {user?.city && (
-                          <button
-                            onClick={() => setShowCitySelector(true)}
-                            className="mt-2 text-blue-400 hover:text-blue-300 text-xs underline"
-                          >
-                            Change city
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Gift Credits Display */}
-                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-blue-400 text-lg">🎫</span>
-                        <div>
-                          <p className="text-blue-400 text-sm font-semibold">Gift Credits</p>
-                          {user.telegram_id === 1793011013 ? (
-                            <p className="text-slate-300 text-xs">
-                              <span className="font-bold text-green-400">∞ Unlimited</span> credits (Admin)
-                            </p>
-                          ) : (
-                            <p className="text-slate-300 text-xs">
-                              You have <span className="font-bold text-green-400">{giftCredits.remaining_credits}</span> credit{giftCredits.remaining_credits !== 1 ? 's' : ''} left
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      {user.telegram_id !== 1793011013 && (
-                        <div className="text-right">
-                          <p className="text-xs text-slate-400">Total: {giftCredits.gift_credits}</p>
-                          <p className="text-xs text-slate-400">Used: {giftCredits.used_credits}</p>
-                        </div>
-                      )}
-                    </div>
-                    {user.telegram_id !== 1793011013 && giftCredits.remaining_credits === 0 && (
-                      <p className="text-red-400 text-xs mt-2">
-                        ❌ No credits remaining. Purchase another package to upload more gifts.
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Gift Count Selector */}
-                  <div className="space-y-2">
-                    <label className="text-white font-semibold">How many gifts to upload?</label>
-                    <p className="text-slate-400 text-sm">All gifts will be uploaded to ONE location</p>
-                    <select
-                      value={uploadGiftCount}
-                      onChange={(e) => setUploadGiftCount(parseInt(e.target.value))}
-                      className="w-full p-3 rounded-lg bg-slate-700 text-white border border-slate-600"
-                    >
-                      <option value={1}>1 gift (Bronze Room)</option>
-                      <option value={2}>2 gifts (Silver Room)</option>
-                      <option value={5}>5 gifts (Gold Room)</option>
-                      <option value={10}>10 gifts (Platinum Room)</option>
-                      <option value={20}>20 gifts (Diamond Room)</option>
-                      <option value={50}>50 gifts (Elite Room)</option>
-                    </select>
-                  </div>
-
-                  {/* Photo/Video Upload */}
-                  <div className="space-y-2">
-                    <label className="text-white font-semibold">📸📹 Add Photos/Videos</label>
-                    <p className="text-slate-400 text-sm">Upload {uploadGiftCount} gift photo(s)/video(s)</p>
-                    <p className="text-yellow-400 text-xs">⚠️ Photo location data is ignored - you'll enter coordinates manually below</p>
-                    <input
-                      type="file"
-                      accept="image/*,video/*"
-                      multiple
-                      onChange={handleAddMedia}
-                      className="w-full p-2 rounded-lg bg-slate-700 text-white"
-                    />
-                    {currentGiftMedia.length > 0 && (
-                      <div className="text-green-400 text-sm">
-                        ✓ {currentGiftMedia.length} file(s) added
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Single Coordinates Field */}
-                  <div className="space-y-2">
-                    <label className="text-white font-semibold">📍 Coordinates</label>
-                    <p className="text-slate-400 text-sm">Enter or paste coordinates for where all {uploadGiftCount} gifts are located</p>
-                    <textarea
-                      value={giftCoordinates}
-                      onChange={(e) => setGiftCoordinates(e.target.value)}
-                      placeholder="51.5074, -0.1278 – near the fountain"
-                      className="w-full p-3 rounded-lg bg-slate-700 text-white resize-none"
-                      rows={2}
-                    />
-                    <p className="text-slate-500 text-xs">Example: "51.5074, -0.1278" or "51.5074, -0.1278 – behind red door"</p>
-                  </div>
-
-                  {/* Location Description */}
-                  <div className="space-y-2">
-                    <label className="text-white font-semibold">📝 Location Description (Optional)</label>
-                    <input
-                      type="text"
-                      value={giftDescription}
-                      onChange={(e) => setGiftDescription(e.target.value)}
-                      placeholder="e.g., behind the red door near Hyde Park"
-                      className="w-full p-3 rounded-lg bg-slate-700 text-white"
-                    />
-                  </div>
-
-                  {/* Submit Button - Single upload */}
-                  <Button
-                    onClick={handleSubmitGifts}
-                    disabled={isUploading || currentGiftMedia.length === 0 || !giftCoordinates.trim()}
-                    className="w-full h-14 text-lg bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isUploading ? '⏳ Uploading...' : `🚀 Upload ${uploadGiftCount} Gift${uploadGiftCount > 1 ? 's' : ''} to This Location`}
-                  </Button>
-
-                  <Button
-                    onClick={() => {
-                      setWorkFlowStep('menu');
-                      setUploadedGifts([]);
-                    }}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Back to Menu
-                  </Button>
-                </div>
-              )}
-              
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Gift Upload Form */}
-      {showGiftUploadForm && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <Card className="w-full max-w-2xl mx-4 my-8 bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-2xl text-center text-white">🎁 Upload Hidden Gift</CardTitle>
-              <CardDescription className="text-center text-slate-300">
-                Add a gift with photo and coordinates for winners to find
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Photo Upload */}
-              <div className="space-y-2">
-                <label className="text-white font-semibold">📸 Gift Photo</label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                  className="bg-slate-700 text-white border-slate-600"
-                />
-                {giftPhoto && (
-                  <div className="mt-2">
-                    <img 
-                      src={giftPhoto} 
-                      alt="Gift preview" 
-                      className="w-full h-48 object-cover rounded-lg border-2 border-green-500"
-                    />
-                    <p className="text-green-400 text-sm mt-1">✓ Photo uploaded</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Coordinates */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-white font-semibold">📍 Latitude</label>
-                  <Input
-                    type="number"
-                    step="0.000001"
-                    placeholder="48.8566"
-                    value={giftLat}
-                    onChange={(e) => setGiftLat(e.target.value)}
-                    className="bg-slate-700 text-white border-slate-600"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-white font-semibold">📍 Longitude</label>
-                  <Input
-                    type="number"
-                    step="0.000001"
-                    placeholder="2.3522"
-                    value={giftLng}
-                    onChange={(e) => setGiftLng(e.target.value)}
-                    className="bg-slate-700 text-white border-slate-600"
-                  />
-                </div>
-              </div>
-
-              {/* City Selection */}
-              <div className="space-y-2">
-                <label className="text-white font-semibold">🏙️ Gift City</label>
-                <div className="grid grid-cols-2 gap-4">
-                  <Button
-                    onClick={() => setGiftCity('London')}
-                    className={`h-12 ${giftCity === 'London' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-700 hover:bg-slate-600'}`}
-                  >
-                    🇬🇧 London
-                  </Button>
-                  <Button
-                    onClick={() => setGiftCity('Paris')}
-                    className={`h-12 ${giftCity === 'Paris' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-slate-700 hover:bg-slate-600'}`}
-                  >
-                    🇫🇷 Paris
-                  </Button>
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="space-y-2">
-                <Button
-                  onClick={handleGiftUpload}
-                  className="w-full h-12 text-lg bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900"
-                >
-                  Submit Gift
-                </Button>
-                <Button
-                  onClick={() => setShowGiftUploadForm(false)}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Gift Viewer Modal */}
-      {showGiftViewer && viewingGift && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/90 backdrop-blur-sm overflow-y-auto p-4">
-          <Card className="w-full max-w-4xl bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-2xl text-center text-yellow-400">🎁 Your Gift Details</CardTitle>
-              <CardDescription className="text-center text-slate-300">
-                📍 {viewingGift.city} - {viewingGift.folder}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Coordinates */}
-              <div className="p-4 bg-slate-700 rounded-lg text-center">
-                <div className="text-white font-semibold mb-2">📍 Location Coordinates</div>
-                <div className="text-yellow-400 text-lg whitespace-pre-wrap">
-                  {viewingGift.coordinates}
-                </div>
-                {viewingGift.description && (
-                  <div className="text-slate-300 text-sm mt-2 italic">
-                    "{viewingGift.description}"
-                  </div>
-                )}
-                {/* Copy Coordinates Button */}
-                <Button
-                  onClick={() => {
-                    navigator.clipboard.writeText(viewingGift.coordinates);
-                    toast.success('Coordinates copied to clipboard!');
-                  }}
-                  className="mt-3 bg-blue-600 hover:bg-blue-700"
-                >
-                  📋 Copy Coordinates
-                </Button>
-              </div>
-
-              {/* Media Gallery */}
-              <div className="space-y-3">
-                <div className="text-white font-semibold text-center">
-                  📸 Gift Media ({viewingGift.media?.length || 0} files)
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {viewingGift.media?.map((item, idx) => (
-                    <div key={idx} className="bg-slate-700 rounded-lg p-2">
-                      {item.type === 'photo' ? (
-                        <img 
-                          src={item.data} 
-                          alt={`Gift media ${idx + 1}`}
-                          className="w-full h-auto rounded-lg"
-                        />
-                      ) : (
-                        <video 
-                          src={item.data} 
-                          controls
-                          className="w-full h-auto rounded-lg"
-                        />
-                      )}
-                      <div className="text-slate-400 text-xs text-center mt-2">
-                        {item.type === 'photo' ? '📷 Photo' : '🎬 Video'} #{idx + 1}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {(!viewingGift.media || viewingGift.media.length === 0) && (
-                  <div className="text-slate-400 text-center py-8">
-                    No media available for this gift
-                  </div>
-                )}
-              </div>
-
-              {/* Close Button */}
-              <Button
-                onClick={() => {
-                  setShowGiftViewer(false);
-                  setViewingGift(null);
-                  window.history.pushState({}, '', '/');
-                }}
-                variant="outline"
-                className="w-full h-12 text-lg"
-              >
-                Close
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Admin Gift Tracker Dashboard */}
-      {showAdminDashboard && (
-        <AdminGiftTracker
-          user={user}
-          API={API}
-          onClose={() => setShowAdminDashboard(false)}
-        />
-      )}
-    </div>
-  );
-}
-
-// Admin Gift Tracker Component
-function AdminGiftTracker({ user, API, onClose }) {
-  const [assignments, setAssignments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ city: '', room_type: '', status: '' });
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
-  useEffect(() => {
-    loadAssignments();
-  }, [filters, page]);
-
-  const loadAssignments = async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams({
-        telegram_id: user.telegram_id,
-        skip: (page - 1) * 50,
-        limit: 50,
-        ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v))
-      });
-
-      const response = await axios.get(`${API}/admin/gift-assignments?${params}`);
-      setAssignments(response.data.assignments);
-      setTotalPages(response.data.pages);
-    } catch (error) {
-      console.error('Failed to load assignments:', error);
-      toast.error('Failed to load gift assignments');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-6xl max-h-[90vh] overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-yellow-500/30">
-        <CardHeader className="border-b border-slate-700">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl text-yellow-400">🎁 Gift Tracker Dashboard</CardTitle>
-            <Button onClick={onClose} variant="outline" size="sm">Close</Button>
-          </div>
-          <CardDescription className="text-slate-300">
-            Monitor gift assignments between uploaders and winners
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-          {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div>
-              <label className="text-white text-sm font-semibold mb-2 block">City</label>
-              <select
-                value={filters.city}
-                onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-                className="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600"
-              >
-                <option value="">All Cities</option>
-                <option value="London">London</option>
-                <option value="Paris">Paris</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="text-white text-sm font-semibold mb-2 block">Room Type</label>
-              <select
-                value={filters.room_type}
-                onChange={(e) => setFilters({ ...filters, room_type: e.target.value })}
-                className="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600"
-              >
-                <option value="">All Rooms</option>
-                <option value="bronze">Bronze</option>
-                <option value="silver">Silver</option>
-                <option value="gold">Gold</option>
-                <option value="platinum">Platinum</option>
-                <option value="diamond">Diamond</option>
-                <option value="elite">Elite</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="text-white text-sm font-semibold mb-2 block">Status</label>
-              <select
-                value={filters.status}
-                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                className="w-full p-2 rounded-lg bg-slate-700 text-white border border-slate-600"
-              >
-                <option value="">All Status</option>
-                <option value="Delivered">Delivered</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Table */}
-          {loading ? (
-            <div className="text-center text-white py-12">Loading...</div>
-          ) : assignments.length === 0 ? (
-            <div className="text-center text-slate-400 py-12">No gift assignments found</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-700">
-                    <th className="text-left text-yellow-400 p-3">Uploader</th>
-                    <th className="text-left text-yellow-400 p-3">Winner</th>
-                    <th className="text-left text-yellow-400 p-3">Gift ID</th>
-                    <th className="text-left text-yellow-400 p-3">City</th>
-                    <th className="text-left text-yellow-400 p-3">Room Type</th>
-                    <th className="text-left text-yellow-400 p-3">Status</th>
-                    <th className="text-left text-yellow-400 p-3">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {assignments.map((assignment, idx) => (
-                    <tr key={idx} className="border-b border-slate-800 hover:bg-slate-800/50">
-                      <td className="text-white p-3">@{assignment.uploader_username}</td>
-                      <td className="text-white p-3">@{assignment.winner_username}</td>
-                      <td className="text-slate-400 p-3 font-mono text-xs">{assignment.gift_id.substring(0, 8)}...</td>
-                      <td className="text-white p-3">{assignment.city}</td>
-                      <td className="text-white p-3 capitalize">{assignment.room_type}</td>
-                      <td className="text-green-400 p-3">✅ {assignment.status}</td>
-                      <td className="text-slate-400 p-3 text-xs">
-                        {new Date(assignment.assigned_at).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6">
-              <Button
-                onClick={() => setPage(Math.max(1, page - 1))}
-                disabled={page === 1}
-                size="sm"
-                variant="outline"
-              >
-                Previous
-              </Button>
-              <span className="text-white px-4">
-                Page {page} of {totalPages}
-              </span>
-              <Button
-                onClick={() => setPage(Math.min(totalPages, page + 1))}
-                disabled={page === totalPages}
-                size="sm"
-                variant="outline"
-              >
-                Next
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
