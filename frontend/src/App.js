@@ -440,6 +440,7 @@ function App() {
   const showGetReadyRef = React.useRef(false); // Ref to track roulette state for socket listeners
   const blockWinnerScreenRef = React.useRef(false); // Block winner screen after redirect_home
   const [forceHideLobby, setForceHideLobby] = useState(false); // Force hide lobby after redirect
+  const currentGameRoomRef = React.useRef(null); // Track current game room for socket reconnects
   
   // UI state
   const [activeTab, setActiveTab] = useState('rooms');
@@ -715,8 +716,18 @@ function App() {
           user_id: storedUser.id,
           platform: platform
         });
+
+        // Re-join game room if we were in one (socket loses room membership on reconnect)
+        if (currentGameRoomRef.current) {
+          console.log('🔄 Re-joining game room after reconnect:', currentGameRoomRef.current);
+          newSocket.emit('join_game_room', {
+            room_id: currentGameRoomRef.current,
+            user_id: storedUser.id,
+            platform: platform
+          });
+        }
       }
-      
+
       // Reload rooms after reconnection
       loadRooms();
     });
@@ -1004,6 +1015,7 @@ function App() {
       setForceHideLobby(false);
       // Always reset roulette ref + config on redirect_home (game is fully over)
       showGetReadyRef.current = false;
+      currentGameRoomRef.current = null;
       setRouletteConfig(null);
       setActiveTab('rooms');
       
@@ -1844,6 +1856,7 @@ function App() {
         
         // Join Socket.IO room
         if (socket && socket.connected) {
+          currentGameRoomRef.current = specificRoomData.room_id;
           socket.emit('join_game_room', {
             room_id: specificRoomData.room_id,
             user_id: user.id,
@@ -1922,12 +1935,13 @@ function App() {
           console.log('Platform:', platform);
           console.log('Transport:', socket.io.engine.transport.name);
           
+          currentGameRoomRef.current = response.data.room_id;
           socket.emit('join_game_room', {
             room_id: response.data.room_id,
             user_id: user.id,
             platform: platform
           });
-          
+
           console.log('✅ join_game_room event emitted successfully');
         } else {
           console.error('❌❌❌ SOCKET NOT CONNECTED!');
