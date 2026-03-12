@@ -1073,10 +1073,25 @@ async def start_game_round(room: GameRoom):
     room.status = "finished"
     room.finished_at = datetime.now(timezone.utc)
     
+    # Credit winner with the full prize pool (losers already had bets deducted on join)
+    if not winner.user_id.startswith('bot_'):
+        try:
+            result = await db.users.find_one_and_update(
+                {"id": winner.user_id},
+                {"$inc": {"token_balance": room.prize_pool}},
+                return_document=True
+            )
+            if result:
+                logging.info(f"💰 Credited {room.prize_pool} tokens to winner {winner.username} (new balance: {result.get('token_balance', 0)})")
+            else:
+                logging.error(f"❌ Winner user {winner.user_id} not found in DB — balance NOT credited")
+        except Exception as e:
+            logging.error(f"❌ Failed to credit winner balance: {e}")
+
     # Get the prize link for this room type
     prize_link = PRIZE_LINKS[room.room_type]
     room.prize_link = prize_link
-    
+
     # Store the winner's prize link in database for later retrieval
     try:
         await db.winner_prizes.insert_one({
