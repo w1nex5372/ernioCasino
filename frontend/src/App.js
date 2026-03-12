@@ -817,6 +817,18 @@ function App() {
       console.log('🚀🚀🚀 EVENT: room_ready RECEIVED 🚀🚀🚀');
       console.log('📥 room_ready data:', data);
 
+      // Filter: only process if current user is a participant in this game
+      const currentUser = userRef.current;
+      const isParticipant = currentUser && data.players && data.players.some(p =>
+        String(p.user_id) === String(currentUser.id) ||
+        String(p.telegram_id) === String(currentUser.telegram_id)
+      );
+      if (!isParticipant) {
+        console.log('⏭️ room_ready: not a participant in this game, ignoring');
+        return;
+      }
+      console.log('✅ room_ready: confirmed participant, showing roulette');
+
       // Reset all block flags for new game
       blockWinnerScreenRef.current = false;
       showGetReadyRef.current = false; // force-clear any stuck state from previous game
@@ -868,18 +880,28 @@ function App() {
 
     newSocket.on('game_finished', (data) => {
       const matchId = data.match_id;
-      
+
+      // Filter: only process if current user was a participant (check via showGetReadyRef or player list)
+      // If roulette is active (showGetReadyRef=true), we're definitely a participant
+      // Otherwise check active_game_room sessionStorage to confirm participation
+      const activeRoom = sessionStorage.getItem('active_game_room');
+      const isParticipatingRoom = showGetReadyRef.current || (activeRoom && activeRoom === data.room_id);
+      if (!isParticipatingRoom) {
+        console.log('⏭️ game_finished: not a participant in this game, ignoring');
+        return;
+      }
+
       // FIRST CHECK - Before any logging or processing
       if (blockWinnerScreenRef.current) {
         console.log('🚫 BLOCKED by ref');
         return;
       }
-      
+
       if (!matchId || shownMatchIds.has(matchId)) {
         console.log('🚫 BLOCKED by matchId');
         return;
       }
-      
+
       if (showWinnerScreen) {
         console.log('🚫 BLOCKED - already showing');
         return;
@@ -1004,7 +1026,15 @@ function App() {
     newSocket.on('redirect_home', (data) => {
       console.log('🟢🟢🟢 EVENT: redirect_home RECEIVED 🟢🟢🟢');
       console.log('Match ID:', data.match_id);
-      
+
+      // Filter: only process if we're an active participant
+      const activeRoomForRedirect = sessionStorage.getItem('active_game_room');
+      const isParticipatingRedirect = showGetReadyRef.current || (activeRoomForRedirect && activeRoomForRedirect === data.room_id);
+      if (!isParticipatingRedirect) {
+        console.log('⏭️ redirect_home: not a participant, ignoring');
+        return;
+      }
+
       // CRITICAL: Block any future winner screens from this game
       blockWinnerScreenRef.current = true;
       console.log('🚫 Winner screen BLOCKED for future events');

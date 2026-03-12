@@ -1098,22 +1098,11 @@ async def start_game_round(room: GameRoom):
         'countdown': 3
     }
     
-    logging.info(f"📤📤📤 BROADCASTING room_ready to room {room.id}")
-    logging.info(f"🧩 Target sockets: {[sid[:8] for sid in final_sockets]}")
-    logging.info(f"📊 Socket count: {final_socket_count}")
-    
-    await socket_rooms.broadcast_to_room(sio, room.id, 'room_ready', room_ready_data)
-
-    # Also directly emit to each real player's socket as fallback (handles reconnect case)
-    for player in room.players:
-        if not player.user_id.startswith('bot_') and player.user_id in user_to_socket:
-            direct_sid = user_to_socket[player.user_id]
-            if direct_sid not in final_sockets:  # only if not already in room
-                logging.info(f"📤 Direct emit room_ready to {player.username} (sid {direct_sid[:8]})")
-                await sio.emit('room_ready', room_ready_data, to=direct_sid)
-
-    logging.info(f"✅ Emitted room_ready to room {room.id} with match_id {match_id}")
-    logging.info(f"📤 Delivered room_ready to {final_socket_count} clients successfully")
+    # Broadcast room_ready to ALL clients - client filters by player list
+    # This is more reliable than room-based delivery since socket may not have joined room yet
+    logging.info(f"📤📤📤 BROADCASTING room_ready GLOBALLY (room {room.id}, match {match_id})")
+    await sio.emit('room_ready', room_ready_data)
+    logging.info(f"✅ Emitted room_ready globally for match {match_id}")
     
     # Wait for roulette wheel animation (5 seconds - enough time to spin)
     await asyncio.sleep(5)
@@ -1169,18 +1158,9 @@ async def start_game_round(room: GameRoom):
         'has_prize': True,
         'finished_at': room.finished_at.isoformat()
     }
-    await socket_rooms.broadcast_to_room(sio, room.id, 'game_finished', game_finished_data)
-
-    # Also directly emit to each real player's socket as fallback
-    current_sockets_gf = socket_rooms.room_to_sockets.get(room.id, set())
-    for player in room.players:
-        if not player.user_id.startswith('bot_') and player.user_id in user_to_socket:
-            direct_sid = user_to_socket[player.user_id]
-            if direct_sid not in current_sockets_gf:
-                logging.info(f"📤 Direct emit game_finished to {player.username} (sid {direct_sid[:8]})")
-                await sio.emit('game_finished', game_finished_data, to=direct_sid)
-
-    logging.info(f"✅ Emitted game_finished to room {room.id}, winner: {winner.username}, match_id: {match_id}")
+    # Broadcast game_finished to ALL clients - client filters by player list
+    await sio.emit('game_finished', game_finished_data)
+    logging.info(f"✅ Emitted game_finished globally, winner: {winner.username}, match_id: {match_id}")
 
     # Wait for winner announcement screen (8 seconds so players can see it)
     logging.info(f"⏱️ Waiting 8 seconds for winner announcement...")
@@ -1199,18 +1179,9 @@ async def start_game_round(room: GameRoom):
         'match_id': match_id,
         'message': 'Returning to home screen...'
     }
-    await socket_rooms.broadcast_to_room(sio, room.id, 'redirect_home', redirect_home_data)
-
-    # Also directly emit to each real player's socket as fallback
-    for player in room.players:
-        if not player.user_id.startswith('bot_') and player.user_id in user_to_socket:
-            direct_sid = user_to_socket[player.user_id]
-            if direct_sid not in final_sockets:
-                logging.info(f"📤 Direct emit redirect_home to {player.username} (sid {direct_sid[:8]})")
-                await sio.emit('redirect_home', redirect_home_data, to=direct_sid)
-
-    logging.info(f"✅ Emitted redirect_home to room {room.id}")
-    logging.info(f"📤 Delivered redirect_home to {socket_count} clients")
+    # Broadcast redirect_home to ALL clients - client filters by player list
+    await sio.emit('redirect_home', redirect_home_data)
+    logging.info(f"✅ Emitted redirect_home globally for match {match_id}")
     
     # EVENT 5: prize_won - Send prize link privately to the winner (using socket ID)
     winner_sid = user_to_socket.get(winner.user_id)
