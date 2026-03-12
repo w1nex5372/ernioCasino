@@ -2124,7 +2124,7 @@ function App() {
       loadRooms();
     }, 5000);
     return () => clearInterval(interval);
-  }, [user, activeTab, inLobby, gameInProgress, rouletteConfig]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, activeTab, inLobby, gameInProgress, rouletteConfig]); // eslint-disable-line
 
   // Auto-refresh token balance every 10 seconds when user is logged in
   useEffect(() => {
@@ -2133,7 +2133,7 @@ function App() {
       refreshUserData(user.id);
     }, 10000);
     return () => clearInterval(interval);
-  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user?.id]); // eslint-disable-line
 
   // Error screen for non-Telegram access
   if (telegramError) {
