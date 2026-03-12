@@ -482,6 +482,7 @@ function App() {
   const [casinoWalletAddress, setCasinoWalletAddress] = useState('Loading...');
   const [isRefreshingHistory, setIsRefreshingHistory] = useState(false);
   const [anonModal, setAnonModal] = useState(null); // { roomType, betAmount } when open
+  const [confirmLeave, setConfirmLeave] = useState(false);
 
   // Form state
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -2972,32 +2973,9 @@ function App() {
                         🏠 Browse Menu
                       </Button>
 
-                      {/* Leave & Refund — removes from room and refunds tokens */}
+                      {/* Leave & Refund — shows confirmation first */}
                       <Button
-                        onClick={async () => {
-                          if (!lobbyData?.room_id || !user?.id) return;
-                          try {
-                            const res = await axios.post(`${API}/leave-room`, {
-                              room_id: lobbyData.room_id,
-                              user_id: user.id,
-                            });
-                            setUser(prev => ({ ...prev, token_balance: res.data.new_balance }));
-                            setInLobby(false);
-                            setLobbyData(null);
-                            setUserActiveRooms(prev => {
-                              const next = { ...prev };
-                              delete next[lobbyData.room_type];
-                              return next;
-                            });
-                            setActiveGameRoomId(null);
-                            currentGameRoomRef.current = null;
-                            sessionStorage.removeItem('active_game_room');
-                            toast.success(`💸 Left room — ${res.data.refund} tokens refunded`);
-                            loadRooms();
-                          } catch (err) {
-                            toast.error(err.response?.data?.detail || 'Could not leave room');
-                          }
-                        }}
+                        onClick={() => setConfirmLeave(true)}
                         variant="outline"
                         className="flex-1 border-red-500 text-red-400 hover:bg-red-500/10 hover:text-red-300"
                       >
@@ -3510,6 +3488,55 @@ function App() {
           <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', fontWeight: 600, background: 'rgba(0,0,0,0.5)', borderRadius: 6, padding: '1px 5px', whiteSpace: 'nowrap' }}>{r.name}</span>
         </div>
       ))}
+
+      {/* Leave & Refund Confirmation Modal */}
+      {confirmLeave && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="bg-slate-800 border border-slate-600 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+            <div className="text-center mb-5">
+              <div className="text-4xl mb-3">💸</div>
+              <h2 className="text-white text-xl font-bold mb-1">Leave the room?</h2>
+              <p className="text-slate-400 text-sm">
+                Your bet of <span className="text-yellow-400 font-semibold">{lobbyData?.bet_amount} tokens</span> will be refunded to your balance.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmLeave(false)}
+                className="flex-1 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold transition-all active:scale-95"
+              >
+                No, stay
+              </button>
+              <button
+                onClick={async () => {
+                  setConfirmLeave(false);
+                  if (!lobbyData?.room_id || !user?.id) return;
+                  try {
+                    const res = await axios.post(`${API}/leave-room`, {
+                      room_id: lobbyData.room_id,
+                      user_id: user.id,
+                    });
+                    setUser(prev => ({ ...prev, token_balance: res.data.new_balance }));
+                    setInLobby(false);
+                    setLobbyData(null);
+                    setUserActiveRooms(prev => { const next = { ...prev }; delete next[lobbyData.room_type]; return next; });
+                    setActiveGameRoomId(null);
+                    currentGameRoomRef.current = null;
+                    sessionStorage.removeItem('active_game_room');
+                    toast.success(`💸 Left room — ${res.data.refund} tokens refunded`);
+                    loadRooms();
+                  } catch (err) {
+                    toast.error(err.response?.data?.detail || 'Could not leave room');
+                  }
+                }}
+                className="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold transition-all active:scale-95"
+              >
+                Yes, leave
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Anonymous Choice Modal */}
       {anonModal && (
