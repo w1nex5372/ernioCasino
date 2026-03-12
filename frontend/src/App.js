@@ -582,13 +582,11 @@ function App() {
         const matchId = data.match_id || '';
         const playerCount = (data.players || []).length;
 
-        toast.info(`📊 POLL: ${status} | ${playerCount}p | showRef=${showGetReadyRef.current} | last=${lastStatus}`, { duration: 3000 });
-
         // Status: ready → show roulette wheel
         if ((status === 'ready' || status === 'playing' || status === 'finished') &&
             lastStatus !== 'ready' && lastStatus !== 'playing' && lastStatus !== 'finished' &&
             !showGetReadyRef.current) {
-          toast.success(`🎡 SHOWING ROULETTE: ${playerCount} players`, { duration: 5000 });
+          toast.success(`🎡 SHOWING ROULETTE: ${playerCount} players`, { duration: 3000 });
           blockWinnerScreenRef.current = false;
           showGetReadyRef.current = true;
           setInLobby(false);
@@ -620,7 +618,7 @@ function App() {
       }
     };
 
-    const interval = setInterval(pollGameState, 1000);
+    const interval = setInterval(pollGameState, 500);
     pollGameState(); // immediate first check
 
     return () => clearInterval(interval);

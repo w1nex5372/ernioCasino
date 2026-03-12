@@ -1035,61 +1035,20 @@ async def start_game_round(room: GameRoom):
     room.match_id = match_id  # Store on room for polling clients
     logging.info(f"🎮 Starting game round for room {room.id}, match_id: {match_id}")
     logging.info(f"👥 Players in room: {[p.username for p in room.players]}")
-    
-    # CRITICAL: Wait for ALL 3 sockets to actually join the room
-    max_wait_time = 5.0  # Maximum 5 seconds to wait (increased)
-    wait_interval = 0.2   # Check every 200ms
-    elapsed = 0.0
-    
-    while elapsed < max_wait_time:
-        socket_count = socket_rooms.get_room_socket_count(room.id)
-        sockets_in_room = socket_rooms.room_to_sockets.get(room.id, set())
-        
-        logging.info(f"⏱️ [{elapsed:.1f}s] Checking sockets in room {room.id}: {socket_count}/3")
-        logging.info(f"📋 Socket IDs in room: {[sid[:8] for sid in sockets_in_room]}")
-        
-        # Check which user IDs are mapped to sockets
-        users_with_sockets = []
-        for player in room.players:
-            if player.user_id in user_to_socket:
-                sid = user_to_socket[player.user_id]
-                users_with_sockets.append(f"{player.username}={sid[:8]}")
-        logging.info(f"👥 Users with socket mapping: {users_with_sockets}")
-        
-        if socket_count >= 3:
-            logging.info(f"✅ All 3 sockets confirmed in room {room.id}!")
-            break
-        
-        logging.info(f"⏳ Waiting for more sockets ({socket_count}/3)... {elapsed:.1f}s elapsed")
-        await asyncio.sleep(wait_interval)
-        elapsed += wait_interval
-    
-    # Final check
-    final_socket_count = socket_rooms.get_room_socket_count(room.id)
-    final_sockets = socket_rooms.room_to_sockets.get(room.id, set())
-    
-    if final_socket_count < 3:
-        logging.warning(f"⚠️ Only {final_socket_count} sockets in room after {max_wait_time}s wait!")
-        logging.warning(f"⚠️ Sockets present: {[sid[:8] for sid in final_sockets]}")
-        logging.warning(f"⚠️ Proceeding anyway to avoid deadlock...")
-    else:
-        logging.info(f"✅✅✅ CONFIRMED: {final_socket_count} sockets in room {room.id}")
-        logging.info(f"✅ Socket IDs: {[sid[:8] for sid in final_sockets]}")
-    
+
+    # Set status IMMEDIATELY — polling clients detect this within 500ms
     room.status = "ready"
-    
-    # Calculate prize pool (total bets)
     room.prize_pool = sum(p.bet_amount for p in room.players)
-    
-    # EVENT 1: room_ready - Trigger "GET READY!" animation (2-3 seconds)
-    # Serialize player data properly
+
+    # Serialize player data
     serialized_players = []
     for p in room.players:
         player_dict = p.dict()
         if 'joined_at' in player_dict and isinstance(player_dict['joined_at'], datetime):
             player_dict['joined_at'] = player_dict['joined_at'].isoformat()
         serialized_players.append(player_dict)
-    
+
+    # Broadcast room_ready globally (socket fallback — polling is the primary mechanism)
     room_ready_data = {
         'room_id': room.id,
         'room_type': room.room_type,
@@ -1097,17 +1056,12 @@ async def start_game_round(room: GameRoom):
         'players': serialized_players,
         'prize_pool': room.prize_pool,
         'message': '🚀 GET READY FOR BATTLE!',
-        'countdown': 3
     }
-    
-    # Broadcast room_ready to ALL clients - client filters by player list
-    # This is more reliable than room-based delivery since socket may not have joined room yet
-    logging.info(f"📤📤📤 BROADCASTING room_ready GLOBALLY (room {room.id}, match {match_id})")
     await sio.emit('room_ready', room_ready_data)
-    logging.info(f"✅ Emitted room_ready globally for match {match_id}")
-    
-    # Wait for roulette wheel animation (5 seconds - enough time to spin)
-    await asyncio.sleep(5)
+    logging.info(f"✅ room_ready emitted globally, match {match_id}")
+
+    # Wait for roulette wheel animation (8 seconds to spin + show result)
+    await asyncio.sleep(8)
     
     # Select winner immediately after GET READY (no game_starting event needed)
     room.status = "playing"
