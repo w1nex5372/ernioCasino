@@ -3118,145 +3118,118 @@ function App() {
             {/* Token Purchase Tab */}
             {activeTab === 'tokens' && (
               isMobile ? (
-                <div className="space-y-3 max-w-full">
+                <div className="space-y-3 max-w-full px-1">
                   {/* Balance Card */}
-                  <Card className="bg-gradient-to-r from-purple-900/50 to-purple-800/50 border-purple-500/30">
-                    <CardContent className="p-4 text-center">
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <Wallet className="w-5 h-5 text-purple-400" />
-                        <h2 className="text-sm font-bold text-white">Your Balance</h2>
-                      </div>
-                      <div className="text-3xl font-bold text-yellow-400">{user.token_balance || 0}</div>
-                      <div className="text-xs text-slate-400">tokens</div>
-                    </CardContent>
-                  </Card>
-                  
-                  {/* Add Tokens Button */}
-                  <Button
-                    onClick={() => setShowPaymentModal(true)}
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 text-lg rounded-xl shadow-lg transition-all duration-200"
-                  >
-                    <Zap className="w-5 h-5 mr-2" />
-                    + Add Tokens
-                  </Button>
-                  <p className="text-xs text-green-400 text-center mt-2">
-                    💰 Live on Solana Mainnet - Real SOL payments
-                  </p>
+                  <div style={{ background: 'linear-gradient(135deg, #1a0320 0%, #0d0d1a 100%)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: 12, padding: '14px 16px', textAlign: 'center' }}>
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <Wallet className="w-4 h-4" style={{ color: '#a855f7' }} />
+                      <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Your Balance</span>
+                    </div>
+                    <div className="text-2xl font-black text-yellow-400" style={{ fontFamily: 'Orbitron, monospace' }}>{(user.token_balance || 0).toLocaleString()}</div>
+                    <div className="text-xs text-slate-500">SW Tokens</div>
+                  </div>
 
-                  {/* Quick Amount Buttons */}
+                  {/* Add Tokens Button */}
+                  <button
+                    onClick={() => setShowPaymentModal(true)}
+                    style={{ width: '100%', background: 'linear-gradient(135deg, #dc2626 0%, #7c3aed 100%)', border: 'none', borderRadius: 10, padding: '10px 16px', color: 'white', fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', boxShadow: '0 0 16px rgba(220,38,38,0.4)' }}
+                  >
+                    <Zap className="w-4 h-4" />
+                    + Add Tokens
+                  </button>
+                  <p className="text-xs text-slate-500 text-center">⚡ Solana Mainnet · Real SOL payments</p>
+
+                  {/* Package grid */}
                   <div className="grid grid-cols-3 gap-2">
                     {[500, 1000, 2000].map(amount => (
                       <button
                         key={amount}
                         onClick={() => {
-                          console.log(`🛒 Buy button clicked: ${amount} tokens (€${amount / 100})`);
-                          // Telegram haptic feedback
-                          if (window.Telegram?.WebApp?.HapticFeedback) {
-                            window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-                          }
+                          if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
                           setShowPaymentModal(true);
                           setPaymentEurAmount(amount / 100);
                         }}
-                        className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 rounded-lg transition-all duration-200 active:scale-95"
+                        style={{ background: 'linear-gradient(135deg, #0f0f1a 0%, #1a0a20 100%)', border: '1px solid rgba(220,38,38,0.35)', borderRadius: 10, padding: '10px 6px', color: 'white', cursor: 'pointer', transition: 'all 0.2s' }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(220,38,38,0.8)'}
+                        onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(220,38,38,0.35)'}
                       >
-                        <div className="text-xs">Buy</div>
-                        <div className="text-sm">{amount}</div>
-                        <div className="text-xs">€{(amount / 100).toFixed(1)}</div>
+                        <div className="text-yellow-400 font-black text-base" style={{ fontFamily: 'Orbitron, monospace' }}>{amount}</div>
+                        <div className="text-slate-400 text-xs">tokens</div>
+                        <div style={{ marginTop: 4, background: 'rgba(220,38,38,0.2)', borderRadius: 6, padding: '2px 6px', display: 'inline-block', fontSize: 11, color: '#f87171' }}>€{(amount / 100).toFixed(0)}</div>
                       </button>
                     ))}
                   </div>
-                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2 mt-2">
-                    <p className="text-xs text-blue-400 text-center">
-                      💰 Live on Solana Mainnet - Real SOL transactions
+
+                  {/* Info box */}
+                  <div style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 10, padding: '10px 12px' }}>
+                    <p className="text-xs text-slate-400 text-center">
+                      <span style={{ color: '#a855f7', fontWeight: 600 }}>1 EUR = 100 tokens</span> · Auto-credited in 1–2 min
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-6 max-w-3xl mx-auto">
-                  {/* Balance and Wallet Card */}
-                  <Card className="bg-gradient-to-r from-purple-900/50 to-purple-800/50 border-purple-500/30">
-                    <CardContent className="p-6">
-                      <div className="grid grid-cols-2 gap-6">
-                        <div className="text-center">
-                          <div className="flex items-center justify-center gap-2 mb-2">
-                            <Wallet className="w-6 h-6 text-purple-400" />
-                            <h3 className="text-lg font-bold text-white">Your Balance</h3>
-                          </div>
-                          <div className="text-5xl font-bold text-yellow-400">{user.token_balance || 0}</div>
-                          <div className="text-sm text-slate-400 mt-1">tokens</div>
-                        </div>
+                <div className="space-y-4 max-w-2xl mx-auto">
+                  {/* Balance Card */}
+                  <div style={{ background: 'linear-gradient(135deg, #1a0320 0%, #0d0d1a 100%)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: 14, padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 24 }}>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Wallet className="w-4 h-4" style={{ color: '#a855f7' }} />
+                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Balance</span>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <div className="text-4xl font-black text-yellow-400" style={{ fontFamily: 'Orbitron, monospace' }}>{(user.token_balance || 0).toLocaleString()}</div>
+                      <div className="text-xs text-slate-500 mt-1">SpinWar Tokens</div>
+                    </div>
+                    <button
+                      onClick={() => setShowPaymentModal(true)}
+                      style={{ marginLeft: 'auto', background: 'linear-gradient(135deg, #dc2626 0%, #7c3aed 100%)', border: 'none', borderRadius: 10, padding: '10px 20px', color: 'white', fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', boxShadow: '0 0 16px rgba(220,38,38,0.4)', whiteSpace: 'nowrap' }}
+                    >
+                      <Zap className="w-4 h-4" /> + Add Tokens
+                    </button>
+                  </div>
 
-                  {/* Add Tokens Section */}
-                  <Card className="bg-slate-800/90 border-slate-700">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-green-400">
-                        <Zap className="w-5 h-5" />
-                        Add Tokens
-                      </CardTitle>
-                      <CardDescription className="text-slate-400">
-                        Purchase tokens using Solana (SOL) with instant conversion
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-4 gap-4 mb-6">
-                        {[500, 1000, 2000, 5000].map(amount => (
-                          <button
-                            key={amount}
-                            onClick={() => {
-                              console.log(`🛒 Desktop Buy button clicked: ${amount} tokens (€${amount / 100})`);
-                              setShowPaymentModal(true);
-                              // Calculate EUR from tokens
-                              setPaymentEurAmount(amount / 100);
-                            }}
-                            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-6 rounded-xl shadow-lg transition-all duration-200 hover:scale-105"
-                          >
-                            <div className="text-sm">Buy</div>
-                            <div className="text-2xl">{amount}</div>
-                            <div className="text-xs">tokens</div>
-                            <div className="text-sm mt-1">€{(amount / 100).toFixed(0)}</div>
-                          </button>
-                        ))}
-                      </div>
-                      
-                      <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-6">
-                        <h3 className="text-green-400 font-bold mb-2">💰 Live on Mainnet</h3>
-                        <p className="text-sm text-green-300">
-                          The app is now live on Solana Mainnet. All payments use real SOL and are processed on the live blockchain.
-                        </p>
-                      </div>
-                      
-                      <div className="flex gap-4">
-                        <Input
-                          type="number"
-                          placeholder="Custom amount (min 100)"
-                          min="100"
-                          className="flex-1 bg-slate-900 border-slate-700 text-white"
-                          onChange={(e) => setPaymentTokenAmount(parseInt(e.target.value) || 100)}
-                        />
-                        <Button
-                          onClick={() => setShowPaymentModal(true)}
-                          className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold px-8"
+                  {/* Package grid */}
+                  <div style={{ background: 'rgba(13,13,26,0.95)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: 14, padding: '20px' }}>
+                    <p className="text-xs text-slate-500 uppercase tracking-widest mb-3">Quick Buy</p>
+                    <div className="grid grid-cols-4 gap-3 mb-4">
+                      {[500, 1000, 2000, 5000].map(amount => (
+                        <button
+                          key={amount}
+                          onClick={() => { setShowPaymentModal(true); setPaymentEurAmount(amount / 100); }}
+                          style={{ background: 'linear-gradient(135deg, #0f0f1a 0%, #1a0a20 100%)', border: '1px solid rgba(220,38,38,0.35)', borderRadius: 10, padding: '12px 8px', color: 'white', cursor: 'pointer', transition: 'all 0.2s' }}
                         >
-                          <Zap className="w-4 h-4 mr-2" />
-                          Buy Now
-                        </Button>
-                      </div>
+                          <div className="text-yellow-400 font-black text-lg" style={{ fontFamily: 'Orbitron, monospace' }}>{amount}</div>
+                          <div className="text-slate-400 text-xs mb-1">tokens</div>
+                          <div style={{ background: 'rgba(220,38,38,0.2)', borderRadius: 6, padding: '2px 8px', display: 'inline-block', fontSize: 12, color: '#f87171' }}>€{(amount / 100).toFixed(0)}</div>
+                        </button>
+                      ))}
+                    </div>
 
-                      <div className="mt-6 p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
-                        <h4 className="text-white font-semibold mb-2">How it works:</h4>
-                        <ul className="text-sm text-slate-300 space-y-1">
-                          <li>• Click a package or enter custom amount</li>
-                          <li>• Get a unique payment address with 20-minute timer</li>
-                          <li>• Send SOL to the provided address</li>
-                          <li>• Tokens credited automatically within 1-2 minutes</li>
-                          <li>• <span className="text-purple-400 font-semibold">1 EUR = 100 tokens</span> (live SOL/EUR rate)</li>
-                        </ul>
-                      </div>
-                    </CardContent>
-                  </Card>
+                    <div className="flex gap-3">
+                      <Input
+                        type="number"
+                        placeholder="Custom amount (min 100)"
+                        min="100"
+                        style={{ background: '#0a0a12', border: '1px solid rgba(124,58,237,0.3)', color: 'white', borderRadius: 8, fontSize: 13 }}
+                        onChange={(e) => setPaymentTokenAmount(parseInt(e.target.value) || 100)}
+                      />
+                      <button
+                        onClick={() => setShowPaymentModal(true)}
+                        style={{ background: 'linear-gradient(135deg, #dc2626 0%, #7c3aed 100%)', border: 'none', borderRadius: 8, padding: '8px 18px', color: 'white', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                      >
+                        <Zap className="w-3.5 h-3.5" /> Buy
+                      </button>
+                    </div>
+
+                    <div style={{ marginTop: 16, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 10, padding: '12px 14px' }}>
+                      <p className="text-xs text-slate-400 mb-2 font-semibold" style={{ color: '#a855f7' }}>How it works</p>
+                      <ul className="text-xs text-slate-400 space-y-1">
+                        <li>• Pick a package or enter a custom amount</li>
+                        <li>• Send SOL to the generated address (20 min timer)</li>
+                        <li>• Tokens credited automatically in 1–2 min</li>
+                        <li>• <span style={{ color: '#a855f7', fontWeight: 600 }}>1 EUR = 100 tokens</span> (live SOL/EUR rate)</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               )
             )}

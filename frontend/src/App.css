@@ -226,17 +226,19 @@ h1, h2, h3, .heading {
 
 /* SpinWar Primary Button */
 .spinwar-btn-primary {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #7c3aed 100%);
   color: #fff;
-  font-family: 'Orbitron', monospace;
+  font-family: 'Exo 2', sans-serif;
   font-weight: 700;
+  font-size: 13px;
   border: none;
-  box-shadow: 0 0 16px rgba(220, 38, 38, 0.5), 0 4px 12px rgba(0,0,0,0.4);
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.45), 0 2px 8px rgba(0,0,0,0.4);
   transition: all 0.2s ease;
+  letter-spacing: 0.03em;
 }
 .spinwar-btn-primary:hover {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  box-shadow: 0 0 28px rgba(220, 38, 38, 0.7), 0 4px 16px rgba(0,0,0,0.5);
+  background: linear-gradient(135deg, #ef4444 0%, #8b5cf6 100%);
+  box-shadow: 0 0 22px rgba(220, 38, 38, 0.65), 0 4px 14px rgba(0,0,0,0.5);
   transform: translateY(-1px);
 }
 
@@ -244,10 +246,11 @@ h1, h2, h3, .heading {
 .spinwar-btn-secondary {
   background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
   color: #fff;
-  font-family: 'Orbitron', monospace;
+  font-family: 'Exo 2', sans-serif;
   font-weight: 700;
+  font-size: 13px;
   border: none;
-  box-shadow: 0 0 16px rgba(124, 58, 237, 0.4), 0 4px 12px rgba(0,0,0,0.4);
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.35), 0 2px 8px rgba(0,0,0,0.4);
   transition: all 0.2s ease;
 }
 .spinwar-btn-secondary:hover {
