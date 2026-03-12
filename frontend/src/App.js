@@ -2130,8 +2130,8 @@ function App() {
   // Error screen for non-Telegram access
   if (telegramError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-slate-800/90 border-slate-700">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{background: 'linear-gradient(135deg, #08080f 0%, #1a0320 40%, #08080f 100%)'}}>
+        <Card className="w-full max-w-md bg-[#0d0d1a]/95 border-red-900/40">
           <CardContent className="p-8 text-center">
             <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">⚠️</span>
@@ -2185,10 +2185,10 @@ function App() {
   if (isLoading) {
     console.log('🔄 Rendering: LOADING screen');
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-slate-800/90 border-slate-700">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{background: 'linear-gradient(135deg, #08080f 0%, #1a0320 40%, #08080f 100%)'}}>
+        <Card className="w-full max-w-md bg-[#0d0d1a]/95 border-red-900/40">
           <CardContent className="p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
             <h3 className="text-xl font-bold text-white mb-2">Connecting to Telegram...</h3>
             <p className="text-slate-400">Authenticating your account</p>
           </CardContent>
@@ -2201,10 +2201,10 @@ function App() {
   if (!user) {
     console.log('🔄 Rendering: NO USER screen');
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-slate-800/90 border-slate-700">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{background: 'linear-gradient(135deg, #08080f 0%, #1a0320 40%, #08080f 100%)'}}>
+        <Card className="w-full max-w-md bg-[#0d0d1a]/95 border-red-900/40">
           <CardContent className="p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
             <h3 className="text-xl font-bold text-white mb-2">Loading SpinWar...</h3>
             <p className="text-slate-400">Connecting to Telegram Web App</p>
           </CardContent>
@@ -2220,9 +2220,9 @@ function App() {
     telegram_id: user?.telegram_id
   });
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-y-auto ${
+    <div className={`min-h-screen text-white overflow-y-auto ${
       isMobile ? 'overflow-x-hidden max-w-full w-full' : ''
-    }`} style={isMobile ? {maxWidth: '100vw', width: '100vw'} : {}}>
+    }`} style={isMobile ? {maxWidth: '100vw', width: '100vw', background: 'linear-gradient(135deg, #08080f 0%, #1a0320 40%, #08080f 100%)'} : {background: 'linear-gradient(135deg, #08080f 0%, #1a0320 40%, #08080f 100%)'}}>
       
       {/* Roulette Wheel Animation */}
       {rouletteConfig && (
@@ -2251,21 +2251,21 @@ function App() {
       )}
       
       {/* Header */}
-      <header className="bg-slate-900/90 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-50">
+      <header className="spinwar-header sticky top-0 z-50">
         <div className="px-4 py-3">
           {isMobile ? (
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between px-3 py-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <Crown className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+                  <Crown className="w-5 h-5 text-red-500 flex-shrink-0" />
                   <div>
-                    <h1 className="text-sm font-bold text-white">SpinWar</h1>
+                    <h1 className="text-sm font-bold spinwar-title">SpinWar</h1>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-right">
                     <div className="text-xs text-slate-400">Balance</div>
-                    <div className="text-sm font-bold text-yellow-400">{user.token_balance || 0}</div>
+                    <div className="text-sm font-bold" style={{color: 'var(--sw-gold)'}}>{user.token_balance || 0}</div>
                   </div>
                   <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
                 </div>
@@ -2284,8 +2284,8 @@ function App() {
           ) : (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Crown className="w-8 h-8 text-yellow-400" />
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+                <Crown className="w-8 h-8 text-red-500" />
+                <h1 className="text-2xl spinwar-title">
                   SpinWar
                 </h1>
               </div>
@@ -2315,8 +2315,8 @@ function App() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <Coins className="w-4 h-4 text-yellow-400" />
-                    <span className="text-lg font-bold text-yellow-400">{user.token_balance || 0}</span>
+                    <Coins className="w-4 h-4" style={{color: 'var(--sw-gold)'}} />
+                    <span className="text-lg font-bold" style={{color: 'var(--sw-gold)'}}>{user.token_balance || 0}</span>
                     <span className="text-slate-400">tokens</span>
                   </div>
                 </div>
@@ -2341,13 +2341,13 @@ function App() {
       <div className="flex">
         {/* Desktop Sidebar */}
         {!isMobile && (
-          <nav className="desktop-sidebar w-64 bg-slate-800/50 backdrop-blur-sm border-r border-slate-700 min-h-screen p-4">
+          <nav className="desktop-sidebar w-64 backdrop-blur-sm border-r min-h-screen p-4" style={{background: 'rgba(8,8,15,0.85)', borderColor: 'rgba(220,38,38,0.2)'}}>
             <div className="space-y-2">
               <button
                 onClick={() => setActiveTab('rooms')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === 'rooms' 
-                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
+                  activeTab === 'rooms'
+                    ? 'bg-gradient-to-r from-red-700 to-red-800 text-white font-semibold'
                     : 'text-slate-300 hover:bg-slate-700 hover:text-white'
                 }`}
               >
@@ -2358,8 +2358,8 @@ function App() {
               <button
                 onClick={() => setActiveTab('history')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === 'history' 
-                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-semibold' 
+                  activeTab === 'history'
+                    ? 'bg-gradient-to-r from-purple-700 to-purple-800 text-white font-semibold'
                     : 'text-slate-300 hover:bg-slate-700 hover:text-white'
                 }`}
               >
@@ -2397,9 +2397,9 @@ function App() {
 
             {/* Stats Sidebar */}
             <div className="mt-8 space-y-4">
-              <div className="bg-slate-700/50 rounded-lg p-4">
+              <div className="rounded-lg p-4" style={{background: 'rgba(13,13,26,0.8)', border: '1px solid rgba(220,38,38,0.2)'}}>
                 <div className="text-xs text-slate-400 uppercase tracking-wide mb-1">Your Balance</div>
-                <div className="text-2xl font-bold text-yellow-400">{user.token_balance}</div>
+                <div className="text-2xl font-bold" style={{color: 'var(--sw-gold)'}}>{user.token_balance}</div>
                 <div className="text-xs text-slate-500">SpinWar Tokens</div>
               </div>
             </div>
@@ -2412,7 +2412,7 @@ function App() {
 
             {/* Mobile Welcome Header - Compact */}
             {isMobile && (
-              <div className="bg-gradient-to-r from-green-600/15 to-emerald-600/15 border border-green-500/20 rounded-lg p-3 mb-3">
+              <div className="bg-gradient-to-r from-red-900/15 to-purple-900/15 border border-red-800/20 rounded-lg p-3 mb-3">
                 <div className="text-center">
                   <div className="flex items-center justify-center gap-2 mb-1">
                     <h3 className="text-base font-bold text-white">Welcome, {user.first_name}!</h3>
@@ -2428,7 +2428,7 @@ function App() {
                     )}
                   </div>
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <p className="text-yellow-400 font-medium text-sm">Balance: {user.token_balance || 0} tokens</p>
+                    <p className="font-medium text-sm" style={{color: 'var(--sw-gold)'}}>Balance: {user.token_balance || 0} tokens</p>
                   </div>
                 </div>
               </div>
@@ -2756,9 +2756,9 @@ function App() {
 
             {/* LOBBY SCREEN - Show when player is waiting in room - HIDDEN when GET READY animation is showing */}
             {!showWinnerScreen && !gameInProgress && inLobby && !rouletteConfig && !forceHideLobby && lobbyData && (
-              <Card className="bg-slate-800/90 border-2 border-yellow-500/50">
+              <Card className="bg-[#0d0d1a]/95 border-2 border-red-500/40" style={{boxShadow: '0 0 24px rgba(220,38,38,0.15), 0 0 48px rgba(124,58,237,0.1)'}}>
                 <CardHeader className="text-center">
-                  <CardTitle className="text-2xl text-yellow-400 flex items-center justify-center gap-2">
+                  <CardTitle className="text-2xl text-red-400 flex items-center justify-center gap-2">
                     <Users className="w-6 h-6" />
                     {ROOM_CONFIGS[lobbyData.room_type]?.icon} {ROOM_CONFIGS[lobbyData.room_type]?.name} Spin Lobby
                   </CardTitle>
@@ -2769,12 +2769,12 @@ function App() {
                 <CardContent>
                   <div className="space-y-4">
                     {/* Prize Pool */}
-                    <div className="bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/40 rounded-xl p-4 text-center">
-                      <p className="text-yellow-400 text-xs font-semibold uppercase tracking-widest mb-1">Prize Pool</p>
-                      <p className="text-3xl font-black text-yellow-300">
+                    <div className="bg-gradient-to-r from-red-900/25 to-purple-900/25 border border-red-500/30 rounded-xl p-4 text-center" style={{boxShadow: '0 0 20px rgba(220,38,38,0.15)'}}>
+                      <p className="text-red-400 text-xs font-semibold uppercase tracking-widest mb-1">Prize Pool</p>
+                      <p className="text-3xl font-black" style={{background: 'linear-gradient(135deg, #dc2626, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'}}>
                         💰 {(roomParticipants[lobbyData.room_type] || []).reduce((sum, p) => sum + (p.bet_amount || lobbyData.bet_amount || 0), 0)} tokens
                       </p>
-                      <p className="text-yellow-500/70 text-xs mt-1">Winner takes all!</p>
+                      <p className="text-red-500/70 text-xs mt-1">Winner takes all!</p>
                     </div>
 
                     {/* Current room participants */}
@@ -2806,7 +2806,7 @@ function App() {
                                 {player.username && (
                                   <p className="text-slate-400 text-sm">@{player.username}</p>
                                 )}
-                                <p className="text-green-400 text-sm font-medium">Ready to play · <span className="text-yellow-400">{player.bet_amount || lobbyData.bet_amount} tokens</span></p>
+                                <p className="text-purple-400 text-sm font-medium">Ready to play · <span style={{color: 'var(--sw-gold)'}}>{player.bet_amount || lobbyData.bet_amount} tokens</span></p>
                               </div>
                             </div>
                           ))
@@ -2841,8 +2841,8 @@ function App() {
                           // Waiting for more players
                           return (
                             <div className="py-4">
-                              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mb-2"></div>
-                              <p className="text-yellow-400 font-semibold text-lg">
+                              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mb-2"></div>
+                              <p className="text-red-400 font-semibold text-lg">
                                 Waiting for {playersNeeded} more player{playersNeeded === 1 ? '' : 's'}...
                               </p>
                               <p className="text-slate-400 text-sm mt-1">
@@ -2857,15 +2857,15 @@ function App() {
                             <div className="py-6 relative">
                               {/* Glow Effect */}
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-40 h-40 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500 rounded-full opacity-20 animate-ping"></div>
-                                <div className="w-32 h-32 bg-gradient-to-r from-green-400 to-emerald-600 rounded-full opacity-30 animate-pulse absolute"></div>
+                                <div className="w-40 h-40 bg-gradient-to-r from-red-600 via-red-500 to-purple-600 rounded-full opacity-20 animate-ping"></div>
+                                <div className="w-32 h-32 bg-gradient-to-r from-red-600 to-purple-700 rounded-full opacity-30 animate-pulse absolute"></div>
                               </div>
                               
                               {/* Main Content */}
                               <div className="relative z-10">
                                 <div className="text-6xl mb-4 animate-bounce">🚀</div>
                                 <div className="mb-4 space-y-2">
-                                  <p className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400 animate-pulse">
+                                  <p className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-400 to-purple-400 animate-pulse" style={{fontFamily: 'Orbitron, monospace'}}>
                                     GET READY!
                                   </p>
                                   <p className="text-xl md:text-2xl font-bold text-white animate-pulse">
@@ -2875,11 +2875,11 @@ function App() {
                                 
                                 {/* Ready indicator */}
                                 <div className="flex items-center justify-center gap-3 mt-6">
-                                  <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                                  <p className="text-green-400 font-bold text-lg">
+                                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                                  <p className="text-purple-400 font-bold text-lg">
                                     All 3 Players Ready
                                   </p>
-                                  <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                                 </div>
                                 
                                 <p className="text-slate-400 text-sm mt-4 animate-pulse">
@@ -2924,16 +2924,16 @@ function App() {
                   </div>
                 ) : (
                   <div className="text-center py-6">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full mb-3">
-                      <Users className="w-8 h-8 text-slate-900" />
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-red-700 to-purple-700 rounded-full mb-3" style={{boxShadow: '0 0 20px rgba(220,38,38,0.4)'}}>
+                      <Users className="w-8 h-8 text-white" />
                     </div>
-                    <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+                    <h2 className="text-3xl font-bold mb-2 spinwar-title">
                       Choose Your Spin Room
                     </h2>
                     <p className="text-slate-400 text-lg max-w-2xl mx-auto">
                       Join one of our six exclusive rooms where 3 players spin for the prize!
                       <br />
-                      <span className="text-yellow-400 font-medium">Higher bet = Better winning odds!</span>
+                      <span className="font-medium" style={{color: 'var(--sw-gold)'}}>Higher bet = Better winning odds!</span>
                     </p>
                   </div>
                 )}
@@ -2944,7 +2944,7 @@ function App() {
                     const config = ROOM_CONFIGS[roomType];
 
                     return (
-                      <Card key={roomType} className="bg-slate-800/90 border-slate-700 overflow-hidden">
+                      <Card key={roomType} className="spinwar-room-card overflow-hidden">
                         {isMobile ? (
                           // MOBILE: Compact card layout - fixed overflow
                           <div className="w-full max-w-full overflow-hidden">
@@ -2985,7 +2985,7 @@ function App() {
                                   setBetAmounts(prev => ({ ...prev, [roomType]: e.target.value }));
                                 }}
                                 disabled={!!userActiveRooms[roomType]}
-                                className="bg-slate-700 border-slate-500 text-white text-center h-9 text-sm placeholder:text-slate-400 focus:border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="bg-slate-700 border-slate-500 text-white text-center h-9 text-sm placeholder:text-slate-400 focus:border-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                               />
 
                               <Button
@@ -3006,7 +3006,7 @@ function App() {
                                   userActiveRooms[roomType] ? 'bg-blue-600 hover:bg-blue-700' :
                                   (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))
                                     ? 'bg-slate-600 cursor-not-allowed'
-                                    : 'bg-green-600 hover:bg-green-700'
+                                    : 'spinwar-btn-primary'
                                 }`}
                               >
                                 <Play className="w-3 h-3 mr-1" />
@@ -3052,7 +3052,7 @@ function App() {
                                     <p className="text-slate-400 text-sm text-center">No players yet. Be the first to join!</p>
                                   )}
                                   {room.players_count === 1 && (
-                                    <p className="text-yellow-400 text-sm text-center font-medium">1 player waiting. Join now!</p>
+                                    <p className="text-purple-400 text-sm text-center font-medium">1 player waiting. Join now!</p>
                                   )}
                                   {room.players_count >= 3 && (
                                     <p className="text-red-400 text-sm text-center font-medium">Room full - game in progress</p>
@@ -3092,7 +3092,7 @@ function App() {
                                       userActiveRooms[roomType] ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600' :
                                       (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))
                                         ? 'bg-slate-600 cursor-not-allowed'
-                                        : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600'
+                                        : 'spinwar-btn-primary'
                                     } text-white font-bold py-3`}
                                   >
                                     <Play className="w-4 h-4 mr-2" />
@@ -3342,13 +3342,13 @@ function App() {
 
       {/* Mobile Bottom Navigation - BIGGER & BETTER */}
       {isMobile && (
-        <nav className="mobile-bottom-nav fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur-sm border-t border-slate-700 z-50">
+        <nav className="mobile-bottom-nav fixed bottom-0 left-0 right-0 backdrop-blur-sm border-t z-50" style={{background: 'rgba(8,8,16,0.95)', borderColor: 'rgba(220,38,38,0.3)'}}>
           <div className="flex justify-evenly items-center py-3 px-2 safe-area-inset-bottom max-w-md mx-auto">
             <button
               onClick={() => setActiveTab('rooms')}
               className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-[100px] ${
-                activeTab === 'rooms' 
-                  ? 'text-yellow-400 bg-yellow-400/20 scale-105' 
+                activeTab === 'rooms'
+                  ? 'text-red-400 bg-red-500/20 scale-105'
                   : 'text-slate-300 active:bg-slate-700/50'
               }`}
             >

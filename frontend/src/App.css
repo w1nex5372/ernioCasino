@@ -1,5 +1,16 @@
-/* Global styles for Casino Battle Royale */
+/* Global styles for SpinWar */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap');
+
+/* SpinWar CSS Variables */
+:root {
+  --sw-red: #dc2626;
+  --sw-red-dark: #991b1b;
+  --sw-purple: #7c3aed;
+  --sw-purple-light: #a855f7;
+  --sw-gold: #f59e0b;
+  --sw-dark: #08080f;
+  --sw-card: #0d0d1a;
+}
 
 * {
   box-sizing: border-box;
@@ -17,7 +28,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #0f172a 0%, #581c87 50%, #0f172a 100%);
+  background: linear-gradient(135deg, #08080f 0%, #1a0320 40%, #0f0015 70%, #08080f 100%);
   min-height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
@@ -48,12 +59,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(251, 191, 36, 0.5);
+  background: rgba(220, 38, 38, 0.5);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(251, 191, 36, 0.7);
+  background: rgba(220, 38, 38, 0.7);
 }
 
 /* Mobile optimizations */
@@ -195,9 +206,105 @@ h1, h2, h3, .heading {
 }
 
 .animated-bg {
-  background: linear-gradient(45deg, #0f172a, #581c87, #7c3aed, #0f172a);
+  background: linear-gradient(45deg, #08080f, #1a0320, #3b0764, #4c0519, #08080f);
   background-size: 400% 400%;
   animation: gradientShift 8s ease infinite;
+}
+
+/* SpinWar Card */
+.spinwar-card {
+  background: #0d0d1a;
+  background-image: linear-gradient(135deg, #0d0d1a 0%, #120818 100%);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px rgba(220, 38, 38, 0.25),
+    0 0 16px rgba(124, 58, 237, 0.15),
+    0 0 32px rgba(220, 38, 38, 0.08),
+    inset 0 1px 0 rgba(168, 85, 247, 0.08);
+}
+
+/* SpinWar Primary Button */
+.spinwar-btn-primary {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 0 16px rgba(220, 38, 38, 0.5), 0 4px 12px rgba(0,0,0,0.4);
+  transition: all 0.2s ease;
+}
+.spinwar-btn-primary:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 0 28px rgba(220, 38, 38, 0.7), 0 4px 16px rgba(0,0,0,0.5);
+  transform: translateY(-1px);
+}
+
+/* SpinWar Secondary Button */
+.spinwar-btn-secondary {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.4), 0 4px 12px rgba(0,0,0,0.4);
+  transition: all 0.2s ease;
+}
+.spinwar-btn-secondary:hover {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  box-shadow: 0 0 28px rgba(124, 58, 237, 0.6), 0 4px 16px rgba(0,0,0,0.5);
+  transform: translateY(-1px);
+}
+
+/* SpinWar Header */
+.spinwar-header {
+  background: rgba(8, 8, 15, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 2px solid transparent;
+  border-image: linear-gradient(90deg, #dc2626 0%, #a855f7 50%, #7c3aed 100%) 1;
+}
+
+/* SpinWar Nav Active */
+.spinwar-nav-active {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.15);
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.3);
+}
+
+/* SpinWar Title */
+.spinwar-title {
+  font-family: 'Orbitron', monospace;
+  font-weight: 900;
+  background: linear-gradient(135deg, #dc2626 0%, #a855f7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 8px rgba(220, 38, 38, 0.6));
+}
+
+/* SpinWar Room Card */
+.spinwar-room-card {
+  background: #0d0d1a;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-left: 3px solid #dc2626;
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.1);
+  transition: all 0.25s ease;
+}
+.spinwar-room-card:hover {
+  border-color: rgba(220, 38, 38, 0.5);
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.25), 0 0 40px rgba(124, 58, 237, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Glow utilities */
+.glow-red-strong {
+  box-shadow: 0 0 24px rgba(220, 38, 38, 0.7), 0 0 48px rgba(220, 38, 38, 0.3);
+}
+
+.glow-purple-strong {
+  box-shadow: 0 0 24px rgba(124, 58, 237, 0.7), 0 0 48px rgba(124, 58, 237, 0.3);
 }
 
 /* Card hover effects */
