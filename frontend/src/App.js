@@ -958,6 +958,9 @@ function App() {
     newSocket.on('game_finished', (data) => {
       const matchId = data.match_id;
 
+      // Always refresh history for all users when any game finishes
+      loadGameHistory();
+
       // Filter: only process if current user was a participant (check via showGetReadyRef or player list)
       // If roulette is active (showGetReadyRef=true), we're definitely a participant
       // Otherwise check active_game_room sessionStorage to confirm participation
@@ -1191,6 +1194,10 @@ function App() {
         setUser({...user, token_balance: data.new_balance});
         toast.success(`🎉 Payment confirmed! +${data.tokens_added} tokens (${data.sol_received} SOL)`);
       }
+    });
+
+    newSocket.on('balance_updated', (data) => {
+      setUser(prev => prev && data.user_id === prev.id ? {...prev, token_balance: data.new_balance} : prev);
     });
 
     return () => {
@@ -2118,23 +2125,7 @@ function App() {
     };
   }, [user]);
 
-  // Auto-refresh rooms list every 1 second when on rooms tab and not in a game
-  useEffect(() => {
-    if (!user || activeTab !== 'rooms' || inLobby || gameInProgress || rouletteConfig) return;
-    const interval = setInterval(() => {
-      loadRooms();
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [user, activeTab, inLobby, gameInProgress, rouletteConfig]); // eslint-disable-line
-
-  // Auto-refresh token balance every 1 second when user is logged in
-  useEffect(() => {
-    if (!user || !user.id) return;
-    const interval = setInterval(() => {
-      refreshUserData(user.id);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [user?.id]); // eslint-disable-line
+  // Rooms, balance, and history are updated via socket events (no polling needed)
 
   // Error screen for non-Telegram access
   if (telegramError) {
@@ -2146,7 +2137,7 @@ function App() {
               <span className="text-2xl">⚠️</span>
             </div>
             <h3 className="text-xl font-bold text-white mb-2">Telegram Web App Required</h3>
-            <p className="text-slate-400 mb-4">This casino must be opened as a Telegram Web App, not in a regular browser.</p>
+            <p className="text-slate-400 mb-4">SpinWar must be opened as a Telegram Web App, not in a regular browser.</p>
             
             <div className="space-y-3 text-left mb-4">
               <div className="flex items-start gap-3">
@@ -2155,7 +2146,7 @@ function App() {
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-yellow-400 font-bold text-lg">🔍</span>
-                <p className="text-sm text-slate-300">Find your casino bot or Web App</p>
+                <p className="text-sm text-slate-300">Find your SpinWar bot or Web App</p>
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-yellow-400 font-bold text-lg">🚀</span>
@@ -2214,7 +2205,7 @@ function App() {
         <Card className="w-full max-w-md bg-slate-800/90 border-slate-700">
           <CardContent className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
-            <h3 className="text-xl font-bold text-white mb-2">Loading Casino...</h3>
+            <h3 className="text-xl font-bold text-white mb-2">Loading SpinWar...</h3>
             <p className="text-slate-400">Connecting to Telegram Web App</p>
           </CardContent>
         </Card>
@@ -2268,7 +2259,7 @@ function App() {
                 <div className="flex items-center gap-2 min-w-0">
                   <Crown className="w-5 h-5 text-yellow-400 flex-shrink-0" />
                   <div>
-                    <h1 className="text-sm font-bold text-white">Casino Battle</h1>
+                    <h1 className="text-sm font-bold text-white">SpinWar</h1>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -2295,7 +2286,7 @@ function App() {
               <div className="flex items-center gap-2">
                 <Crown className="w-8 h-8 text-yellow-400" />
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-                  Casino Battle Royale
+                  SpinWar
                 </h1>
               </div>
               
@@ -2361,7 +2352,7 @@ function App() {
                 }`}
               >
                 <Users className="w-5 h-5" />
-                <span>Battle Rooms</span>
+                <span>Spin Rooms</span>
               </button>
               
               <button
@@ -2409,7 +2400,7 @@ function App() {
               <div className="bg-slate-700/50 rounded-lg p-4">
                 <div className="text-xs text-slate-400 uppercase tracking-wide mb-1">Your Balance</div>
                 <div className="text-2xl font-bold text-yellow-400">{user.token_balance}</div>
-                <div className="text-xs text-slate-500">Casino Tokens</div>
+                <div className="text-xs text-slate-500">SpinWar Tokens</div>
               </div>
             </div>
           </nav>
@@ -2744,7 +2735,7 @@ function App() {
                               {player.username && (
                                 <p className="text-slate-400 text-sm">@{player.username}</p>
                               )}
-                              <p className="text-blue-400 text-sm font-medium">In Battle</p>
+                              <p className="text-blue-400 text-sm font-medium">In Spin</p>
                             </div>
                             
                             {/* Battle indicator for 3-player games */}
@@ -2769,7 +2760,7 @@ function App() {
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl text-yellow-400 flex items-center justify-center gap-2">
                     <Users className="w-6 h-6" />
-                    {ROOM_CONFIGS[lobbyData.room_type]?.icon} {ROOM_CONFIGS[lobbyData.room_type]?.name} Lobby
+                    {ROOM_CONFIGS[lobbyData.room_type]?.icon} {ROOM_CONFIGS[lobbyData.room_type]?.name} Spin Lobby
                   </CardTitle>
                   <CardDescription className="text-lg">
                     Bet Amount: {lobbyData.bet_amount} tokens
@@ -2926,7 +2917,7 @@ function App() {
               <div className={isMobile ? 'space-y-4' : 'space-y-6'}>
                 {isMobile ? (
                   <div className="text-center py-2 px-2">
-                    <h2 className="text-base font-bold text-white mb-2">Casino Rooms</h2>
+                    <h2 className="text-base font-bold text-white mb-2">Spin Rooms</h2>
                     <p className="text-xs text-slate-400">
                       3 players • Higher bet = better odds
                     </p>
@@ -2937,10 +2928,10 @@ function App() {
                       <Users className="w-8 h-8 text-slate-900" />
                     </div>
                     <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-                      Choose Your Battle Arena
+                      Choose Your Spin Room
                     </h2>
                     <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-                      Join one of our six exclusive rooms where 3 players battle for the prize!
+                      Join one of our six exclusive rooms where 3 players spin for the prize!
                       <br />
                       <span className="text-yellow-400 font-medium">Higher bet = Better winning odds!</span>
                     </p>
@@ -3110,7 +3101,7 @@ function App() {
                                      room.players_count >= 3 ? 'Room Full' :
                                      !betAmounts[roomType] ? 'Enter Bet Amount' :
                                      parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max ? 'Invalid Amount' :
-                                     user.token_balance < parseInt(betAmounts[roomType]) ? 'Insufficient Tokens' : 'Join Battle'}
+                                     user.token_balance < parseInt(betAmounts[roomType]) ? 'Insufficient Tokens' : 'Join Spin'}
                                   </Button>
                                 </div>
                               </div>
