@@ -670,6 +670,18 @@ function App() {
           user_id: storedUser.id,
           platform: platform
         });
+
+        // Re-join game room if user was in one (survives reconnect AND full remount)
+        const activeGameRoom = sessionStorage.getItem('active_game_room');
+        if (activeGameRoom) {
+          console.log('🔄 Re-joining game room on connect:', activeGameRoom);
+          currentGameRoomRef.current = activeGameRoom;
+          newSocket.emit('join_game_room', {
+            room_id: activeGameRoom,
+            user_id: storedUser.id,
+            platform: platform
+          });
+        }
       } else {
         console.warn('⚠️ No user in localStorage to register');
       }
@@ -718,10 +730,11 @@ function App() {
         });
 
         // Re-join game room if we were in one (socket loses room membership on reconnect)
-        if (currentGameRoomRef.current) {
-          console.log('🔄 Re-joining game room after reconnect:', currentGameRoomRef.current);
+        const reconnectRoom = currentGameRoomRef.current || sessionStorage.getItem('active_game_room');
+        if (reconnectRoom) {
+          console.log('🔄 Re-joining game room after reconnect:', reconnectRoom);
           newSocket.emit('join_game_room', {
-            room_id: currentGameRoomRef.current,
+            room_id: reconnectRoom,
             user_id: storedUser.id,
             platform: platform
           });
@@ -1016,6 +1029,7 @@ function App() {
       // Always reset roulette ref + config on redirect_home (game is fully over)
       showGetReadyRef.current = false;
       currentGameRoomRef.current = null;
+      sessionStorage.removeItem('active_game_room');
       setRouletteConfig(null);
       setActiveTab('rooms');
       
@@ -1857,6 +1871,7 @@ function App() {
         // Join Socket.IO room
         if (socket && socket.connected) {
           currentGameRoomRef.current = specificRoomData.room_id;
+          sessionStorage.setItem('active_game_room', specificRoomData.room_id);
           socket.emit('join_game_room', {
             room_id: specificRoomData.room_id,
             user_id: user.id,
@@ -1936,6 +1951,7 @@ function App() {
           console.log('Transport:', socket.io.engine.transport.name);
           
           currentGameRoomRef.current = response.data.room_id;
+          sessionStorage.setItem('active_game_room', response.data.room_id);
           socket.emit('join_game_room', {
             room_id: response.data.room_id,
             user_id: user.id,
@@ -2102,6 +2118,8 @@ function App() {
           onComplete={() => {
             setRouletteConfig(null);
             showGetReadyRef.current = false;
+            currentGameRoomRef.current = null;
+            sessionStorage.removeItem('active_game_room');
             setActiveTab('rooms');
             setInLobby(false);
             setGameInProgress(false);
