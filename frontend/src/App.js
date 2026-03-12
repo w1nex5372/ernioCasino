@@ -1277,6 +1277,32 @@ function App() {
               setUser(response.data);
               saveUserSession(response.data);
               toast.success(`Welcome back, ${response.data.first_name}!`);
+
+              // Check for a missed game result (user was offline when game ended)
+              try {
+                const pendingRes = await axios.get(`${API}/pending-result/${response.data.id}`);
+                const pending = pendingRes.data?.result;
+                if (pending) {
+                  const winnerName = `${pending.winner.first_name} ${pending.winner.last_name || ''}`.trim();
+                  setWinnerData({
+                    winner: pending.winner,
+                    winner_name: winnerName,
+                    winner_username: pending.winner.username,
+                    winner_photo: pending.winner.photo_url,
+                    room_type: pending.room_type,
+                    prize_pool: pending.prize_pool,
+                    prize_link: pending.prize_link,
+                    game_id: pending.match_id,
+                    finished_at: pending.finished_at,
+                    all_players: pending.all_players || [],
+                    is_winner: String(pending.winner.user_id) === String(response.data.id),
+                    missed: true,
+                  });
+                  setShowWinnerScreen(true);
+                }
+              } catch (e) {
+                console.error('Failed to fetch pending result:', e);
+              }
             }
           } catch (refreshError) {
             console.error('❌ Session validation failed:', refreshError);
@@ -2547,6 +2573,13 @@ function App() {
                         ✕
                       </button>
                       
+                      {/* Missed game badge */}
+                      {winnerData.missed && (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-700/80 border border-slate-500 text-slate-300 text-xs font-medium mb-1">
+                          📵 You were offline — here's what happened
+                        </div>
+                      )}
+
                       {/* 🏆 Winner Announcement Title - PERSONALIZED */}
                       <div className="space-y-3 md:space-y-4">
                         {(() => {

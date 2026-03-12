@@ -1203,7 +1203,26 @@ async def start_game_round(room: GameRoom):
             game_doc['winner']['joined_at'] = game_doc['winner']['joined_at'].isoformat()
         
         await db.completed_games.insert_one(game_doc)
-        
+
+        # Save pending result for each participant so they see it when they reopen the app
+        for participant in room.players:
+            if not participant.user_id.startswith('bot_'):
+                pending_doc = {
+                    'user_id': participant.user_id,
+                    'match_id': match_id,
+                    'winner': game_doc['winner'],
+                    'all_players': game_doc['players'],
+                    'room_type': room.room_type,
+                    'prize_pool': room.prize_pool,
+                    'prize_link': prize_link,
+                    'finished_at': game_doc['finished_at'],
+                }
+                await db.pending_results.replace_one(
+                    {'user_id': participant.user_id},
+                    pending_doc,
+                    upsert=True
+                )
+
         # Cleanup old game history (keep only 5 most recent)
         await cleanup_old_game_history()
     except Exception as e:
@@ -2237,6 +2256,15 @@ async def leave_room(request: LeaveRoomRequest):
 
     logging.info(f"👋 Player {player.username or player.first_name} left room {room.id}, refunded {refund} tokens")
     return {"status": "left", "refund": refund, "new_balance": new_balance}
+
+@api_router.get("/pending-result/{user_id}")
+async def get_pending_result(user_id: str):
+    """Return and delete any missed game result for this user"""
+    doc = await db.pending_results.find_one_and_delete({"user_id": user_id})
+    if not doc:
+        return {"result": None}
+    doc.pop("_id", None)
+    return {"result": doc}
 
 @api_router.get("/room-participants/{room_type}")
 async def get_room_participants_by_type(room_type: str):
