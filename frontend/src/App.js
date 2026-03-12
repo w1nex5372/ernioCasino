@@ -441,6 +441,7 @@ function App() {
   const blockWinnerScreenRef = React.useRef(false); // Block winner screen after redirect_home
   const [forceHideLobby, setForceHideLobby] = useState(false); // Force hide lobby after redirect
   const currentGameRoomRef = React.useRef(null); // Track current game room for socket reconnects
+  const [activeGameRoomId, setActiveGameRoomId] = useState(() => sessionStorage.getItem('active_game_room') || null);
   
   // UI state
   const [activeTab, setActiveTab] = useState('rooms');
@@ -564,12 +565,64 @@ function App() {
     };
   }, [inLobby, lobbyData]);
 
-  // DISABLED - Socket.IO handles winner detection now
-  // Old polling fallback code removed to prevent duplicate winner screens
+  // GAME STATE POLLING — primary mechanism for showing roulette (socket events are unreliable)
+  // Polls /api/room/{room_id} every 1s while user is in a game room
   useEffect(() => {
-    // Socket.IO game_finished event handles all winner detection
-    // No polling needed
-  }, [user]);
+    const roomId = activeGameRoomId;
+    if (!roomId) return;
+
+    let lastStatus = '';
+    let lastMatchId = '';
+
+    const pollGameState = async () => {
+      try {
+        const response = await axios.get(`${API}/room/${roomId}`);
+        const data = response.data;
+        const status = data.status;
+        const matchId = data.match_id || '';
+
+        // Status: ready → show roulette wheel
+        if ((status === 'ready' || status === 'playing' || status === 'finished') &&
+            lastStatus !== 'ready' && lastStatus !== 'playing' && lastStatus !== 'finished' &&
+            !showGetReadyRef.current) {
+          console.log('🎡 [POLL] Game state ready → showing roulette');
+          blockWinnerScreenRef.current = false;
+          showGetReadyRef.current = true;
+          setInLobby(false);
+          setLobbyData(null);
+          setGameInProgress(false);
+          setShowWinnerScreen(false);
+          setWinnerData(null);
+          setForceHideLobby(true);
+          setRouletteConfig({ players: data.players || [], winner: null });
+          toast.info(`🎡 Game started! ${(data.players || []).length} players`, { duration: 3000 });
+        }
+
+        // Status: finished + winner → inject winner into roulette
+        if (status === 'finished' && data.winner && matchId && matchId !== lastMatchId) {
+          if (showGetReadyRef.current) {
+            console.log('🏆 [POLL] Winner ready → injecting into roulette');
+            lastMatchId = matchId;
+            setShownMatchIds(prev => new Set([...prev, matchId]));
+            setRouletteConfig(prev => prev ? { ...prev, winner: data.winner } : prev);
+          }
+        }
+
+        lastStatus = status;
+      } catch (e) {
+        // Room gone (game ended, room reset) — stop polling
+        if (e.response && e.response.status === 404) {
+          console.log('🏁 [POLL] Room no longer exists, stopping poll');
+          clearInterval(interval);
+        }
+      }
+    };
+
+    const interval = setInterval(pollGameState, 1000);
+    pollGameState(); // immediate first check
+
+    return () => clearInterval(interval);
+  }, [activeGameRoomId]);
 
   // Mobile detection - force mobile for Telegram WebApp
   useEffect(() => {
@@ -1060,6 +1113,7 @@ function App() {
       showGetReadyRef.current = false;
       currentGameRoomRef.current = null;
       sessionStorage.removeItem('active_game_room');
+      setActiveGameRoomId(null);
       setRouletteConfig(null);
       setActiveTab('rooms');
       
@@ -1902,6 +1956,7 @@ function App() {
         if (socket && socket.connected) {
           currentGameRoomRef.current = specificRoomData.room_id;
           sessionStorage.setItem('active_game_room', specificRoomData.room_id);
+          setActiveGameRoomId(specificRoomData.room_id);
           socket.emit('join_game_room', {
             room_id: specificRoomData.room_id,
             user_id: user.id,
@@ -1982,6 +2037,7 @@ function App() {
           
           currentGameRoomRef.current = response.data.room_id;
           sessionStorage.setItem('active_game_room', response.data.room_id);
+          setActiveGameRoomId(response.data.room_id);
           socket.emit('join_game_room', {
             room_id: response.data.room_id,
             user_id: user.id,
@@ -2150,6 +2206,7 @@ function App() {
             showGetReadyRef.current = false;
             currentGameRoomRef.current = null;
             sessionStorage.removeItem('active_game_room');
+            setActiveGameRoomId(null);
             setActiveTab('rooms');
             setInLobby(false);
             setGameInProgress(false);

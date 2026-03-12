@@ -279,10 +279,11 @@ class GameRoom(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     room_type: RoomType
     players: List[RoomPlayer] = Field(default_factory=list)
-    status: str = "waiting"  # waiting, playing, finished
+    status: str = "waiting"  # waiting, ready, playing, finished
     prize_pool: int = Field(default=0)
     winner: Optional[RoomPlayer] = None
     prize_link: Optional[str] = None
+    match_id: Optional[str] = None  # Set when game round starts
     round_number: int = Field(default=1)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     started_at: Optional[datetime] = None
@@ -1031,6 +1032,7 @@ async def start_game_round(room: GameRoom):
     
     # Generate unique match ID for this game
     match_id = str(uuid.uuid4())[:12]  # Short unique ID
+    room.match_id = match_id  # Store on room for polling clients
     logging.info(f"🎮 Starting game round for room {room.id}, match_id: {match_id}")
     logging.info(f"👥 Players in room: {[p.username for p in room.players]}")
     
@@ -2203,16 +2205,24 @@ async def get_room_details(room_id: str):
     room = active_rooms.get(room_id)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
-    
+
+    def serialize_player(p):
+        d = p.dict()
+        if 'joined_at' in d and isinstance(d['joined_at'], datetime):
+            d['joined_at'] = d['joined_at'].isoformat()
+        return d
+
     return {
         "id": room.id,
         "room_type": room.room_type,
-        "players": [p.dict() for p in room.players],
+        "players": [serialize_player(p) for p in room.players],
         "status": room.status,
         "prize_pool": room.prize_pool,
+        "match_id": room.match_id,
         "round_number": room.round_number,
         "settings": ROOM_SETTINGS[room.room_type],
-        "winner": room.winner.dict() if room.winner else None
+        "winner": serialize_player(room.winner) if room.winner else None,
+        "finished_at": room.finished_at.isoformat() if room.finished_at else None,
     }
 
 @api_router.get("/leaderboard")
