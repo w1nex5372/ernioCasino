@@ -452,6 +452,7 @@ function App() {
   const [activeRoom, setActiveRoom] = useState(null);
   const [roomParticipants, setRoomParticipants] = useState({}); // Track participants per room
   const [gameHistory, setGameHistory] = useState([]);
+  const [recentWinners, setRecentWinners] = useState([]);
   const [userPrizes, setUserPrizes] = useState([]);
   const [inLobby, setInLobby] = useState(false); // Track if user is in lobby waiting
   const [lobbyData, setLobbyData] = useState(null); // Store lobby room data
@@ -479,6 +480,7 @@ function App() {
   const [isMobile, setIsMobile] = useState(false);
   const [casinoWalletAddress, setCasinoWalletAddress] = useState('Loading...');
   const [isRefreshingHistory, setIsRefreshingHistory] = useState(false);
+  const [anonModal, setAnonModal] = useState(null); // { roomType, betAmount } when open
 
   // Form state
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -1951,7 +1953,21 @@ function App() {
     }
   };
 
-  const joinRoom = async (roomType) => {
+  // Called by the "Enter Bet" / "Join" button — shows anonymous choice modal
+  const promptJoinRoom = (roomType) => {
+    const betAmount = betAmounts[roomType];
+    if (!user) { toast.error('Please authenticate first'); return; }
+    if (userActiveRooms[roomType]) { joinRoom(roomType, false); return; } // return-to-room, skip modal
+    const parsedBetAmount = parseInt(betAmount);
+    if (!parsedBetAmount || isNaN(parsedBetAmount)) { toast.error('Please enter a valid bet amount'); return; }
+    if (parsedBetAmount < ROOM_CONFIGS[roomType].min || parsedBetAmount > ROOM_CONFIGS[roomType].max) {
+      toast.error(`Bet amount must be between ${ROOM_CONFIGS[roomType].min} - ${ROOM_CONFIGS[roomType].max} tokens`); return;
+    }
+    if (user.token_balance < parsedBetAmount) { toast.error('Insufficient tokens'); return; }
+    setAnonModal({ roomType, betAmount });
+  };
+
+  const joinRoom = async (roomType, isAnonymous = false) => {
     const betAmount = betAmounts[roomType];
     
     console.log('🎯 JOIN ROOM CALLED!', { 
@@ -2037,7 +2053,8 @@ function App() {
       const response = await axios.post(`${API}/join-room`, {
         room_type: roomType,
         user_id: user.id,
-        bet_amount: parsedBetAmount
+        bet_amount: parsedBetAmount,
+        is_anonymous: isAnonymous
       });
       console.log('✅ API Response:', response.data);
 
@@ -2125,7 +2142,19 @@ function App() {
     };
   }, [user]);
 
-  // Rooms, balance, and history are updated via socket events (no polling needed)
+  // Auto-fetch recent winners every 10 seconds
+  useEffect(() => {
+    if (!user) return;
+    const fetchWinners = async () => {
+      try {
+        const res = await axios.get(`${API}/game-history?limit=5`);
+        setRecentWinners(res.data.games || []);
+      } catch (e) {}
+    };
+    fetchWinners();
+    const interval = setInterval(fetchWinners, 10000);
+    return () => clearInterval(interval);
+  }, [user]); // eslint-disable-line
 
   // Error screen for non-Telegram access
   if (telegramError) {
@@ -2786,24 +2815,26 @@ function App() {
                             <div key={`player-${player.user_id}-${index}`} className="flex items-center gap-4 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
                               {/* Profile Picture */}
                               <div className="w-12 h-12 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 flex items-center justify-center text-slate-900 font-bold text-xl flex-shrink-0">
-                                {player.photo_url ? (
+                                {player.is_anonymous ? (
+                                  <span className="text-2xl">🥷</span>
+                                ) : player.photo_url ? (
                                   <img src={player.photo_url} alt={player.first_name} className="w-12 h-12 rounded-full" />
                                 ) : (
                                   player.first_name?.charAt(0).toUpperCase()
                                 )}
                               </div>
-                              
+
                               {/* Player Info */}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                   <p className="text-white font-semibold truncate">
-                                    {player.first_name} {player.last_name || ''}
+                                    {player.first_name} {player.is_anonymous ? '' : (player.last_name || '')}
                                   </p>
                                   {player.user_id === user?.id && (
                                     <Badge className="bg-green-500 text-black text-xs">You</Badge>
                                   )}
                                 </div>
-                                {player.username && (
+                                {!player.is_anonymous && player.username && (
                                   <p className="text-slate-400 text-sm">@{player.username}</p>
                                 )}
                                 <p className="text-purple-400 text-sm font-medium">Ready to play · <span style={{color: 'var(--sw-gold)'}}>{player.bet_amount || lobbyData.bet_amount} tokens</span></p>
@@ -2915,6 +2946,41 @@ function App() {
             {/* Battle Rooms Tab */}
             {activeTab === 'rooms' && !inLobby && !showWinnerScreen && !gameInProgress && (
               <div className={isMobile ? 'space-y-4' : 'space-y-6'}>
+
+                {/* Live Winners Feed */}
+                {recentWinners.length > 0 && (
+                  <div style={{ background: 'linear-gradient(135deg, #0d0d1a 0%, #1a0a20 100%)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 12, padding: isMobile ? '10px 12px' : '12px 16px' }}>
+                    {/* Header row */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
+                      <span style={{ fontFamily: 'Orbitron, monospace', fontSize: 10, fontWeight: 700, color: '#ef4444', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Live Winners</span>
+                    </div>
+                    {/* Winners list */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                      {recentWinners.map((game, i) => {
+                        const config = ROOM_CONFIGS[game.room_type];
+                        const winnerName = game.winner?.first_name || game.winner?.username || 'Unknown';
+                        const pool = game.prize_pool || 0;
+                        const finishedAt = game.finished_at ? new Date(game.finished_at) : null;
+                        const minsAgo = finishedAt ? Math.max(0, Math.floor((Date.now() - finishedAt.getTime()) / 60000)) : null;
+                        const timeLabel = minsAgo === null ? '' : minsAgo < 1 ? 'just now' : minsAgo < 60 ? `${minsAgo}m ago` : `${Math.floor(minsAgo/60)}h ago`;
+                        return (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', borderRadius: 8, background: i === 0 ? 'rgba(220,38,38,0.1)' : 'rgba(255,255,255,0.03)', border: i === 0 ? '1px solid rgba(220,38,38,0.2)' : '1px solid transparent' }}>
+                            <span style={{ fontSize: 14, flexShrink: 0 }}>{config?.icon || '🎯'}</span>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <span style={{ color: '#f1f5f9', fontWeight: 600, fontSize: 12, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {winnerName}
+                                {i === 0 && <span style={{ marginLeft: 5, fontSize: 9, background: 'rgba(220,38,38,0.3)', color: '#fca5a5', borderRadius: 4, padding: '1px 4px', fontFamily: 'Orbitron, monospace', fontWeight: 700 }}>LATEST</span>}
+                              </span>
+                              <span style={{ color: '#64748b', fontSize: 10 }}>{config?.name} · {timeLabel}</span>
+                            </div>
+                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: 12, fontWeight: 700, color: '#fbbf24', flexShrink: 0 }}>+{pool.toLocaleString()}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
                 {isMobile ? (
                   <div className="text-center py-2 px-2">
                     <h2 className="text-base font-bold text-white mb-2">Spin Rooms</h2>
@@ -2998,7 +3064,7 @@ function App() {
                                     playersCount: room.players_count,
                                     roomStatus: room.status
                                   });
-                                  await joinRoom(roomType);
+                                  promptJoinRoom(roomType);
                                   console.log('🔘 Join room function completed');
                                 }}
                                 disabled={!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))}
@@ -3084,7 +3150,7 @@ function App() {
                                         playersCount: room.players_count,
                                         roomStatus: room.status
                                       });
-                                      await joinRoom(roomType);
+                                      promptJoinRoom(roomType);
                                       console.log('🖥️ Join room function completed');
                                     }}
                                     disabled={!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))}
@@ -3371,6 +3437,48 @@ function App() {
 
       <Toaster richColors position={isMobile ? "top-center" : "top-right"} />
       
+      {/* Anonymous Choice Modal */}
+      {anonModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="bg-slate-800 border border-slate-600 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+            <h2 className="text-white text-xl font-bold text-center mb-1">How do you want to play?</h2>
+            <p className="text-slate-400 text-sm text-center mb-6">Choose your identity for this game</p>
+            <div className="space-y-3">
+              <button
+                onClick={() => { setAnonModal(null); joinRoom(anonModal.roomType, false); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all active:scale-95"
+              >
+                {user?.photo_url ? (
+                  <img src={user.photo_url} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-blue-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                    {user?.first_name?.[0] || '?'}
+                  </div>
+                )}
+                <div className="text-left">
+                  <div className="text-white font-semibold">{user?.first_name} {user?.last_name || ''}</div>
+                  {user?.telegram_username && <div className="text-blue-200 text-xs">@{user.telegram_username}</div>}
+                </div>
+              </button>
+              <button
+                onClick={() => { setAnonModal(null); joinRoom(anonModal.roomType, true); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold transition-all active:scale-95 border border-slate-500"
+              >
+                <div className="w-8 h-8 rounded-full bg-slate-500 flex items-center justify-center text-2xl flex-shrink-0">🥷</div>
+                <div className="text-left">
+                  <div className="text-white font-semibold">Play Anonymously</div>
+                  <div className="text-slate-400 text-xs">Others will see you as "Anonymous"</div>
+                </div>
+              </button>
+            </div>
+            <button
+              onClick={() => setAnonModal(null)}
+              className="w-full mt-4 py-2 text-slate-400 hover:text-white text-sm transition-colors"
+            >Cancel</button>
+          </div>
+        </div>
+      )}
+
       {/* Payment Modal */}
       <PaymentModal
         isOpen={showPaymentModal}
