@@ -580,12 +580,15 @@ function App() {
         const data = response.data;
         const status = data.status;
         const matchId = data.match_id || '';
+        const playerCount = (data.players || []).length;
+
+        toast.info(`📊 POLL: ${status} | ${playerCount}p | showRef=${showGetReadyRef.current} | last=${lastStatus}`, { duration: 3000 });
 
         // Status: ready → show roulette wheel
         if ((status === 'ready' || status === 'playing' || status === 'finished') &&
             lastStatus !== 'ready' && lastStatus !== 'playing' && lastStatus !== 'finished' &&
             !showGetReadyRef.current) {
-          console.log('🎡 [POLL] Game state ready → showing roulette');
+          toast.success(`🎡 SHOWING ROULETTE: ${playerCount} players`, { duration: 5000 });
           blockWinnerScreenRef.current = false;
           showGetReadyRef.current = true;
           setInLobby(false);
@@ -595,13 +598,12 @@ function App() {
           setWinnerData(null);
           setForceHideLobby(true);
           setRouletteConfig({ players: data.players || [], winner: null });
-          toast.info(`🎡 Game started! ${(data.players || []).length} players`, { duration: 3000 });
         }
 
         // Status: finished + winner → inject winner into roulette
         if (status === 'finished' && data.winner && matchId && matchId !== lastMatchId) {
           if (showGetReadyRef.current) {
-            console.log('🏆 [POLL] Winner ready → injecting into roulette');
+            toast.success(`🏆 WINNER: ${data.winner.first_name}`, { duration: 5000 });
             lastMatchId = matchId;
             setShownMatchIds(prev => new Set([...prev, matchId]));
             setRouletteConfig(prev => prev ? { ...prev, winner: data.winner } : prev);
@@ -612,7 +614,7 @@ function App() {
       } catch (e) {
         // Room gone (game ended, room reset) — stop polling
         if (e.response && e.response.status === 404) {
-          console.log('🏁 [POLL] Room no longer exists, stopping poll');
+          toast.warning(`🏁 POLL 404: room gone`, { duration: 3000 });
           clearInterval(interval);
         }
       }
@@ -876,11 +878,10 @@ function App() {
         String(p.user_id) === String(currentUser.id) ||
         String(p.telegram_id) === String(currentUser.telegram_id)
       );
+      toast.info(`🔌 SOCKET room_ready: ${data.players?.length}p | user=${currentUser?.id?.substring(0,8)} | participant=${isParticipant}`, { duration: 6000 });
       if (!isParticipant) {
-        console.log('⏭️ room_ready: not a participant in this game, ignoring');
         return;
       }
-      console.log('✅ room_ready: confirmed participant, showing roulette');
 
       // Reset all block flags for new game
       blockWinnerScreenRef.current = false;
@@ -1943,6 +1944,7 @@ function App() {
       
       // Fetch current room state for this specific room type
       const specificRoomData = await checkUserRoomStatus(roomType);
+      toast.info(`🔍 Return to Room: ${specificRoomData ? 'found room ' + specificRoomData.room_id?.substring(0,8) : 'NO ROOM'}`, { duration: 5000 });
       if (specificRoomData) {
         setInLobby(true);
         setLobbyData({
@@ -1951,12 +1953,15 @@ function App() {
           bet_amount: betAmount
         });
         setRoomParticipants(specificRoomData.players);
-        
-        // Join Socket.IO room
+
+        // Always set game room for polling — regardless of socket state
+        currentGameRoomRef.current = specificRoomData.room_id;
+        sessionStorage.setItem('active_game_room', specificRoomData.room_id);
+        setActiveGameRoomId(specificRoomData.room_id);
+        toast.info(`📡 POLL STARTED for ${specificRoomData.room_id?.substring(0,8)}`, { duration: 5000 });
+
+        // Also join Socket.IO room if connected
         if (socket && socket.connected) {
-          currentGameRoomRef.current = specificRoomData.room_id;
-          sessionStorage.setItem('active_game_room', specificRoomData.room_id);
-          setActiveGameRoomId(specificRoomData.room_id);
           socket.emit('join_game_room', {
             room_id: specificRoomData.room_id,
             user_id: user.id,
@@ -1964,7 +1969,7 @@ function App() {
           });
         }
       }
-      
+
       // Silently return to room, no toast needed
       return;
     }
@@ -2025,26 +2030,19 @@ function App() {
         // DON'T manually set roomParticipants here - let the player_joined socket event handle it
         console.log('✅ Joined room, waiting for player_joined socket event...');
         
+        // Always set game room for polling — regardless of socket state
+        currentGameRoomRef.current = response.data.room_id;
+        sessionStorage.setItem('active_game_room', response.data.room_id);
+        setActiveGameRoomId(response.data.room_id);
+        toast.info(`✅ JOINED: polling room ${response.data.room_id?.substring(0,8)}`, { duration: 5000 });
+
         // Join the Socket.IO room for room-specific events
         if (socket && socket.connected) {
-          console.log('🎮🎮🎮 EMITTING join_game_room event 🎮🎮🎮');
-          console.log('Socket ID:', socket.id);
-          console.log('Socket connected:', socket.connected);
-          console.log('Room ID:', response.data.room_id);
-          console.log('User ID:', user.id);
-          console.log('Platform:', platform);
-          console.log('Transport:', socket.io.engine.transport.name);
-          
-          currentGameRoomRef.current = response.data.room_id;
-          sessionStorage.setItem('active_game_room', response.data.room_id);
-          setActiveGameRoomId(response.data.room_id);
           socket.emit('join_game_room', {
             room_id: response.data.room_id,
             user_id: user.id,
             platform: platform
           });
-
-          console.log('✅ join_game_room event emitted successfully');
         } else {
           console.error('❌❌❌ SOCKET NOT CONNECTED!');
           console.log('Socket exists:', !!socket);
