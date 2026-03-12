@@ -1083,6 +1083,9 @@ async def start_game_round(room: GameRoom):
             )
             if result:
                 logging.info(f"💰 Credited {room.prize_pool} tokens to winner {winner.username} (new balance: {result.get('token_balance', 0)})")
+                winner_sid = user_to_socket.get(winner.user_id)
+                if winner_sid:
+                    await sio.emit('balance_updated', {'user_id': winner.user_id, 'new_balance': result.get('token_balance', 0)}, room=winner_sid)
             else:
                 logging.error(f"❌ Winner user {winner.user_id} not found in DB — balance NOT credited")
         except Exception as e:
@@ -2071,6 +2074,10 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         {"id": request.user_id},
         {"$inc": {"token_balance": -request.bet_amount}}
     )
+    new_balance_after_join = user_doc.get('token_balance', 0) - request.bet_amount
+    joining_sid = user_to_socket.get(request.user_id)
+    if joining_sid:
+        await sio.emit('balance_updated', {'user_id': request.user_id, 'new_balance': new_balance_after_join}, room=joining_sid)
     
     # Add player to room with full Telegram info
     player = RoomPlayer(
