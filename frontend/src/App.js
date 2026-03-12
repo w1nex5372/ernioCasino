@@ -212,6 +212,8 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
   }, [playerData]);
 
   // Set target rotation when winner arrives
+  // Needle at CSS rotate(0) points UP = canvas 270°
+  // To point at canvas angle midDeg: CSS rotation = midDeg + 90
   React.useEffect(() => {
     if (winner && targetRotRef.current === null && playerData.length > 0) {
       const idx = playerData.findIndex(p =>
@@ -220,12 +222,10 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
       );
       const i = idx >= 0 ? idx : 0;
       const midDeg = playerData[i].startDeg + playerData[i].angleDeg / 2;
-      // CSS rotate(R): segment at canvas-angle midDeg will appear at top (270°) when:
-      // midDeg + R ≡ 270 (mod 360)  →  R = (270 - midDeg + 360k) mod 360
+      const needleTargetMod = ((midDeg + 90) % 360 + 360) % 360;
       const currentMod = rotRef.current % 360;
-      const targetMod = ((270 - midDeg) % 360 + 360) % 360;
-      const delta = ((targetMod - currentMod) + 360) % 360;
-      targetRotRef.current = rotRef.current + 360 * 4 + (delta === 0 ? 360 : delta);
+      const delta = ((needleTargetMod - currentMod) + 360) % 360;
+      targetRotRef.current = rotRef.current + 360 * 5 + (delta === 0 ? 360 : delta);
     }
   }, [winner, playerData]);
 
@@ -297,26 +297,56 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
 
       {/* Wheel */}
       <div className="relative flex items-center justify-center z-10">
-        {/* Pointer triangle (top) */}
-        <div className="absolute -top-1 left-1/2 -translate-x-1/2 z-20"
-          style={{ width: 0, height: 0, borderLeft: '12px solid transparent', borderRight: '12px solid transparent', borderTop: '24px solid #f59e0b', filter: 'drop-shadow(0 0 10px rgba(245,158,11,1))' }} />
-
-        {/* Spinning wheel */}
-        <div style={{ transform: `rotate(${displayRot}deg)`, borderRadius: '50%', boxShadow: '0 0 50px rgba(124,58,237,0.6), 0 0 20px rgba(124,58,237,0.3)' }}>
+        {/* Static wheel */}
+        <div style={{ borderRadius: '50%', boxShadow: '0 0 50px rgba(124,58,237,0.6), 0 0 20px rgba(124,58,237,0.3)' }}>
           <canvas ref={canvasRef} width={260} height={260} style={{ borderRadius: '50%', display: 'block' }} />
         </div>
 
-        {/* Center overlay - does NOT rotate */}
+        {/* Spinning needle arrow — rotates around center */}
+        <div className="absolute inset-0 pointer-events-none" style={{ width: 260, height: 260 }}>
+          {/* Needle: bottom anchored at center, extends up */}
+          <div style={{
+            position: 'absolute',
+            bottom: '50%',
+            left: '50%',
+            marginLeft: '-4px',
+            width: '8px',
+            height: '108px',
+            transformOrigin: 'bottom center',
+            transform: `rotate(${displayRot}deg)`,
+            borderRadius: '4px 4px 2px 2px',
+            background: 'linear-gradient(to top, #dc2626 0%, #fbbf24 60%, #fff 100%)',
+            boxShadow: '0 0 12px rgba(251,191,36,0.9), 0 0 4px rgba(220,38,38,0.8)',
+          }} />
+          {/* Arrowhead tip */}
+          <div style={{
+            position: 'absolute',
+            bottom: '50%',
+            left: '50%',
+            marginLeft: '-7px',
+            marginBottom: '106px',
+            width: 0,
+            height: 0,
+            borderLeft: '7px solid transparent',
+            borderRight: '7px solid transparent',
+            borderBottom: '14px solid #fff',
+            transformOrigin: 'center 14px',
+            transform: `rotate(${displayRot}deg)`,
+            filter: 'drop-shadow(0 0 6px rgba(251,191,36,1))',
+          }} />
+        </div>
+
+        {/* Center hub - does NOT rotate */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden shadow-lg"
-            style={{ background: '#1a1a3e', border: '3px solid #7c3aed', boxShadow: '0 0 15px rgba(124,58,237,0.5)' }}>
+          <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden shadow-lg"
+            style={{ background: '#1a1a3e', border: '3px solid #7c3aed', boxShadow: '0 0 15px rgba(124,58,237,0.5)', zIndex: 10 }}>
             {showResult && winner?.photo_url ? (
               <img src={winner.photo_url} alt="winner" className="w-full h-full object-cover"
                 onError={e => { e.target.style.display = 'none'; }} />
             ) : showResult && winner ? (
-              <span className="text-white font-black text-2xl">{(winner.first_name || '?').charAt(0)}</span>
+              <span className="text-white font-black text-lg">{(winner.first_name || '?').charAt(0)}</span>
             ) : (
-              <span className="text-2xl">🎰</span>
+              <span className="text-lg">🎰</span>
             )}
           </div>
         </div>
