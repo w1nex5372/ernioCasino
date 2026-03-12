@@ -586,7 +586,6 @@ function App() {
         if ((status === 'ready' || status === 'playing' || status === 'finished') &&
             lastStatus !== 'ready' && lastStatus !== 'playing' && lastStatus !== 'finished' &&
             !showGetReadyRef.current) {
-          toast.success(`🎡 SHOWING ROULETTE: ${playerCount} players`, { duration: 3000 });
           blockWinnerScreenRef.current = false;
           showGetReadyRef.current = true;
           setInLobby(false);
@@ -601,7 +600,6 @@ function App() {
         // Status: finished + winner → inject winner into roulette
         if (status === 'finished' && data.winner && matchId && matchId !== lastMatchId) {
           if (showGetReadyRef.current) {
-            toast.success(`🏆 WINNER: ${data.winner.first_name}`, { duration: 5000 });
             lastMatchId = matchId;
             setShownMatchIds(prev => new Set([...prev, matchId]));
             setRouletteConfig(prev => prev ? { ...prev, winner: data.winner } : prev);
@@ -612,7 +610,6 @@ function App() {
       } catch (e) {
         // Room gone (game ended, room reset) — stop polling
         if (e.response && e.response.status === 404) {
-          toast.warning(`🏁 POLL 404: room gone`, { duration: 3000 });
           clearInterval(interval);
         }
       }
@@ -876,7 +873,6 @@ function App() {
         String(p.user_id) === String(currentUser.id) ||
         String(p.telegram_id) === String(currentUser.telegram_id)
       );
-      toast.info(`🔌 SOCKET room_ready: ${data.players?.length}p | user=${currentUser?.id?.substring(0,8)} | participant=${isParticipant}`, { duration: 6000 });
       if (!isParticipant) {
         return;
       }
@@ -901,8 +897,6 @@ function App() {
       const roomPlayers = data.players || [];
       setRouletteConfig({ players: roomPlayers, winner: null });
 
-      // DEBUG TOAST - remove after testing
-      toast.info(`🎡 Roulette: ${roomPlayers.length} players loaded`, { duration: 4000 });
     });
 
     newSocket.on('game_starting', (data) => {
@@ -1956,7 +1950,6 @@ function App() {
         currentGameRoomRef.current = specificRoomData.room_id;
         sessionStorage.setItem('active_game_room', specificRoomData.room_id);
         setActiveGameRoomId(specificRoomData.room_id);
-        toast.info(`📡 POLL STARTED for ${specificRoomData.room_id?.substring(0,8)}`, { duration: 5000 });
 
         // Also join Socket.IO room if connected
         if (socket && socket.connected) {
@@ -2765,13 +2758,18 @@ function App() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {/* Prize Pool */}
+                    <div className="bg-gradient-to-r from-yellow-500/20 to-amber-500/20 border border-yellow-500/40 rounded-xl p-4 text-center">
+                      <p className="text-yellow-400 text-xs font-semibold uppercase tracking-widest mb-1">Prize Pool</p>
+                      <p className="text-3xl font-black text-yellow-300">
+                        💰 {(roomParticipants[lobbyData.room_type] || []).reduce((sum, p) => sum + (p.bet_amount || lobbyData.bet_amount || 0), 0)} tokens
+                      </p>
+                      <p className="text-yellow-500/70 text-xs mt-1">Winner takes all!</p>
+                    </div>
+
                     {/* Current room participants */}
                     <div>
                       <h3 className="text-white font-semibold mb-3 text-center">Players in Room:</h3>
-                      {/* Debug info */}
-                      {console.log('Lobby - lobbyData:', lobbyData)}
-                      {console.log('Lobby - roomParticipants:', roomParticipants)}
-                      {console.log('Lobby - Current room players:', roomParticipants[lobbyData?.room_type])}
                       <div className="space-y-3" key={`lobby-${lobbyData.room_type}-${roomParticipants[lobbyData.room_type]?.length || 0}`}>
                         {roomParticipants[lobbyData.room_type]?.length > 0 ? (
                           roomParticipants[lobbyData.room_type].map((player, index) => (
@@ -2798,7 +2796,7 @@ function App() {
                                 {player.username && (
                                   <p className="text-slate-400 text-sm">@{player.username}</p>
                                 )}
-                                <p className="text-green-400 text-sm font-medium">Ready to play</p>
+                                <p className="text-green-400 text-sm font-medium">Ready to play · <span className="text-yellow-400">{player.bet_amount || lobbyData.bet_amount} tokens</span></p>
                               </div>
                             </div>
                           ))
