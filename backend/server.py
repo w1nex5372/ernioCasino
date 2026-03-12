@@ -267,6 +267,7 @@ class RoomPlayer(BaseModel):
     last_name: Optional[str] = None  # Telegram last name
     photo_url: Optional[str] = None  # Telegram profile photo
     bet_amount: int
+    is_anonymous: bool = False
     joined_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class GameResult(BaseModel):
@@ -293,6 +294,7 @@ class JoinRoomRequest(BaseModel):
     room_type: RoomType
     user_id: str
     bet_amount: int
+    is_anonymous: bool = False
 
 # In-memory storage for active rooms (in production, use Redis)
 active_rooms: Dict[str, GameRoom] = {}
@@ -2080,14 +2082,28 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         await sio.emit('balance_updated', {'user_id': request.user_id, 'new_balance': new_balance_after_join}, room=joining_sid)
     
     # Add player to room with full Telegram info
-    player = RoomPlayer(
-        user_id=request.user_id,
-        username=user_doc.get('telegram_username', ''),  # @username
-        first_name=user_doc.get('first_name', 'Player'),
-        last_name=user_doc.get('last_name', ''),
-        photo_url=user_doc.get('photo_url', ''),
-        bet_amount=request.bet_amount
-    )
+    if request.is_anonymous:
+        anon_count = sum(1 for p in target_room.players if p.is_anonymous)
+        anon_name = "Anonymous" if anon_count == 0 else f"Anonymous-{anon_count + 1}"
+        player = RoomPlayer(
+            user_id=request.user_id,
+            username='',
+            first_name=anon_name,
+            last_name='',
+            photo_url='',
+            bet_amount=request.bet_amount,
+            is_anonymous=True
+        )
+    else:
+        player = RoomPlayer(
+            user_id=request.user_id,
+            username=user_doc.get('telegram_username', ''),  # @username
+            first_name=user_doc.get('first_name', 'Player'),
+            last_name=user_doc.get('last_name', ''),
+            photo_url=user_doc.get('photo_url', ''),
+            bet_amount=request.bet_amount,
+            is_anonymous=False
+        )
     target_room.players.append(player)
     target_room.prize_pool += request.bet_amount
     
