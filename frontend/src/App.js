@@ -1193,8 +1193,11 @@ function App() {
     });
 
     newSocket.on('reaction_received', (data) => {
+      // Only show if we're in the same room
+      const activeRoom = sessionStorage.getItem('active_game_room');
+      if (data.room_id && activeRoom && data.room_id !== activeRoom) return;
       const id = Date.now() + Math.random();
-      const x = 15 + Math.random() * 70; // random horizontal position 15-85%
+      const x = 15 + Math.random() * 70;
       setFloatingReactions(prev => [...prev, { id, emoji: data.emoji, name: data.name, x }]);
       setTimeout(() => setFloatingReactions(prev => prev.filter(r => r.id !== id)), 2500);
     });

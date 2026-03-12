@@ -995,12 +995,13 @@ async def send_reaction(sid, data):
     user_id = data.get('user_id', '')
     if not room_id:
         return
+    # Broadcast globally — client filters by room_id (same pattern as game events)
     await sio.emit('reaction_received', {
         'emoji': emoji,
         'name': name,
         'user_id': user_id,
         'room_id': room_id,
-    }, room=room_id)
+    })
     logging.info(f"💬 Reaction {emoji} from {name} in room {room_id[:8]}")
 
 @sio.event
