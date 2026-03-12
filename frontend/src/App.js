@@ -302,9 +302,8 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
           <canvas ref={canvasRef} width={260} height={260} style={{ borderRadius: '50%', display: 'block' }} />
         </div>
 
-        {/* Spinning needle arrow — rotates around center */}
+        {/* Spinning needle — rotates around center */}
         <div className="absolute inset-0 pointer-events-none" style={{ width: 260, height: 260 }}>
-          {/* Needle: bottom anchored at center, extends up */}
           <div style={{
             position: 'absolute',
             bottom: '50%',
@@ -314,39 +313,41 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
             height: '108px',
             transformOrigin: 'bottom center',
             transform: `rotate(${displayRot}deg)`,
-            borderRadius: '4px 4px 2px 2px',
-            background: 'linear-gradient(to top, #dc2626 0%, #fbbf24 60%, #fff 100%)',
-            boxShadow: '0 0 12px rgba(251,191,36,0.9), 0 0 4px rgba(220,38,38,0.8)',
-          }} />
-          {/* Arrowhead tip */}
-          <div style={{
-            position: 'absolute',
-            bottom: '50%',
-            left: '50%',
-            marginLeft: '-7px',
-            marginBottom: '106px',
-            width: 0,
-            height: 0,
-            borderLeft: '7px solid transparent',
-            borderRight: '7px solid transparent',
-            borderBottom: '14px solid #fff',
-            transformOrigin: 'center 14px',
-            transform: `rotate(${displayRot}deg)`,
-            filter: 'drop-shadow(0 0 6px rgba(251,191,36,1))',
+            borderRadius: '4px 4px 0 0',
+            background: 'linear-gradient(to top, #7c3aed 0%, #a855f7 40%, #f59e0b 100%)',
+            boxShadow: '0 0 14px rgba(168,85,247,0.9), 0 0 6px rgba(245,158,11,0.8)',
           }} />
         </div>
 
         {/* Center hub - does NOT rotate */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden shadow-lg"
-            style={{ background: '#1a1a3e', border: '3px solid #7c3aed', boxShadow: '0 0 15px rgba(124,58,237,0.5)', zIndex: 10 }}>
+          {/* Outer glow ring */}
+          <div style={{
+            position: 'absolute',
+            width: 56, height: 56,
+            borderRadius: '50%',
+            background: 'conic-gradient(from 0deg, #7c3aed, #a855f7, #f59e0b, #7c3aed)',
+            animation: 'spin 3s linear infinite',
+            zIndex: 9,
+          }} />
+          {/* Inner hub */}
+          <div style={{
+            width: 48, height: 48,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle at 35% 35%, #2e1065, #1a1a3e)',
+            border: '2px solid rgba(168,85,247,0.6)',
+            boxShadow: '0 0 20px rgba(124,58,237,0.8), inset 0 0 10px rgba(0,0,0,0.5)',
+            zIndex: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            overflow: 'hidden',
+          }}>
             {showResult && winner?.photo_url ? (
-              <img src={winner.photo_url} alt="winner" className="w-full h-full object-cover"
+              <img src={winner.photo_url} alt="winner" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                 onError={e => { e.target.style.display = 'none'; }} />
             ) : showResult && winner ? (
-              <span className="text-white font-black text-lg">{(winner.first_name || '?').charAt(0)}</span>
+              <span style={{ color: '#f59e0b', fontWeight: 900, fontSize: 20 }}>{(winner.first_name || '?').charAt(0)}</span>
             ) : (
-              <span className="text-lg">🎰</span>
+              <span style={{ fontSize: 20 }}>🎰</span>
             )}
           </div>
         </div>
@@ -3278,35 +3279,12 @@ function App() {
             {activeTab === 'history' && (
               <Card className="bg-slate-800/90 border-slate-700">
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2 text-blue-400">
-                        <Timer className="w-5 h-5" />
-                        Game History
-                      </CardTitle>
-                      <CardDescription>Recent completed games</CardDescription>
-                    </div>
-                    <button
-                      onClick={() => loadGameHistory(true)}
-                      disabled={isRefreshingHistory}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                        isRefreshingHistory 
-                          ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
-                          : 'bg-blue-600 hover:bg-blue-700 text-white active:scale-95'
-                      }`}
-                    >
-                      {isRefreshingHistory ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
-                          <span>Refreshing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-lg">🔄</span>
-                          <span>Refresh</span>
-                        </>
-                      )}
-                    </button>
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-blue-400">
+                      <Timer className="w-5 h-5" />
+                      Game History
+                    </CardTitle>
+                    <CardDescription>Recent completed games</CardDescription>
                   </div>
                 </CardHeader>
                 <CardContent>
