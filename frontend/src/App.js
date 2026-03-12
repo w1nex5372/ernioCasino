@@ -468,6 +468,7 @@ function App() {
   // New synchronization states
   // Single atomic roulette state - null=hidden, {players,winner}=show wheel
   const [rouletteConfig, setRouletteConfig] = useState(null);
+  const [floatingReactions, setFloatingReactions] = useState([]); // [{id, emoji, name, x}]
   const [shownMatchIds, setShownMatchIds] = useState(new Set()); // Track shown match IDs to prevent duplicates
   const showGetReadyRef = React.useRef(false); // Ref to track roulette state for socket listeners
   const blockWinnerScreenRef = React.useRef(false); // Block winner screen after redirect_home
@@ -1188,7 +1189,13 @@ function App() {
     newSocket.on('new_room_available', (data) => {
       console.log('🆕 New room available:', data);
       loadRooms();
-      // Removed noisy toast notification
+    });
+
+    newSocket.on('reaction_received', (data) => {
+      const id = Date.now() + Math.random();
+      const x = 15 + Math.random() * 70; // random horizontal position 15-85%
+      setFloatingReactions(prev => [...prev, { id, emoji: data.emoji, name: data.name, x }]);
+      setTimeout(() => setFloatingReactions(prev => prev.filter(r => r.id !== id)), 2500);
     });
 
     newSocket.on('token_balance_updated', (data) => {
@@ -2923,19 +2930,78 @@ function App() {
                       })()}
                     </div>
 
-                    {/* Leave Room Button */}
-                    <div className="text-center pt-2">
-                      <Button 
+                    {/* Reaction Buttons */}
+                    <div style={{ marginTop: 12, marginBottom: 4 }}>
+                      <p style={{ fontSize: 10, color: '#64748b', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Taunt your opponents</p>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
+                        {['🔥', '👊', '🎯', '😤', '💀'].map(emoji => (
+                          <button
+                            key={emoji}
+                            onClick={() => {
+                              if (!socket || !lobbyData?.room_id) return;
+                              if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+                              socket.emit('send_reaction', {
+                                room_id: lobbyData.room_id,
+                                user_id: user.id,
+                                name: user.first_name || 'Player',
+                                emoji,
+                              });
+                            }}
+                            style={{ fontSize: 22, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, width: 44, height: 44, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.2)'; e.currentTarget.style.transform = 'scale(1.15)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.transform = 'scale(1)'; }}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Lobby Action Buttons */}
+                    <div className="flex gap-3 pt-2">
+                      {/* Browse Menu — keeps spot in room */}
+                      <Button
                         onClick={() => {
                           setInLobby(false);
-                          setLobbyData(null);
-                          toast.info('Left the lobby');
-                          loadRooms();
+                          // lobbyData and userActiveRooms kept — player still in room
+                          toast.info('Your spot is saved! Hit "Return to Room" to come back.');
                         }}
                         variant="outline"
-                        className="border-red-500 text-red-500 hover:bg-red-500/10"
+                        className="flex-1 border-slate-500 text-slate-300 hover:bg-slate-700 hover:text-white"
                       >
-                        Leave Lobby
+                        🏠 Browse Menu
+                      </Button>
+
+                      {/* Leave & Refund — removes from room and refunds tokens */}
+                      <Button
+                        onClick={async () => {
+                          if (!lobbyData?.room_id || !user?.id) return;
+                          try {
+                            const res = await axios.post(`${API}/leave-room`, {
+                              room_id: lobbyData.room_id,
+                              user_id: user.id,
+                            });
+                            setUser(prev => ({ ...prev, token_balance: res.data.new_balance }));
+                            setInLobby(false);
+                            setLobbyData(null);
+                            setUserActiveRooms(prev => {
+                              const next = { ...prev };
+                              delete next[lobbyData.room_type];
+                              return next;
+                            });
+                            setActiveGameRoomId(null);
+                            currentGameRoomRef.current = null;
+                            sessionStorage.removeItem('active_game_room');
+                            toast.success(`💸 Left room — ${res.data.refund} tokens refunded`);
+                            loadRooms();
+                          } catch (err) {
+                            toast.error(err.response?.data?.detail || 'Could not leave room');
+                          }
+                        }}
+                        variant="outline"
+                        className="flex-1 border-red-500 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                      >
+                        💸 Leave & Refund
                       </Button>
                     </div>
                   </div>
@@ -3436,7 +3502,15 @@ function App() {
       )}
 
       <Toaster richColors position={isMobile ? "top-center" : "top-right"} />
-      
+
+      {/* Floating Reactions Overlay */}
+      {floatingReactions.map(r => (
+        <div key={r.id} style={{ position: 'fixed', bottom: 120, left: `${r.x}%`, transform: 'translateX(-50%)', zIndex: 99999, pointerEvents: 'none', animation: 'reactionFloat 2.5s ease-out forwards', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <span style={{ fontSize: 32, filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.5))' }}>{r.emoji}</span>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', fontWeight: 600, background: 'rgba(0,0,0,0.5)', borderRadius: 6, padding: '1px 5px', whiteSpace: 'nowrap' }}>{r.name}</span>
+        </div>
+      ))}
+
       {/* Anonymous Choice Modal */}
       {anonModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">

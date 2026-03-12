@@ -987,6 +987,23 @@ def select_winner(players: List[RoomPlayer]) -> RoomPlayer:
     return players[-1]
 
 @sio.event
+async def send_reaction(sid, data):
+    """Broadcast an emoji reaction to all players in a room"""
+    room_id = data.get('room_id')
+    emoji = data.get('emoji', '🔥')
+    name = data.get('name', 'Player')
+    user_id = data.get('user_id', '')
+    if not room_id:
+        return
+    await sio.emit('reaction_received', {
+        'emoji': emoji,
+        'name': name,
+        'user_id': user_id,
+        'room_id': room_id,
+    }, room=room_id)
+    logging.info(f"💬 Reaction {emoji} from {name} in room {room_id[:8]}")
+
+@sio.event
 async def catch_all(event, sid, data):
     """Catch all events for debugging"""
     logging.info(f"🎯 CATCH-ALL: Event '{event}' from {sid[:8]} with data: {data}")
@@ -2165,6 +2182,60 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         "players_needed": 3 - len(target_room.players),
         "new_balance": user_doc.get('token_balance', 0) - request.bet_amount
     }
+
+class LeaveRoomRequest(BaseModel):
+    room_id: str
+    user_id: str
+
+@api_router.post("/leave-room")
+async def leave_room(request: LeaveRoomRequest):
+    """Remove player from a waiting room and refund their bet"""
+    room = active_rooms.get(request.room_id)
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    if room.status != "waiting":
+        raise HTTPException(status_code=400, detail="Cannot leave a room that is already in progress")
+
+    player = next((p for p in room.players if p.user_id == request.user_id), None)
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not in this room")
+
+    refund = player.bet_amount
+    room.players = [p for p in room.players if p.user_id != request.user_id]
+    room.prize_pool = max(0, room.prize_pool - refund)
+
+    # Refund tokens
+    result = await db.users.find_one_and_update(
+        {"id": request.user_id},
+        {"$inc": {"token_balance": refund}},
+        return_document=True
+    )
+    new_balance = result.get("token_balance", 0) if result else 0
+
+    # Notify socket
+    sid = user_to_socket.get(request.user_id)
+    if sid:
+        await sio.emit("balance_updated", {"user_id": request.user_id, "new_balance": new_balance}, room=sid)
+
+    # Broadcast updated room list to all clients
+    await broadcast_room_updates()
+
+    # Notify remaining room players
+    serialized_players = []
+    for p in room.players:
+        pd = p.dict()
+        if isinstance(pd.get("joined_at"), datetime):
+            pd["joined_at"] = pd["joined_at"].isoformat()
+        serialized_players.append(pd)
+    await sio.emit("player_left", {
+        "room_type": room.room_type,
+        "player": {"first_name": player.first_name, "username": player.username},
+        "players_count": len(room.players),
+        "all_players": serialized_players,
+    })
+
+    logging.info(f"👋 Player {player.username or player.first_name} left room {room.id}, refunded {refund} tokens")
+    return {"status": "left", "refund": refund, "new_balance": new_balance}
 
 @api_router.get("/room-participants/{room_type}")
 async def get_room_participants_by_type(room_type: str):
