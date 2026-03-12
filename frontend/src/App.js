@@ -2117,21 +2117,21 @@ function App() {
     };
   }, [user]);
 
-  // Auto-refresh rooms list every 5 seconds when on rooms tab and not in a game
+  // Auto-refresh rooms list every 1 second when on rooms tab and not in a game
   useEffect(() => {
     if (!user || activeTab !== 'rooms' || inLobby || gameInProgress || rouletteConfig) return;
     const interval = setInterval(() => {
       loadRooms();
-    }, 5000);
+    }, 1000);
     return () => clearInterval(interval);
   }, [user, activeTab, inLobby, gameInProgress, rouletteConfig]); // eslint-disable-line
 
-  // Auto-refresh token balance every 10 seconds when user is logged in
+  // Auto-refresh token balance every 1 second when user is logged in
   useEffect(() => {
     if (!user || !user.id) return;
     const interval = setInterval(() => {
       refreshUserData(user.id);
-    }, 10000);
+    }, 1000);
     return () => clearInterval(interval);
   }, [user?.id]); // eslint-disable-line
 
@@ -2437,18 +2437,6 @@ function App() {
                   </div>
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <p className="text-yellow-400 font-medium text-sm">Balance: {user.token_balance || 0} tokens</p>
-                    <button 
-                      onClick={() => {
-                        refreshUserData(user.id);
-                        toast.info('Refreshing balance...');
-                      }}
-                      className="text-blue-400 hover:text-blue-300 transition-colors"
-                      title="Refresh balance"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    </button>
                   </div>
                 </div>
               </div>
@@ -2937,19 +2925,7 @@ function App() {
               <div className={isMobile ? 'space-y-4' : 'space-y-6'}>
                 {isMobile ? (
                   <div className="text-center py-2 px-2">
-                    <div className="flex items-center justify-between mb-2">
-                      <h2 className="text-base font-bold text-white flex-1 text-center">Casino Rooms</h2>
-                      <Button
-                        onClick={() => {
-                          loadRooms();
-                          toast.success('Rooms refreshed!');
-                        }}
-                        size="sm"
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-xs"
-                      >
-                        🔄 Refresh
-                      </Button>
-                    </div>
+                    <h2 className="text-base font-bold text-white mb-2">Casino Rooms</h2>
                     <p className="text-xs text-slate-400">
                       3 players • Higher bet = better odds
                     </p>
@@ -2967,17 +2943,6 @@ function App() {
                       <br />
                       <span className="text-yellow-400 font-medium">Higher bet = Better winning odds!</span>
                     </p>
-                    <div className="mt-4">
-                      <Button
-                        onClick={() => {
-                          loadRooms();
-                          toast.success('Rooms refreshed!');
-                        }}
-                        className="bg-blue-500 hover:bg-blue-600 text-white"
-                      >
-                        🔄 Refresh Rooms
-                      </Button>
-                    </div>
                   </div>
                 )}
 
