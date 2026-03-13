@@ -67,27 +67,6 @@ const ROOM_CONFIGS = {
     max: 1200,
     gradient: 'from-yellow-400 to-yellow-600'
   },
-  platinum: {
-    name: 'Platinum Room',
-    icon: '💠',
-    min: 1200,
-    max: 2400,
-    gradient: 'from-purple-400 to-purple-600'
-  },
-  diamond: {
-    name: 'Diamond Room',
-    icon: '💎',
-    min: 2400,
-    max: 4800,
-    gradient: 'from-blue-400 to-blue-600'
-  },
-  elite: {
-    name: 'Elite Room',
-    icon: '👑',
-    min: 4500,
-    max: 8000,
-    gradient: 'from-pink-500 to-red-600'
-  }
 };
 
 // Countdown Timer Component
@@ -133,7 +112,8 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
   const [displayRot, setDisplayRot] = React.useState(0);
   const [showResult, setShowResult] = React.useState(false);
 
-  const COLORS = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#e91e63'];
+  // Vibrant segment colors
+  const COLORS = ['#ef4444','#3b82f6','#22c55e','#f59e0b','#a855f7','#06b6d4','#f97316','#ec4899'];
 
   const playerData = React.useMemo(() => {
     if (!players || players.length === 0) return [];
@@ -148,72 +128,92 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
     });
   }, [players]);
 
-  // Draw wheel segments once
+  // Draw wheel — segments + tick marks, no player names inside
   React.useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || playerData.length === 0) return;
     const ctx = canvas.getContext('2d');
     const W = canvas.width;
-    const cx = W / 2, cy = W / 2, R = W / 2 - 6;
+    const cx = W / 2, cy = W / 2, R = W / 2 - 10;
     ctx.clearRect(0, 0, W, W);
 
+    // Segments
     playerData.forEach(p => {
       const startRad = (p.startDeg * Math.PI) / 180;
       const endRad = ((p.startDeg + p.angleDeg) * Math.PI) / 180;
+      const midRad = (startRad + endRad) / 2;
+
+      // Radial gradient per segment
+      const grd = ctx.createRadialGradient(cx, cy, R * 0.15, cx, cy, R);
+      grd.addColorStop(0, p.color + 'dd');
+      grd.addColorStop(1, p.color + '88');
+
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.arc(cx, cy, R, startRad, endRad);
       ctx.closePath();
-      ctx.fillStyle = p.color;
+      ctx.fillStyle = grd;
       ctx.fill();
-      ctx.strokeStyle = '#0f0f23';
-      ctx.lineWidth = 2;
+
+      // Segment border
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.lineWidth = 2.5;
       ctx.stroke();
 
-      if (p.angleDeg > 18) {
-        const midRad = startRad + (endRad - startRad) / 2;
-        const lr = R * 0.64;
+      // Percentage label — only if segment is big enough
+      if (p.angleDeg > 22) {
+        const lr = R * 0.66;
         ctx.save();
         ctx.translate(cx + lr * Math.cos(midRad), cy + lr * Math.sin(midRad));
         ctx.rotate(midRad + Math.PI / 2);
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 10px Arial';
+        // White text shadow
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 4;
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        ctx.font = 'bold 12px system-ui, Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText((p.first_name || 'P').substring(0, 8), 0, -6);
-        ctx.font = '9px Arial';
-        ctx.fillText(p.pct + '%', 0, 6);
+        ctx.fillText(p.pct + '%', 0, 0);
+        ctx.shadowBlur = 0;
         ctx.restore();
       }
     });
 
-    // Outer ring
+    // Tick marks on outer edge
+    const tickCount = 48;
+    for (let t = 0; t < tickCount; t++) {
+      const angle = (t / tickCount) * Math.PI * 2;
+      const isLong = t % 4 === 0;
+      const outer = R + 2;
+      const inner = outer - (isLong ? 8 : 4);
+      ctx.beginPath();
+      ctx.moveTo(cx + outer * Math.cos(angle), cy + outer * Math.sin(angle));
+      ctx.lineTo(cx + inner * Math.cos(angle), cy + inner * Math.sin(angle));
+      ctx.strokeStyle = isLong ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = isLong ? 2 : 1;
+      ctx.stroke();
+    }
+
+    // Outer rim
     ctx.beginPath();
-    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.arc(cx, cy, R + 2, 0, Math.PI * 2);
     ctx.strokeStyle = '#7c3aed';
     ctx.lineWidth = 5;
+    ctx.shadowColor = '#a855f7';
+    ctx.shadowBlur = 14;
     ctx.stroke();
+    ctx.shadowBlur = 0;
 
-    // Decorative inner ring
+    // Inner decorative ring
     ctx.beginPath();
-    ctx.arc(cx, cy, R - 8, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(124,58,237,0.3)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Center circle
-    ctx.beginPath();
-    ctx.arc(cx, cy, 32, 0, Math.PI * 2);
-    ctx.fillStyle = '#1a1a3e';
-    ctx.fill();
-    ctx.strokeStyle = '#7c3aed';
-    ctx.lineWidth = 3;
+    ctx.arc(cx, cy, R * 0.22, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(168,85,247,0.35)';
+    ctx.lineWidth = 1.5;
     ctx.stroke();
   }, [playerData]);
 
-  // Set target rotation when winner arrives
-  // Needle at CSS rotate(0) points UP = canvas 270°
-  // To point at canvas angle midDeg: CSS rotation = midDeg + 90
+  // Wheel rotates, pointer is fixed at top (270° in canvas coords)
+  // For midDeg to land under top pointer: wheelRot = (270 - midDeg) mod 360
   React.useEffect(() => {
     if (winner && targetRotRef.current === null && playerData.length > 0) {
       const idx = playerData.findIndex(p =>
@@ -222,14 +222,14 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
       );
       const i = idx >= 0 ? idx : 0;
       const midDeg = playerData[i].startDeg + playerData[i].angleDeg / 2;
-      const needleTargetMod = ((midDeg + 90) % 360 + 360) % 360;
+      const wheelTargetMod = ((270 - midDeg) % 360 + 360) % 360;
       const currentMod = rotRef.current % 360;
-      const delta = ((needleTargetMod - currentMod) + 360) % 360;
+      const delta = ((wheelTargetMod - currentMod) + 360) % 360;
       targetRotRef.current = rotRef.current + 360 * 5 + (delta === 0 ? 360 : delta);
     }
   }, [winner, playerData]);
 
-  // Safety fallback: if winner never arrives within 15s, call onComplete anyway
+  // Safety fallback
   React.useEffect(() => {
     const safeguard = setTimeout(() => {
       if (animatingRef.current) {
@@ -241,7 +241,7 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
     return () => clearTimeout(safeguard);
   }, []);
 
-  // Animation loop - runs once on mount, uses refs for callbacks
+  // Animation loop
   React.useEffect(() => {
     animatingRef.current = true;
     const animate = () => {
@@ -261,6 +261,7 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
         const speed = Math.max(0.2, Math.min(8, remaining / 25));
         rotRef.current += speed;
       } else {
+        // Spin up gradually
         rotRef.current += Math.min(8, rotRef.current < 720 ? rotRef.current / 90 + 1 : 8);
       }
       setDisplayRot(rotRef.current);
@@ -278,116 +279,211 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
     String(currentUser.telegram_id) === String(winner.telegram_id)
   );
 
+  const WHEEL_SIZE = 270;
+
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)' }}>
+      style={{ background: 'radial-gradient(ellipse at center, #1a0a2e 0%, #0a0a14 60%, #000 100%)' }}>
 
-      {/* Animated stars */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(25)].map((_, i) => (
-          <div key={i} className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
-            style={{ left: `${(i * 37 + 11) % 100}%`, top: `${(i * 53 + 7) % 100}%`, opacity: 0.3 + (i % 5) * 0.1, animationDelay: `${i * 0.3}s` }} />
+      {/* Starfield */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {[...Array(40)].map((_, i) => (
+          <div key={i} className="absolute rounded-full" style={{
+            width: i % 7 === 0 ? 3 : i % 3 === 0 ? 2 : 1,
+            height: i % 7 === 0 ? 3 : i % 3 === 0 ? 2 : 1,
+            background: i % 5 === 0 ? '#a855f7' : 'white',
+            left: `${(i * 37 + 11) % 100}%`,
+            top: `${(i * 53 + 7) % 100}%`,
+            opacity: 0.1 + (i % 6) * 0.07,
+            animation: `pulse ${1.5 + (i % 5) * 0.4}s ease-in-out infinite`,
+            animationDelay: `${i * 0.12}s`
+          }} />
         ))}
       </div>
 
       {/* Title */}
-      <h2 className="text-xl font-bold text-white mb-3 z-10 tracking-wider">
-        {showResult ? '🏆 WINNER REVEALED!' : '🎰 SPINNING...'}
-      </h2>
+      <div className="z-10 mb-5 text-center">
+        {showResult ? (
+          <div>
+            <h2 style={{
+              fontSize: 24, fontWeight: 900, letterSpacing: '0.1em',
+              background: 'linear-gradient(90deg, #f59e0b, #fbbf24, #f59e0b)',
+              backgroundSize: '200% auto',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              filter: 'drop-shadow(0 0 16px rgba(245,158,11,0.7))',
+              animation: 'gradientShift 2s linear infinite',
+            }}>🏆 WINNER!</h2>
+          </div>
+        ) : (
+          <h2 style={{
+            fontSize: 22, fontWeight: 900, letterSpacing: '0.18em',
+            background: 'linear-gradient(90deg, #dc2626, #a855f7, #3b82f6, #a855f7, #dc2626)',
+            backgroundSize: '300% auto',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            animation: 'gradientShift 2s linear infinite',
+          }}>SPINNING...</h2>
+        )}
+      </div>
 
-      {/* Wheel */}
-      <div className="relative flex items-center justify-center z-10">
-        {/* Static wheel */}
-        <div style={{ borderRadius: '50%', boxShadow: '0 0 50px rgba(124,58,237,0.6), 0 0 20px rgba(124,58,237,0.3)' }}>
-          <canvas ref={canvasRef} width={260} height={260} style={{ borderRadius: '50%', display: 'block' }} />
+      {/* Wheel area */}
+      <div className="relative z-10" style={{ width: WHEEL_SIZE + 20, height: WHEEL_SIZE + 20 }}>
+
+        {/* Fixed top pointer (downward triangle) */}
+        <div style={{
+          position: 'absolute',
+          top: 2,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 30,
+          width: 0, height: 0,
+          borderLeft: '11px solid transparent',
+          borderRight: '11px solid transparent',
+          borderTop: '24px solid #dc2626',
+          filter: 'drop-shadow(0 2px 8px rgba(220,38,38,1)) drop-shadow(0 0 4px rgba(220,38,38,0.6))',
+        }} />
+
+        {/* Outer glow ring (static) */}
+        <div style={{
+          position: 'absolute',
+          inset: 6,
+          borderRadius: '50%',
+          boxShadow: showResult
+            ? '0 0 70px rgba(245,158,11,0.6), 0 0 140px rgba(245,158,11,0.2), inset 0 0 40px rgba(245,158,11,0.1)'
+            : '0 0 50px rgba(124,58,237,0.5), 0 0 100px rgba(124,58,237,0.2)',
+          transition: 'box-shadow 0.6s ease',
+          pointerEvents: 'none',
+        }} />
+
+        {/* Rotating wheel canvas */}
+        <div style={{
+          position: 'absolute',
+          inset: 10,
+          borderRadius: '50%',
+          transform: `rotate(${displayRot}deg)`,
+        }}>
+          <canvas ref={canvasRef} width={WHEEL_SIZE} height={WHEEL_SIZE}
+            style={{ borderRadius: '50%', display: 'block', width: '100%', height: '100%' }} />
         </div>
 
-        {/* Spinning needle — rotates around center */}
-        <div className="absolute inset-0 pointer-events-none" style={{ width: 260, height: 260 }}>
+        {/* Center hub — static, does not rotate */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          pointerEvents: 'none',
+          zIndex: 20,
+        }}>
+          {/* Spinning conic ring */}
           <div style={{
             position: 'absolute',
-            bottom: '50%',
-            left: '50%',
-            marginLeft: '-4px',
-            width: '8px',
-            height: '108px',
-            transformOrigin: 'bottom center',
-            transform: `rotate(${displayRot}deg)`,
-            borderRadius: '4px 4px 0 0',
-            background: 'linear-gradient(to top, #7c3aed 0%, #a855f7 40%, #f59e0b 100%)',
-            boxShadow: '0 0 14px rgba(168,85,247,0.9), 0 0 6px rgba(245,158,11,0.8)',
+            width: 60, height: 60, borderRadius: '50%',
+            background: showResult
+              ? 'conic-gradient(from 0deg, #f59e0b, #fbbf24, #f59e0b, #fbbf24, #f59e0b)'
+              : 'conic-gradient(from 0deg, #dc2626, #a855f7, #3b82f6, #a855f7, #dc2626)',
+            animation: 'spin 2s linear infinite',
           }} />
-        </div>
-
-        {/* Center hub - does NOT rotate */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {/* Outer glow ring */}
+          {/* White separator ring */}
           <div style={{
             position: 'absolute',
-            width: 56, height: 56,
-            borderRadius: '50%',
-            background: 'conic-gradient(from 0deg, #7c3aed, #a855f7, #f59e0b, #7c3aed)',
-            animation: 'spin 3s linear infinite',
-            zIndex: 9,
+            width: 52, height: 52, borderRadius: '50%',
+            background: '#111',
           }} />
-          {/* Inner hub */}
+          {/* Inner hub face */}
           <div style={{
-            width: 48, height: 48,
-            borderRadius: '50%',
-            background: 'radial-gradient(circle at 35% 35%, #2e1065, #1a1a3e)',
-            border: '2px solid rgba(168,85,247,0.6)',
-            boxShadow: '0 0 20px rgba(124,58,237,0.8), inset 0 0 10px rgba(0,0,0,0.5)',
-            zIndex: 10,
+            width: 46, height: 46, borderRadius: '50%',
+            background: 'radial-gradient(circle at 38% 32%, #2d1b69, #0d0d1a)',
+            boxShadow: '0 0 16px rgba(124,58,237,0.9), inset 0 0 12px rgba(0,0,0,0.9)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             overflow: 'hidden',
+            position: 'relative',
+            zIndex: 2,
           }}>
             {showResult && winner?.photo_url ? (
-              <img src={winner.photo_url} alt="winner" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+              <img src={winner.photo_url} alt="w"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                 onError={e => { e.target.style.display = 'none'; }} />
             ) : showResult && winner ? (
-              <span style={{ color: '#f59e0b', fontWeight: 900, fontSize: 20 }}>{(winner.first_name || '?').charAt(0)}</span>
+              <span style={{ color: '#f59e0b', fontWeight: 900, fontSize: 18, lineHeight: 1 }}>
+                {(winner.first_name || '?').charAt(0).toUpperCase()}
+              </span>
             ) : (
-              <span style={{ fontSize: 20 }}>🎰</span>
+              // Pulsing dot while spinning
+              <div style={{
+                width: 12, height: 12, borderRadius: '50%',
+                background: 'radial-gradient(circle, #c084fc, #7c3aed)',
+                boxShadow: '0 0 12px rgba(192,132,252,1)',
+                animation: 'pulse 0.8s ease-in-out infinite',
+              }} />
             )}
           </div>
         </div>
       </div>
 
       {/* Result text */}
-      <div className="mt-4 text-center z-10 px-6 min-h-[70px]">
+      <div className="mt-4 text-center z-10 px-6" style={{ minHeight: 64 }}>
         {showResult && winner ? (
           <div>
-            <p className="text-2xl font-black text-yellow-400 animate-bounce">
-              🏆 {winner.first_name} {winner.last_name || ''} 🏆
+            <p style={{
+              fontSize: 19, fontWeight: 900,
+              color: isUserWinner ? '#4ade80' : '#fbbf24',
+              textShadow: isUserWinner ? '0 0 24px rgba(74,222,128,0.9)' : '0 0 24px rgba(251,191,36,0.9)',
+              animation: 'pulse 0.6s ease-in-out infinite alternate',
+            }}>
+              {isUserWinner ? '🎉 You Won!' : `🏆 ${winner.first_name} wins!`}
             </p>
-            <p className={`mt-2 text-base font-semibold ${isUserWinner ? 'text-green-400' : 'text-slate-300'}`}>
-              {isUserWinner ? '🎉 Congratulations! You Won!' : 'You lose this time... 🍀'}
+            <p style={{ color: isUserWinner ? '#86efac' : '#94a3b8', fontSize: 13, marginTop: 6 }}>
+              {isUserWinner ? 'Prize is being processed.' : 'Better luck next spin! 🍀'}
             </p>
-            {!isUserWinner && (
-              <p className="text-slate-400 text-sm mt-1">Next time will be your time! Keep going!</p>
-            )}
           </div>
         ) : (
-          <p className="text-purple-300 text-sm animate-pulse mt-2">Determining the winner...</p>
+          <p style={{ color: '#a78bfa', fontSize: 13, letterSpacing: '0.06em', animation: 'pulse 1.4s ease-in-out infinite' }}>
+            Determining the winner...
+          </p>
         )}
       </div>
 
       {/* Players list */}
       <div className="mt-3 w-full max-w-xs px-4 z-10">
-        <div className="bg-black/40 backdrop-blur rounded-xl p-3 border border-purple-500/20">
-          <p className="text-purple-300 text-xs text-center mb-2 font-semibold tracking-wider">PLAYERS</p>
-          {playerData.map((p, i) => (
-            <div key={p.user_id || i} className="flex items-center gap-2 py-0.5">
-              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-              <span className="text-white text-sm flex-1 truncate">
-                {p.first_name} {p.last_name || ''}
-                {currentUser && String(currentUser.id) === String(p.user_id) && (
-                  <span className="text-blue-400 text-xs ml-1">(you)</span>
-                )}
-              </span>
-              <span className="text-xs font-bold" style={{ color: p.color }}>{p.pct}%</span>
-            </div>
-          ))}
+        <div style={{
+          background: 'rgba(0,0,0,0.55)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: 14,
+          padding: '10px 14px',
+          border: '1px solid rgba(124,58,237,0.25)',
+        }}>
+          <p style={{ color: '#9333ea', fontSize: 10, textAlign: 'center', marginBottom: 10, fontWeight: 700, letterSpacing: '0.18em' }}>PLAYERS</p>
+          {playerData.map((p, i) => {
+            const isWinner = showResult && winner && (
+              String(winner.user_id) === String(p.user_id) ||
+              String(winner.telegram_id) === String(p.telegram_id)
+            );
+            const isYou = currentUser && String(currentUser.id) === String(p.user_id);
+            return (
+              <div key={p.user_id || i} style={{
+                display: 'flex', alignItems: 'center', gap: 9, padding: '4px 0',
+                opacity: showResult && !isWinner ? 0.35 : 1,
+                transition: 'opacity 0.5s ease',
+              }}>
+                <div style={{
+                  width: 11, height: 11, borderRadius: '50%', flexShrink: 0,
+                  backgroundColor: p.color,
+                  boxShadow: `0 0 ${isWinner ? 10 : 5}px ${p.color}`,
+                  transition: 'box-shadow 0.4s',
+                }} />
+                <span style={{
+                  color: isWinner ? '#fbbf24' : '#e2e8f0',
+                  fontSize: 13, flex: 1,
+                  fontWeight: isWinner ? 700 : 400,
+                  transition: 'color 0.4s',
+                }} className="truncate">
+                  {p.first_name || 'Player'}{p.last_name ? ` ${p.last_name}` : ''}
+                  {isYou && <span style={{ color: '#60a5fa', fontSize: 10, marginLeft: 5 }}>(you)</span>}
+                  {isWinner && <span style={{ marginLeft: 6 }}>👑</span>}
+                </span>
+                <span style={{ color: p.color, fontSize: 12, fontWeight: 700 }}>{p.pct}%</span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -469,6 +565,8 @@ function App() {
   // Single atomic roulette state - null=hidden, {players,winner}=show wheel
   const [rouletteConfig, setRouletteConfig] = useState(null);
   const [floatingReactions, setFloatingReactions] = useState([]); // [{id, emoji, name, x}]
+  const [lobbyMessages, setLobbyMessages] = useState([]); // [{user_id, name, text, ts}]
+  const [lobbyChatInput, setLobbyChatInput] = useState('');
   const [shownMatchIds, setShownMatchIds] = useState(new Set()); // Track shown match IDs to prevent duplicates
   const showGetReadyRef = React.useRef(false); // Ref to track roulette state for socket listeners
   const blockWinnerScreenRef = React.useRef(false); // Block winner screen after redirect_home
@@ -489,10 +587,7 @@ function App() {
   const [betAmounts, setBetAmounts] = useState({
     bronze: '',
     silver: '',
-    gold: '',
-    platinum: '',
-    diamond: '',
-    elite: ''
+    gold: ''
   }); // Separate bet amount for each room
   const [userActiveRooms, setUserActiveRooms] = useState({}); // Track which rooms user is in: {roomType: {roomId}}
 
@@ -625,6 +720,7 @@ function App() {
           showGetReadyRef.current = true;
           setInLobby(false);
           setLobbyData(null);
+          setLobbyMessages([]);
           setGameInProgress(false);
           setShowWinnerScreen(false);
           setWinnerData(null);
@@ -692,6 +788,7 @@ function App() {
         // This polling fallback only hides the lobby - no roulette logic here
         setInLobby(false);
         setLobbyData(null);
+        setLobbyMessages([]);
         setForceHideLobby(true);
       }
     }
@@ -1200,6 +1297,13 @@ function App() {
       const x = 15 + Math.random() * 70;
       setFloatingReactions(prev => [...prev, { id, emoji: data.emoji, name: data.name, x }]);
       setTimeout(() => setFloatingReactions(prev => prev.filter(r => r.id !== id)), 2500);
+    });
+
+    newSocket.on('lobby_message', (data) => {
+      setLobbyMessages(prev => {
+        const next = [...prev, data];
+        return next.slice(-50);
+      });
     });
 
     newSocket.on('token_balance_updated', (data) => {
@@ -3009,38 +3113,42 @@ function App() {
                       })()}
                     </div>
 
-                    {/* Reaction Buttons */}
-                    <div style={{ marginTop: 12, marginBottom: 4 }}>
-                      <p style={{ fontSize: 10, color: '#64748b', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Taunt your opponents</p>
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
-                        {['🔥', '👊', '🎯', '😤', '💀'].map(emoji => (
-                          <button
-                            key={emoji}
-                            onClick={() => {
-                              if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-                              // Show locally immediately
-                              const id = Date.now() + Math.random();
-                              const x = 15 + Math.random() * 70;
-                              setFloatingReactions(prev => [...prev, { id, emoji, name: user?.first_name || 'You', x }]);
-                              setTimeout(() => setFloatingReactions(prev => prev.filter(r => r.id !== id)), 2500);
-                              // Also broadcast via socket
-                              if (socket && lobbyData?.room_id) {
-                                socket.emit('send_reaction', {
-                                  room_id: lobbyData.room_id,
-                                  user_id: user?.id,
-                                  name: user?.first_name || 'Player',
-                                  emoji,
-                                });
-                              }
-                            }}
-                            style={{ fontSize: 22, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, width: 44, height: 44, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.2)'; e.currentTarget.style.transform = 'scale(1.15)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.transform = 'scale(1)'; }}
-                          >
-                            {emoji}
-                          </button>
+                    {/* Lobby Chat */}
+                    <div style={{ marginTop: 12, marginBottom: 4, background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '10px 12px' }}>
+                      <p style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Lobby Chat</p>
+                      {/* Message list */}
+                      <div style={{ height: 110, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}
+                        ref={el => { if (el) el.scrollTop = el.scrollHeight; }}>
+                        {lobbyMessages.length === 0 ? (
+                          <p style={{ color: '#475569', fontSize: 12, textAlign: 'center', marginTop: 36 }}>No messages yet. Say hi! 👋</p>
+                        ) : lobbyMessages.map((msg, i) => (
+                          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+                            <span style={{ color: '#f59e0b', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>{msg.name}:</span>
+                            <span style={{ color: '#cbd5e1', fontSize: 12, wordBreak: 'break-word' }}>{msg.text}</span>
+                          </div>
                         ))}
                       </div>
+                      {/* Input */}
+                      {user?.is_anonymous ? (
+                        <p style={{ color: '#475569', fontSize: 11, textAlign: 'center' }}>🔒 Login with Telegram to chat</p>
+                      ) : (
+                        <form onSubmit={e => {
+                          e.preventDefault();
+                          const text = lobbyChatInput.trim();
+                          if (!text || !socket || !lobbyData?.room_id) return;
+                          socket.emit('lobby_message', { room_id: lobbyData.room_id, user_id: user?.id, name: user?.first_name || 'Player', text, is_anonymous: false });
+                          setLobbyChatInput('');
+                        }} style={{ display: 'flex', gap: 6 }}>
+                          <input
+                            value={lobbyChatInput}
+                            onChange={e => setLobbyChatInput(e.target.value)}
+                            maxLength={120}
+                            placeholder="Type a message..."
+                            style={{ flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '6px 10px', color: '#f1f5f9', fontSize: 12, outline: 'none' }}
+                          />
+                          <button type="submit" style={{ background: '#dc2626', border: 'none', borderRadius: 8, padding: '6px 12px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Send</button>
+                        </form>
+                      )}
                     </div>
 
                     {/* Lobby Action Buttons */}
@@ -3134,7 +3242,7 @@ function App() {
                 )}
 
                 <div className={`grid gap-3 w-full ${isMobile ? 'grid-cols-1 px-1' : 'lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto'}`}>
-                  {['bronze', 'silver', 'gold', 'platinum', 'diamond', 'elite'].map((roomType) => {
+                  {['bronze', 'silver', 'gold'].map((roomType) => {
                     const room = rooms.find(r => r.room_type === roomType) || { players_count: 0 };
                     const config = ROOM_CONFIGS[roomType];
 
@@ -3763,7 +3871,7 @@ function App() {
   );
 }
 
-const ROOM_LABELS = { bronze: '🥉 Bronze', silver: '🥈 Silver', gold: '🥇 Gold', platinum: '💎 Platinum', diamond: '💠 Diamond', elite: '👑 Elite' };
+const ROOM_LABELS = { bronze: '🥉 Bronze', silver: '🥈 Silver', gold: '🥇 Gold' };
 
 // Normalize room_type from any format: 'RoomType.BRONZE' | 'BRONZE' | 'bronze' → 'bronze'
 const normalizeRoomType = (rt) => {
@@ -4181,7 +4289,7 @@ function AdminPanel({ API, rooms, isMobile, onRoomsRefresh }) {
 
   React.useEffect(() => { loadStats(); loadChart(); loadPromoCodes(); loadRecentGames(); }, []);
 
-  const ROOM_MIN_BETS = { bronze: 200, silver: 350, gold: 650, platinum: 1200, diamond: 2400, elite: 4500 };
+  const ROOM_MIN_BETS = { bronze: 200, silver: 350, gold: 650 };
   const card = "bg-slate-800/90 border border-red-700/40 rounded-xl p-4 space-y-3";
   const inp = "bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2";
   const maxGames = dailyStats.length ? Math.max(...dailyStats.map(d => d.games), 1) : 1;
@@ -4310,7 +4418,7 @@ function AdminPanel({ API, rooms, isMobile, onRoomsRefresh }) {
       <div className={card}>
         <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>🎮</span> Room Control</h3>
         <select value={fakeRoom} onChange={e => { setFakeRoom(e.target.value); setFakeBet(String(ROOM_MIN_BETS[e.target.value])); }} className={`w-full ${inp}`}>
-          {['bronze', 'silver', 'gold', 'platinum', 'diamond', 'elite'].map(r => (
+          {['bronze', 'silver', 'gold'].map(r => (
             <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)} (min {ROOM_MIN_BETS[r]})</option>
           ))}
         </select>

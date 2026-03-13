@@ -186,18 +186,12 @@ class RoomType(str, Enum):
     BRONZE = "bronze"
     SILVER = "silver"
     GOLD = "gold"
-    PLATINUM = "platinum"
-    DIAMOND = "diamond"
-    ELITE = "elite"
 
 # ** EDIT THESE LINES TO ADD YOUR PRIZE LINKS **
 PRIZE_LINKS = {
     RoomType.BRONZE: "https://your-prize-link-1.com",  # Prize link for Bronze room
-    RoomType.SILVER: "https://your-prize-link-2.com",  # Prize link for Silver room  
-    RoomType.GOLD: "https://your-prize-link-3.com",     # Prize link for Gold room
-    RoomType.PLATINUM: "https://your-prize-link-4.com",  # Prize link for Platinum room
-    RoomType.DIAMOND: "https://your-prize-link-5.com",   # Prize link for Diamond room
-    RoomType.ELITE: "https://your-prize-link-6.com"      # Prize link for Elite room
+    RoomType.SILVER: "https://your-prize-link-2.com",  # Prize link for Silver room
+    RoomType.GOLD: "https://your-prize-link-3.com",    # Prize link for Gold room
 }
 
 # ** EDIT THIS LINE TO ADD YOUR TELEGRAM BOT TOKEN **
@@ -207,9 +201,6 @@ ROOM_SETTINGS = {
     RoomType.BRONZE: {"min_bet": 200, "max_bet": 450, "name": "Bronze Room"},
     RoomType.SILVER: {"min_bet": 350, "max_bet": 800, "name": "Silver Room"},
     RoomType.GOLD: {"min_bet": 650, "max_bet": 1200, "name": "Gold Room"},
-    RoomType.PLATINUM: {"min_bet": 1200, "max_bet": 2400, "name": "Platinum Room"},
-    RoomType.DIAMOND: {"min_bet": 2400, "max_bet": 4800, "name": "Diamond Room"},
-    RoomType.ELITE: {"min_bet": 4500, "max_bet": 8000, "name": "Elite Room"}
 }
 
 # Models
@@ -968,6 +959,39 @@ async def send_reaction(sid, data):
     })
     logging.info(f"💬 Reaction {emoji} from {name} in room {room_id[:8]}")
 
+
+# In-memory chat history per room (last 50 messages)
+room_chat: dict = {}
+
+@sio.event
+async def lobby_message(sid, data):
+    """Send a chat message to all players in the lobby room."""
+    room_id = data.get('room_id')
+    user_id = data.get('user_id', '')
+    name = data.get('name', 'Player')
+    text = (data.get('text') or '').strip()[:200]
+    is_anonymous = data.get('is_anonymous', False)
+
+    if not room_id or not text:
+        return
+    if is_anonymous:
+        return  # Anonymous players cannot chat
+
+    msg = {
+        'user_id': user_id,
+        'name': name,
+        'text': text,
+        'ts': datetime.now(timezone.utc).isoformat(),
+    }
+    room_chat.setdefault(room_id, [])
+    room_chat[room_id].append(msg)
+    if len(room_chat[room_id]) > 50:
+        room_chat[room_id] = room_chat[room_id][-50:]
+
+    await sio.emit('lobby_message', {'room_id': room_id, **msg})
+    logging.info(f"💬 Chat [{room_id[:8]}] {name}: {text[:40]}")
+
+
 @sio.event
 async def catch_all(event, sid, data):
     """Catch all events for debugging"""
@@ -1209,6 +1233,9 @@ async def start_game_round(room: GameRoom):
     # Broadcast updated room states (global broadcast)
     await broadcast_room_updates()
     
+    # Clear chat history for finished room
+    room_chat.pop(room.id, None)
+
     logging.info(f"✅ Game cycle complete for {room.room_type} room")
 
 # Initialize rooms
