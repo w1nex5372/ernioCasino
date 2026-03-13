@@ -542,6 +542,92 @@ async def get_admin_stats() -> Dict:
 # ADMIN — delete all data
 # ─────────────────────────────────────────────────────────────────
 
+async def get_all_telegram_ids() -> List[int]:
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch("SELECT telegram_id FROM users WHERE telegram_id IS NOT NULL")
+        return [r["telegram_id"] for r in rows]
+
+
+async def get_daily_stats(days: int = 7) -> List[Dict]:
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch("""
+            SELECT
+                DATE(finished_at AT TIME ZONE 'UTC') as date,
+                COUNT(*)::int as games,
+                COALESCE(SUM(prize_pool), 0)::bigint as total_wagered
+            FROM completed_games
+            WHERE finished_at >= NOW() - ($1 || ' days')::INTERVAL
+            GROUP BY DATE(finished_at AT TIME ZONE 'UTC')
+            ORDER BY date ASC
+        """, str(days))
+        return [{"date": str(r["date"]), "games": r["games"], "total_wagered": int(r["total_wagered"])} for r in rows]
+
+
+async def create_promo_code(code: str, token_amount: int, max_uses: int = 1, expires_at=None) -> bool:
+    async with get_pool().acquire() as conn:
+        try:
+            await conn.execute("""
+                INSERT INTO promo_codes (code, token_amount, max_uses, expires_at)
+                VALUES ($1, $2, $3, $4)
+                ON CONFLICT (code) DO NOTHING
+            """, code.upper(), token_amount, max_uses, expires_at)
+            return True
+        except Exception as e:
+            logging.error(f"create_promo_code error: {e}")
+            return False
+
+
+async def get_promo_codes() -> List[Dict]:
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch("SELECT * FROM promo_codes ORDER BY created_at DESC")
+        result = []
+        for r in rows:
+            d = dict(r)
+            for k in ('created_at', 'expires_at'):
+                if d.get(k) and isinstance(d[k], datetime):
+                    d[k] = d[k].isoformat()
+            result.append(d)
+        return result
+
+
+async def delete_promo_code(code: str) -> bool:
+    async with get_pool().acquire() as conn:
+        result = await conn.execute("DELETE FROM promo_codes WHERE code = $1", code.upper())
+        return result == "DELETE 1"
+
+
+async def use_promo_code(code: str, telegram_id: int) -> Dict:
+    async with get_pool().acquire() as conn:
+        async with conn.transaction():
+            promo = await conn.fetchrow("""
+                SELECT * FROM promo_codes
+                WHERE code = $1 AND is_active = TRUE
+                  AND (expires_at IS NULL OR expires_at > NOW())
+                  AND uses_count < max_uses
+            """, code.upper())
+            if not promo:
+                return {"success": False, "tokens": 0, "error": "Invalid or expired code"}
+            already = await conn.fetchval(
+                "SELECT 1 FROM promo_uses WHERE code = $1 AND telegram_id = $2",
+                code.upper(), telegram_id
+            )
+            if already:
+                return {"success": False, "tokens": 0, "error": "You already used this code"}
+            await conn.execute(
+                "INSERT INTO promo_uses (code, telegram_id) VALUES ($1, $2)",
+                code.upper(), telegram_id
+            )
+            await conn.execute(
+                "UPDATE promo_codes SET uses_count = uses_count + 1 WHERE code = $1",
+                code.upper()
+            )
+            await conn.execute(
+                "UPDATE users SET token_balance = token_balance + $2 WHERE telegram_id = $1",
+                telegram_id, promo["token_amount"]
+            )
+            return {"success": True, "tokens": promo["token_amount"], "error": ""}
+
+
 async def delete_all_data() -> Dict:
     async with get_pool().acquire() as conn:
         r_users     = await conn.execute("DELETE FROM users")

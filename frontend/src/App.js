@@ -3359,6 +3359,9 @@ function App() {
                     </button>
                     <p className="text-xs text-slate-600 text-center mt-1">Balance: {user.token_balance || 0} tokens available</p>
                   </div>
+
+                  {/* Promo Code */}
+                  <PromoCodeBox API={API} user={user} onTokensAdded={(amt) => setUser(prev => prev ? {...prev, token_balance: (prev.token_balance||0)+amt} : prev)} />
                 </div>
               ) : (
                 <div className="space-y-4 max-w-2xl mx-auto">
@@ -3444,6 +3447,11 @@ function App() {
                     >
                       🛍️ Open Shop
                     </button>
+                  </div>
+
+                  {/* Promo Code - Desktop */}
+                  <div style={{ background: 'rgba(13,13,26,0.95)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 14, padding: '20px' }}>
+                    <PromoCodeBox API={API} user={user} onTokensAdded={(amt) => setUser(prev => prev ? {...prev, token_balance: (prev.token_balance||0)+amt} : prev)} />
                   </div>
                 </div>
               )
@@ -3716,6 +3724,49 @@ function App() {
   );
 }
 
+function PromoCodeBox({ API, user, onTokensAdded }) {
+  const [code, setCode] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+
+  const redeem = async () => {
+    if (!code.trim() || !user?.telegram_id) return;
+    setLoading(true);
+    try {
+      const r = await axios.post(`${API}/use-promo?code=${encodeURIComponent(code.trim().toUpperCase())}&telegram_id=${user.telegram_id}`);
+      toast.success(`🎉 +${r.data.tokens} tokens added!`);
+      onTokensAdded(r.data.tokens);
+      setCode('');
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Invalid code');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ borderTop: '1px solid rgba(124,58,237,0.15)', paddingTop: 12, marginTop: 4 }}>
+      <p className="text-xs text-slate-500 text-center mb-2">🎟️ Have a promo code?</p>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={code}
+          onChange={e => setCode(e.target.value.toUpperCase())}
+          onKeyDown={e => e.key === 'Enter' && redeem()}
+          placeholder="Enter code"
+          style={{ flex: 1, background: '#0a0a12', border: '1px solid rgba(124,58,237,0.3)', color: 'white', borderRadius: 8, padding: '8px 12px', fontSize: 13 }}
+        />
+        <button
+          onClick={redeem}
+          disabled={loading || !code.trim()}
+          style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)', border: 'none', borderRadius: 8, padding: '8px 16px', color: 'white', fontWeight: 700, fontSize: 13, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+        >
+          {loading ? '...' : 'Redeem'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AdminPanel({ API, rooms, isMobile }) {
   const ADMIN_KEY = 'PRODUCTION_CLEANUP_2025';
   const [tgId, setTgId] = React.useState('');
@@ -3730,6 +3781,17 @@ function AdminPanel({ API, rooms, isMobile }) {
   const [statsLoading, setStatsLoading] = React.useState(false);
   const [recentGames, setRecentGames] = React.useState([]);
   const [gamesLoading, setGamesLoading] = React.useState(false);
+  const [broadcastMsg, setBroadcastMsg] = React.useState('');
+  const [broadcasting, setBroadcasting] = React.useState(false);
+  const [maintenance, setMaintenance] = React.useState(false);
+  const [dailyStats, setDailyStats] = React.useState([]);
+  const [chartLoading, setChartLoading] = React.useState(false);
+  const [promoCode, setPromoCode] = React.useState('');
+  const [promoAmount, setPromoAmount] = React.useState('');
+  const [promoMaxUses, setPromoMaxUses] = React.useState('1');
+  const [promoCodes, setPromoCodes] = React.useState([]);
+  const [solWallet, setSolWallet] = React.useState('');
+  const [solSig, setSolSig] = React.useState('');
 
   const lookupUser = async () => {
     if (!tgId) return;
@@ -3802,6 +3864,15 @@ function AdminPanel({ API, rooms, isMobile }) {
     }
   };
 
+  const forceStart = async () => {
+    try {
+      const r = await axios.post(`${API}/admin/force-start/${fakeRoom}?admin_key=${ADMIN_KEY}`);
+      toast.success(`🚀 ${r.data.message}`);
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed');
+    }
+  };
+
   const forceCloseRoom = async (roomType) => {
     try {
       await axios.post(`${API}/admin/force-close-room/${roomType}?admin_key=${ADMIN_KEY}`);
@@ -3823,8 +3894,12 @@ function AdminPanel({ API, rooms, isMobile }) {
   const loadStats = async () => {
     setStatsLoading(true);
     try {
-      const r = await axios.get(`${API}/admin/stats?admin_key=${ADMIN_KEY}`);
-      setStats(r.data);
+      const [sR, mR] = await Promise.all([
+        axios.get(`${API}/admin/stats?admin_key=${ADMIN_KEY}`),
+        axios.get(`${API}/admin/maintenance-status?admin_key=${ADMIN_KEY}`),
+      ]);
+      setStats(sR.data);
+      setMaintenance(mR.data.maintenance_mode);
     } catch (e) {
       toast.error('Failed to load stats');
     } finally {
@@ -3844,12 +3919,91 @@ function AdminPanel({ API, rooms, isMobile }) {
     }
   };
 
-  React.useEffect(() => { loadStats(); }, []);
+  const loadChart = async () => {
+    setChartLoading(true);
+    try {
+      const r = await axios.get(`${API}/admin/daily-stats?admin_key=${ADMIN_KEY}&days=7`);
+      setDailyStats(r.data.days);
+    } catch (e) {
+      toast.error('Failed to load chart');
+    } finally {
+      setChartLoading(false);
+    }
+  };
+
+  const toggleMaintenance = async () => {
+    try {
+      const r = await axios.post(`${API}/admin/toggle-maintenance?admin_key=${ADMIN_KEY}`);
+      setMaintenance(r.data.maintenance_mode);
+      toast.success(`🔧 Maintenance ${r.data.maintenance_mode ? 'ON' : 'OFF'}`);
+    } catch (e) {
+      toast.error('Failed');
+    }
+  };
+
+  const sendBroadcast = async () => {
+    if (!broadcastMsg.trim()) return toast.error('Enter a message');
+    if (!window.confirm(`Send to ALL users?\n\n"${broadcastMsg}"`)) return;
+    setBroadcasting(true);
+    try {
+      const r = await axios.post(`${API}/admin/broadcast?admin_key=${ADMIN_KEY}&message=${encodeURIComponent(broadcastMsg)}`);
+      toast.success(`📢 Sent: ${r.data.sent}, Failed: ${r.data.failed}`);
+      setBroadcastMsg('');
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Broadcast failed');
+    } finally {
+      setBroadcasting(false);
+    }
+  };
+
+  const createPromo = async () => {
+    if (!promoCode || !promoAmount) return toast.error('Enter code and amount');
+    try {
+      await axios.post(`${API}/admin/promo-codes?admin_key=${ADMIN_KEY}&code=${encodeURIComponent(promoCode)}&token_amount=${promoAmount}&max_uses=${promoMaxUses || 1}`);
+      toast.success(`✅ Code "${promoCode.toUpperCase()}" created`);
+      setPromoCode(''); setPromoAmount(''); setPromoMaxUses('1');
+      loadPromoCodes();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed');
+    }
+  };
+
+  const loadPromoCodes = async () => {
+    try {
+      const r = await axios.get(`${API}/admin/promo-codes?admin_key=${ADMIN_KEY}`);
+      setPromoCodes(r.data.codes);
+    } catch (e) {}
+  };
+
+  const deletePromo = async (code) => {
+    try {
+      await axios.delete(`${API}/admin/promo-codes/${code}?admin_key=${ADMIN_KEY}`);
+      toast.success(`🗑️ Deleted ${code}`);
+      setPromoCodes(prev => prev.filter(c => c.code !== code));
+    } catch (e) {
+      toast.error('Failed');
+    }
+  };
+
+  const confirmSolPayment = async () => {
+    if (!solWallet || !solSig) return toast.error('Enter wallet and signature');
+    try {
+      await axios.post(`${API}/admin/process-payment?admin_key=${ADMIN_KEY}&wallet_address=${encodeURIComponent(solWallet)}&signature=${encodeURIComponent(solSig)}`);
+      toast.success('✅ Payment processed');
+      setSolWallet(''); setSolSig('');
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed');
+    }
+  };
+
+  const exportCSV = () => window.open(`${API}/admin/export-users?admin_key=${ADMIN_KEY}`, '_blank');
+
+  React.useEffect(() => { loadStats(); loadChart(); loadPromoCodes(); }, []);
 
   const ROOM_MIN_BETS = { bronze: 200, silver: 350, gold: 650, platinum: 1200, diamond: 2400, elite: 4500 };
-
   const card = "bg-slate-800/90 border border-red-700/40 rounded-xl p-4 space-y-3";
   const inp = "bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2";
+  const maxGames = dailyStats.length ? Math.max(...dailyStats.map(d => d.games), 1) : 1;
 
   return (
     <div className="space-y-4 pb-6">
@@ -3858,13 +4012,17 @@ function AdminPanel({ API, rooms, isMobile }) {
         <p className="text-xs text-slate-500">Only visible to admins</p>
       </div>
 
-      {/* Live Stats */}
+      {/* Live Stats + Maintenance */}
       <div className={card}>
         <div className="flex items-center justify-between">
           <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>📊</span> Live Stats</h3>
-          <button onClick={loadStats} className="text-xs text-slate-400 hover:text-white">
-            {statsLoading ? '...' : '↻ Refresh'}
-          </button>
+          <div className="flex gap-2 items-center">
+            <button onClick={toggleMaintenance}
+              className={`text-xs px-2 py-1 rounded font-semibold ${maintenance ? 'bg-orange-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
+              {maintenance ? '🔧 Maint. ON' : '🟢 Maint. OFF'}
+            </button>
+            <button onClick={loadStats} className="text-xs text-slate-400 hover:text-white">{statsLoading ? '...' : '↻'}</button>
+          </div>
         </div>
         {stats ? (
           <div className="grid grid-cols-2 gap-2">
@@ -3887,8 +4045,47 @@ function AdminPanel({ API, rooms, isMobile }) {
             ))}
           </div>
         ) : (
-          <div className="text-xs text-slate-500 text-center py-2">{statsLoading ? 'Loading...' : 'Click Refresh'}</div>
+          <div className="text-xs text-slate-500 text-center py-2">{statsLoading ? 'Loading...' : 'Click ↻'}</div>
         )}
+        <button onClick={exportCSV} className="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs py-2 rounded-lg">
+          📋 Export Users CSV
+        </button>
+      </div>
+
+      {/* Daily Chart */}
+      <div className={card}>
+        <div className="flex items-center justify-between">
+          <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>📈</span> Last 7 Days</h3>
+          <button onClick={loadChart} className="text-xs text-slate-400 hover:text-white">{chartLoading ? '...' : '↻'}</button>
+        </div>
+        {dailyStats.length > 0 ? (
+          <div className="space-y-1">
+            {dailyStats.map(d => (
+              <div key={d.date} className="flex items-center gap-2 text-xs">
+                <span className="text-slate-500 w-12 shrink-0">{d.date.slice(5)}</span>
+                <div className="flex-1 bg-slate-700/40 rounded overflow-hidden h-5 relative">
+                  <div className="h-full rounded" style={{ width: `${Math.max(4, (d.games / maxGames) * 100)}%`, background: 'linear-gradient(90deg, #dc2626, #7c3aed)' }} />
+                  <span className="absolute inset-0 flex items-center px-2 text-white font-semibold">{d.games} games</span>
+                </div>
+                <span className="text-yellow-400 w-20 text-right shrink-0">{(d.total_wagered||0).toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-xs text-slate-500 text-center py-2">{chartLoading ? 'Loading...' : 'No data yet'}</div>
+        )}
+      </div>
+
+      {/* Broadcast */}
+      <div className={card}>
+        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>📢</span> Broadcast to All Users</h3>
+        <textarea value={broadcastMsg} onChange={e => setBroadcastMsg(e.target.value)}
+          placeholder="Message to all users via Telegram bot..." rows={3}
+          className={`w-full ${inp} resize-none`} style={{ fontFamily: 'inherit' }} />
+        <button onClick={sendBroadcast} disabled={broadcasting || !broadcastMsg.trim()}
+          className="w-full bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white text-sm py-2 rounded-lg font-semibold">
+          {broadcasting ? '📤 Sending...' : '📢 Send Broadcast'}
+        </button>
       </div>
 
       {/* User Management */}
@@ -3902,76 +4099,46 @@ function AdminPanel({ API, rooms, isMobile }) {
             {lookupLoading ? '...' : 'Lookup'}
           </button>
         </div>
-
         {userInfo && (
-          <div className="bg-slate-700/50 rounded-lg p-2 text-xs space-y-1">
+          <div className="bg-slate-700/50 rounded-lg p-2 text-xs">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-white font-semibold">{userInfo.first_name}</span>
               {userInfo.telegram_username && <span className="text-slate-400">@{userInfo.telegram_username}</span>}
-              <span className="text-yellow-400 font-bold">{(userInfo.token_balance || 0).toLocaleString()} tkn</span>
+              <span className="text-yellow-400 font-bold">{(userInfo.token_balance||0).toLocaleString()} tkn</span>
               {userInfo.is_banned && <span className="text-red-400 font-bold">🚫 BANNED</span>}
               {userInfo.is_owner && <span className="text-yellow-400 font-bold">👑 OWNER</span>}
               {userInfo.is_admin && !userInfo.is_owner && <span className="text-blue-400 font-bold">🛡️ ADMIN</span>}
             </div>
           </div>
         )}
-
-        {/* Tokens */}
         <div className="flex gap-2">
           <input type="number" value={tokenAmount} onChange={e => setTokenAmount(e.target.value)}
             placeholder="Token amount" className={`flex-1 ${inp} min-w-0`} />
           <button onClick={() => adjustTokens(1)} className="bg-green-700 hover:bg-green-600 text-white text-sm px-3 py-2 rounded-lg">+ Add</button>
           <button onClick={() => adjustTokens(-1)} className="bg-red-700 hover:bg-red-600 text-white text-sm px-3 py-2 rounded-lg">− Remove</button>
         </div>
-
-        {/* Ban / Role */}
         <div className="grid grid-cols-2 gap-2">
-          <button onClick={() => banUser(true)}
-            className="bg-red-900/60 hover:bg-red-800 border border-red-600/40 text-red-300 text-xs py-2 rounded-lg font-semibold">
-            🚫 Ban User
-          </button>
-          <button onClick={() => banUser(false)}
-            className="bg-green-900/60 hover:bg-green-800 border border-green-600/40 text-green-300 text-xs py-2 rounded-lg font-semibold">
-            ✅ Unban User
-          </button>
-          <button onClick={() => setRole(true, false)}
-            className="bg-blue-900/60 hover:bg-blue-800 border border-blue-600/40 text-blue-300 text-xs py-2 rounded-lg font-semibold">
-            🛡️ Make Admin
-          </button>
-          <button onClick={() => setRole(false, false)}
-            className="bg-slate-700 hover:bg-slate-600 border border-slate-500/40 text-slate-300 text-xs py-2 rounded-lg font-semibold">
-            👤 Remove Role
-          </button>
+          <button onClick={() => banUser(true)} className="bg-red-900/60 hover:bg-red-800 border border-red-600/40 text-red-300 text-xs py-2 rounded-lg font-semibold">🚫 Ban</button>
+          <button onClick={() => banUser(false)} className="bg-green-900/60 hover:bg-green-800 border border-green-600/40 text-green-300 text-xs py-2 rounded-lg font-semibold">✅ Unban</button>
+          <button onClick={() => setRole(true, false)} className="bg-blue-900/60 hover:bg-blue-800 border border-blue-600/40 text-blue-300 text-xs py-2 rounded-lg font-semibold">🛡️ Make Admin</button>
+          <button onClick={() => setRole(false, false)} className="bg-slate-700 hover:bg-slate-600 border border-slate-500/40 text-slate-300 text-xs py-2 rounded-lg font-semibold">👤 Remove Role</button>
         </div>
       </div>
 
-      {/* Add Fake Player to Room */}
+      {/* Room Control */}
       <div className={card}>
-        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>🤖</span> Anonymous Bot Player</h3>
-        <select value={fakeRoom}
-          onChange={e => { setFakeRoom(e.target.value); setFakeBet(String(ROOM_MIN_BETS[e.target.value])); }}
-          className={`w-full ${inp}`}>
+        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>🎮</span> Room Control</h3>
+        <select value={fakeRoom} onChange={e => { setFakeRoom(e.target.value); setFakeBet(String(ROOM_MIN_BETS[e.target.value])); }} className={`w-full ${inp}`}>
           {['bronze', 'silver', 'gold', 'platinum', 'diamond', 'elite'].map(r => (
             <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)} (min {ROOM_MIN_BETS[r]})</option>
           ))}
         </select>
-        <div className="flex gap-2">
-          <input type="number" value={fakeBet} onChange={e => setFakeBet(e.target.value)}
-            placeholder="Bet amount" className={`flex-1 ${inp} min-w-0`} />
-        </div>
-        <div className="flex gap-2">
-          <button onClick={addFakePlayer}
-            className="flex-1 bg-purple-700 hover:bg-purple-600 text-white text-sm py-2 rounded-lg font-semibold">
-            + Add Anonymous
-          </button>
-          <button onClick={removeFakePlayer}
-            className="flex-1 bg-yellow-900/60 hover:bg-yellow-800 border border-yellow-600/40 text-yellow-300 text-sm py-2 rounded-lg font-semibold">
-            − Remove Bot
-          </button>
-          <button onClick={() => forceCloseRoom(fakeRoom)}
-            className="bg-orange-900/60 hover:bg-orange-800 border border-orange-600/40 text-orange-300 text-xs px-3 py-2 rounded-lg font-semibold whitespace-nowrap">
-            🔄 Clear
-          </button>
+        <input type="number" value={fakeBet} onChange={e => setFakeBet(e.target.value)} placeholder="Bet amount" className={`w-full ${inp}`} />
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={addFakePlayer} className="bg-purple-700 hover:bg-purple-600 text-white text-sm py-2 rounded-lg font-semibold">+ Anon Bot</button>
+          <button onClick={removeFakePlayer} className="bg-yellow-900/60 hover:bg-yellow-800 border border-yellow-600/40 text-yellow-300 text-sm py-2 rounded-lg font-semibold">− Remove Bot</button>
+          <button onClick={forceStart} className="bg-green-800 hover:bg-green-700 text-white text-sm py-2 rounded-lg font-semibold">🚀 Force Start</button>
+          <button onClick={() => forceCloseRoom(fakeRoom)} className="bg-orange-900/60 hover:bg-orange-800 border border-orange-600/40 text-orange-300 text-sm py-2 rounded-lg font-semibold">🔄 Clear Room</button>
         </div>
         <div className="grid grid-cols-3 gap-1">
           {rooms.filter(r => r.status === 'waiting').map(r => (
@@ -3987,38 +4154,68 @@ function AdminPanel({ API, rooms, isMobile }) {
       <div className={card}>
         <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>👥</span> User Search</h3>
         <div className="flex gap-2">
-          <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Name or username" className={`flex-1 ${inp} min-w-0`} />
-          <button onClick={loadUsers}
-            className="bg-blue-700 hover:bg-blue-600 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap">
-            Search
-          </button>
+          <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Name or username" className={`flex-1 ${inp} min-w-0`} />
+          <button onClick={loadUsers} className="bg-blue-700 hover:bg-blue-600 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap">Search</button>
         </div>
         {userList.length > 0 && (
           <div className="space-y-1 max-h-48 overflow-y-auto">
             {userList.map(u => (
-              <div key={u.telegram_id}
-                className="flex items-center justify-between bg-slate-700/50 rounded-lg px-3 py-2 text-xs cursor-pointer hover:bg-slate-600/50"
+              <div key={u.telegram_id} className="flex items-center justify-between bg-slate-700/50 rounded-lg px-3 py-2 text-xs cursor-pointer hover:bg-slate-600/50"
                 onClick={() => { setTgId(String(u.telegram_id)); setUserInfo(u); }}>
                 <div>
                   <span className="text-white font-semibold">{u.first_name}</span>
                   {u.username && <span className="text-slate-400 ml-1">@{u.username}</span>}
                   <span className="text-slate-500 ml-1">#{u.telegram_id}</span>
                 </div>
-                <span className="text-yellow-400 font-bold ml-2 whitespace-nowrap">{(u.token_balance || 0).toLocaleString()} tkn</span>
+                <span className="text-yellow-400 font-bold ml-2 whitespace-nowrap">{(u.token_balance||0).toLocaleString()} tkn</span>
               </div>
             ))}
           </div>
         )}
       </div>
 
+      {/* Promo Codes */}
+      <div className={card}>
+        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>🎟️</span> Promo Codes</h3>
+        <div className="grid grid-cols-3 gap-2">
+          <input type="text" value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())} placeholder="CODE" className={inp} />
+          <input type="number" value={promoAmount} onChange={e => setPromoAmount(e.target.value)} placeholder="Tokens" className={inp} />
+          <input type="number" value={promoMaxUses} onChange={e => setPromoMaxUses(e.target.value)} placeholder="Max uses" className={inp} />
+        </div>
+        <button onClick={createPromo} className="w-full bg-purple-700 hover:bg-purple-600 text-white text-sm py-2 rounded-lg font-semibold">
+          + Create Promo Code
+        </button>
+        {promoCodes.length > 0 && (
+          <div className="space-y-1 max-h-48 overflow-y-auto">
+            {promoCodes.map(c => (
+              <div key={c.code} className="flex items-center justify-between bg-slate-700/40 rounded-lg px-3 py-2 text-xs">
+                <div>
+                  <span className="text-white font-bold font-mono">{c.code}</span>
+                  <span className="text-yellow-400 ml-2">+{c.token_amount} tkn</span>
+                  <span className="text-slate-500 ml-2">{c.uses_count}/{c.max_uses} uses</span>
+                </div>
+                <button onClick={() => deletePromo(c.code)} className="text-red-400 hover:text-red-300 ml-2">🗑️</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Manual SOL Payment */}
+      <div className={card}>
+        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>💳</span> Manual SOL Payment</h3>
+        <input type="text" value={solWallet} onChange={e => setSolWallet(e.target.value)} placeholder="Wallet address" className={`w-full ${inp}`} />
+        <input type="text" value={solSig} onChange={e => setSolSig(e.target.value)} placeholder="Transaction signature" className={`w-full ${inp}`} />
+        <button onClick={confirmSolPayment} className="w-full bg-teal-700 hover:bg-teal-600 text-white text-sm py-2 rounded-lg font-semibold">
+          ✅ Confirm Payment
+        </button>
+      </div>
+
       {/* Recent Games */}
       <div className={card}>
         <div className="flex items-center justify-between">
           <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>📜</span> Recent Games</h3>
-          <button onClick={loadRecentGames} className="text-xs text-slate-400 hover:text-white">
-            {gamesLoading ? '...' : '↻ Load'}
-          </button>
+          <button onClick={loadRecentGames} className="text-xs text-slate-400 hover:text-white">{gamesLoading ? '...' : '↻ Load'}</button>
         </div>
         {recentGames.length > 0 ? (
           <div className="space-y-1 max-h-64 overflow-y-auto">
@@ -4028,7 +4225,7 @@ function AdminPanel({ API, rooms, isMobile }) {
                 <div key={g.id || i} className="bg-slate-700/40 rounded-lg px-3 py-2 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="capitalize font-semibold text-white">{g.room_type}</span>
-                    <span className="text-yellow-400 font-bold">{(g.prize_pool || 0).toLocaleString()} tkn</span>
+                    <span className="text-yellow-400 font-bold">{(g.prize_pool||0).toLocaleString()} tkn</span>
                   </div>
                   <div className="flex items-center justify-between mt-0.5">
                     <span className="text-green-400">🏆 {winner?.name || winner?.first_name || 'Unknown'}</span>

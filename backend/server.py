@@ -289,6 +289,9 @@ class JoinRoomRequest(BaseModel):
 # In-memory storage for active rooms (in production, use Redis)
 active_rooms: Dict[str, GameRoom] = {}
 
+# Maintenance mode — blocks new room joins (resets on restart)
+maintenance_mode: bool = False
+
 # Telegram authentication functions
 def verify_telegram_auth(auth_data: dict, bot_token: str) -> bool:
     """Verify Telegram authentication data - PRODUCTION VERSION"""
@@ -2011,7 +2014,10 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
 
     if user_doc.get("is_banned"):
         raise HTTPException(status_code=403, detail="Your account has been banned.")
-    
+
+    if maintenance_mode:
+        raise HTTPException(status_code=503, detail="🔧 Maintenance in progress. Please try again later.")
+
     logging.info(f"User balance: {user_doc.get('token_balance', 0)}, Bet amount: {request.bet_amount}")
     
     if user_doc.get('token_balance', 0) < request.bet_amount:
@@ -2565,6 +2571,147 @@ async def get_recent_games_endpoint(admin_key: str = "", limit: int = 15):
         return {"games": games, "count": len(games)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/admin/broadcast")
+async def broadcast_message(message: str, admin_key: str = ""):
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    if not TELEGRAM_BOT_TOKEN or TELEGRAM_BOT_TOKEN == 'YOUR_TELEGRAM_BOT_TOKEN_HERE':
+        raise HTTPException(status_code=400, detail="TELEGRAM_BOT_TOKEN not configured")
+    try:
+        tg_ids = await dbq.get_all_telegram_ids()
+        sent, failed = 0, 0
+        import httpx as _httpx
+        async with _httpx.AsyncClient(timeout=10) as client:
+            for tg_id in tg_ids:
+                try:
+                    await client.post(
+                        f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+                        json={"chat_id": tg_id, "text": message, "parse_mode": "HTML"},
+                    )
+                    sent += 1
+                    await asyncio.sleep(0.05)
+                except Exception:
+                    failed += 1
+        return {"sent": sent, "failed": failed, "total": len(tg_ids)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/admin/force-start/{room_type}")
+async def force_start_room(room_type: str, admin_key: str = "", background_tasks: BackgroundTasks = None):
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    target_room = None
+    for room in active_rooms.values():
+        if room.room_type == room_type and room.status == "waiting":
+            target_room = room
+            break
+    if not target_room:
+        raise HTTPException(status_code=404, detail=f"No waiting {room_type} room")
+    if len(target_room.players) == 0:
+        raise HTTPException(status_code=400, detail="Room has no players — add at least one first")
+    settings = ROOM_SETTINGS[room_type]
+    while len(target_room.players) < 3:
+        bot_seed = str(uuid.uuid4())[:8]
+        anon_num = str(abs(hash(bot_seed)) % 9000 + 1000)
+        bot = RoomPlayer(
+            user_id=f"bot_{bot_seed}",
+            username=f"anon{anon_num}",
+            first_name="Anonymous",
+            last_name="",
+            photo_url="",
+            bet_amount=settings["min_bet"]
+        )
+        target_room.players.append(bot)
+        target_room.prize_pool += settings["min_bet"]
+    if background_tasks:
+        background_tasks.add_task(start_game_round, target_room)
+    else:
+        asyncio.create_task(start_game_round(target_room))
+    return {"success": True, "message": f"Force starting {room_type} room", "players": len(target_room.players)}
+
+
+@api_router.post("/admin/toggle-maintenance")
+async def toggle_maintenance(admin_key: str = ""):
+    global maintenance_mode
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    maintenance_mode = not maintenance_mode
+    logging.info(f"🔧 Maintenance mode {'ON' if maintenance_mode else 'OFF'}")
+    return {"maintenance_mode": maintenance_mode}
+
+
+@api_router.get("/admin/maintenance-status")
+async def get_maintenance_status_endpoint(admin_key: str = ""):
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    return {"maintenance_mode": maintenance_mode}
+
+
+@api_router.get("/admin/daily-stats")
+async def get_daily_stats_endpoint(admin_key: str = "", days: int = 7):
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    try:
+        return {"days": await dbq.get_daily_stats(days)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/admin/promo-codes")
+async def create_promo_code_endpoint(code: str, token_amount: int, max_uses: int = 1, admin_key: str = ""):
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    ok = await dbq.create_promo_code(code, token_amount, max_uses)
+    if not ok:
+        raise HTTPException(status_code=400, detail="Code already exists or failed to create")
+    return {"success": True, "code": code.upper(), "token_amount": token_amount, "max_uses": max_uses}
+
+
+@api_router.get("/admin/promo-codes")
+async def list_promo_codes_endpoint(admin_key: str = ""):
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    return {"codes": await dbq.get_promo_codes()}
+
+
+@api_router.delete("/admin/promo-codes/{code}")
+async def delete_promo_code_endpoint(code: str, admin_key: str = ""):
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    ok = await dbq.delete_promo_code(code)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Code not found")
+    return {"success": True}
+
+
+@api_router.post("/use-promo")
+async def use_promo_code_endpoint(code: str, telegram_id: int):
+    result = await dbq.use_promo_code(code, telegram_id)
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+
+@api_router.get("/admin/export-users")
+async def export_users_csv(admin_key: str = ""):
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    from fastapi.responses import StreamingResponse
+    import io, csv
+    users = await dbq.get_all_users(limit=10000)
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["telegram_id", "first_name", "username", "token_balance", "total_purchases", "is_admin", "is_banned", "created_at"])
+    for u in users:
+        writer.writerow([u.get("telegram_id",""), u.get("first_name",""), u.get("telegram_username",""),
+                         u.get("token_balance",0), u.get("total_purchases",0),
+                         u.get("is_admin",False), u.get("is_banned",False), u.get("created_at","")])
+    output.seek(0)
+    return StreamingResponse(iter([output.getvalue()]), media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=users.csv"})
 
 
 @api_router.post("/admin/force-close-room/{room_type}")
