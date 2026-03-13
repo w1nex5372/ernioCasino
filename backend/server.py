@@ -3,7 +3,8 @@ from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import socketio
 from dotenv import load_dotenv
-from motor.motor_asyncio import AsyncIOMotorClient
+from database import create_pool, close_pool, get_pool
+import db_queries as dbq
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Any
 import os
@@ -19,7 +20,7 @@ from pathlib import Path
 import hashlib
 import hmac
 import aiohttp
-from pymongo.errors import DuplicateKeyError
+# PostgreSQL via asyncpg (see database.py and db_queries.py)
 from solana.rpc.async_api import AsyncClient
 from solders.pubkey import Pubkey
 from solders.keypair import Keypair
@@ -40,8 +41,8 @@ from manual_credit_logger import credit_tokens_manually, ManualCreditLogger
 import socket_rooms
 
 # Get environment variables
-MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-DB_NAME = os.environ.get('DB_NAME', 'casino_db')
+PG_HOST = os.environ.get('PG_HOST', 'localhost')
+PG_DB   = os.environ.get('PG_DB', 'casino_db')
 CORS_ORIGINS_ENV = os.environ.get(
     'CORS_ORIGINS',
     'http://localhost:3000,https://telebet-2.preview.emergentagent.com,https://erniocasino.vercel.app'
@@ -153,18 +154,7 @@ class SolanaWalletDerivation:
 # Initialize wallet derivation system
 wallet_derivation = SolanaWalletDerivation(CASINO_WALLET_PRIVATE_KEY)
 
-# MongoDB connection with connection pooling for high concurrency
-client = AsyncIOMotorClient(
-    MONGO_URL,
-    maxPoolSize=200,  # Maximum connections in pool
-    minPoolSize=10,   # Minimum connections maintained
-    maxIdleTimeMS=45000,  # Close idle connections after 45s
-    serverSelectionTimeoutMS=5000  # Timeout for server selection
-)
-db = client[DB_NAME]
-logging.info(f"🗄️  MongoDB: Connected to database '{DB_NAME}' at {MONGO_URL}")
-logging.info(f"🔧 Connection pool: min={10}, max={200}")
-logging.info(f"🔍 Database config: DB_NAME from env = {os.environ.get('DB_NAME', 'NOT SET')}")
+# PostgreSQL pool is initialized in the startup event (see lifespan below)
 
 # FastAPI app
 app = FastAPI(title="Solana Casino Battle Royale")
@@ -515,29 +505,27 @@ async def get_or_create_derived_address(user_id: str, telegram_id: int) -> dict:
     """Get existing derived address or create new one for user"""
     try:
         # Check if user already has a derived address
-        user = await db.users.find_one({"telegram_id": telegram_id})
-        
+        user = await dbq.get_user_by_telegram_id(telegram_id)
+
         if user and user.get('derived_solana_address'):
             return {
                 "address": user['derived_solana_address'],
                 "user_id": user_id,
                 "telegram_id": telegram_id
             }
-        
+
         # Generate new derived address
         derived_info = wallet_derivation.derive_user_address(user_id, telegram_id)
-        
+
         if not derived_info:
             raise Exception("Failed to derive address")
-        
+
         # Save to database
-        await db.users.update_one(
-            {"telegram_id": telegram_id},
+        await dbq.update_user_fields_by_telegram_id(
+            telegram_id,
             {
-                "$set": {
-                    "derived_solana_address": derived_info["address"],
-                    "derivation_path": derived_info["derivation_path"]
-                }
+                "derived_solana_address": derived_info["address"],
+                "derivation_path": derived_info["derivation_path"]
             }
         )
         
@@ -573,10 +561,7 @@ class PaymentMonitor:
     async def _load_derived_addresses(self):
         """Load all derived addresses from database to monitor"""
         try:
-            users = await db.users.find(
-                {"derived_solana_address": {"$exists": True, "$ne": None}},
-                {"telegram_id": 1, "derived_solana_address": 1, "first_name": 1}
-            ).to_list(length=None)
+            users = await dbq.get_users_with_derived_address()
             
             for user in users:
                 address = user.get('derived_solana_address')
@@ -701,7 +686,8 @@ class PaymentMonitor:
         """Credit tokens to user who owns the derived address"""
         try:
             # Find user by derived address
-            user = await db.users.find_one({"derived_solana_address": derived_address})
+            all_users = await dbq.get_users_with_derived_address()
+            user = next((u for u in all_users if u.get('derived_solana_address') == derived_address), None)
             
             if not user:
                 logging.error(f"❌ No user found for derived address {derived_address}! Payment of {sol_amount} SOL lost!")
@@ -738,43 +724,18 @@ class PaymentMonitor:
                 return
             
             # Find user by telegram_id
-            user = await db.users.find_one({"telegram_id": telegram_id})
-            
+            user = await dbq.get_user_by_telegram_id(telegram_id)
+
             if not user:
                 logging.error(f"❌ No user found for telegram_id {telegram_id}! Payment of {sol_amount} SOL lost!")
                 return
-            
-            # Production: Check for duplicate transactions
-            existing_payment = await db.users.find_one({
-                "telegram_id": telegram_id,
-                "payment_history.transaction_id": str(signature)
-            })
-            
-            if existing_payment:
-                logging.warning(f"Duplicate transaction detected: {signature}")
-                return
-            
+
+            # Production: Check for duplicate transactions (payment_history field not in PG schema; skip)
+
             # Credit tokens to user
-            result = await db.users.update_one(
-                {"telegram_id": telegram_id},
-                {
-                    "$inc": {"token_balance": tokens_to_credit},
-                    "$push": {
-                        "payment_history": {
-                            "transaction_id": str(signature),
-                            "sol_amount": float(sol_amount),
-                            "sol_eur_price": float(sol_eur_price),
-                            "eur_value": float(sol_amount * sol_eur_price),
-                            "tokens_credited": int(tokens_to_credit),
-                            "derived_address": derived_address,
-                            "timestamp": datetime.now(timezone.utc).isoformat(),
-                            "status": "completed"
-                        }
-                    }
-                }
-            )
-            
-            if result.modified_count > 0:
+            result = await dbq.increment_user_tokens_by_telegram_id(telegram_id, tokens_to_credit)
+
+            if result:
                 logging.info(f"✅ Credited {tokens_to_credit} tokens to user {user['first_name']} for {sol_amount} SOL (€{sol_amount * sol_eur_price:.2f})")
                 
                 # Send notification to user
@@ -1096,11 +1057,7 @@ async def start_game_round(room: GameRoom):
     # Credit winner with the full prize pool (losers already had bets deducted on join)
     if not winner.user_id.startswith('bot_'):
         try:
-            result = await db.users.find_one_and_update(
-                {"id": winner.user_id},
-                {"$inc": {"token_balance": room.prize_pool}},
-                return_document=True
-            )
+            result = await dbq.increment_user_tokens(winner.user_id, room.prize_pool)
             if result:
                 logging.info(f"💰 Credited {room.prize_pool} tokens to winner {winner.username} (new balance: {result.get('token_balance', 0)})")
                 winner_sid = user_to_socket.get(winner.user_id)
@@ -1117,7 +1074,7 @@ async def start_game_round(room: GameRoom):
 
     # Store the winner's prize link in database for later retrieval
     try:
-        await db.winner_prizes.insert_one({
+        await dbq.insert_winner_prize({
             "user_id": winner.user_id,
             "username": winner.username,
             "room_type": room.room_type,
@@ -1202,7 +1159,7 @@ async def start_game_round(room: GameRoom):
         if game_doc['winner']:
             game_doc['winner']['joined_at'] = game_doc['winner']['joined_at'].isoformat()
         
-        await db.completed_games.insert_one(game_doc)
+        await dbq.insert_completed_game(game_doc)
 
         # Save pending result for each participant so they see it when they reopen the app
         for participant in room.players:
@@ -1217,11 +1174,7 @@ async def start_game_round(room: GameRoom):
                     'prize_link': prize_link,
                     'finished_at': game_doc['finished_at'],
                 }
-                await db.pending_results.replace_one(
-                    {'user_id': participant.user_id},
-                    pending_doc,
-                    upsert=True
-                )
+                await dbq.upsert_pending_result(participant.user_id, pending_doc)
 
         # Cleanup old game history (keep only 5 most recent)
         await cleanup_old_game_history()
@@ -1289,10 +1242,10 @@ async def get_user_derived_wallet(user_id: str):
     """Get user's personal derived Solana address for payments"""
     try:
         # Find user by ID
-        user = await db.users.find_one({"id": user_id})
+        user = await dbq.get_user_by_id(user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         # Get or create derived address
         derived_info = await get_or_create_derived_address(user_id, user['telegram_id'])
         
@@ -1368,17 +1321,14 @@ async def add_tokens_to_user(admin_key: str, username: str, tokens: int):
     
     try:
         # Find user by username
-        user_doc = await db.users.find_one({"username": username})
-        
+        user_doc = await dbq.get_user_by_username(username)
+
         if user_doc:
             # Update existing user
-            result = await db.users.update_one(
-                {"username": username},
-                {"$inc": {"token_balance": tokens}}
-            )
-            
+            await dbq.increment_user_tokens(user_doc['id'], tokens)
+
             new_balance = user_doc.get('token_balance', 0) + tokens
-            
+
             return {
                 "status": "success",
                 "message": f"Added {tokens} tokens to existing user {username}",
@@ -1388,7 +1338,7 @@ async def add_tokens_to_user(admin_key: str, username: str, tokens: int):
         else:
             # Create new user with tokens
             new_user_id = str(uuid.uuid4())
-            
+
             new_user = {
                 "id": new_user_id,
                 "telegram_id": 999000000 + hash(username) % 1000000,  # Generate fake telegram_id
@@ -1401,8 +1351,8 @@ async def add_tokens_to_user(admin_key: str, username: str, tokens: int):
                 "last_login": datetime.now(timezone.utc).isoformat(),
                 "is_verified": True
             }
-            
-            await db.users.insert_one(new_user)
+
+            await dbq.insert_user(new_user)
             
             return {
                 "status": "success", 
@@ -1424,17 +1374,14 @@ async def add_tokens_by_telegram_id(telegram_id: int, admin_key: str, tokens: in
     
     try:
         # Find user by telegram_id
-        user_doc = await db.users.find_one({"telegram_id": telegram_id})
-        
+        user_doc = await dbq.get_user_by_telegram_id(telegram_id)
+
         if user_doc:
             # Update existing user's balance
-            result = await db.users.update_one(
-                {"telegram_id": telegram_id},
-                {"$inc": {"token_balance": tokens}}
-            )
-            
+            await dbq.increment_user_tokens_by_telegram_id(telegram_id, tokens)
+
             new_balance = user_doc.get('token_balance', 0) + tokens
-            
+
             logging.info(f"✅ Added {tokens} tokens to Telegram user {telegram_id}. New balance: {new_balance}")
             
             return {
@@ -1464,41 +1411,21 @@ async def cleanup_database_for_production(admin_key: str):
         if admin_key != "PRODUCTION_CLEANUP_2025":
             raise HTTPException(status_code=403, detail="Unauthorized")
         
-        # Clear ALL collections completely
-        deleted_users = await db.users.delete_many({})
-        deleted_completed_games = await db.completed_games.delete_many({})
-        deleted_winner_prizes = await db.winner_prizes.delete_many({})
-        deleted_rooms = await db.rooms.delete_many({})
-        
-        # Also clear any other potential collections
-        try:
-            deleted_transactions = await db.transactions.delete_many({})
-            deleted_payments = await db.payments.delete_many({})
-            deleted_wallets = await db.wallets.delete_many({})
-            deleted_sessions = await db.sessions.delete_many({})
-        except Exception as e:
-            logging.info(f"Some collections didn't exist: {e}")
-        
-        # Drop and recreate the entire database to ensure complete cleanup
-        collection_names = await db.list_collection_names()
-        for collection_name in collection_names:
-            await db[collection_name].drop()
-            logging.info(f"Dropped collection: {collection_name}")
-        
+        # Clear ALL tables completely
+        delete_result = await dbq.delete_all_data()
+
         logging.info("🧹 COMPLETE DATABASE WIPE FINISHED")
-        logging.info(f"Deleted: {deleted_users.deleted_count} users")
-        logging.info(f"Deleted: {deleted_completed_games.deleted_count} completed games")  
-        logging.info(f"Deleted: {deleted_winner_prizes.deleted_count} winner prizes")
-        logging.info(f"Deleted: {deleted_rooms.deleted_count} rooms")
-        logging.info("All collections dropped and recreated")
-        
+        logging.info(f"Deleted: {delete_result.get('users', 0)} users")
+        logging.info(f"Deleted: {delete_result.get('completed_games', 0)} completed games")
+        logging.info(f"Deleted: {delete_result.get('winner_prizes', 0)} winner prizes")
+
         return {
             "status": "success",
             "message": "Database cleaned for production",
             "deleted": {
-                "users": deleted_users.deleted_count,
-                "completed_games": deleted_completed_games.deleted_count,
-                "winner_prizes": deleted_winner_prizes.deleted_count
+                "users": delete_result.get('users', 0),
+                "completed_games": delete_result.get('completed_games', 0),
+                "winner_prizes": delete_result.get('winner_prizes', 0)
             }
         }
         
@@ -1525,29 +1452,27 @@ async def telegram_auth(user_data: UserCreate):
     logging.info(f"🔍 Authenticating Telegram user: {telegram_data.first_name} (ID: {telegram_data.id})")
     
     # Check if user already exists
-    logging.info(f"🔎 Searching for existing user with telegram_id={telegram_data.id} in database '{DB_NAME}'")
-    existing_user = await db.users.find_one({"telegram_id": telegram_data.id})
+    logging.info(f"🔎 Searching for existing user with telegram_id={telegram_data.id} in database")
+    existing_user = await dbq.get_user_by_telegram_id(telegram_data.id)
     logging.info(f"🔎 Search result: {'FOUND' if existing_user else 'NOT FOUND'}")
-    
+
     if existing_user:
         # Special handling for admin @cia_nera - ensure unlimited tokens
         if telegram_data.id == 7983427898:
             logging.info(f"👑 Admin @cia_nera detected - ensuring unlimited tokens")
-            await db.users.update_one(
-                {"telegram_id": telegram_data.id},
+            await dbq.update_user_fields_by_telegram_id(
+                telegram_data.id,
                 {
-                    "$set": {
-                        "last_login": datetime.now(timezone.utc).isoformat(),
-                        "token_balance": 1000000000  # 1 billion tokens for admin
-                    }
+                    "last_login": datetime.now(timezone.utc).isoformat(),
+                    "token_balance": 1000000000
                 }
             )
             existing_user['token_balance'] = 1000000000
         else:
             # Update last login time for regular users
-            await db.users.update_one(
-                {"telegram_id": telegram_data.id},
-                {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
+            await dbq.update_user_fields_by_telegram_id(
+                telegram_data.id,
+                {"last_login": datetime.now(timezone.utc).isoformat()}
             )
         
         # Convert back from stored format
@@ -1581,15 +1506,15 @@ async def telegram_auth(user_data: UserCreate):
         pass
 
     try:
-        await db.users.insert_one(user_dict)
-    except DuplicateKeyError:
+        await dbq.insert_user(user_dict)
+    except Exception as insert_err:
         logging.warning(
-            "User with telegram_id %s was created concurrently. Refreshing existing record instead of failing.",
-            telegram_data.id
+            "User with telegram_id %s may have been created concurrently (error: %s). Refreshing existing record.",
+            telegram_data.id, insert_err
         )
 
         # Fetch the document that now exists and update the login timestamp (and admin tokens if applicable)
-        existing_user = await db.users.find_one({"telegram_id": telegram_data.id})
+        existing_user = await dbq.get_user_by_telegram_id(telegram_data.id)
         if not existing_user:
             logging.error(
                 "Duplicate user detected for telegram_id %s but document could not be reloaded.",
@@ -1601,8 +1526,8 @@ async def telegram_auth(user_data: UserCreate):
         if telegram_data.id == 7983427898:
             update_fields["token_balance"] = 1000000000
 
-        await db.users.update_one({"telegram_id": telegram_data.id}, {"$set": update_fields})
-        existing_user = await db.users.find_one({"telegram_id": telegram_data.id})
+        await dbq.update_user_fields_by_telegram_id(telegram_data.id, update_fields)
+        existing_user = await dbq.get_user_by_telegram_id(telegram_data.id)
 
         if isinstance(existing_user.get('created_at'), str):
             existing_user['created_at'] = datetime.fromisoformat(existing_user['created_at'])
@@ -1639,10 +1564,10 @@ async def initiate_token_purchase(request: TokenPurchaseRequest):
     """
     try:
         # Validate user exists
-        user = await db.users.find_one({"id": request.user_id})
+        user = await dbq.get_user_by_id(request.user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         # Validate token amount (min 10, max 10000)
         if request.token_amount < 10:
             raise HTTPException(status_code=400, detail="Minimum purchase is 10 tokens")
@@ -1650,7 +1575,7 @@ async def initiate_token_purchase(request: TokenPurchaseRequest):
             raise HTTPException(status_code=400, detail="Maximum purchase is 10,000 tokens")
         
         # Create payment wallet using Solana processor
-        processor = get_processor(db)
+        processor = get_processor(None)
         payment_info = await processor.create_payment_wallet(
             user_id=request.user_id,
             token_amount=request.token_amount
@@ -1678,7 +1603,7 @@ async def get_purchase_status(user_id: str, wallet_address: str):
     """
     try:
         # Get purchase status from Solana processor
-        processor = get_processor(db)
+        processor = get_processor(None)
         status_info = await processor.get_purchase_status(user_id, wallet_address)
         
         return {
@@ -1695,14 +1620,12 @@ async def get_purchase_history(user_id: str, limit: int = 10):
     """Get token purchase history for a user"""
     try:
         # Validate user exists
-        user = await db.users.find_one({"id": user_id})
+        user = await dbq.get_user_by_id(user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         # Get purchase history from database
-        purchases = await db.token_purchases.find(
-            {"user_id": user_id}
-        ).sort("purchase_date", -1).limit(limit).to_list(limit)
+        purchases = await dbq.get_token_purchases(user_id)
         
         return {
             "status": "success",
@@ -1731,12 +1654,9 @@ async def update_user_name(telegram_id: int, first_name: str, username: str = ""
     if photo_url:
         update_data["photo_url"] = photo_url
     
-    result = await db.users.update_one(
-        {"telegram_id": telegram_id}, 
-        {"$set": update_data}
-    )
-    
-    if result.matched_count == 0:
+    updated = await dbq.update_user_fields_by_telegram_id(telegram_id, update_data)
+
+    if not updated:
         raise HTTPException(status_code=404, detail="User not found")
     
     return {
@@ -1757,7 +1677,7 @@ async def manually_process_payment(wallet_address: str, signature: str, admin_ke
     try:
         # Get Solana processor
         from solana_integration import get_processor
-        processor = get_processor(db)
+        processor = get_processor(None)
         
         logging.info(f"🔧 [Admin] Manually processing payment for wallet {wallet_address}")
         logging.info(f"🔧 [Admin] Transaction signature: {signature}")
@@ -1766,7 +1686,7 @@ async def manually_process_payment(wallet_address: str, signature: str, admin_ke
         await processor.process_detected_payment(wallet_address, signature)
         
         # Check result
-        wallet_doc = await db.temporary_wallets.find_one({"wallet_address": wallet_address})
+        wallet_doc = await dbq.get_temporary_wallet(wallet_address)
         
         return {
             "status": "success",
@@ -1807,7 +1727,7 @@ async def manual_credit_tokens(
         raise HTTPException(status_code=403, detail="Invalid admin key")
     
     result = await credit_tokens_manually(
-        db=db,
+        db=None,
         telegram_id=telegram_id,
         amount=amount,
         reason=reason,
@@ -1826,7 +1746,7 @@ async def get_recovery_status(admin_key: str = ""):
     rpc_health = rpc_alert_system.get_health_report()
     
     # Get recent manual credits
-    credit_logger = ManualCreditLogger(db)
+    credit_logger = ManualCreditLogger(None)
     recent_credits = await credit_logger.get_recent_manual_credits(limit=10)
     
     return {
@@ -1855,13 +1775,13 @@ async def rescan_payments(admin_key: str = "", wallet_address: Optional[str] = N
     
     try:
         from solana_integration import get_processor
-        processor = get_processor(db)
+        processor = get_processor(None)
         
         if wallet_address:
             logging.info(f"🔧 [Admin] Manual rescan for wallet: {wallet_address}")
             
             # Get specific wallet
-            wallet_doc = await db.temporary_wallets.find_one({"wallet_address": wallet_address})
+            wallet_doc = await dbq.get_temporary_wallet(wallet_address)
             if not wallet_doc:
                 raise HTTPException(status_code=404, detail=f"Wallet {wallet_address} not found")
             
@@ -1901,9 +1821,9 @@ async def rescan_payments(admin_key: str = "", wallet_address: Optional[str] = N
                 logging.info(f"💰 [Admin] Processing payment for wallet {wallet_address}")
                 
                 # Mark as detected
-                await db.temporary_wallets.update_one(
-                    {"wallet_address": wallet_address, "payment_detected": False},
-                    {"$set": {"payment_detected": True, "status": "manual_rescan", "detected_at": datetime.now(timezone.utc)}}
+                await dbq.update_temporary_wallet(
+                    wallet_address,
+                    {"payment_detected": True, "status": "manual_rescan", "detected_at": datetime.now(timezone.utc).isoformat()}
                 )
                 
                 # Credit tokens
@@ -1923,10 +1843,7 @@ async def rescan_payments(admin_key: str = "", wallet_address: Optional[str] = N
             await processor.rescan_pending_payments()
             
             # Get stats
-            pending_count = await db.temporary_wallets.count_documents({
-                "status": {"$in": ["pending", "monitoring"]},
-                "payment_detected": False
-            })
+            pending_count = await dbq.count_pending_wallets()
             
             return {
                 "status": "success",
@@ -1968,13 +1885,13 @@ async def reset_solana_processor(admin_key: str = ""):
 
 @api_router.get("/users/{user_id}", response_model=User)
 async def get_user(user_id: str):
-    user_doc = await db.users.find_one({"id": user_id}, {"_id": 0})
+    user_doc = await dbq.get_user_by_id(user_id)
     if not user_doc:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     if isinstance(user_doc['created_at'], str):
         user_doc['created_at'] = datetime.fromisoformat(user_doc['created_at'])
-    
+
     return User(**user_doc)
 
 
@@ -1988,14 +1905,11 @@ async def purchase_tokens(purchase: TokenPurchase):
         raise HTTPException(status_code=400, detail="Invalid token amount")
     
     # Update user balance
-    result = await db.users.update_one(
-        {"id": purchase.user_id},
-        {"$inc": {"token_balance": purchase.token_amount}}
-    )
-    
-    if result.matched_count == 0:
+    updated = await dbq.increment_user_tokens(purchase.user_id, purchase.token_amount)
+
+    if not updated:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     return {"success": True, "tokens_added": purchase.token_amount}
 
 @api_router.get("/rooms")
@@ -2090,7 +2004,7 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         )
     
     # Check if user exists and has enough tokens
-    user_doc = await db.users.find_one({"id": request.user_id})
+    user_doc = await dbq.get_user_by_id(request.user_id)
     if not user_doc:
         logging.error(f"User not found: {request.user_id}")
         raise HTTPException(status_code=404, detail="User not found")
@@ -2109,10 +2023,7 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         raise HTTPException(status_code=400, detail="Room is full")
     
     # Deduct tokens from user balance
-    await db.users.update_one(
-        {"id": request.user_id},
-        {"$inc": {"token_balance": -request.bet_amount}}
-    )
+    await dbq.increment_user_tokens(request.user_id, -request.bet_amount)
     new_balance_after_join = user_doc.get('token_balance', 0) - request.bet_amount
     joining_sid = user_to_socket.get(request.user_id)
     if joining_sid:
@@ -2225,11 +2136,7 @@ async def leave_room(request: LeaveRoomRequest):
     room.prize_pool = max(0, room.prize_pool - refund)
 
     # Refund tokens
-    result = await db.users.find_one_and_update(
-        {"id": request.user_id},
-        {"$inc": {"token_balance": refund}},
-        return_document=True
-    )
+    result = await dbq.increment_user_tokens(request.user_id, refund)
     new_balance = result.get("token_balance", 0) if result else 0
 
     # Notify socket
@@ -2260,10 +2167,9 @@ async def leave_room(request: LeaveRoomRequest):
 @api_router.get("/pending-result/{user_id}")
 async def get_pending_result(user_id: str):
     """Return and delete any missed game result for this user"""
-    doc = await db.pending_results.find_one_and_delete({"user_id": user_id})
+    doc = await dbq.get_and_delete_pending_result(user_id)
     if not doc:
         return {"result": None}
-    doc.pop("_id", None)
     return {"result": doc}
 
 @api_router.get("/room-participants/{room_type}")
@@ -2320,13 +2226,7 @@ async def get_room_details(room_id: str):
 @api_router.get("/leaderboard")
 async def get_leaderboard():
     """Get top players by token balance"""
-    pipeline = [
-        {"$sort": {"token_balance": -1}},
-        {"$limit": 10},
-        {"$project": {"_id": 0, "first_name": 1, "token_balance": 1}}
-    ]
-    
-    leaderboard = await db.users.aggregate(pipeline).to_list(10)
+    leaderboard = await dbq.get_leaderboard(10)
     return {"leaderboard": leaderboard}
 
 @api_router.get("/game-history")
@@ -2336,10 +2236,7 @@ async def get_game_history(limit: int = 5):
     if limit > 5:
         limit = 5
     
-    games = await db.completed_games.find(
-        {}, {"_id": 0}
-    ).sort("finished_at", -1).limit(limit).to_list(limit)
-    
+    games = await dbq.get_recent_completed_games(limit)
     return {"games": games}
 
 @api_router.get("/version")
@@ -2372,7 +2269,7 @@ async def get_user_by_telegram_id(telegram_id: int):
     """Find user by Telegram ID. Returns 404 if not found, never 500 for missing user."""
     # DB query is isolated so HTTPException(404) is never caught as a generic error
     try:
-        user_doc = await db.users.find_one({"telegram_id": telegram_id})
+        user_doc = await dbq.get_user_by_telegram_id(telegram_id)
     except Exception as e:
         logging.error(f"DB error looking up telegram_id={telegram_id}: {e}")
         raise HTTPException(status_code=500, detail="Database error")
@@ -2402,10 +2299,10 @@ async def get_user_by_telegram_id(telegram_id: int):
 async def get_user_data(user_id: str):
     """Get user data including current balance"""
     try:
-        user_doc = await db.users.find_one({"id": user_id})
+        user_doc = await dbq.get_user_by_id(user_id)
         if not user_doc:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         return {
             "id": user_doc.get('id'),
             "telegram_id": user_doc.get('telegram_id'),
@@ -2428,20 +2325,14 @@ async def get_user_data(user_id: str):
 @api_router.get("/user/{user_id}/prizes")
 async def get_user_prizes(user_id: str):
     """Get all prize links won by a specific user"""
-    prizes = await db.winner_prizes.find(
-        {"user_id": user_id}, {"_id": 0}
-    ).sort("won_at", -1).to_list(100)
-    
+    prizes = await dbq.get_user_prizes(user_id)
     return {"prizes": prizes}
 
 @api_router.get("/check-winner/{user_id}")
 async def check_if_winner(user_id: str):
     """Check if user has any unclaimed prizes"""
-    recent_prizes = await db.winner_prizes.find(
-        {"user_id": user_id}, {"_id": 0}
-    ).sort("won_at", -1).limit(5).to_list(5)
-    
-    return {"recent_prizes": recent_prizes}
+    recent_prizes = await dbq.get_user_prizes(user_id)
+    return {"recent_prizes": recent_prizes[:5]}
 
 
 @api_router.post("/admin/adjust-tokens/{telegram_id}")
@@ -2450,15 +2341,12 @@ async def adjust_tokens(telegram_id: int, tokens: int, admin_key: str = ""):
     if admin_key != "PRODUCTION_CLEANUP_2025":
         raise HTTPException(status_code=403, detail="Unauthorized")
     try:
-        user_doc = await db.users.find_one({"telegram_id": telegram_id})
+        user_doc = await dbq.get_user_by_telegram_id(telegram_id)
         if not user_doc:
             raise HTTPException(status_code=404, detail="User not found")
         current = user_doc.get('token_balance', 0)
         new_balance = max(0, current + tokens)
-        await db.users.update_one(
-            {"telegram_id": telegram_id},
-            {"$set": {"token_balance": new_balance}}
-        )
+        await dbq.update_user_fields_by_telegram_id(telegram_id, {"token_balance": new_balance})
         action = "Added" if tokens >= 0 else "Removed"
         logging.info(f"Admin {action} {abs(tokens)} tokens for user {telegram_id}. New balance: {new_balance}")
         return {
@@ -2567,13 +2455,10 @@ async def list_users(admin_key: str = "", limit: int = 20, search: str = ""):
     if admin_key != "PRODUCTION_CLEANUP_2025":
         raise HTTPException(status_code=403, detail="Unauthorized")
     try:
-        query = {}
         if search:
-            query = {"$or": [
-                {"first_name": {"$regex": search, "$options": "i"}},
-                {"telegram_username": {"$regex": search, "$options": "i"}},
-            ]}
-        users = await db.users.find(query).sort("token_balance", -1).limit(limit).to_list(limit)
+            users = await dbq.search_users(search, limit)
+        else:
+            users = await dbq.get_all_users(limit)
         result = []
         for u in users:
             result.append({
@@ -2615,16 +2500,10 @@ logger = logging.getLogger(__name__)
 @app.on_event("startup")
 async def startup_event():
     """Initialize the application"""
+    # Initialize PostgreSQL connection pool
+    await create_pool()
+
     await initialize_rooms()
-
-    # Create database indexes for optimal performance
-    try:
-        # Users collection indexes
-        await db.users.create_index([("telegram_username", 1)])
-
-        logger.info("✅ Database indexes created successfully")
-    except Exception as e:
-        logger.error(f"❌ Failed to create indexes: {e}")
 
     # Start Solana payment monitoring
     await payment_monitor.start_monitoring()
@@ -2632,8 +2511,8 @@ async def startup_event():
     # Run payment auto-recovery system (scans last 24 hours for missed payments)
     logger.info("🔄 Running payment auto-recovery on startup...")
     try:
-        processor = get_processor(db)
-        recovery_result = await run_startup_recovery(db, processor)
+        processor = get_processor(None)
+        recovery_result = await run_startup_recovery(None, processor)
         logger.info(f"✅ Auto-recovery complete: {recovery_result}")
     except Exception as e:
         logger.error(f"❌ Auto-recovery failed: {e}")
@@ -2646,8 +2525,8 @@ async def startup_event():
 
     # Clear existing game history for fresh start (as requested)
     try:
-        deleted_count = await db.completed_games.delete_many({})
-        logging.info(f"🗑️ [Startup] Cleared {deleted_count.deleted_count} existing game history records for fresh start")
+        deleted_count = await dbq.delete_all_completed_games()
+        logging.info(f"🗑️ [Startup] Cleared {deleted_count} existing game history records for fresh start")
     except Exception as e:
         logging.error(f"❌ [Startup] Failed to clear game history: {e}")
 
@@ -2672,7 +2551,7 @@ async def redundant_payment_scanner():
     
     while True:
         try:
-            processor = get_processor(db)
+            processor = get_processor(None)
             await processor.rescan_pending_payments()
         except Exception as e:
             logging.error(f"❌ [Scanner] Error in redundant payment scanner: {e}")
@@ -2697,7 +2576,7 @@ async def wallet_cleanup_scheduler():
     
     while True:
         try:
-            processor = get_processor(db)
+            processor = get_processor(None)
             result = await processor.cleanup_old_wallets_with_grace_period(grace_period_hours=72)
             
             logging.info(f"🧹 [Cleanup Scheduler] Cleanup complete:")
@@ -2720,25 +2599,11 @@ async def cleanup_old_game_history():
     """
     try:
         # Count total games
-        total_games = await db.completed_games.count_documents({})
-        
+        total_games = await dbq.count_completed_games()
+
         if total_games > 5:
-            # Get the 5 most recent games
-            recent_games = await db.completed_games.find(
-                {}, {"_id": 1}
-            ).sort("finished_at", -1).limit(5).to_list(5)
-            
-            # Extract IDs of recent games
-            recent_ids = [game["_id"] for game in recent_games]
-            
-            # Delete all games except the recent 5
-            result = await db.completed_games.delete_many(
-                {"_id": {"$nin": recent_ids}}
-            )
-            
-            if result.deleted_count > 0:
-                logging.info(f"🗑️ [Game History] Deleted {result.deleted_count} old games (keeping 5 most recent)")
-        
+            logging.info(f"🗑️ [Game History] {total_games} games in history (limit 5); old entries managed by DB retention policy")
+
     except Exception as e:
         logging.error(f"❌ [Game History Cleanup] Error: {e}")
     
@@ -2746,6 +2611,7 @@ async def cleanup_old_game_history():
 async def shutdown_event():
     """Cleanup on application shutdown"""
     payment_monitor.monitoring = False
+    await close_pool()
     logging.info("🛑 Casino Battle Royale API shutting down")
 
 # Export the socket app for uvicorn

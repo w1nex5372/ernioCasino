@@ -3312,6 +3312,25 @@ function App() {
                       <span style={{ color: '#a855f7', fontWeight: 600 }}>1 EUR = 100 tokens</span> · Auto-credited in 1–2 min
                     </p>
                   </div>
+
+                  {/* Buy Items with Tokens */}
+                  <div style={{ borderTop: '1px solid rgba(220,38,38,0.15)', paddingTop: 12 }}>
+                    <p className="text-xs text-slate-500 text-center mb-2">Spend your tokens in the shop</p>
+                    <button
+                      onClick={() => {
+                        const startParam = `spinwar_${user.telegram_id}`;
+                        if (window.Telegram?.WebApp?.openTelegramLink) {
+                          window.Telegram.WebApp.openTelegramLink(`https://t.me/SpinWarPlayBot?start=${startParam}`);
+                        } else {
+                          window.open(`https://t.me/SpinWarPlayBot?start=${startParam}`, '_blank');
+                        }
+                      }}
+                      style={{ width: '100%', background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)', border: '1px solid rgba(168,85,247,0.4)', borderRadius: 10, padding: '10px 16px', color: 'white', fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer' }}
+                    >
+                      🛍️ Buy Items with Tokens
+                    </button>
+                    <p className="text-xs text-slate-600 text-center mt-1">Balance: {user.token_balance || 0} tokens available</p>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4 max-w-2xl mx-auto">
@@ -3375,6 +3394,28 @@ function App() {
                         <li>• <span style={{ color: '#a855f7', fontWeight: 600 }}>1 EUR = 100 tokens</span> (live SOL/EUR rate)</li>
                       </ul>
                     </div>
+                  </div>
+
+                  {/* Buy Items with Tokens - Desktop */}
+                  <div style={{ background: 'rgba(13,13,26,0.95)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: 14, padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                    <div>
+                      <p className="text-sm font-bold text-white mb-1">🛍️ Shop — Buy Items with Tokens</p>
+                      <p className="text-xs text-slate-400">Use your SpinWar tokens to purchase items in the shop</p>
+                      <p className="text-xs mt-1" style={{ color: '#a855f7' }}>Available: <span className="font-bold text-yellow-400">{(user.token_balance || 0).toLocaleString()} tokens</span></p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const startParam = `spinwar_${user.telegram_id}`;
+                        if (window.Telegram?.WebApp?.openTelegramLink) {
+                          window.Telegram.WebApp.openTelegramLink(`https://t.me/SpinWarPlayBot?start=${startParam}`);
+                        } else {
+                          window.open(`https://t.me/SpinWarPlayBot?start=${startParam}`, '_blank');
+                        }
+                      }}
+                      style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)', border: '1px solid rgba(168,85,247,0.4)', borderRadius: 10, padding: '10px 20px', color: 'white', fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 0 16px rgba(124,58,237,0.3)' }}
+                    >
+                      🛍️ Open Shop
+                    </button>
                   </div>
                 </div>
               )

@@ -23,7 +23,7 @@ from solders.transaction import Transaction, VersionedTransaction
 from solders.message import MessageV0
 from solders.system_program import TransferParams, transfer
 from solders.hash import Hash
-from motor.motor_asyncio import AsyncIOMotorDatabase
+import db_queries as dbq
 import base58
 
 # Configuration
@@ -173,8 +173,7 @@ logger = logging.getLogger(__name__)
 class SolanaPaymentProcessor:
     """Handles Solana payment processing for automatic token purchases"""
     
-    def __init__(self, db: AsyncIOMotorDatabase):
-        self.db = db
+    def __init__(self, db=None):
         # Initialize RPC manager with fallback support
         self.rpc_manager = RPCManager(SOLANA_RPC_URL, SOLANA_RPC_FALLBACKS)
         self.client = AsyncClient(self.rpc_manager.get_current_url())
@@ -260,7 +259,7 @@ class SolanaPaymentProcessor:
             }
             
             # Insert into temporary_wallets collection
-            await self.db.temporary_wallets.insert_one(wallet_data)
+            await dbq.insert_temporary_wallet(wallet_data)
             
             # Start monitoring this wallet for payments
             asyncio.create_task(self.monitor_wallet_payments(wallet_address))
@@ -335,9 +334,7 @@ class SolanaPaymentProcessor:
                         logger.info(f"💤 [{wallet_address[:8]}...] No transactions found yet")
                     
                     # Check if wallet has been processed (payment found and handled)
-                    wallet_doc = await self.db.temporary_wallets.find_one(
-                        {"wallet_address": wallet_address}
-                    )
+                    wallet_doc = await dbq.get_temporary_wallet(wallet_address)
                     
                     if wallet_doc and wallet_doc.get("tokens_credited"):
                         logger.info(f"✅ Wallet {wallet_address} successfully processed, stopping monitor")
@@ -359,10 +356,7 @@ class SolanaPaymentProcessor:
             if check_count >= max_checks:
                 logger.warning(f"⏰ Payment monitoring timeout for wallet {wallet_address}")
                 # Mark wallet as expired
-                await self.db.temporary_wallets.update_one(
-                    {"wallet_address": wallet_address},
-                    {"$set": {"status": "expired", "updated_at": datetime.now(timezone.utc)}}
-                )
+                await dbq.update_temporary_wallet(wallet_address, {"status": "expired", "updated_at": datetime.now(timezone.utc)})
                 
         except Exception as e:
             import traceback
@@ -428,9 +422,7 @@ class SolanaPaymentProcessor:
                 return
                 
             # Get wallet record from database
-            wallet_doc = await self.db.temporary_wallets.find_one(
-                {"wallet_address": wallet_address}
-            )
+            wallet_doc = await dbq.get_temporary_wallet(wallet_address)
             
             if not wallet_doc:
                 logger.error(f"❌ [{wallet_address[:8]}...] No wallet record found in database!")
@@ -485,19 +477,14 @@ class SolanaPaymentProcessor:
             logger.info(f"💰 [{wallet_address[:8]}...] Payment detected: {received_sol} SOL received (required: {required_sol} SOL)")
             
             # Update wallet record
-            await self.db.temporary_wallets.update_one(
-                {"wallet_address": wallet_address},
-                {
-                    "$set": {
-                        "payment_detected": True,
-                        "received_lamports": received_lamports,
-                        "received_sol": float(received_sol),
-                        "transaction_signature": signature,
-                        "payment_detected_at": datetime.now(timezone.utc),
-                        "status": "payment_received"
-                    }
-                }
-            )
+            await dbq.update_temporary_wallet(wallet_address, {
+                "payment_detected": True,
+                "received_lamports": received_lamports,
+                "received_sol": float(received_sol),
+                "transaction_signature": signature,
+                "payment_detected_at": datetime.now(timezone.utc),
+                "status": "payment_received"
+            })
             
             # Check if payment is sufficient (with 0.001 SOL tolerance)
             tolerance = Decimal("0.001")
@@ -515,10 +502,7 @@ class SolanaPaymentProcessor:
                 await self.forward_sol_to_main_wallet(wallet_address, wallet_doc["private_key"], received_lamports)
             else:
                 logger.warning(f"❌ [{wallet_address[:8]}...] Insufficient payment: {received_sol} SOL < {required_sol} SOL required (tolerance: {tolerance} SOL)")
-                await self.db.temporary_wallets.update_one(
-                    {"wallet_address": wallet_address},
-                    {"$set": {"status": "insufficient_payment"}}
-                )
+                await dbq.update_temporary_wallet(wallet_address, {"status": "insufficient_payment"})
                 
         except Exception as e:
             import traceback
@@ -550,34 +534,26 @@ class SolanaPaymentProcessor:
             logger.info(f"💳 [Credit] Updating user balance: +{actual_tokens} tokens")
             
             # Update user balance
-            result = await self.db.users.update_one(
-                {"id": user_id},
-                {"$inc": {"token_balance": actual_tokens}}
-            )
-            
-            logger.info(f"📊 [Credit] Database update result: modified={result.modified_count}, matched={result.matched_count}")
-            
-            if result.modified_count > 0:
+            result = await dbq.increment_user_tokens(user_id, actual_tokens)
+
+            logger.info(f"📊 [Credit] Database update result: {result}")
+
+            if result is not None:
                 eur_value = float(received_sol) * sol_eur_price
                 logger.info(f"✅ [Credit] SUCCESS! Credited {actual_tokens} tokens to user {user_id} for {received_sol} SOL (€{eur_value:.2f} at {sol_eur_price} EUR/SOL)")
                 
                 # Mark wallet as tokens credited
-                await self.db.temporary_wallets.update_one(
-                    {"wallet_address": wallet_doc["wallet_address"]},
-                    {
-                        "$set": {
-                            "tokens_credited": True,
-                            "actual_tokens_credited": actual_tokens,
-                            "sol_eur_price_at_credit": sol_eur_price,
-                            "eur_value": eur_value,
-                            "tokens_credited_at": datetime.now(timezone.utc),
-                            "status": "tokens_credited"
-                        }
-                    }
-                )
-                
+                await dbq.update_temporary_wallet(wallet_doc["wallet_address"], {
+                    "tokens_credited": True,
+                    "actual_tokens_credited": actual_tokens,
+                    "sol_eur_price_at_credit": sol_eur_price,
+                    "eur_value": eur_value,
+                    "tokens_credited_at": datetime.now(timezone.utc),
+                    "status": "tokens_credited"
+                })
+
                 # Create transaction history record
-                await self.db.token_purchases.insert_one({
+                await dbq.insert_token_purchase({
                     "user_id": user_id,
                     "wallet_address": wallet_doc["wallet_address"],
                     "transaction_signature": wallet_doc.get("transaction_signature"),
@@ -764,19 +740,14 @@ class SolanaPaymentProcessor:
                 logger.info(f"✅ [Sweep Success] ===============================")
                 
                 # Update wallet record in database
-                await self.db.temporary_wallets.update_one(
-                    {"wallet_address": wallet_address},
-                    {
-                        "$set": {
-                            "sol_forwarded": True,
-                            "forward_signature": signature,
-                            "forwarded_amount_lamports": transfer_amount,
-                            "forwarded_at": datetime.now(timezone.utc),
-                            "status": "completed",
-                            "network": "mainnet"
-                        }
-                    }
-                )
+                await dbq.update_temporary_wallet(wallet_address, {
+                    "sol_forwarded": True,
+                    "forward_signature": signature,
+                    "forwarded_amount_lamports": transfer_amount,
+                    "forwarded_at": datetime.now(timezone.utc),
+                    "status": "completed",
+                    "network": "mainnet"
+                })
                 
                 # Clean up wallet data after successful forwarding
                 await asyncio.sleep(60)  # Wait 1 minute before cleanup
@@ -797,16 +768,11 @@ class SolanaPaymentProcessor:
                     logger.error(f"❌ [Sweep] All {max_retries} attempts exhausted!")
                     # Mark wallet as failed
                     try:
-                        await self.db.temporary_wallets.update_one(
-                            {"wallet_address": wallet_address},
-                            {
-                                "$set": {
-                                    "status": "forward_failed",
-                                    "forward_error": str(e),
-                                    "failed_at": datetime.now(timezone.utc)
-                                }
-                            }
-                        )
+                        await dbq.update_temporary_wallet(wallet_address, {
+                            "status": "forward_failed",
+                            "forward_error": str(e),
+                            "failed_at": datetime.now(timezone.utc)
+                        })
                     except Exception as db_error:
                         logger.error(f"❌ [Sweep] Could not update database: {db_error}")
                     raise
@@ -820,7 +786,7 @@ class SolanaPaymentProcessor:
         """
         try:
             # Get wallet record
-            wallet_doc = await self.db.temporary_wallets.find_one({"wallet_address": wallet_address})
+            wallet_doc = await dbq.get_temporary_wallet(wallet_address)
             
             if not wallet_doc:
                 logger.warning(f"🧹 [Cleanup] Wallet {wallet_address} not found")
@@ -834,16 +800,11 @@ class SolanaPaymentProcessor:
                 logger.warning(f"   SOL Forwarded: {wallet_doc.get('sol_forwarded', False)}")
                 
                 # Mark for manual review instead of cleaning up
-                await self.db.temporary_wallets.update_one(
-                    {"wallet_address": wallet_address},
-                    {
-                        "$set": {
-                            "needs_manual_review": True,
-                            "review_reason": "cleanup_blocked_unswept_funds",
-                            "flagged_at": datetime.now(timezone.utc)
-                        }
-                    }
-                )
+                await dbq.update_temporary_wallet(wallet_address, {
+                    "needs_manual_review": True,
+                    "review_reason": "cleanup_blocked_unswept_funds",
+                    "flagged_at": datetime.now(timezone.utc)
+                })
                 return
             
             # Additional safety: Check actual on-chain balance before deleting private key
@@ -857,17 +818,12 @@ class SolanaPaymentProcessor:
                     logger.error(f"❌ [Cleanup] CRITICAL: Wallet {wallet_address[:8]}... still has {balance_lamports} lamports!")
                     logger.error(f"   Refusing to delete private key - funds at risk!")
                     
-                    await self.db.temporary_wallets.update_one(
-                        {"wallet_address": wallet_address},
-                        {
-                            "$set": {
-                                "needs_manual_review": True,
-                                "review_reason": "cleanup_blocked_balance_detected",
-                                "flagged_at": datetime.now(timezone.utc),
-                                "flagged_balance_lamports": balance_lamports
-                            }
-                        }
-                    )
+                    await dbq.update_temporary_wallet(wallet_address, {
+                        "needs_manual_review": True,
+                        "review_reason": "cleanup_blocked_balance_detected",
+                        "flagged_at": datetime.now(timezone.utc),
+                        "flagged_balance_lamports": balance_lamports
+                    })
                     return
             except Exception as balance_check_error:
                 logger.warning(f"⚠️  [Cleanup] Could not verify on-chain balance: {balance_check_error}")
@@ -877,17 +833,11 @@ class SolanaPaymentProcessor:
             logger.info(f"🧹 [Cleanup] Safe to cleanup wallet {wallet_address[:8]}... (SOL forwarded, balance verified)")
             
             # Remove private key and mark as cleaned up
-            await self.db.temporary_wallets.update_one(
-                {"wallet_address": wallet_address},
-                {
-                    "$unset": {"private_key": ""},
-                    "$set": {
-                        "cleaned_up": True,
-                        "cleaned_up_at": datetime.now(timezone.utc),
-                        "status": "cleaned_up"
-                    }
-                }
-            )
+            await dbq.update_temporary_wallet(wallet_address, {
+                "cleaned_up": True,
+                "cleaned_up_at": datetime.now(timezone.utc),
+                "status": "cleaned_up"
+            })
             logger.info(f"🧹 Cleaned up wallet data for {wallet_address}")
             
         except Exception as e:
@@ -896,10 +846,9 @@ class SolanaPaymentProcessor:
     async def get_purchase_status(self, user_id: str, wallet_address: str) -> Dict[str, Any]:
         """Get the status of a token purchase"""
         try:
-            wallet_doc = await self.db.temporary_wallets.find_one({
-                "wallet_address": wallet_address,
-                "user_id": user_id
-            })
+            wallet_doc = await dbq.get_temporary_wallet(wallet_address)
+            if wallet_doc and wallet_doc.get("user_id") != user_id:
+                wallet_doc = None
             
             if not wallet_doc:
                 return {"status": "not_found", "message": "Purchase not found"}
@@ -942,11 +891,11 @@ class SolanaPaymentProcessor:
             
             # Get all pending wallets (not expired, not already processed)
             # Limit to 10 most recent to avoid rate limits
-            pending_wallets = await self.db.temporary_wallets.find({
-                "status": {"$in": ["pending", "monitoring"]},
-                "payment_detected": False,
-                "tokens_credited": False
-            }).sort("created_at", -1).limit(10).to_list(length=10)
+            all_monitoring_wallets = await dbq.get_all_temporary_wallets_monitoring()
+            pending_wallets = [
+                w for w in all_monitoring_wallets
+                if not w.get("payment_detected") and not w.get("tokens_credited")
+            ][:10]
             
             if not pending_wallets:
                 logger.info("🔍 [Rescan] No pending wallets to check")
@@ -1008,23 +957,14 @@ class SolanaPaymentProcessor:
                         logger.info(f"✅ [Rescan] SUFFICIENT PAYMENT! Processing credit...")
                         
                         # Use atomic update to prevent duplicate processing
-                        update_result = await self.db.temporary_wallets.update_one(
-                            {
-                                "wallet_address": wallet_address,
-                                "payment_detected": False,  # Only update if not already processed
-                                "tokens_credited": False
-                            },
-                            {
-                                "$set": {
-                                    "payment_detected": True,
-                                    "status": "detected_by_rescan",
-                                    "detected_at": datetime.now(timezone.utc)
-                                }
-                            }
-                        )
-                        
+                        update_result = await dbq.update_temporary_wallet(wallet_address, {
+                            "payment_detected": True,
+                            "status": "detected_by_rescan",
+                            "detected_at": datetime.now(timezone.utc)
+                        })
+
                         # If we successfully marked it as detected, process the payment
-                        if update_result.modified_count > 0:
+                        if update_result:
                             logger.info(f"🎁 [Credited] Starting token credit for user {user_id}...")
                             
                             # Credit tokens to user
@@ -1076,12 +1016,21 @@ class SolanaPaymentProcessor:
             cutoff_time = datetime.now(timezone.utc) - timedelta(hours=grace_period_hours)
             
             # Find completed wallets past grace period that haven't been cleaned up
-            old_completed_wallets = await self.db.temporary_wallets.find({
-                "status": "completed",
-                "sol_forwarded": True,
-                "cleaned_up": {"$ne": True},
-                "forwarded_at": {"$lt": cutoff_time}
-            }).to_list(length=100)
+            all_monitoring_wallets = await dbq.get_all_temporary_wallets_monitoring()
+            # Also fetch completed ones by getting all wallets and filtering in Python
+            # get_all_temporary_wallets_monitoring returns pending/monitoring; for completed
+            # we directly query via a broader call and filter here
+            from database import get_pool as _get_pool
+            async with _get_pool().acquire() as _conn:
+                _rows = await _conn.fetch("SELECT * FROM temporary_wallets WHERE status = 'completed'")
+                _all_completed = [dict(r) for r in _rows]
+            old_completed_wallets = [
+                w for w in _all_completed
+                if w.get("sol_forwarded")
+                and not w.get("cleaned_up")
+                and w.get("forwarded_at") is not None
+                and (w["forwarded_at"] if isinstance(w["forwarded_at"], datetime) else datetime.fromisoformat(str(w["forwarded_at"]))) < cutoff_time
+            ][:100]
             
             logger.info(f"🧹 [Scheduled Cleanup] Found {len(old_completed_wallets)} wallets eligible for cleanup")
             
@@ -1102,31 +1051,20 @@ class SolanaPaymentProcessor:
                         logger.warning(f"⚠️  [Scheduled Cleanup] BLOCKED: {wallet_address[:8]}... has {balance_lamports} lamports")
                         blocked_count += 1
                         
-                        await self.db.temporary_wallets.update_one(
-                            {"wallet_address": wallet_address},
-                            {
-                                "$set": {
-                                    "needs_manual_review": True,
-                                    "review_reason": "scheduled_cleanup_blocked_balance",
-                                    "flagged_at": datetime.now(timezone.utc),
-                                    "flagged_balance_lamports": balance_lamports
-                                }
-                            }
-                        )
+                        await dbq.update_temporary_wallet(wallet_address, {
+                            "needs_manual_review": True,
+                            "review_reason": "scheduled_cleanup_blocked_balance",
+                            "flagged_at": datetime.now(timezone.utc),
+                            "flagged_balance_lamports": balance_lamports
+                        })
                         continue
-                    
+
                     # Safe to cleanup
-                    await self.db.temporary_wallets.update_one(
-                        {"wallet_address": wallet_address},
-                        {
-                            "$unset": {"private_key": ""},
-                            "$set": {
-                                "cleaned_up": True,
-                                "cleaned_up_at": datetime.now(timezone.utc),
-                                "cleanup_method": "scheduled_grace_period"
-                            }
-                        }
-                    )
+                    await dbq.update_temporary_wallet(wallet_address, {
+                        "cleaned_up": True,
+                        "cleaned_up_at": datetime.now(timezone.utc),
+                        "cleanup_method": "scheduled_grace_period"
+                    })
                     
                     cleaned_count += 1
                     logger.info(f"✅ [Scheduled Cleanup] Cleaned {wallet_address[:8]}...")
@@ -1136,11 +1074,7 @@ class SolanaPaymentProcessor:
                     continue
             
             # Also find wallets flagged for manual review (older than 7 days)
-            old_flagged_time = datetime.now(timezone.utc) - timedelta(days=7)
-            flagged_count = await self.db.temporary_wallets.count_documents({
-                "needs_manual_review": True,
-                "flagged_at": {"$lt": old_flagged_time}
-            })
+            flagged_count = await dbq.count_pending_wallets()
             
             logger.info(f"🧹 [Scheduled Cleanup] Complete: cleaned {cleaned_count}, blocked {blocked_count}, flagged for review: {flagged_count}")
             
@@ -1167,7 +1101,7 @@ def reset_processor():
     processor = None
     processor_rpc_url = None
 
-def get_processor(db: AsyncIOMotorDatabase) -> SolanaPaymentProcessor:
+def get_processor(db=None) -> SolanaPaymentProcessor:
     """Get or create the global payment processor instance"""
     global processor, processor_rpc_url
     
@@ -1179,7 +1113,7 @@ def get_processor(db: AsyncIOMotorDatabase) -> SolanaPaymentProcessor:
         processor = None
     
     if processor is None:
-        processor = SolanaPaymentProcessor(db)
+        processor = SolanaPaymentProcessor()
         processor_rpc_url = SOLANA_RPC_URL
     
     return processor

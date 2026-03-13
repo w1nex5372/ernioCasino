@@ -1,0 +1,482 @@
+"""
+db_queries.py — All PostgreSQL database operations (replaces MongoDB/Motor calls)
+Each function corresponds to one or more MongoDB operations from the original server.py.
+"""
+import json
+import logging
+from typing import Optional, List, Dict, Any
+from datetime import datetime, timezone
+
+from database import get_pool
+
+
+# ─────────────────────────────────────────────────────────────────
+# Helpers
+# ─────────────────────────────────────────────────────────────────
+
+def _row_to_dict(row) -> Optional[Dict]:
+    """Convert asyncpg Record to dict."""
+    if row is None:
+        return None
+    d = dict(row)
+    # Convert JSONB fields (already parsed by asyncpg) to plain types
+    for key in ('players', 'winner', 'all_players'):
+        if key in d and isinstance(d[key], str):
+            d[key] = json.loads(d[key])
+    # Convert datetime to ISO string for Pydantic compatibility
+    for key in ('created_at', 'last_login', 'started_at', 'finished_at',
+                'won_at', 'purchase_date', 'detected_at', 'last_daily_claim'):
+        if key in d and d[key] is not None and isinstance(d[key], datetime):
+            d[key] = d[key].isoformat()
+    return d
+
+
+def _rows_to_list(rows) -> List[Dict]:
+    return [_row_to_dict(r) for r in rows]
+
+
+# ─────────────────────────────────────────────────────────────────
+# USERS
+# ─────────────────────────────────────────────────────────────────
+
+async def get_user_by_telegram_id(telegram_id: int) -> Optional[Dict]:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT * FROM users WHERE telegram_id = $1", telegram_id
+        )
+        return _row_to_dict(row)
+
+
+async def get_user_by_id(user_id: str) -> Optional[Dict]:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT * FROM users WHERE id = $1", user_id
+        )
+        return _row_to_dict(row)
+
+
+async def get_user_by_username(username: str) -> Optional[Dict]:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT * FROM users WHERE telegram_username = $1", username
+        )
+        return _row_to_dict(row)
+
+
+async def insert_user(user_dict: Dict) -> bool:
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        try:
+            await conn.execute("""
+                INSERT INTO users (
+                    id, telegram_id, first_name, last_name, telegram_username,
+                    photo_url, wallet_address, personal_solana_address,
+                    derived_solana_address, derivation_path,
+                    token_balance, is_verified, is_admin, is_owner, role,
+                    last_daily_claim, created_at, last_login
+                ) VALUES (
+                    $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
+                )
+            """,
+                user_dict.get('id'),
+                user_dict.get('telegram_id'),
+                user_dict.get('first_name', ''),
+                user_dict.get('last_name'),
+                user_dict.get('telegram_username'),
+                user_dict.get('photo_url'),
+                user_dict.get('wallet_address'),
+                user_dict.get('personal_solana_address'),
+                user_dict.get('derived_solana_address'),
+                user_dict.get('derivation_path'),
+                user_dict.get('token_balance', 0),
+                user_dict.get('is_verified', False),
+                user_dict.get('is_admin', False),
+                user_dict.get('is_owner', False),
+                user_dict.get('role', 'user'),
+                user_dict.get('last_daily_claim'),
+                user_dict.get('created_at') or datetime.now(timezone.utc),
+                user_dict.get('last_login') or datetime.now(timezone.utc),
+            )
+            return True
+        except Exception as e:
+            logging.error(f"insert_user error: {e}")
+            return False
+
+
+async def update_user_fields(user_id: str, fields: Dict) -> bool:
+    """Update user by internal id (UUID string)."""
+    if not fields:
+        return False
+    pool = get_pool()
+    allowed = {
+        'first_name', 'last_name', 'telegram_username', 'photo_url',
+        'wallet_address', 'personal_solana_address', 'derived_solana_address',
+        'derivation_path', 'token_balance', 'is_verified', 'is_admin',
+        'is_owner', 'role', 'last_daily_claim', 'last_login',
+    }
+    filtered = {k: v for k, v in fields.items() if k in allowed}
+    if not filtered:
+        return False
+    async with get_pool().acquire() as conn:
+        sets = ', '.join(f"{k} = ${i+2}" for i, k in enumerate(filtered))
+        await conn.execute(
+            f"UPDATE users SET {sets} WHERE id = $1",
+            user_id, *filtered.values()
+        )
+        return True
+
+
+async def update_user_fields_by_telegram_id(telegram_id: int, fields: Dict) -> bool:
+    """Update user by telegram_id."""
+    if not fields:
+        return False
+    allowed = {
+        'first_name', 'last_name', 'telegram_username', 'photo_url',
+        'wallet_address', 'personal_solana_address', 'derived_solana_address',
+        'derivation_path', 'token_balance', 'is_verified', 'is_admin',
+        'is_owner', 'role', 'last_daily_claim', 'last_login',
+    }
+    filtered = {k: v for k, v in fields.items() if k in allowed}
+    if not filtered:
+        return False
+    async with get_pool().acquire() as conn:
+        sets = ', '.join(f"{k} = ${i+2}" for i, k in enumerate(filtered))
+        await conn.execute(
+            f"UPDATE users SET {sets} WHERE telegram_id = $1",
+            telegram_id, *filtered.values()
+        )
+        return True
+
+
+async def increment_user_tokens(user_id: str, amount: int) -> Optional[Dict]:
+    """Atomically increment token_balance and return updated user. Replaces $inc + find_one."""
+    async with get_pool().acquire() as conn:
+        row = await conn.fetchrow(
+            "UPDATE users SET token_balance = token_balance + $2 WHERE id = $1 RETURNING *",
+            user_id, amount
+        )
+        return _row_to_dict(row)
+
+
+async def increment_user_tokens_by_telegram_id(telegram_id: int, amount: int) -> Optional[Dict]:
+    async with get_pool().acquire() as conn:
+        row = await conn.fetchrow(
+            "UPDATE users SET token_balance = token_balance + $2 WHERE telegram_id = $1 RETURNING *",
+            telegram_id, amount
+        )
+        return _row_to_dict(row)
+
+
+async def get_leaderboard(limit: int = 10) -> List[Dict]:
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch(
+            """SELECT first_name, telegram_username, token_balance, photo_url
+               FROM users ORDER BY token_balance DESC LIMIT $1""",
+            limit
+        )
+        return _rows_to_list(rows)
+
+
+async def search_users(query: str, limit: int = 50) -> List[Dict]:
+    pattern = f"%{query}%"
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch(
+            """SELECT * FROM users
+               WHERE first_name ILIKE $1 OR telegram_username ILIKE $1
+               ORDER BY token_balance DESC LIMIT $2""",
+            pattern, limit
+        )
+        return _rows_to_list(rows)
+
+
+async def get_all_users(limit: int = 200) -> List[Dict]:
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT * FROM users ORDER BY token_balance DESC LIMIT $1", limit
+        )
+        return _rows_to_list(rows)
+
+
+async def get_users_with_derived_address() -> List[Dict]:
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT * FROM users WHERE derived_solana_address IS NOT NULL"
+        )
+        return _rows_to_list(rows)
+
+
+async def check_duplicate_wallet(user_id: str, wallet_address: str) -> Optional[Dict]:
+    async with get_pool().acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT * FROM users WHERE id != $1 AND personal_solana_address = $2",
+            user_id, wallet_address
+        )
+        return _row_to_dict(row)
+
+
+# ─────────────────────────────────────────────────────────────────
+# WINNER PRIZES
+# ─────────────────────────────────────────────────────────────────
+
+async def insert_winner_prize(prize_doc: Dict) -> bool:
+    async with get_pool().acquire() as conn:
+        try:
+            await conn.execute("""
+                INSERT INTO winner_prizes
+                    (user_id, username, room_type, prize_link, bet_amount, total_pool, round_number, won_at)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+            """,
+                str(prize_doc.get('user_id', '')),
+                prize_doc.get('username', ''),
+                prize_doc.get('room_type', ''),
+                prize_doc.get('prize_link', ''),
+                prize_doc.get('bet_amount', 0),
+                prize_doc.get('total_pool', 0),
+                prize_doc.get('round_number', 1),
+                prize_doc.get('won_at') or datetime.now(timezone.utc),
+            )
+            return True
+        except Exception as e:
+            logging.error(f"insert_winner_prize error: {e}")
+            return False
+
+
+async def get_user_prizes(user_id: str) -> List[Dict]:
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT * FROM winner_prizes WHERE user_id = $1 ORDER BY won_at DESC",
+            user_id
+        )
+        return _rows_to_list(rows)
+
+
+async def get_recent_prizes(limit: int = 10) -> List[Dict]:
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT * FROM winner_prizes ORDER BY won_at DESC LIMIT $1", limit
+        )
+        return _rows_to_list(rows)
+
+
+# ─────────────────────────────────────────────────────────────────
+# COMPLETED GAMES
+# ─────────────────────────────────────────────────────────────────
+
+async def insert_completed_game(game_doc: Dict) -> bool:
+    async with get_pool().acquire() as conn:
+        try:
+            await conn.execute("""
+                INSERT INTO completed_games
+                    (id, room_type, players, status, prize_pool, winner,
+                     prize_link, match_id, round_number, created_at, started_at, finished_at)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+                ON CONFLICT (id) DO NOTHING
+            """,
+                game_doc.get('id', ''),
+                game_doc.get('room_type', ''),
+                json.dumps(game_doc.get('players', [])),
+                game_doc.get('status', 'finished'),
+                game_doc.get('prize_pool', 0),
+                json.dumps(game_doc.get('winner')) if game_doc.get('winner') else None,
+                game_doc.get('prize_link'),
+                game_doc.get('match_id'),
+                game_doc.get('round_number', 1),
+                game_doc.get('created_at') or datetime.now(timezone.utc),
+                game_doc.get('started_at'),
+                game_doc.get('finished_at') or datetime.now(timezone.utc),
+            )
+            return True
+        except Exception as e:
+            logging.error(f"insert_completed_game error: {e}")
+            return False
+
+
+async def get_recent_completed_games(limit: int = 5) -> List[Dict]:
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT * FROM completed_games ORDER BY finished_at DESC LIMIT $1", limit
+        )
+        return _rows_to_list(rows)
+
+
+async def count_completed_games() -> int:
+    async with get_pool().acquire() as conn:
+        return await conn.fetchval("SELECT COUNT(*) FROM completed_games") or 0
+
+
+async def delete_all_completed_games() -> int:
+    async with get_pool().acquire() as conn:
+        result = await conn.execute("DELETE FROM completed_games")
+        return int(result.split()[-1])
+
+
+# ─────────────────────────────────────────────────────────────────
+# PENDING RESULTS
+# ─────────────────────────────────────────────────────────────────
+
+async def upsert_pending_result(user_id: str, result_doc: Dict) -> bool:
+    async with get_pool().acquire() as conn:
+        try:
+            await conn.execute("""
+                INSERT INTO pending_results
+                    (user_id, match_id, winner, all_players, room_type, prize_pool, prize_link, finished_at)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+                ON CONFLICT (user_id) DO UPDATE SET
+                    match_id = EXCLUDED.match_id,
+                    winner = EXCLUDED.winner,
+                    all_players = EXCLUDED.all_players,
+                    room_type = EXCLUDED.room_type,
+                    prize_pool = EXCLUDED.prize_pool,
+                    prize_link = EXCLUDED.prize_link,
+                    finished_at = EXCLUDED.finished_at
+            """,
+                user_id,
+                result_doc.get('match_id'),
+                json.dumps(result_doc.get('winner')) if result_doc.get('winner') else None,
+                json.dumps(result_doc.get('all_players', [])),
+                result_doc.get('room_type'),
+                result_doc.get('prize_pool', 0),
+                result_doc.get('prize_link'),
+                result_doc.get('finished_at') or datetime.now(timezone.utc),
+            )
+            return True
+        except Exception as e:
+            logging.error(f"upsert_pending_result error: {e}")
+            return False
+
+
+async def get_and_delete_pending_result(user_id: str) -> Optional[Dict]:
+    async with get_pool().acquire() as conn:
+        row = await conn.fetchrow(
+            "DELETE FROM pending_results WHERE user_id = $1 RETURNING *", user_id
+        )
+        return _row_to_dict(row)
+
+
+# ─────────────────────────────────────────────────────────────────
+# TOKEN PURCHASES
+# ─────────────────────────────────────────────────────────────────
+
+async def insert_token_purchase(purchase_doc: Dict) -> bool:
+    async with get_pool().acquire() as conn:
+        try:
+            await conn.execute("""
+                INSERT INTO token_purchases (user_id, sol_amount, token_amount, purchase_date)
+                VALUES ($1,$2,$3,$4)
+            """,
+                str(purchase_doc.get('user_id', '')),
+                purchase_doc.get('sol_amount'),
+                purchase_doc.get('token_amount', 0),
+                purchase_doc.get('purchase_date') or datetime.now(timezone.utc),
+            )
+            return True
+        except Exception as e:
+            logging.error(f"insert_token_purchase error: {e}")
+            return False
+
+
+async def get_token_purchases(user_id: str) -> List[Dict]:
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT * FROM token_purchases WHERE user_id = $1 ORDER BY purchase_date DESC",
+            user_id
+        )
+        return _rows_to_list(rows)
+
+
+# ─────────────────────────────────────────────────────────────────
+# TEMPORARY WALLETS
+# ─────────────────────────────────────────────────────────────────
+
+async def get_temporary_wallet(wallet_address: str) -> Optional[Dict]:
+    async with get_pool().acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT * FROM temporary_wallets WHERE wallet_address = $1", wallet_address
+        )
+        return _row_to_dict(row)
+
+
+async def insert_temporary_wallet(wallet_doc: Dict) -> bool:
+    async with get_pool().acquire() as conn:
+        try:
+            await conn.execute("""
+                INSERT INTO temporary_wallets
+                    (wallet_address, user_id, required_sol, private_key, token_amount,
+                     payment_detected, tokens_credited, sol_forwarded, status, created_at)
+                VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+                ON CONFLICT (wallet_address) DO NOTHING
+            """,
+                wallet_doc.get('wallet_address', ''),
+                str(wallet_doc.get('user_id', '')),
+                wallet_doc.get('required_sol'),
+                wallet_doc.get('private_key'),
+                wallet_doc.get('token_amount', 0),
+                wallet_doc.get('payment_detected', False),
+                wallet_doc.get('tokens_credited', False),
+                wallet_doc.get('sol_forwarded', False),
+                wallet_doc.get('status', 'pending'),
+                wallet_doc.get('created_at') or datetime.now(timezone.utc),
+            )
+            return True
+        except Exception as e:
+            logging.error(f"insert_temporary_wallet error: {e}")
+            return False
+
+
+async def update_temporary_wallet(wallet_address: str, fields: Dict) -> bool:
+    if not fields:
+        return False
+    allowed = {
+        'payment_detected', 'tokens_credited', 'sol_forwarded',
+        'status', 'detected_at',
+    }
+    filtered = {k: v for k, v in fields.items() if k in allowed}
+    if not filtered:
+        return False
+    async with get_pool().acquire() as conn:
+        sets = ', '.join(f"{k} = ${i+2}" for i, k in enumerate(filtered))
+        await conn.execute(
+            f"UPDATE temporary_wallets SET {sets} WHERE wallet_address = $1",
+            wallet_address, *filtered.values()
+        )
+        return True
+
+
+async def count_pending_wallets() -> int:
+    async with get_pool().acquire() as conn:
+        return await conn.fetchval(
+            "SELECT COUNT(*) FROM temporary_wallets WHERE status = 'pending'"
+        ) or 0
+
+
+async def get_all_temporary_wallets_monitoring() -> List[Dict]:
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT * FROM temporary_wallets WHERE status IN ('pending', 'monitoring')"
+        )
+        return _rows_to_list(rows)
+
+
+# ─────────────────────────────────────────────────────────────────
+# ADMIN — delete all data
+# ─────────────────────────────────────────────────────────────────
+
+async def delete_all_data() -> Dict:
+    async with get_pool().acquire() as conn:
+        r_users     = await conn.execute("DELETE FROM users")
+        r_games     = await conn.execute("DELETE FROM completed_games")
+        r_prizes    = await conn.execute("DELETE FROM winner_prizes")
+        r_pending   = await conn.execute("DELETE FROM pending_results")
+        r_purchases = await conn.execute("DELETE FROM token_purchases")
+        r_wallets   = await conn.execute("DELETE FROM temporary_wallets")
+        return {
+            "users":             int(r_users.split()[-1]),
+            "completed_games":   int(r_games.split()[-1]),
+            "winner_prizes":     int(r_prizes.split()[-1]),
+            "pending_results":   int(r_pending.split()[-1]),
+            "token_purchases":   int(r_purchases.split()[-1]),
+            "temporary_wallets": int(r_wallets.split()[-1]),
+        }
