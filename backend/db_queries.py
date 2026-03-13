@@ -14,6 +14,18 @@ from database import get_pool
 # Helpers
 # ─────────────────────────────────────────────────────────────────
 
+def _parse_dt(value) -> Optional[datetime]:
+    """Convert ISO string or datetime to datetime object."""
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value
+    try:
+        return datetime.fromisoformat(str(value))
+    except Exception:
+        return None
+
+
 def _row_to_dict(row) -> Optional[Dict]:
     """Convert asyncpg Record to dict."""
     if row is None:
@@ -96,9 +108,9 @@ async def insert_user(user_dict: Dict) -> bool:
                 user_dict.get('is_admin', False),
                 user_dict.get('is_owner', False),
                 user_dict.get('role', 'user'),
-                user_dict.get('last_daily_claim'),
-                user_dict.get('created_at') or datetime.now(timezone.utc),
-                user_dict.get('last_login') or datetime.now(timezone.utc),
+                _parse_dt(user_dict.get('last_daily_claim')),
+                _parse_dt(user_dict.get('created_at')) or datetime.now(timezone.utc),
+                _parse_dt(user_dict.get('last_login')) or datetime.now(timezone.utc),
             )
             return True
         except Exception as e:
@@ -111,13 +123,15 @@ async def update_user_fields(user_id: str, fields: Dict) -> bool:
     if not fields:
         return False
     pool = get_pool()
+    dt_fields = {'last_daily_claim', 'last_login', 'created_at'}
     allowed = {
         'first_name', 'last_name', 'telegram_username', 'photo_url',
         'wallet_address', 'personal_solana_address', 'derived_solana_address',
         'derivation_path', 'token_balance', 'is_verified', 'is_admin',
         'is_owner', 'role', 'last_daily_claim', 'last_login',
     }
-    filtered = {k: v for k, v in fields.items() if k in allowed}
+    filtered = {k: (_parse_dt(v) if k in dt_fields else v)
+                for k, v in fields.items() if k in allowed}
     if not filtered:
         return False
     async with get_pool().acquire() as conn:
@@ -133,13 +147,15 @@ async def update_user_fields_by_telegram_id(telegram_id: int, fields: Dict) -> b
     """Update user by telegram_id."""
     if not fields:
         return False
+    dt_fields = {'last_daily_claim', 'last_login', 'created_at'}
     allowed = {
         'first_name', 'last_name', 'telegram_username', 'photo_url',
         'wallet_address', 'personal_solana_address', 'derived_solana_address',
         'derivation_path', 'token_balance', 'is_verified', 'is_admin',
         'is_owner', 'role', 'last_daily_claim', 'last_login',
     }
-    filtered = {k: v for k, v in fields.items() if k in allowed}
+    filtered = {k: (_parse_dt(v) if k in dt_fields else v)
+                for k, v in fields.items() if k in allowed}
     if not filtered:
         return False
     async with get_pool().acquire() as conn:
