@@ -331,6 +331,17 @@ async def insert_completed_game(game_doc: Dict) -> bool:
             return False
 
 
+async def get_user_completed_games(user_id: str, limit: int = 10) -> List[Dict]:
+    """Return completed games where this user was a participant."""
+    import json as _json
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT * FROM completed_games WHERE players @> $1::jsonb ORDER BY finished_at DESC LIMIT $2",
+            _json.dumps([{"user_id": user_id}]), limit
+        )
+        return _rows_to_list(rows)
+
+
 async def get_recent_completed_games(limit: int = 5) -> List[Dict]:
     async with get_pool().acquire() as conn:
         rows = await conn.fetch(

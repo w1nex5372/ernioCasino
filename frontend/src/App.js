@@ -1895,7 +1895,7 @@ function App() {
   const loadGameHistory = async (showLoading = false) => {
     try {
       if (showLoading) setIsRefreshingHistory(true);
-      const response = await axios.get(`${API}/game-history?limit=10`);
+      const response = await axios.get(`${API}/game-history?limit=10${user?.id ? `&user_id=${user.id}` : ''}`);
       setGameHistory(response.data.games);
       if (showLoading) {
         toast.success('✅ History refreshed!', { duration: 2000 });
