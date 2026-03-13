@@ -51,6 +51,7 @@ const ROOM_CONFIGS = {
     icon: '🥉',
     min: 200,
     max: 450,
+    maxPlayers: 3,
     gradient: 'from-amber-600 to-amber-800'
   },
   silver: {
@@ -58,6 +59,7 @@ const ROOM_CONFIGS = {
     icon: '🥈',
     min: 350,
     max: 800,
+    maxPlayers: 3,
     gradient: 'from-slate-400 to-slate-600'
   },
   gold: {
@@ -65,7 +67,16 @@ const ROOM_CONFIGS = {
     icon: '🥇',
     min: 650,
     max: 1200,
+    maxPlayers: 3,
     gradient: 'from-yellow-400 to-yellow-600'
+  },
+  freeroll: {
+    name: 'Free Roll',
+    icon: '🎟️',
+    min: 0,
+    max: 0,
+    maxPlayers: 30,
+    gradient: 'from-emerald-500 to-teal-600'
   },
 };
 
@@ -551,6 +562,8 @@ function App() {
   const [recentWinners, setRecentWinners] = useState([]);
   const [userPrizes, setUserPrizes] = useState([]);
   const [inLobby, setInLobby] = useState(false); // Track if user is in lobby waiting
+  const [lobbyIsAnonymous, setLobbyIsAnonymous] = useState(false); // Track if joined lobby anonymously
+  const [showRevealModal, setShowRevealModal] = useState(false); // Show identity reveal modal
   const [lobbyData, setLobbyData] = useState(null); // Store lobby room data
   const [showWinnerScreen, setShowWinnerScreen] = useState(false); // Show winner announcement
   const [winnerData, setWinnerData] = useState(null); // Store winner information
@@ -587,7 +600,8 @@ function App() {
   const [betAmounts, setBetAmounts] = useState({
     bronze: '',
     silver: '',
-    gold: ''
+    gold: '',
+    freeroll: '0'
   }); // Separate bet amount for each room
   const [userActiveRooms, setUserActiveRooms] = useState({}); // Track which rooms user is in: {roomType: {roomId}}
 
@@ -1232,6 +1246,7 @@ function App() {
       setShowWinnerScreen(false);
       setWinnerData(null);
       setInLobby(false);
+      setLobbyIsAnonymous(false);
       setLobbyData(null);
       setGameInProgress(false);
       setActiveRoom(null);
@@ -1315,6 +1330,34 @@ function App() {
 
     newSocket.on('balance_updated', (data) => {
       setUser(prev => prev && data.user_id === prev.id ? {...prev, token_balance: data.new_balance} : prev);
+    });
+
+    newSocket.on('players_updated', (data) => {
+      console.log('📥 EVENT: players_updated', data);
+      // Update lobby room participants when a player reveals identity
+      if (data.room_id && data.players) {
+        // Find which room type this room belongs to by checking lobbyData
+        // We update by room_id matching in roomParticipants via the room_type in lobbyData
+        setRoomParticipants(prev => {
+          const newPrev = { ...prev };
+          // Update any room type whose players contain a match for this room_id
+          // Since we track by room_type, we rebuild via players list
+          Object.keys(newPrev).forEach(rt => {
+            // We identify room by checking if any of the updated players match current list
+            if (newPrev[rt] && newPrev[rt].length > 0) {
+              const currentIds = new Set(newPrev[rt].map(p => p.user_id));
+              const updatedIds = new Set(data.players.map(p => p.user_id));
+              // If the sets overlap significantly, this is our room
+              let overlap = 0;
+              currentIds.forEach(id => { if (updatedIds.has(id)) overlap++; });
+              if (overlap > 0 && overlap >= Math.min(currentIds.size, updatedIds.size) / 2) {
+                newPrev[rt] = data.players;
+              }
+            }
+          });
+          return newPrev;
+        });
+      }
     });
 
     return () => {
@@ -2110,25 +2153,25 @@ function App() {
 
   const joinRoom = async (roomType, isAnonymous = false) => {
     const betAmount = betAmounts[roomType];
-    
-    console.log('🎯 JOIN ROOM CALLED!', { 
-      roomType, 
-      user: user ? 'EXISTS' : 'NULL', 
+
+    console.log('🎯 JOIN ROOM CALLED!', {
+      roomType,
+      user: user ? 'EXISTS' : 'NULL',
       betAmount,
-      selectedRoom 
+      selectedRoom
     });
-    
+
     if (!user) {
       console.error('❌ No user');
       toast.error('Please authenticate first');
       return;
     }
-    
+
     // Check if user is already in THIS specific room type
     if (userActiveRooms[roomType]) {
       // Show the lobby (Return to Room)
       console.log('✅ User already in this room, showing lobby');
-      
+
       // Fetch current room state for this specific room type
       const specificRoomData = await checkUserRoomStatus(roomType);
       toast.info(`🔍 Return to Room: ${specificRoomData ? 'found room ' + specificRoomData.room_id?.substring(0,8) : 'NO ROOM'}`, { duration: 5000 });
@@ -2159,29 +2202,32 @@ function App() {
       // Silently return to room, no toast needed
       return;
     }
-    
+
     // User can join this room (not participating yet in this room type)
 
-    // Parse bet amount
-    const parsedBetAmount = parseInt(betAmount);
+    // Freeroll: skip validation, use bet 0
+    const isFreeroll = roomType === 'freeroll';
+    const parsedBetAmount = isFreeroll ? 0 : parseInt(betAmount);
     console.log('💰 Parsed bet amount:', parsedBetAmount);
-    
-    if (!parsedBetAmount || isNaN(parsedBetAmount)) {
-      console.error('❌ Invalid bet amount (not a number)', betAmount);
-      toast.error('Please enter a valid bet amount');
-      return;
-    }
 
-    if (parsedBetAmount < ROOM_CONFIGS[roomType].min || parsedBetAmount > ROOM_CONFIGS[roomType].max) {
-      console.error('❌ Bet amount out of range', parsedBetAmount);
-      toast.error(`Bet amount must be between ${ROOM_CONFIGS[roomType].min} - ${ROOM_CONFIGS[roomType].max} tokens`);
-      return;
-    }
+    if (!isFreeroll) {
+      if (!parsedBetAmount || isNaN(parsedBetAmount)) {
+        console.error('❌ Invalid bet amount (not a number)', betAmount);
+        toast.error('Please enter a valid bet amount');
+        return;
+      }
 
-    if (user.token_balance < parsedBetAmount) {
-      console.error('❌ Insufficient tokens', { balance: user.token_balance, bet: parsedBetAmount });
-      toast.error('Insufficient tokens');
-      return;
+      if (parsedBetAmount < ROOM_CONFIGS[roomType].min || parsedBetAmount > ROOM_CONFIGS[roomType].max) {
+        console.error('❌ Bet amount out of range', parsedBetAmount);
+        toast.error(`Bet amount must be between ${ROOM_CONFIGS[roomType].min} - ${ROOM_CONFIGS[roomType].max} tokens`);
+        return;
+      }
+
+      if (user.token_balance < parsedBetAmount) {
+        console.error('❌ Insufficient tokens', { balance: user.token_balance, bet: parsedBetAmount });
+        toast.error('Insufficient tokens');
+        return;
+      }
     }
 
     console.log('✅ Validation passed, calling API with:', {
@@ -2242,10 +2288,11 @@ function App() {
         blockWinnerScreenRef.current = false; // Allow winner screen for new game
         console.log('✅ Winner screen block RESET for new game');
         setInLobby(true);
+        setLobbyIsAnonymous(isAnonymous); // Track if joined anonymously
         setLobbyData({
           room_type: roomType,
           room_id: response.data.room_id,
-          bet_amount: parseInt(betAmount)
+          bet_amount: parsedBetAmount
         });
         
         loadRooms();
@@ -2422,6 +2469,7 @@ function App() {
             setActiveGameRoomId(null);
             setActiveTab('rooms');
             setInLobby(false);
+            setLobbyIsAnonymous(false);
             setGameInProgress(false);
             if (user && user.id) {
               axios.get(`${API}/user/${user.id}`)
@@ -3056,9 +3104,10 @@ function App() {
                     <div className="text-center">
                       {(() => {
                         const playerCount = roomParticipants[lobbyData.room_type]?.length || 0;
-                        const playersNeeded = 3 - playerCount;
-                        
-                        if (playerCount < 3) {
+                        const maxPlayers = ROOM_CONFIGS[lobbyData.room_type]?.maxPlayers || 3;
+                        const playersNeeded = maxPlayers - playerCount;
+
+                        if (playerCount < maxPlayers) {
                           // Waiting for more players
                           return (
                             <div className="py-4">
@@ -3067,7 +3116,7 @@ function App() {
                                 Waiting for {playersNeeded} more player{playersNeeded === 1 ? '' : 's'}...
                               </p>
                               <p className="text-slate-400 text-sm mt-1">
-                                {playerCount}/3 players ready
+                                {playerCount}/{maxPlayers} players ready
                               </p>
                               <p className="text-slate-500 text-xs mt-2">Stay on this screen</p>
                             </div>
@@ -3081,7 +3130,7 @@ function App() {
                                 <div className="w-40 h-40 bg-gradient-to-r from-red-600 via-red-500 to-purple-600 rounded-full opacity-20 animate-ping"></div>
                                 <div className="w-32 h-32 bg-gradient-to-r from-red-600 to-purple-700 rounded-full opacity-30 animate-pulse absolute"></div>
                               </div>
-                              
+
                               {/* Main Content */}
                               <div className="relative z-10">
                                 <div className="text-6xl mb-4 animate-bounce">🚀</div>
@@ -3093,16 +3142,16 @@ function App() {
                                     THE GAME IS ABOUT TO BEGIN!
                                   </p>
                                 </div>
-                                
+
                                 {/* Ready indicator */}
                                 <div className="flex items-center justify-center gap-3 mt-6">
                                   <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                                   <p className="text-purple-400 font-bold text-lg">
-                                    All 3 Players Ready
+                                    All {maxPlayers} Players Ready
                                   </p>
                                   <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                                 </div>
-                                
+
                                 <p className="text-slate-400 text-sm mt-4 animate-pulse">
                                   Stay on this screen...
                                 </p>
@@ -3129,8 +3178,13 @@ function App() {
                         ))}
                       </div>
                       {/* Input */}
-                      {user?.is_anonymous ? (
-                        <p style={{ color: '#475569', fontSize: 11, textAlign: 'center' }}>🔒 Login with Telegram to chat</p>
+                      {lobbyIsAnonymous ? (
+                        <button
+                          onClick={() => setShowRevealModal(true)}
+                          style={{ width: '100%', background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.4)', borderRadius: 8, padding: '8px 12px', color: '#a78bfa', fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'center' }}
+                        >
+                          🥷 You're anonymous — tap to reveal identity
+                        </button>
                       ) : (
                         <form onSubmit={e => {
                           e.preventDefault();
@@ -3160,6 +3214,7 @@ function App() {
                       <Button
                         onClick={() => {
                           setInLobby(false);
+                          setLobbyIsAnonymous(false);
                           // lobbyData and userActiveRooms kept — player still in room
                           toast.info('Your spot is saved! Hit "Return to Room" to come back.');
                         }}
@@ -3245,9 +3300,12 @@ function App() {
                 )}
 
                 <div className={`grid gap-3 w-full ${isMobile ? 'grid-cols-1 px-1' : 'lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto'}`}>
-                  {['bronze', 'silver', 'gold'].map((roomType) => {
+                  {['bronze', 'silver', 'gold', 'freeroll'].map((roomType) => {
                     const room = rooms.find(r => r.room_type === roomType) || { players_count: 0 };
                     const config = ROOM_CONFIGS[roomType];
+                    const isFreeroll = roomType === 'freeroll';
+                    const maxPlayers = room.max_players || config.maxPlayers || 3;
+                    const isRoomLocked = isFreeroll && room.is_locked;
 
                     return (
                       <Card key={roomType} className="spinwar-room-card overflow-hidden">
@@ -3260,65 +3318,79 @@ function App() {
                                   <span className="text-lg flex-shrink-0">{config.icon}</span>
                                   <div className="min-w-0 flex-1">
                                     <h3 className="text-white font-bold text-sm truncate">{config.name}</h3>
-                                    <p className="text-white/80 text-xs truncate">{config.min}-{config.max}</p>
+                                    {isFreeroll ? (
+                                      <span className="text-xs font-bold text-emerald-100">FREE ENTRY</span>
+                                    ) : (
+                                      <p className="text-white/80 text-xs truncate">{config.min}-{config.max}</p>
+                                    )}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                  <Badge className={`text-xs px-2 py-0.5 flex-shrink-0 ${
-                                    room.status === 'playing' || room.status === 'finished' ? 'bg-red-500 text-white animate-pulse' :
-                                    room.players_count === 0 ? 'bg-slate-500 text-white' :
-                                    room.players_count === 1 ? 'bg-yellow-500 text-black animate-pulse' :
-                                    'bg-green-500 text-black'
-                                  }`}>
-                                    {room.status === 'playing' || room.status === 'finished' ? '🔒 FULL' :
-                                     room.players_count === 0 ? '🎯 Empty' :
-                                     room.players_count === 1 ? '🔥 Filling' :
-                                     room.players_count === 2 ? '⏳ Nearly Ready' :
-                                     '⚡ Ready'}
-                                  </Badge>
-                                  <span className="text-xs text-white/70">{room.players_count}/3</span>
+                                  {isRoomLocked ? (
+                                    <Badge className="text-xs px-2 py-0.5 flex-shrink-0 bg-slate-600 text-white">🔒 Locked</Badge>
+                                  ) : (
+                                    <Badge className={`text-xs px-2 py-0.5 flex-shrink-0 ${
+                                      room.status === 'playing' || room.status === 'finished' ? 'bg-red-500 text-white animate-pulse' :
+                                      room.players_count === 0 ? 'bg-slate-500 text-white' :
+                                      room.players_count < maxPlayers - 1 ? 'bg-yellow-500 text-black animate-pulse' :
+                                      'bg-green-500 text-black'
+                                    }`}>
+                                      {room.status === 'playing' || room.status === 'finished' ? '🔒 FULL' :
+                                       room.players_count === 0 ? '🎯 Empty' :
+                                       room.players_count < maxPlayers ? '🔥 Filling' :
+                                       '⚡ Ready'}
+                                    </Badge>
+                                  )}
+                                  <span className="text-xs text-white/70">{room.players_count}/{maxPlayers}</span>
                                 </div>
                               </div>
                             </div>
                             <div className="p-2 space-y-2">
-                              <Input
-                                type="number"
-                                placeholder={`${config.min}-${config.max}`}
-                                value={betAmounts[roomType] || ''}
-                                onChange={(e) => {
-                                  console.log('📝 Bet amount changed:', e.target.value, 'for room:', roomType);
-                                  setSelectedRoom(roomType);
-                                  setBetAmounts(prev => ({ ...prev, [roomType]: e.target.value }));
-                                }}
-                                disabled={!!userActiveRooms[roomType]}
-                                className="bg-slate-700 border-slate-500 text-white text-center h-9 text-sm placeholder:text-slate-400 focus:border-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                              />
+                              {isFreeroll ? (
+                                <div className="text-center py-1">
+                                  <span className="text-emerald-400 font-bold text-sm">🏆 500 tokens</span>
+                                  <span className="text-slate-400 text-xs ml-1">house prize</span>
+                                </div>
+                              ) : (
+                                <Input
+                                  type="number"
+                                  placeholder={`${config.min}-${config.max}`}
+                                  value={betAmounts[roomType] || ''}
+                                  onChange={(e) => {
+                                    console.log('📝 Bet amount changed:', e.target.value, 'for room:', roomType);
+                                    setSelectedRoom(roomType);
+                                    setBetAmounts(prev => ({ ...prev, [roomType]: e.target.value }));
+                                  }}
+                                  disabled={!!userActiveRooms[roomType]}
+                                  className="bg-slate-700 border-slate-500 text-white text-center h-9 text-sm placeholder:text-slate-400 focus:border-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                />
+                              )}
 
                               <Button
                                 onClick={async () => {
-                                  console.log('🔘 MOBILE Join button clicked!', {
-                                    roomType,
-                                    betAmount: betAmounts[roomType],
-                                    selectedRoom,
-                                    userBalance: user?.token_balance,
-                                    playersCount: room.players_count,
-                                    roomStatus: room.status
-                                  });
-                                  promptJoinRoom(roomType);
-                                  console.log('🔘 Join room function completed');
+                                  if (isFreeroll) {
+                                    if (isRoomLocked) return;
+                                    if (userActiveRooms[roomType]) { joinRoom(roomType, false); return; }
+                                    setAnonModal({ roomType, betAmount: '0' });
+                                  } else {
+                                    promptJoinRoom(roomType);
+                                  }
                                 }}
-                                disabled={!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))}
+                                disabled={isRoomLocked || (!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= maxPlayers || (!isFreeroll && (!betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType])))))}
                                 className={`w-full h-9 text-white font-semibold text-sm ${
+                                  isRoomLocked ? 'bg-slate-600 cursor-not-allowed' :
                                   userActiveRooms[roomType] ? 'bg-blue-600 hover:bg-blue-700' :
-                                  (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))
+                                  (room.status === 'playing' || room.status === 'finished' || room.players_count >= maxPlayers || (!isFreeroll && (!betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))))
                                     ? 'bg-slate-600 cursor-not-allowed'
-                                    : 'spinwar-btn-primary'
+                                    : isFreeroll ? 'bg-emerald-600 hover:bg-emerald-700' : 'spinwar-btn-primary'
                                 }`}
                               >
                                 <Play className="w-3 h-3 mr-1" />
-                                {userActiveRooms[roomType] ? '↩️ Return to Room' :
+                                {isRoomLocked ? '🔒 Locked' :
+                                 userActiveRooms[roomType] ? '↩️ Return to Room' :
                                  room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
-                                 room.players_count >= 3 ? 'Full' :
+                                 room.players_count >= maxPlayers ? 'Full' :
+                                 isFreeroll ? 'Join Free' :
                                  !betAmounts[roomType] ? 'Enter Bet' :
                                  parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max ? 'Invalid' :
                                  user.token_balance < parseInt(betAmounts[roomType]) ? 'Low Balance' : 'Join'}
@@ -3340,13 +3412,19 @@ function App() {
                                       <CardTitle className="text-xl font-bold leading-tight">
                                         {config.name}
                                       </CardTitle>
-                                      <CardDescription className="text-white/90 font-medium leading-tight">
-                                        {config.min} - {config.max} tokens
-                                      </CardDescription>
+                                      {isFreeroll ? (
+                                        <CardDescription className="text-white/90 font-bold leading-tight">
+                                          FREE ENTRY · 🏆 500 tokens prize
+                                        </CardDescription>
+                                      ) : (
+                                        <CardDescription className="text-white/90 font-medium leading-tight">
+                                          {config.min} - {config.max} tokens
+                                        </CardDescription>
+                                      )}
                                     </div>
                                   </div>
                                   <Badge className="bg-white/20 text-white font-bold">
-                                    {room.players_count}/3 players
+                                    {room.players_count}/{maxPlayers} players
                                   </Badge>
                                 </div>
                               </div>
@@ -3354,57 +3432,64 @@ function App() {
                             <CardContent className="p-4">
                               <div className="space-y-4">
                                 <>
-                                  {room.players_count === 0 && (
+                                  {isRoomLocked ? (
+                                    <p className="text-slate-400 text-sm text-center">🔒 This room is currently locked by admin</p>
+                                  ) : room.players_count === 0 ? (
                                     <p className="text-slate-400 text-sm text-center">No players yet. Be the first to join!</p>
-                                  )}
-                                  {room.players_count === 1 && (
-                                    <p className="text-purple-400 text-sm text-center font-medium">1 player waiting. Join now!</p>
-                                  )}
-                                  {room.players_count >= 3 && (
+                                  ) : room.players_count < maxPlayers ? (
+                                    <p className="text-purple-400 text-sm text-center font-medium">{room.players_count} player{room.players_count !== 1 ? 's' : ''} waiting. Join now!</p>
+                                  ) : (
                                     <p className="text-red-400 text-sm text-center font-medium">Room full - game in progress</p>
                                   )}
                                 </>
 
                                 <div className="space-y-3">
-                                  <Input
-                                    type="number"
-                                    placeholder={`Bet amount (${config.min}-${config.max})`}
-                                    value={betAmounts[roomType] || ''}
-                                    onChange={(e) => {
-                                      setSelectedRoom(roomType);
-                                      setBetAmounts(prev => ({ ...prev, [roomType]: e.target.value }));
-                                    }}
-                                    min={config.min}
-                                    max={config.max}
-                                    disabled={!!userActiveRooms[roomType]}
-                                    className="bg-slate-700 border-slate-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                                  />
+                                  {isFreeroll ? (
+                                    <div className="text-center py-2 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
+                                      <span className="text-emerald-400 font-bold">🏆 500 tokens</span>
+                                      <span className="text-slate-400 text-sm ml-2">house prize — FREE to enter</span>
+                                    </div>
+                                  ) : (
+                                    <Input
+                                      type="number"
+                                      placeholder={`Bet amount (${config.min}-${config.max})`}
+                                      value={betAmounts[roomType] || ''}
+                                      onChange={(e) => {
+                                        setSelectedRoom(roomType);
+                                        setBetAmounts(prev => ({ ...prev, [roomType]: e.target.value }));
+                                      }}
+                                      min={config.min}
+                                      max={config.max}
+                                      disabled={!!userActiveRooms[roomType]}
+                                      className="bg-slate-700 border-slate-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                    />
+                                  )}
 
                                   <Button
                                     onClick={async () => {
-                                      console.log('🖥️ DESKTOP Join button clicked!', {
-                                        roomType,
-                                        betAmount: betAmounts[roomType],
-                                        selectedRoom,
-                                        userBalance: user?.token_balance,
-                                        playersCount: room.players_count,
-                                        roomStatus: room.status
-                                      });
-                                      promptJoinRoom(roomType);
-                                      console.log('🖥️ Join room function completed');
+                                      if (isFreeroll) {
+                                        if (isRoomLocked) return;
+                                        if (userActiveRooms[roomType]) { joinRoom(roomType, false); return; }
+                                        setAnonModal({ roomType, betAmount: '0' });
+                                      } else {
+                                        promptJoinRoom(roomType);
+                                      }
                                     }}
-                                    disabled={!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))}
+                                    disabled={isRoomLocked || (!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= maxPlayers || (!isFreeroll && (!betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType])))))}
                                     className={`w-full ${
+                                      isRoomLocked ? 'bg-slate-600 cursor-not-allowed' :
                                       userActiveRooms[roomType] ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600' :
-                                      (room.status === 'playing' || room.status === 'finished' || room.players_count >= 3 || !betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))
+                                      (room.status === 'playing' || room.status === 'finished' || room.players_count >= maxPlayers || (!isFreeroll && (!betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))))
                                         ? 'bg-slate-600 cursor-not-allowed'
-                                        : 'spinwar-btn-primary'
+                                        : isFreeroll ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500' : 'spinwar-btn-primary'
                                     } text-white font-bold py-3`}
                                   >
                                     <Play className="w-4 h-4 mr-2" />
-                                    {userActiveRooms[roomType] ? '↩️ Return to Room' :
+                                    {isRoomLocked ? '🔒 Locked' :
+                                     userActiveRooms[roomType] ? '↩️ Return to Room' :
                                      room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
-                                     room.players_count >= 3 ? 'Room Full' :
+                                     room.players_count >= maxPlayers ? 'Room Full' :
+                                     isFreeroll ? '🎟️ Join Free Roll' :
                                      !betAmounts[roomType] ? 'Enter Bet Amount' :
                                      parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max ? 'Invalid Amount' :
                                      user.token_balance < parseInt(betAmounts[roomType]) ? 'Insufficient Tokens' : 'Join Spin'}
@@ -3858,6 +3943,51 @@ function App() {
         </div>
       )}
 
+      {/* Reveal Identity Modal */}
+      {showRevealModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="bg-slate-800 border border-slate-600 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+            <h2 className="text-white text-xl font-bold text-center mb-1">Reveal your identity?</h2>
+            <p className="text-slate-400 text-sm text-center mb-6">Other players will see your real Telegram profile</p>
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setShowRevealModal(false);
+                  setLobbyIsAnonymous(false);
+                  if (socket && lobbyData?.room_id && user?.id) {
+                    socket.emit('reveal_identity', {
+                      room_id: lobbyData.room_id,
+                      user_id: user.id,
+                      first_name: user.first_name,
+                      last_name: user.last_name,
+                      photo_url: user.photo_url,
+                      username: user.telegram_username,
+                    });
+                  }
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold transition-all active:scale-95"
+              >
+                {user?.photo_url ? (
+                  <img src={user.photo_url} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-violet-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                    {user?.first_name?.[0] || '?'}
+                  </div>
+                )}
+                <div className="text-left">
+                  <div className="text-white font-semibold">Reveal as {user?.first_name} {user?.last_name || ''}</div>
+                  {user?.telegram_username && <div className="text-violet-200 text-xs">@{user.telegram_username}</div>}
+                </div>
+              </button>
+            </div>
+            <button
+              onClick={() => setShowRevealModal(false)}
+              className="w-full mt-4 py-2 text-slate-400 hover:text-white text-sm transition-colors"
+            >Cancel</button>
+          </div>
+        </div>
+      )}
+
       {/* Payment Modal */}
       <PaymentModal
         isOpen={showPaymentModal}
@@ -4080,6 +4210,45 @@ function AdminPanel({ API, rooms, isMobile, onRoomsRefresh }) {
   const [promoCodes, setPromoCodes] = React.useState([]);
   const [solWallet, setSolWallet] = React.useState('');
   const [solSig, setSolSig] = React.useState('');
+  const [freerollConfig, setFreerollConfig] = React.useState({ prize: 500, max_players: 30, is_locked: false });
+  const [freerollPrize, setFreerollPrize] = React.useState('500');
+  const [freerollMaxPlayers, setFreerollMaxPlayers] = React.useState('30');
+  const [freerollSaving, setFreerollSaving] = React.useState(false);
+
+  const loadFreerollConfig = async () => {
+    try {
+      const r = await axios.get(`${API}/admin/freeroll-config?admin_key=${ADMIN_KEY}`);
+      setFreerollConfig(r.data);
+      setFreerollPrize(String(r.data.prize));
+      setFreerollMaxPlayers(String(r.data.max_players));
+    } catch (e) {
+      // silently ignore
+    }
+  };
+
+  const saveFreerollConfig = async () => {
+    setFreerollSaving(true);
+    try {
+      const r = await axios.post(`${API}/admin/freeroll-config?admin_key=${ADMIN_KEY}&prize=${freerollPrize}&max_players=${freerollMaxPlayers}&is_locked=${freerollConfig.is_locked}`);
+      setFreerollConfig(r.data);
+      toast.success('✅ Free Roll config saved');
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed to save');
+    } finally {
+      setFreerollSaving(false);
+    }
+  };
+
+  const toggleFreerollLock = async () => {
+    const newLocked = !freerollConfig.is_locked;
+    try {
+      const r = await axios.post(`${API}/admin/freeroll-config?admin_key=${ADMIN_KEY}&is_locked=${newLocked}`);
+      setFreerollConfig(r.data);
+      toast.success(newLocked ? '🔒 Free Roll locked' : '🔓 Free Roll unlocked');
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed');
+    }
+  };
 
   const lookupUser = async () => {
     if (!tgId) return;
@@ -4290,9 +4459,9 @@ function AdminPanel({ API, rooms, isMobile, onRoomsRefresh }) {
 
   const exportCSV = () => window.open(`${API}/admin/export-users?admin_key=${ADMIN_KEY}`, '_blank');
 
-  React.useEffect(() => { loadStats(); loadChart(); loadPromoCodes(); loadRecentGames(); }, []);
+  React.useEffect(() => { loadStats(); loadChart(); loadPromoCodes(); loadRecentGames(); loadFreerollConfig(); }, []);
 
-  const ROOM_MIN_BETS = { bronze: 200, silver: 350, gold: 650 };
+  const ROOM_MIN_BETS = { bronze: 200, silver: 350, gold: 650, freeroll: 0 };
   const card = "bg-slate-800/90 border border-red-700/40 rounded-xl p-4 space-y-3";
   const inp = "bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2";
   const maxGames = dailyStats.length ? Math.max(...dailyStats.map(d => d.games), 1) : 1;
@@ -4421,7 +4590,7 @@ function AdminPanel({ API, rooms, isMobile, onRoomsRefresh }) {
       <div className={card}>
         <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>🎮</span> Room Control</h3>
         <select value={fakeRoom} onChange={e => { setFakeRoom(e.target.value); setFakeBet(String(ROOM_MIN_BETS[e.target.value])); }} className={`w-full ${inp}`}>
-          {['bronze', 'silver', 'gold'].map(r => (
+          {['bronze', 'silver', 'gold', 'freeroll'].map(r => (
             <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)} (min {ROOM_MIN_BETS[r]})</option>
           ))}
         </select>
@@ -4440,6 +4609,54 @@ function AdminPanel({ API, rooms, isMobile, onRoomsRefresh }) {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Free Roll Settings */}
+      <div className={card}>
+        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>🎟️</span> Free Roll Settings</h3>
+        <div className="flex items-center justify-between bg-slate-700/40 rounded-lg px-3 py-2">
+          <div>
+            <div className="text-white text-xs font-semibold">Room Status</div>
+            <div className={`text-xs mt-0.5 ${freerollConfig.is_locked ? 'text-red-400' : 'text-emerald-400'}`}>
+              {freerollConfig.is_locked ? '🔒 Locked — players cannot join' : '🔓 Open — players can join freely'}
+            </div>
+          </div>
+          <button
+            onClick={toggleFreerollLock}
+            className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition-all ${freerollConfig.is_locked ? 'bg-emerald-700 hover:bg-emerald-600 text-white' : 'bg-red-800 hover:bg-red-700 text-white'}`}
+          >
+            {freerollConfig.is_locked ? '🔓 Unlock' : '🔒 Lock'}
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="text-xs text-slate-400 block mb-1">Prize Tokens</label>
+            <input
+              type="number"
+              value={freerollPrize}
+              onChange={e => setFreerollPrize(e.target.value)}
+              placeholder="500"
+              className={`w-full ${inp}`}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-slate-400 block mb-1">Max Players</label>
+            <input
+              type="number"
+              value={freerollMaxPlayers}
+              onChange={e => setFreerollMaxPlayers(e.target.value)}
+              placeholder="30"
+              className={`w-full ${inp}`}
+            />
+          </div>
+        </div>
+        <button
+          onClick={saveFreerollConfig}
+          disabled={freerollSaving}
+          className="w-full bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm py-2 rounded-lg font-semibold transition-all"
+        >
+          {freerollSaving ? 'Saving...' : '💾 Save Free Roll Config'}
+        </button>
       </div>
 
       {/* User Search */}

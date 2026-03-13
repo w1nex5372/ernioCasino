@@ -186,12 +186,14 @@ class RoomType(str, Enum):
     BRONZE = "bronze"
     SILVER = "silver"
     GOLD = "gold"
+    FREEROLL = "freeroll"
 
 # ** EDIT THESE LINES TO ADD YOUR PRIZE LINKS **
 PRIZE_LINKS = {
     RoomType.BRONZE: "https://your-prize-link-1.com",  # Prize link for Bronze room
     RoomType.SILVER: "https://your-prize-link-2.com",  # Prize link for Silver room
     RoomType.GOLD: "https://your-prize-link-3.com",    # Prize link for Gold room
+    RoomType.FREEROLL: "https://your-prize-link-freeroll.com",  # Prize link for Free Roll room
 }
 
 # ** EDIT THIS LINE TO ADD YOUR TELEGRAM BOT TOKEN **
@@ -201,6 +203,7 @@ ROOM_SETTINGS = {
     RoomType.BRONZE: {"min_bet": 200, "max_bet": 450, "name": "Bronze Room"},
     RoomType.SILVER: {"min_bet": 350, "max_bet": 800, "name": "Silver Room"},
     RoomType.GOLD: {"min_bet": 650, "max_bet": 1200, "name": "Gold Room"},
+    RoomType.FREEROLL: {"min_bet": 0, "max_bet": 0, "name": "Free Roll"},
 }
 
 # Models
@@ -263,6 +266,7 @@ class GameRoom(BaseModel):
     players: List[RoomPlayer] = Field(default_factory=list)
     status: str = "waiting"  # waiting, ready, playing, finished
     prize_pool: int = Field(default=0)
+    max_players: int = Field(default=3)
     winner: Optional[RoomPlayer] = None
     prize_link: Optional[str] = None
     match_id: Optional[str] = None  # Set when game round starts
@@ -282,6 +286,9 @@ active_rooms: Dict[str, GameRoom] = {}
 
 # Maintenance mode — blocks new room joins (resets on restart)
 maintenance_mode: bool = False
+
+# Free Roll room global config
+freeroll_config: dict = {"max_players": 30, "prize": 500, "is_locked": False}
 
 # Telegram authentication functions
 def verify_telegram_auth(auth_data: dict, bot_token: str) -> bool:
@@ -993,6 +1000,37 @@ async def lobby_message(sid, data):
 
 
 @sio.event
+async def reveal_identity(sid, data):
+    """Player reveals their identity after joining anonymously"""
+    room_id = data.get('room_id')
+    user_id = data.get('user_id')
+    if not room_id or not user_id:
+        return
+    room = active_rooms.get(room_id)
+    if not room:
+        return
+    for player in room.players:
+        if player.user_id == user_id:
+            player.is_anonymous = False
+            player.first_name = data.get('first_name', player.first_name)
+            player.last_name = data.get('last_name', player.last_name)
+            player.photo_url = data.get('photo_url', player.photo_url)
+            player.username = data.get('username', player.username)
+            break
+    serialized_players = []
+    for p in room.players:
+        pd = p.dict()
+        if 'joined_at' in pd and isinstance(pd['joined_at'], datetime):
+            pd['joined_at'] = pd['joined_at'].isoformat()
+        serialized_players.append(pd)
+    await socket_rooms.broadcast_to_room(sio, room_id, 'players_updated', {
+        'room_id': room_id,
+        'players': serialized_players,
+    })
+    logging.info(f"🔓 Player {user_id} revealed identity in room {room_id[:8]}")
+
+
+@sio.event
 async def catch_all(event, sid, data):
     """Catch all events for debugging"""
     logging.info(f"🎯 CATCH-ALL: Event '{event}' from {sid[:8]} with data: {data}")
@@ -1019,7 +1057,7 @@ async def broadcast_room_updates():
                 'prize_pool': room.prize_pool,
                 'round_number': room.round_number,
                 'players_count': len(room.players),
-                'max_players': 3
+                'max_players': room.max_players
             }
             room_data.append(room_info)
         
@@ -1035,7 +1073,7 @@ async def broadcast_room_updates():
 
 async def start_game_round(room: GameRoom):
     """Start a game round when room is full - with strict event sequence"""
-    if len(room.players) != 3:
+    if len(room.players) < room.max_players:
         return
     
     # Generate unique match ID for this game
@@ -1082,11 +1120,15 @@ async def start_game_round(room: GameRoom):
     room.finished_at = datetime.now(timezone.utc)
     
     # Credit winner with the full prize pool (losers already had bets deducted on join)
+    # For freeroll rooms, credit the fixed house prize instead of prize_pool
+    credit_amount = freeroll_config['prize'] if room.room_type == RoomType.FREEROLL else room.prize_pool
+    room.prize_pool = credit_amount  # ensure prize_pool reflects actual credit for DB storage
+
     if not winner.user_id.startswith('bot_'):
         try:
-            result = await dbq.increment_user_tokens(winner.user_id, room.prize_pool)
+            result = await dbq.increment_user_tokens(winner.user_id, credit_amount)
             if result:
-                logging.info(f"💰 Credited {room.prize_pool} tokens to winner {winner.username} (new balance: {result.get('token_balance', 0)})")
+                logging.info(f"💰 Credited {credit_amount} tokens to winner {winner.username} (new balance: {result.get('token_balance', 0)})")
                 winner_sid = user_to_socket.get(winner.user_id)
                 if winner_sid:
                     await sio.emit('balance_updated', {'user_id': winner.user_id, 'new_balance': result.get('token_balance', 0)}, room=winner_sid)
@@ -1241,9 +1283,11 @@ async def start_game_round(room: GameRoom):
 # Initialize rooms
 async def initialize_rooms():
     """Create initial rooms for all room types"""
-    room_types = ['bronze', 'silver', 'gold']
+    room_types = ['bronze', 'silver', 'gold', 'freeroll']
     for room_type in room_types:
         room = GameRoom(room_type=room_type)
+        if room_type == 'freeroll':
+            room.max_players = freeroll_config['max_players']
         active_rooms[room.id] = room
         logging.info(f"✅ Created {room_type} room {room.id}")
 
@@ -1950,11 +1994,12 @@ async def get_active_rooms():
             "id": room.id,
             "room_type": room.room_type,
             "players_count": len(room.players),
-            "max_players": 3,
+            "max_players": room.max_players,
             "status": room.status,
             "prize_pool": room.prize_pool,
             "round_number": room.round_number,
-            "settings": ROOM_SETTINGS.get(room.room_type, ROOM_SETTINGS["bronze"])
+            "settings": ROOM_SETTINGS.get(room.room_type, ROOM_SETTINGS["bronze"]),
+            "is_locked": (room.room_type == RoomType.FREEROLL and freeroll_config.get('is_locked', False))
         }
         rooms_data.append(room_data)
 
@@ -2022,15 +2067,20 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
     if not target_room:
         logging.error(f"No available room of type {request.room_type}")
         raise HTTPException(status_code=404, detail="No available room of this type")
-    
-    # Validate bet amount
+
+    # Freeroll lock check
+    if target_room.room_type == RoomType.FREEROLL and freeroll_config.get('is_locked'):
+        raise HTTPException(status_code=423, detail="Free Roll room is currently locked.")
+
+    # Validate bet amount (skip range check for freeroll)
     settings = ROOM_SETTINGS[request.room_type]
-    if request.bet_amount < settings["min_bet"] or request.bet_amount > settings["max_bet"]:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Bet amount must be between {settings['min_bet']} and {settings['max_bet']} tokens"
-        )
-    
+    if request.room_type != RoomType.FREEROLL:
+        if request.bet_amount < settings["min_bet"] or request.bet_amount > settings["max_bet"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Bet amount must be between {settings['min_bet']} and {settings['max_bet']} tokens"
+            )
+
     # Check if user exists and has enough tokens
     user_doc = await dbq.get_user_by_id(request.user_id)
     if not user_doc:
@@ -2044,20 +2094,21 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         raise HTTPException(status_code=503, detail="🔧 Maintenance in progress. Please try again later.")
 
     logging.info(f"User balance: {user_doc.get('token_balance', 0)}, Bet amount: {request.bet_amount}")
-    
-    if user_doc.get('token_balance', 0) < request.bet_amount:
+
+    if request.bet_amount > 0 and user_doc.get('token_balance', 0) < request.bet_amount:
         raise HTTPException(status_code=400, detail="Insufficient token balance")
 
     # Check if user is already in the room
     if any(p.user_id == request.user_id for p in target_room.players):
         raise HTTPException(status_code=400, detail="You are already in this room")
-    
+
     # Check if room is full
-    if len(target_room.players) >= 3:
+    if len(target_room.players) >= target_room.max_players:
         raise HTTPException(status_code=400, detail="Room is full")
-    
-    # Deduct tokens from user balance
-    await dbq.increment_user_tokens(request.user_id, -request.bet_amount)
+
+    # Deduct tokens from user balance (skip for freeroll / 0-bet)
+    if request.bet_amount > 0:
+        await dbq.increment_user_tokens(request.user_id, -request.bet_amount)
     new_balance_after_join = user_doc.get('token_balance', 0) - request.bet_amount
     joining_sid = user_to_socket.get(request.user_id)
     if joining_sid:
@@ -2103,9 +2154,9 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
     if 'joined_at' in player_dict and isinstance(player_dict['joined_at'], datetime):
         player_dict['joined_at'] = player_dict['joined_at'].isoformat()
     
-    logging.info(f"👤 Player {player.username} joined room {target_room.id} ({len(target_room.players)}/3)")
+    logging.info(f"👤 Player {player.username} joined room {target_room.id} ({len(target_room.players)}/{target_room.max_players})")
     logging.info(f"📋 Full participant list: {[p['username'] for p in serialized_players]}")
-    
+
     await socket_rooms.broadcast_to_room(sio, target_room.id, 'player_joined', {
         'room_id': target_room.id,
         'room_type': target_room.room_type,
@@ -2113,38 +2164,38 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         'players_count': len(target_room.players),
         'prize_pool': target_room.prize_pool,
         'all_players': serialized_players,  # FULL participant list - REPLACE, don't append
-        'room_status': 'filling' if len(target_room.players) < 3 else 'full',
+        'room_status': 'filling' if len(target_room.players) < target_room.max_players else 'full',
         'timestamp': datetime.now(timezone.utc).isoformat()
     })
     logging.info(f"✅ Emitted player_joined to room {target_room.id} with {len(serialized_players)} players")
-    
+
     # Broadcast updated room states to all clients (global lobby update)
     await broadcast_room_updates()
-    
+
     # Check if room is full and start game sequence
-    if len(target_room.players) == 3:
-        logging.info(f"🚀 ROOM FULL! Room {target_room.id} has 3 players, starting game sequence...")
-        
+    if len(target_room.players) >= target_room.max_players:
+        logging.info(f"🚀 ROOM FULL! Room {target_room.id} has {len(target_room.players)} players, starting game sequence...")
+
         # Emit room_full event to all participants in THIS room only
         await socket_rooms.broadcast_to_room(sio, target_room.id, 'room_full', {
             'room_id': target_room.id,
             'room_type': target_room.room_type,
             'players': serialized_players,
-            'players_count': 3,
+            'players_count': target_room.max_players,
             'message': '🚀 ROOM IS FULL! GET READY FOR THE BATTLE!',
             'timestamp': datetime.now(timezone.utc).isoformat()
         })
         logging.info(f"✅ Emitted room_full to room {target_room.id}")
-        
+
         # Start the game sequence (will emit room_ready, game_starting, game_finished in order)
         background_tasks.add_task(start_game_round, target_room)
-    
+
     return {
         "status": "joined",
         "success": True,
         "room_id": target_room.id,
         "position": len(target_room.players),
-        "players_needed": 3 - len(target_room.players),
+        "players_needed": target_room.max_players - len(target_room.players),
         "new_balance": user_doc.get('token_balance', 0) - request.bet_amount
     }
 
@@ -2764,6 +2815,35 @@ async def force_close_room_endpoint(room_type: str, admin_key: str = ""):
     if not closed:
         raise HTTPException(status_code=404, detail=f"No waiting {room_type} room found")
     return {"success": True, "closed_rooms": closed}
+
+
+@api_router.get("/admin/freeroll-config")
+async def get_freeroll_config(admin_key: str = ""):
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    return freeroll_config
+
+
+@api_router.post("/admin/freeroll-config")
+async def update_freeroll_config(
+    max_players: int = None,
+    prize: int = None,
+    is_locked: bool = None,
+    admin_key: str = ""
+):
+    global freeroll_config
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    if max_players is not None:
+        freeroll_config['max_players'] = max_players
+        for room in active_rooms.values():
+            if room.room_type == RoomType.FREEROLL and room.status == 'waiting':
+                room.max_players = max_players
+    if prize is not None:
+        freeroll_config['prize'] = prize
+    if is_locked is not None:
+        freeroll_config['is_locked'] = is_locked
+    return freeroll_config
 
 
 # Include the router
