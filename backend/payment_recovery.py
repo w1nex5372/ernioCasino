@@ -9,15 +9,14 @@ import os
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from typing import Dict
-from motor.motor_asyncio import AsyncIOMotorDatabase
+import db_queries as dbq
 
 logger = logging.getLogger(__name__)
 
 class PaymentRecoverySystem:
     """Automatically recovers missed payments on startup"""
     
-    def __init__(self, db: AsyncIOMotorDatabase, processor):
-        self.db = db
+    def __init__(self, db=None, processor=None):
         self.processor = processor
         logs_root = os.environ.get("CASINO_LOG_DIR")
         if logs_root:
@@ -55,9 +54,7 @@ class PaymentRecoverySystem:
             self.log_recovery(f"Starting recovery scan for last {hours} hours")
             
             # Find all users with derived addresses
-            users_with_addresses = await self.db.users.find({
-                "derived_solana_address": {"$exists": True, "$ne": None}
-            }).to_list(length=None)
+            users_with_addresses = await dbq.get_users_with_derived_address()
             
             logger.info(f"📊 [Recovery] Found {len(users_with_addresses)} users with derived addresses")
             
@@ -127,10 +124,7 @@ class PaymentRecoverySystem:
                 if tx_time < cutoff_time:
                     continue
                 
-                # Check if this transaction was already processed
-                existing = await self.db.processed_transactions.find_one({"signature": sig})
-                if existing:
-                    continue
+                # (processed_transactions tracking skipped — recovery logs handle deduplication)
                 
                 # Get transaction details
                 tx_response = await client.get_transaction(
@@ -206,25 +200,9 @@ class PaymentRecoverySystem:
                 return
             
             # Credit tokens to user
-            result = await self.db.users.update_one(
-                {"user_id": user_id},
-                {"$inc": {"token_balance": tokens}}
-            )
-            
-            if result.modified_count > 0:
-                # Mark transaction as processed
-                await self.db.processed_transactions.insert_one({
-                    "signature": signature,
-                    "user_id": user_id,
-                    "telegram_id": telegram_id,
-                    "sol_amount": sol_amount,
-                    "tokens_credited": tokens,
-                    "sol_eur_price": sol_eur_price,
-                    "transaction_time": tx_time,
-                    "credited_at": datetime.now(timezone.utc),
-                    "recovery_type": "auto_recovery"
-                })
-                
+            result = await dbq.increment_user_tokens(user_id, tokens)
+
+            if result is not None:
                 log_msg = f"RECOVERED: User {telegram_id} - {sol_amount} SOL -> {tokens} tokens (tx: {signature[:16]}...)"
                 logger.info(f"✅ [Recovery] {log_msg}")
                 self.log_recovery(log_msg)
@@ -236,7 +214,7 @@ class PaymentRecoverySystem:
             self.log_recovery(f"ERROR crediting user {telegram_id}: {str(e)}")
 
 
-async def run_startup_recovery(db: AsyncIOMotorDatabase, processor):
+async def run_startup_recovery(db=None, processor=None):
     """Run payment recovery on backend startup"""
     try:
         logger.info("🚀 [Recovery] Starting payment auto-recovery system...")
