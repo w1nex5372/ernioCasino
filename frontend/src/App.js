@@ -1969,7 +1969,7 @@ function App() {
       if (response.data.in_room && response.data.rooms) {
         // Loop through all rooms user is in
         response.data.rooms.forEach(room => {
-          const roomType = room.room_type.toLowerCase(); // Ensure lowercase
+          const roomType = normalizeRoomType(room.room_type);
           newActiveRooms[roomType] = {
             roomId: room.room_id
           };
@@ -2149,6 +2149,20 @@ function App() {
     } catch (error) {
       console.error('Join room error:', error);
       const errorDetail = error.response?.data?.detail || 'Failed to join room';
+      // If already in room → refresh state and show lobby instead of error
+      if (errorDetail === 'You are already in this room') {
+        await loadAllUserRooms();
+        const roomData = await checkUserRoomStatus(roomType);
+        if (roomData) {
+          setInLobby(true);
+          setLobbyData({ room_type: roomType, room_id: roomData.room_id, bet_amount: parseInt(betAmounts[roomType]) || 0 });
+          setRoomParticipants(prev => ({ ...prev, [roomType]: roomData.players || [] }));
+          currentGameRoomRef.current = roomData.room_id;
+          sessionStorage.setItem('active_game_room', roomData.room_id);
+          if (socket?.connected) socket.emit('join_game_room', { room_id: roomData.room_id, user_id: user.id });
+        }
+        return;
+      }
       toast.error(errorDetail);
     }
   };
