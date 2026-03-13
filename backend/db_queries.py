@@ -128,7 +128,7 @@ async def update_user_fields(user_id: str, fields: Dict) -> bool:
         'first_name', 'last_name', 'telegram_username', 'photo_url',
         'wallet_address', 'personal_solana_address', 'derived_solana_address',
         'derivation_path', 'token_balance', 'is_verified', 'is_admin',
-        'is_owner', 'role', 'last_daily_claim', 'last_login',
+        'is_owner', 'role', 'last_daily_claim', 'last_login', 'is_banned',
     }
     filtered = {k: (_parse_dt(v) if k in dt_fields else v)
                 for k, v in fields.items() if k in allowed}
@@ -152,7 +152,7 @@ async def update_user_fields_by_telegram_id(telegram_id: int, fields: Dict) -> b
         'first_name', 'last_name', 'telegram_username', 'photo_url',
         'wallet_address', 'personal_solana_address', 'derived_solana_address',
         'derivation_path', 'token_balance', 'is_verified', 'is_admin',
-        'is_owner', 'role', 'last_daily_claim', 'last_login',
+        'is_owner', 'role', 'last_daily_claim', 'last_login', 'is_banned',
     }
     filtered = {k: (_parse_dt(v) if k in dt_fields else v)
                 for k, v in fields.items() if k in allowed}
@@ -474,6 +474,68 @@ async def get_all_temporary_wallets_monitoring() -> List[Dict]:
             "SELECT * FROM temporary_wallets WHERE status IN ('pending', 'monitoring')"
         )
         return _rows_to_list(rows)
+
+
+# ─────────────────────────────────────────────────────────────────
+# ADMIN — new management functions
+# ─────────────────────────────────────────────────────────────────
+
+async def ban_user(telegram_id: int) -> bool:
+    async with get_pool().acquire() as conn:
+        result = await conn.execute(
+            "UPDATE users SET is_banned = TRUE WHERE telegram_id = $1", telegram_id
+        )
+        return result == "UPDATE 1"
+
+
+async def unban_user(telegram_id: int) -> bool:
+    async with get_pool().acquire() as conn:
+        result = await conn.execute(
+            "UPDATE users SET is_banned = FALSE WHERE telegram_id = $1", telegram_id
+        )
+        return result == "UPDATE 1"
+
+
+async def set_user_role(telegram_id: int, is_admin: bool, is_owner: bool) -> bool:
+    role = "owner" if is_owner else ("admin" if is_admin else "user")
+    async with get_pool().acquire() as conn:
+        result = await conn.execute(
+            "UPDATE users SET is_admin = $2, is_owner = $3, role = $4 WHERE telegram_id = $1",
+            telegram_id, is_admin, is_owner, role
+        )
+        return result == "UPDATE 1"
+
+
+async def get_admin_stats() -> Dict:
+    async with get_pool().acquire() as conn:
+        total_users     = await conn.fetchval("SELECT COUNT(*) FROM users") or 0
+        total_tokens    = await conn.fetchval("SELECT COALESCE(SUM(token_balance), 0) FROM users") or 0
+        total_games     = await conn.fetchval("SELECT COUNT(*) FROM completed_games") or 0
+        games_today     = await conn.fetchval(
+            "SELECT COUNT(*) FROM completed_games WHERE finished_at >= NOW() - INTERVAL '24 hours'"
+        ) or 0
+        tokens_sold     = await conn.fetchval(
+            "SELECT COALESCE(SUM(token_amount), 0) FROM token_purchases"
+        ) or 0
+        total_wagered   = await conn.fetchval(
+            "SELECT COALESCE(SUM(prize_pool), 0) FROM completed_games"
+        ) or 0
+        banned_count    = await conn.fetchval(
+            "SELECT COUNT(*) FROM users WHERE is_banned = TRUE"
+        ) or 0
+        admin_count     = await conn.fetchval(
+            "SELECT COUNT(*) FROM users WHERE is_admin = TRUE OR is_owner = TRUE"
+        ) or 0
+        return {
+            "total_users":      total_users,
+            "tokens_in_circulation": total_tokens,
+            "total_games":      total_games,
+            "games_today":      games_today,
+            "tokens_sold":      tokens_sold,
+            "total_wagered":    total_wagered,
+            "banned_users":     banned_count,
+            "admin_count":      admin_count,
+        }
 
 
 # ─────────────────────────────────────────────────────────────────

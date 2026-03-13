@@ -2008,6 +2008,9 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
     if not user_doc:
         logging.error(f"User not found: {request.user_id}")
         raise HTTPException(status_code=404, detail="User not found")
+
+    if user_doc.get("is_banned"):
+        raise HTTPException(status_code=403, detail="Your account has been banned.")
     
     logging.info(f"User balance: {user_doc.get('token_balance', 0)}, Bet amount: {request.bet_amount}")
     
@@ -2472,6 +2475,76 @@ async def list_users(admin_key: str = "", limit: int = 20, search: str = ""):
     except Exception as e:
         logging.error(f"Failed to list users: {e}")
         raise HTTPException(status_code=500, detail="Failed to list users")
+
+
+@api_router.post("/admin/ban/{telegram_id}")
+async def ban_user_endpoint(telegram_id: int, admin_key: str = ""):
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    user = await dbq.get_user_by_telegram_id(telegram_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    await dbq.ban_user(telegram_id)
+    return {"success": True, "message": f"User {telegram_id} banned"}
+
+
+@api_router.post("/admin/unban/{telegram_id}")
+async def unban_user_endpoint(telegram_id: int, admin_key: str = ""):
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    await dbq.unban_user(telegram_id)
+    return {"success": True, "message": f"User {telegram_id} unbanned"}
+
+
+@api_router.post("/admin/set-role/{telegram_id}")
+async def set_role_endpoint(telegram_id: int, is_admin: bool = False, is_owner: bool = False, admin_key: str = ""):
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    user = await dbq.get_user_by_telegram_id(telegram_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    await dbq.set_user_role(telegram_id, is_admin, is_owner)
+    role = "owner" if is_owner else ("admin" if is_admin else "user")
+    return {"success": True, "telegram_id": telegram_id, "role": role}
+
+
+@api_router.get("/admin/stats")
+async def get_admin_stats_endpoint(admin_key: str = ""):
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    try:
+        stats = await dbq.get_admin_stats()
+        # Add live room info
+        stats["active_rooms"] = len(active_rooms)
+        stats["players_online"] = sum(len(r.players) for r in active_rooms.values())
+        return stats
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/admin/recent-games")
+async def get_recent_games_endpoint(admin_key: str = "", limit: int = 15):
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    try:
+        games = await dbq.get_recent_completed_games(limit)
+        return {"games": games, "count": len(games)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/admin/force-close-room/{room_type}")
+async def force_close_room_endpoint(room_type: str, admin_key: str = ""):
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    closed = []
+    for room_id, room in list(active_rooms.items()):
+        if room.room_type == room_type and room.status == "waiting":
+            room.players.clear()
+            closed.append(room_id)
+    if not closed:
+        raise HTTPException(status_code=404, detail=f"No waiting {room_type} room found")
+    return {"success": True, "closed_rooms": closed}
 
 
 # Include the router

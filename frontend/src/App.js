@@ -3727,6 +3727,10 @@ function AdminPanel({ API, rooms, isMobile }) {
   const [fakeBet, setFakeBet] = React.useState('');
   const [userList, setUserList] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [stats, setStats] = React.useState(null);
+  const [statsLoading, setStatsLoading] = React.useState(false);
+  const [recentGames, setRecentGames] = React.useState([]);
+  const [gamesLoading, setGamesLoading] = React.useState(false);
 
   const lookupUser = async () => {
     if (!tgId) return;
@@ -3754,6 +3758,29 @@ function AdminPanel({ API, rooms, isMobile }) {
     }
   };
 
+  const banUser = async (ban) => {
+    if (!tgId) return toast.error('Enter Telegram ID first');
+    try {
+      const action = ban ? 'ban' : 'unban';
+      await axios.post(`${API}/admin/${action}/${tgId}?admin_key=${ADMIN_KEY}`);
+      toast.success(`✅ User ${tgId} ${ban ? 'banned' : 'unbanned'}`);
+      setUserInfo(prev => prev ? { ...prev, is_banned: ban } : null);
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed');
+    }
+  };
+
+  const setRole = async (isAdmin, isOwner) => {
+    if (!tgId) return toast.error('Enter Telegram ID first');
+    try {
+      const r = await axios.post(`${API}/admin/set-role/${tgId}?admin_key=${ADMIN_KEY}&is_admin=${isAdmin}&is_owner=${isOwner}`);
+      toast.success(`✅ Role set to: ${r.data.role}`);
+      setUserInfo(prev => prev ? { ...prev, is_admin: isAdmin, is_owner: isOwner } : null);
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed');
+    }
+  };
+
   const addFakePlayer = async () => {
     if (!fakeName || !fakeBet) return toast.error('Enter name and bet amount');
     try {
@@ -3768,6 +3795,15 @@ function AdminPanel({ API, rooms, isMobile }) {
     }
   };
 
+  const forceCloseRoom = async (roomType) => {
+    try {
+      await axios.post(`${API}/admin/force-close-room/${roomType}?admin_key=${ADMIN_KEY}`);
+      toast.success(`✅ ${roomType} room cleared`);
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed');
+    }
+  };
+
   const loadUsers = async () => {
     try {
       const r = await axios.get(`${API}/admin/list-users?admin_key=${ADMIN_KEY}&limit=20&search=${encodeURIComponent(searchTerm)}`);
@@ -3777,7 +3813,36 @@ function AdminPanel({ API, rooms, isMobile }) {
     }
   };
 
+  const loadStats = async () => {
+    setStatsLoading(true);
+    try {
+      const r = await axios.get(`${API}/admin/stats?admin_key=${ADMIN_KEY}`);
+      setStats(r.data);
+    } catch (e) {
+      toast.error('Failed to load stats');
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  const loadRecentGames = async () => {
+    setGamesLoading(true);
+    try {
+      const r = await axios.get(`${API}/admin/recent-games?admin_key=${ADMIN_KEY}&limit=10`);
+      setRecentGames(r.data.games);
+    } catch (e) {
+      toast.error('Failed to load games');
+    } finally {
+      setGamesLoading(false);
+    }
+  };
+
+  React.useEffect(() => { loadStats(); }, []);
+
   const ROOM_MIN_BETS = { bronze: 200, silver: 350, gold: 650, platinum: 1200, diamond: 2400, elite: 4500 };
+
+  const card = "bg-slate-800/90 border border-red-700/40 rounded-xl p-4 space-y-3";
+  const inp = "bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2";
 
   return (
     <div className="space-y-4 pb-6">
@@ -3786,94 +3851,119 @@ function AdminPanel({ API, rooms, isMobile }) {
         <p className="text-xs text-slate-500">Only visible to admins</p>
       </div>
 
-      {/* Token Management */}
-      <div className="bg-slate-800/90 border border-red-700/40 rounded-xl p-4 space-y-3">
-        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2">
-          <span>💰</span> Token Management
-        </h3>
+      {/* Live Stats */}
+      <div className={card}>
+        <div className="flex items-center justify-between">
+          <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>📊</span> Live Stats</h3>
+          <button onClick={loadStats} className="text-xs text-slate-400 hover:text-white">
+            {statsLoading ? '...' : '↻ Refresh'}
+          </button>
+        </div>
+        {stats ? (
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              ['👥 Users', stats.total_users],
+              ['🎮 Games today', stats.games_today],
+              ['🎲 Total games', stats.total_games],
+              ['🟡 Tokens in circ.', (stats.tokens_in_circulation || 0).toLocaleString()],
+              ['💸 Tokens sold', (stats.tokens_sold || 0).toLocaleString()],
+              ['🎰 Total wagered', (stats.total_wagered || 0).toLocaleString()],
+              ['🌐 Active rooms', stats.active_rooms],
+              ['👤 Players online', stats.players_online],
+              ['🚫 Banned', stats.banned_users],
+              ['👑 Admins', stats.admin_count],
+            ].map(([label, val]) => (
+              <div key={label} className="bg-slate-700/40 rounded-lg px-3 py-2">
+                <div className="text-xs text-slate-400">{label}</div>
+                <div className="text-white font-bold text-sm">{val}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-xs text-slate-500 text-center py-2">{statsLoading ? 'Loading...' : 'Click Refresh'}</div>
+        )}
+      </div>
+
+      {/* User Management */}
+      <div className={card}>
+        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>👤</span> User Management</h3>
         <div className="flex gap-2">
-          <input
-            type="number"
-            value={tgId}
-            onChange={e => setTgId(e.target.value)}
-            placeholder="Telegram ID"
-            className="flex-1 bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2 min-w-0"
-          />
-          <button
-            onClick={lookupUser}
-            disabled={lookupLoading}
-            className="bg-slate-600 hover:bg-slate-500 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap"
-          >
+          <input type="number" value={tgId} onChange={e => setTgId(e.target.value)}
+            placeholder="Telegram ID" className={`flex-1 ${inp} min-w-0`} />
+          <button onClick={lookupUser} disabled={lookupLoading}
+            className="bg-slate-600 hover:bg-slate-500 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap">
             {lookupLoading ? '...' : 'Lookup'}
           </button>
         </div>
+
         {userInfo && (
-          <div className="bg-slate-700/50 rounded-lg p-2 text-xs text-slate-300">
-            <span className="text-white font-semibold">{userInfo.first_name}</span>
-            {userInfo.username && <span className="text-slate-400"> @{userInfo.username}</span>}
-            <span className="ml-2 text-yellow-400 font-bold">{userInfo.token_balance} tokens</span>
+          <div className="bg-slate-700/50 rounded-lg p-2 text-xs space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-white font-semibold">{userInfo.first_name}</span>
+              {userInfo.telegram_username && <span className="text-slate-400">@{userInfo.telegram_username}</span>}
+              <span className="text-yellow-400 font-bold">{(userInfo.token_balance || 0).toLocaleString()} tkn</span>
+              {userInfo.is_banned && <span className="text-red-400 font-bold">🚫 BANNED</span>}
+              {userInfo.is_owner && <span className="text-yellow-400 font-bold">👑 OWNER</span>}
+              {userInfo.is_admin && !userInfo.is_owner && <span className="text-blue-400 font-bold">🛡️ ADMIN</span>}
+            </div>
           </div>
         )}
+
+        {/* Tokens */}
         <div className="flex gap-2">
-          <input
-            type="number"
-            value={tokenAmount}
-            onChange={e => setTokenAmount(e.target.value)}
-            placeholder="Amount"
-            className="flex-1 bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2 min-w-0"
-          />
-          <button
-            onClick={() => adjustTokens(1)}
-            className="bg-green-700 hover:bg-green-600 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap"
-          >
-            + Add
+          <input type="number" value={tokenAmount} onChange={e => setTokenAmount(e.target.value)}
+            placeholder="Token amount" className={`flex-1 ${inp} min-w-0`} />
+          <button onClick={() => adjustTokens(1)} className="bg-green-700 hover:bg-green-600 text-white text-sm px-3 py-2 rounded-lg">+ Add</button>
+          <button onClick={() => adjustTokens(-1)} className="bg-red-700 hover:bg-red-600 text-white text-sm px-3 py-2 rounded-lg">− Remove</button>
+        </div>
+
+        {/* Ban / Role */}
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={() => banUser(true)}
+            className="bg-red-900/60 hover:bg-red-800 border border-red-600/40 text-red-300 text-xs py-2 rounded-lg font-semibold">
+            🚫 Ban User
           </button>
-          <button
-            onClick={() => adjustTokens(-1)}
-            className="bg-red-700 hover:bg-red-600 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap"
-          >
-            − Remove
+          <button onClick={() => banUser(false)}
+            className="bg-green-900/60 hover:bg-green-800 border border-green-600/40 text-green-300 text-xs py-2 rounded-lg font-semibold">
+            ✅ Unban User
+          </button>
+          <button onClick={() => setRole(true, false)}
+            className="bg-blue-900/60 hover:bg-blue-800 border border-blue-600/40 text-blue-300 text-xs py-2 rounded-lg font-semibold">
+            🛡️ Make Admin
+          </button>
+          <button onClick={() => setRole(false, false)}
+            className="bg-slate-700 hover:bg-slate-600 border border-slate-500/40 text-slate-300 text-xs py-2 rounded-lg font-semibold">
+            👤 Remove Role
           </button>
         </div>
       </div>
 
       {/* Add Fake Player to Room */}
-      <div className="bg-slate-800/90 border border-red-700/40 rounded-xl p-4 space-y-3">
-        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2">
-          <span>🤖</span> Add Fake Player to Room
-        </h3>
-        <select
-          value={fakeRoom}
+      <div className={card}>
+        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>🤖</span> Add Fake Player</h3>
+        <select value={fakeRoom}
           onChange={e => { setFakeRoom(e.target.value); setFakeBet(String(ROOM_MIN_BETS[e.target.value])); }}
-          className="w-full bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2"
-        >
+          className={`w-full ${inp}`}>
           {['bronze', 'silver', 'gold', 'platinum', 'diamond', 'elite'].map(r => (
             <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)} (min {ROOM_MIN_BETS[r]})</option>
           ))}
         </select>
         <div className="flex gap-2">
-          <input
-            type="text"
-            value={fakeName}
-            onChange={e => setFakeName(e.target.value)}
-            placeholder="Bot name (e.g. Alex)"
-            className="flex-1 bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2 min-w-0"
-          />
-          <input
-            type="number"
-            value={fakeBet}
-            onChange={e => setFakeBet(e.target.value)}
-            placeholder="Bet"
-            className="w-24 bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2"
-          />
+          <input type="text" value={fakeName} onChange={e => setFakeName(e.target.value)}
+            placeholder="Bot name" className={`flex-1 ${inp} min-w-0`} />
+          <input type="number" value={fakeBet} onChange={e => setFakeBet(e.target.value)}
+            placeholder="Bet" className={`w-20 ${inp}`} />
         </div>
-        <button
-          onClick={addFakePlayer}
-          className="w-full bg-purple-700 hover:bg-purple-600 text-white text-sm py-2 rounded-lg font-semibold"
-        >
-          Add Bot to Room
-        </button>
-        {/* Live room status */}
+        <div className="flex gap-2">
+          <button onClick={addFakePlayer}
+            className="flex-1 bg-purple-700 hover:bg-purple-600 text-white text-sm py-2 rounded-lg font-semibold">
+            Add Bot to Room
+          </button>
+          <button onClick={() => forceCloseRoom(fakeRoom)}
+            className="bg-orange-900/60 hover:bg-orange-800 border border-orange-600/40 text-orange-300 text-xs px-3 py-2 rounded-lg font-semibold whitespace-nowrap">
+            🔄 Clear Room
+          </button>
+        </div>
         <div className="grid grid-cols-3 gap-1">
           {rooms.filter(r => r.status === 'waiting').map(r => (
             <div key={r.room_type} className="bg-slate-700/50 rounded p-1 text-center text-xs">
@@ -3885,42 +3975,62 @@ function AdminPanel({ API, rooms, isMobile }) {
       </div>
 
       {/* User Search */}
-      <div className="bg-slate-800/90 border border-red-700/40 rounded-xl p-4 space-y-3">
-        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2">
-          <span>👥</span> Users (top by balance)
-        </h3>
+      <div className={card}>
+        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>👥</span> User Search</h3>
         <div className="flex gap-2">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Search by name or username"
-            className="flex-1 bg-slate-900 border border-slate-600 text-white text-sm rounded-lg px-3 py-2 min-w-0"
-          />
-          <button
-            onClick={loadUsers}
-            className="bg-blue-700 hover:bg-blue-600 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap"
-          >
+          <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+            placeholder="Name or username" className={`flex-1 ${inp} min-w-0`} />
+          <button onClick={loadUsers}
+            className="bg-blue-700 hover:bg-blue-600 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap">
             Search
           </button>
         </div>
         {userList.length > 0 && (
-          <div className="space-y-1 max-h-60 overflow-y-auto">
+          <div className="space-y-1 max-h-48 overflow-y-auto">
             {userList.map(u => (
-              <div
-                key={u.telegram_id}
+              <div key={u.telegram_id}
                 className="flex items-center justify-between bg-slate-700/50 rounded-lg px-3 py-2 text-xs cursor-pointer hover:bg-slate-600/50"
-                onClick={() => { setTgId(String(u.telegram_id)); setUserInfo(u); }}
-              >
+                onClick={() => { setTgId(String(u.telegram_id)); setUserInfo(u); }}>
                 <div>
                   <span className="text-white font-semibold">{u.first_name}</span>
                   {u.username && <span className="text-slate-400 ml-1">@{u.username}</span>}
                   <span className="text-slate-500 ml-1">#{u.telegram_id}</span>
                 </div>
-                <span className="text-yellow-400 font-bold ml-2 whitespace-nowrap">{u.token_balance} tkn</span>
+                <span className="text-yellow-400 font-bold ml-2 whitespace-nowrap">{(u.token_balance || 0).toLocaleString()} tkn</span>
               </div>
             ))}
           </div>
+        )}
+      </div>
+
+      {/* Recent Games */}
+      <div className={card}>
+        <div className="flex items-center justify-between">
+          <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>📜</span> Recent Games</h3>
+          <button onClick={loadRecentGames} className="text-xs text-slate-400 hover:text-white">
+            {gamesLoading ? '...' : '↻ Load'}
+          </button>
+        </div>
+        {recentGames.length > 0 ? (
+          <div className="space-y-1 max-h-64 overflow-y-auto">
+            {recentGames.map((g, i) => {
+              const winner = typeof g.winner === 'string' ? JSON.parse(g.winner || 'null') : g.winner;
+              return (
+                <div key={g.id || i} className="bg-slate-700/40 rounded-lg px-3 py-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="capitalize font-semibold text-white">{g.room_type}</span>
+                    <span className="text-yellow-400 font-bold">{(g.prize_pool || 0).toLocaleString()} tkn</span>
+                  </div>
+                  <div className="flex items-center justify-between mt-0.5">
+                    <span className="text-green-400">🏆 {winner?.name || winner?.first_name || 'Unknown'}</span>
+                    <span className="text-slate-500">{g.finished_at ? new Date(g.finished_at).toLocaleTimeString() : ''}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-xs text-slate-500 text-center py-2">{gamesLoading ? 'Loading...' : 'Click Load'}</div>
         )}
       </div>
     </div>
