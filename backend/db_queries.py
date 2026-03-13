@@ -652,6 +652,77 @@ async def use_promo_code(code: str, telegram_id: int) -> Dict:
             return {"success": True, "tokens": promo["token_amount"], "error": ""}
 
 
+async def get_user_stats(user_id: str) -> Dict:
+    """Return play statistics for a single user."""
+    async with get_pool().acquire() as conn:
+        # Games played: user appears in players JSONB array
+        games_played = await conn.fetchval(
+            "SELECT COUNT(*) FROM completed_games WHERE players @> $1::jsonb",
+            json.dumps([{"user_id": user_id}])
+        ) or 0
+
+        # Games won
+        games_won = await conn.fetchval(
+            "SELECT COUNT(*) FROM winner_prizes WHERE user_id = $1", user_id
+        ) or 0
+
+        # Total tokens wagered (sum of user's bet_amount across all games)
+        total_wagered = await conn.fetchval("""
+            SELECT COALESCE(SUM((p->>'bet_amount')::bigint), 0)
+            FROM completed_games, jsonb_array_elements(players) p
+            WHERE p->>'user_id' = $1
+        """, user_id) or 0
+
+        # Total tokens won (sum of prize pools where user won)
+        total_won = await conn.fetchval(
+            "SELECT COALESCE(SUM(total_pool), 0) FROM winner_prizes WHERE user_id = $1", user_id
+        ) or 0
+
+        # Biggest single win
+        biggest_win = await conn.fetchval(
+            "SELECT COALESCE(MAX(total_pool), 0) FROM winner_prizes WHERE user_id = $1", user_id
+        ) or 0
+
+        # Favorite room (most played)
+        fav_row = await conn.fetchrow("""
+            SELECT room_type, COUNT(*) AS cnt
+            FROM completed_games
+            WHERE players @> $1::jsonb
+            GROUP BY room_type ORDER BY cnt DESC LIMIT 1
+        """, json.dumps([{"user_id": user_id}]))
+        favorite_room = fav_row["room_type"] if fav_row else None
+
+        # Recent wins (last 5)
+        recent_wins_rows = await conn.fetch("""
+            SELECT room_type, total_pool, bet_amount, won_at
+            FROM winner_prizes WHERE user_id = $1
+            ORDER BY won_at DESC LIMIT 5
+        """, user_id)
+        recent_wins = []
+        for r in recent_wins_rows:
+            recent_wins.append({
+                "room_type": r["room_type"],
+                "total_pool": int(r["total_pool"]),
+                "bet_amount": int(r["bet_amount"]),
+                "won_at": r["won_at"].isoformat() if r["won_at"] else None,
+            })
+
+        win_rate = round(games_won / games_played * 100, 1) if games_played > 0 else 0.0
+
+        return {
+            "games_played": int(games_played),
+            "games_won": int(games_won),
+            "games_lost": int(games_played - games_won),
+            "win_rate": win_rate,
+            "total_wagered": int(total_wagered),
+            "total_won": int(total_won),
+            "net_profit": int(total_won - total_wagered),
+            "biggest_win": int(biggest_win),
+            "favorite_room": favorite_room,
+            "recent_wins": recent_wins,
+        }
+
+
 async def delete_all_data() -> Dict:
     async with get_pool().acquire() as conn:
         r_users     = await conn.execute("DELETE FROM users")

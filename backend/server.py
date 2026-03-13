@@ -2248,6 +2248,17 @@ async def get_game_history(limit: int = 5):
     games = await dbq.get_recent_completed_games(limit)
     return {"games": games}
 
+@api_router.get("/user-stats/{user_id}")
+async def get_user_stats_endpoint(user_id: str):
+    """Return play statistics for a user (games played, win rate, profit, etc.)"""
+    try:
+        stats = await dbq.get_user_stats(user_id)
+        return stats
+    except Exception as e:
+        logging.error(f"get_user_stats error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/version")
 async def get_version():
     """Get current build version for verification"""

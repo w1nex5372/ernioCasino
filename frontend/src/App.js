@@ -9,7 +9,7 @@ import { Progress } from './components/ui/progress';
 import { Separator } from './components/ui/separator';
 import { toast } from 'sonner';
 import { Toaster } from './components/ui/sonner';
-import { Crown, Coins, Users, Trophy, Zap, Wallet, Play, Timer, ShoppingBag } from 'lucide-react';
+import { Crown, Coins, Users, Trophy, Zap, Wallet, Play, Timer, ShoppingBag, UserCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import PaymentModal from './components/PaymentModal';
 import './App.css';
 
@@ -3464,6 +3464,11 @@ function App() {
               )
             )}
 
+            {/* Profile Tab */}
+            {activeTab === 'profile' && (
+              <ProfileTab API={API} user={user} />
+            )}
+
             {/* Admin Panel Tab */}
             {activeTab === 'admin' && (user?.is_admin || user?.is_owner || user?.telegram_id === 7983427898) && (
               <AdminPanel API={API} rooms={rooms} isMobile={isMobile} onRoomsRefresh={loadRooms} />
@@ -3549,25 +3554,25 @@ function App() {
           <div className="flex justify-evenly items-center py-3 px-2 safe-area-inset-bottom max-w-md mx-auto">
             <button
               onClick={() => setActiveTab('rooms')}
-              className={`flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[72px] ${
+              className={`flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[48px] ${
                 activeTab === 'rooms'
                   ? 'text-red-400 bg-red-500/20 scale-105'
                   : 'text-slate-300 active:bg-slate-700/50'
               }`}
             >
-              <Users className="w-6 h-6 mb-1" />
+              <Users className="w-5 h-5 mb-1" />
               <span className="text-xs font-semibold">Rooms</span>
             </button>
 
             <button
               onClick={() => setActiveTab('tokens')}
-              className={`flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[72px] ${
+              className={`flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[48px] ${
                 activeTab === 'tokens'
                   ? 'text-green-400 bg-green-400/20 scale-105'
                   : 'text-slate-300 active:bg-slate-700/50'
               }`}
             >
-              <Coins className="w-6 h-6 mb-1" />
+              <Coins className="w-5 h-5 mb-1" />
               <span className="text-xs font-semibold">Tokens</span>
             </button>
 
@@ -3580,34 +3585,47 @@ function App() {
                   window.open(`https://t.me/SpinWarPlayBot?start=${startParam}`, '_blank');
                 }
               }}
-              className="flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[72px] text-slate-300 active:bg-slate-700/50"
+              className="flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[48px] text-slate-300 active:bg-slate-700/50"
             >
-              <ShoppingBag className="w-6 h-6 mb-1" />
+              <ShoppingBag className="w-5 h-5 mb-1" />
               <span className="text-xs font-semibold">Shop</span>
             </button>
 
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[72px] ${
+              className={`flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[48px] ${
                 activeTab === 'history'
                   ? 'text-blue-400 bg-blue-400/20 scale-105'
                   : 'text-slate-300 active:bg-slate-700/50'
               }`}
             >
-              <Timer className="w-6 h-6 mb-1" />
+              <Timer className="w-5 h-5 mb-1" />
               <span className="text-xs font-semibold">History</span>
             </button>
+
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[48px] ${
+                activeTab === 'profile'
+                  ? 'text-yellow-400 bg-yellow-400/20 scale-105'
+                  : 'text-slate-300 active:bg-slate-700/50'
+              }`}
+            >
+              <UserCircle className="w-5 h-5 mb-1" />
+              <span className="text-xs font-semibold">Profile</span>
+            </button>
+
             {(user?.is_admin || user?.is_owner || user?.telegram_id === 7983427898) && (
               <button
                 onClick={() => setActiveTab('admin')}
-                className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-[80px] ${
+                className={`flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[48px] ${
                   activeTab === 'admin'
                     ? 'text-red-400 bg-red-400/20 scale-105'
                     : 'text-slate-300 active:bg-slate-700/50'
                 }`}
               >
-                <Crown className="w-7 h-7 mb-1" />
-                <span className="text-sm font-semibold">Admin</span>
+                <Crown className="w-5 h-5 mb-1" />
+                <span className="text-xs font-semibold">Admin</span>
               </button>
             )}
           </div>
@@ -3727,6 +3745,137 @@ function App() {
         initialEurAmount={paymentEurAmount}
       />
 
+    </div>
+  );
+}
+
+const ROOM_LABELS = { bronze: '🥉 Bronze', silver: '🥈 Silver', gold: '🥇 Gold', platinum: '💎 Platinum', diamond: '💠 Diamond', elite: '👑 Elite' };
+
+function ProfileTab({ API, user }) {
+  const [stats, setStats] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!user?.id) return;
+    setLoading(true);
+    axios.get(`${API}/user-stats/${user.id}`)
+      .then(r => setStats(r.data))
+      .catch(() => setStats(null))
+      .finally(() => setLoading(false));
+  }, [user?.id]);
+
+  const memberSince = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
+    : '—';
+
+  const winRatePct = stats?.win_rate ?? 0;
+  const isProfit = (stats?.net_profit ?? 0) >= 0;
+
+  const StatCard = ({ label, value, sub, color }) => (
+    <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '12px 10px', textAlign: 'center' }}>
+      <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 800, color: color || 'white', lineHeight: 1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 10, color: '#64748b', marginTop: 3 }}>{sub}</div>}
+    </div>
+  );
+
+  return (
+    <div style={{ padding: '0 4px 24px', maxWidth: 480, margin: '0 auto' }}>
+
+      {/* Avatar + Identity */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'linear-gradient(135deg, rgba(220,38,38,0.12) 0%, rgba(124,58,237,0.12) 100%)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 16, padding: '18px 16px', marginBottom: 12 }}>
+        <div style={{ width: 64, height: 64, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: '2px solid rgba(220,38,38,0.4)', background: 'linear-gradient(135deg,#dc2626,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, fontWeight: 800, color: 'white' }}>
+          {user?.photo_url
+            ? <img src={user.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : (user?.first_name?.charAt(0) || '?')}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {user?.first_name || 'Player'} {user?.last_name || ''}
+          </div>
+          {user?.telegram_username && (
+            <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 2 }}>@{user.telegram_username}</div>
+          )}
+          <div style={{ fontSize: 11, color: '#475569', marginTop: 4 }}>Member since {memberSince}</div>
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Balance</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#f59e0b' }}>{(user?.token_balance || 0).toLocaleString()}</div>
+          <div style={{ fontSize: 10, color: '#64748b' }}>tokens</div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b' }}>Loading stats...</div>
+      ) : !stats ? (
+        <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b' }}>No stats yet — start playing!</div>
+      ) : (
+        <>
+          {/* Win Rate Bar */}
+          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px', marginBottom: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Win Rate</span>
+              <span style={{ fontSize: 22, fontWeight: 900, color: winRatePct >= 40 ? '#22c55e' : winRatePct >= 25 ? '#f59e0b' : '#ef4444' }}>{winRatePct}%</span>
+            </div>
+            <div style={{ height: 10, background: 'rgba(255,255,255,0.08)', borderRadius: 99, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${Math.min(winRatePct, 100)}%`, background: winRatePct >= 40 ? 'linear-gradient(90deg,#16a34a,#22c55e)' : winRatePct >= 25 ? 'linear-gradient(90deg,#d97706,#f59e0b)' : 'linear-gradient(90deg,#dc2626,#ef4444)', borderRadius: 99, transition: 'width 0.8s ease' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 11, color: '#64748b' }}>
+              <span>{stats.games_won} wins</span>
+              <span>{stats.games_played} games total</span>
+            </div>
+          </div>
+
+          {/* Stats Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+            <StatCard label="Games Played" value={stats.games_played.toLocaleString()} />
+            <StatCard label="Games Won" value={stats.games_won.toLocaleString()} color="#22c55e" />
+            <StatCard label="Total Wagered" value={stats.total_wagered.toLocaleString()} sub="tokens bet" />
+            <StatCard label="Total Won" value={stats.total_won.toLocaleString()} sub="tokens earned" color="#f59e0b" />
+            <StatCard
+              label="Net Profit / Loss"
+              value={(isProfit ? '+' : '') + stats.net_profit.toLocaleString()}
+              color={isProfit ? '#22c55e' : '#ef4444'}
+            />
+            <StatCard label="Biggest Win" value={stats.biggest_win.toLocaleString()} sub="single game" color="#a78bfa" />
+          </div>
+
+          {/* Favorite Room */}
+          {stats.favorite_room && (
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '12px 16px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 12, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Favorite Room</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>{ROOM_LABELS[stats.favorite_room] || stats.favorite_room}</span>
+            </div>
+          )}
+
+          {/* Recent Wins */}
+          {stats.recent_wins?.length > 0 && (
+            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '14px 16px' }}>
+              <div style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>Recent Wins</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {stats.recent_wins.map((w, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', background: 'rgba(34,197,94,0.07)', borderRadius: 8, border: '1px solid rgba(34,197,94,0.15)' }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>{ROOM_LABELS[w.room_type] || w.room_type}</div>
+                      <div style={{ fontSize: 10, color: '#64748b' }}>{w.won_at ? new Date(w.won_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : ''}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#22c55e' }}>+{w.total_pool.toLocaleString()}</div>
+                      <div style={{ fontSize: 10, color: '#64748b' }}>bet {w.bet_amount.toLocaleString()}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {stats.games_played === 0 && (
+            <div style={{ textAlign: 'center', padding: '24px 0', color: '#64748b', fontSize: 13 }}>
+              Play your first game to start building your stats!
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
