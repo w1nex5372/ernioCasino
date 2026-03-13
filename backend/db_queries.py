@@ -15,7 +15,7 @@ from database import get_pool
 # ─────────────────────────────────────────────────────────────────
 
 def _parse_dt(value) -> Optional[datetime]:
-    """Convert ISO string or datetime to datetime object."""
+    """Convert ISO string or datetime to datetime object (returns None on failure)."""
     if value is None:
         return None
     if isinstance(value, datetime):
@@ -24,6 +24,27 @@ def _parse_dt(value) -> Optional[datetime]:
         return datetime.fromisoformat(str(value))
     except Exception:
         return None
+
+
+def _to_dt(val) -> Optional[datetime]:
+    """Convert ISO string or datetime to datetime object for asyncpg (fallback to now)."""
+    if val is None:
+        return None
+    if isinstance(val, datetime):
+        return val
+    try:
+        return datetime.fromisoformat(str(val))
+    except Exception:
+        return datetime.now(timezone.utc)
+
+
+def _to_json(val) -> Optional[str]:
+    """Convert dict/list to JSON string, safely handling datetime serialization."""
+    if val is None:
+        return None
+    if isinstance(val, str):
+        return val
+    return json.dumps(val, default=str)
 
 
 def _row_to_dict(row) -> Optional[Dict]:
@@ -247,12 +268,12 @@ async def insert_winner_prize(prize_doc: Dict) -> bool:
             """,
                 str(prize_doc.get('user_id', '')),
                 prize_doc.get('username', ''),
-                prize_doc.get('room_type', ''),
+                str(prize_doc.get('room_type', '')),
                 prize_doc.get('prize_link', ''),
-                prize_doc.get('bet_amount', 0),
-                prize_doc.get('total_pool', 0),
-                prize_doc.get('round_number', 1),
-                prize_doc.get('won_at') or datetime.now(timezone.utc),
+                int(prize_doc.get('bet_amount', 0)),
+                int(prize_doc.get('total_pool', 0)),
+                int(prize_doc.get('round_number', 1)),
+                _to_dt(prize_doc.get('won_at')) or datetime.now(timezone.utc),
             )
             return True
         except Exception as e:
@@ -280,27 +301,6 @@ async def get_recent_prizes(limit: int = 10) -> List[Dict]:
 # ─────────────────────────────────────────────────────────────────
 # COMPLETED GAMES
 # ─────────────────────────────────────────────────────────────────
-
-def _to_dt(val) -> Optional[datetime]:
-    """Convert ISO string or datetime to datetime object for asyncpg."""
-    if val is None:
-        return None
-    if isinstance(val, datetime):
-        return val
-    try:
-        return datetime.fromisoformat(str(val))
-    except Exception:
-        return datetime.now(timezone.utc)
-
-
-def _to_json(val) -> Optional[str]:
-    """Convert dict/list to JSON string, handle datetime serialization."""
-    if val is None:
-        return None
-    if isinstance(val, str):
-        return val
-    return json.dumps(val, default=str)
-
 
 async def insert_completed_game(game_doc: Dict) -> bool:
     async with get_pool().acquire() as conn:
@@ -372,12 +372,12 @@ async def upsert_pending_result(user_id: str, result_doc: Dict) -> bool:
             """,
                 user_id,
                 result_doc.get('match_id'),
-                json.dumps(result_doc.get('winner')) if result_doc.get('winner') else None,
-                json.dumps(result_doc.get('all_players', [])),
-                result_doc.get('room_type'),
-                result_doc.get('prize_pool', 0),
+                _to_json(result_doc.get('winner')),
+                _to_json(result_doc.get('all_players', [])),
+                str(result_doc.get('room_type', '')),
+                int(result_doc.get('prize_pool', 0)),
                 result_doc.get('prize_link'),
-                result_doc.get('finished_at') or datetime.now(timezone.utc),
+                _to_dt(result_doc.get('finished_at')) or datetime.now(timezone.utc),
             )
             return True
         except Exception as e:
@@ -406,8 +406,8 @@ async def insert_token_purchase(purchase_doc: Dict) -> bool:
             """,
                 str(purchase_doc.get('user_id', '')),
                 purchase_doc.get('sol_amount'),
-                purchase_doc.get('token_amount', 0),
-                purchase_doc.get('purchase_date') or datetime.now(timezone.utc),
+                int(purchase_doc.get('token_amount', 0)),
+                _to_dt(purchase_doc.get('purchase_date')) or datetime.now(timezone.utc),
             )
             return True
         except Exception as e:
@@ -455,7 +455,7 @@ async def insert_temporary_wallet(wallet_doc: Dict) -> bool:
                 wallet_doc.get('tokens_credited', False),
                 wallet_doc.get('sol_forwarded', False),
                 wallet_doc.get('status', 'pending'),
-                wallet_doc.get('created_at') or datetime.now(timezone.utc),
+                _to_dt(wallet_doc.get('created_at')) or datetime.now(timezone.utc),
             )
             return True
         except Exception as e:
