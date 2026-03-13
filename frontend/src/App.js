@@ -2345,6 +2345,20 @@ function App() {
                 >
                   💰 Buy Tokens
                 </Button>
+                <Button
+                  onClick={() => {
+                    const startParam = `spinwar_${user?.telegram_id}`;
+                    if (window.Telegram?.WebApp?.openTelegramLink) {
+                      window.Telegram.WebApp.openTelegramLink(`https://t.me/SpinWarPlayBot?start=${startParam}`);
+                    } else {
+                      window.open(`https://t.me/SpinWarPlayBot?start=${startParam}`, '_blank');
+                    }
+                  }}
+                  className="w-full text-white text-xs py-2"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)', border: '1px solid rgba(168,85,247,0.4)' }}
+                >
+                  🛍️ Get Your Items
+                </Button>
               </div>
             </div>
           ) : (
@@ -2363,6 +2377,20 @@ function App() {
                 >
                   <Coins className="w-4 h-4 mr-2" />
                   Buy Tokens
+                </Button>
+                <Button
+                  onClick={() => {
+                    const startParam = `spinwar_${user?.telegram_id}`;
+                    if (window.Telegram?.WebApp?.openTelegramLink) {
+                      window.Telegram.WebApp.openTelegramLink(`https://t.me/SpinWarPlayBot?start=${startParam}`);
+                    } else {
+                      window.open(`https://t.me/SpinWarPlayBot?start=${startParam}`, '_blank');
+                    }
+                  }}
+                  className="text-white font-semibold px-4 py-2"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%)', border: '1px solid rgba(168,85,247,0.4)' }}
+                >
+                  🛍️ Get Your Items
                 </Button>
 
                 <div className="flex items-center gap-2">
@@ -3506,38 +3534,53 @@ function App() {
           <div className="flex justify-evenly items-center py-3 px-2 safe-area-inset-bottom max-w-md mx-auto">
             <button
               onClick={() => setActiveTab('rooms')}
-              className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-[100px] ${
+              className={`flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[72px] ${
                 activeTab === 'rooms'
                   ? 'text-red-400 bg-red-500/20 scale-105'
                   : 'text-slate-300 active:bg-slate-700/50'
               }`}
             >
-              <Users className="w-7 h-7 mb-1" />
-              <span className="text-sm font-semibold">Rooms</span>
+              <Users className="w-6 h-6 mb-1" />
+              <span className="text-xs font-semibold">Rooms</span>
             </button>
-            
+
             <button
               onClick={() => setActiveTab('tokens')}
-              className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-[100px] ${
-                activeTab === 'tokens' 
-                  ? 'text-green-400 bg-green-400/20 scale-105' 
+              className={`flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[72px] ${
+                activeTab === 'tokens'
+                  ? 'text-green-400 bg-green-400/20 scale-105'
                   : 'text-slate-300 active:bg-slate-700/50'
               }`}
             >
-              <Coins className="w-7 h-7 mb-1" />
-              <span className="text-sm font-semibold">Tokens</span>
+              <Coins className="w-6 h-6 mb-1" />
+              <span className="text-xs font-semibold">Tokens</span>
             </button>
-            
+
+            <button
+              onClick={() => {
+                const startParam = `spinwar_${user?.telegram_id}`;
+                if (window.Telegram?.WebApp?.openTelegramLink) {
+                  window.Telegram.WebApp.openTelegramLink(`https://t.me/SpinWarPlayBot?start=${startParam}`);
+                } else {
+                  window.open(`https://t.me/SpinWarPlayBot?start=${startParam}`, '_blank');
+                }
+              }}
+              className="flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[72px] text-purple-400 active:bg-purple-400/20"
+            >
+              <span className="text-xl mb-1">🛍️</span>
+              <span className="text-xs font-semibold">Shop</span>
+            </button>
+
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 min-w-[80px] ${
+              className={`flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[72px] ${
                 activeTab === 'history'
                   ? 'text-blue-400 bg-blue-400/20 scale-105'
                   : 'text-slate-300 active:bg-slate-700/50'
               }`}
             >
-              <Timer className="w-7 h-7 mb-1" />
-              <span className="text-sm font-semibold">History</span>
+              <Timer className="w-6 h-6 mb-1" />
+              <span className="text-xs font-semibold">History</span>
             </button>
             {(user?.is_admin || user?.is_owner || user?.telegram_id === 7983427898) && (
               <button

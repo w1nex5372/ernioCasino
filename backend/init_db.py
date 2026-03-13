@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS users (
     derived_solana_address  VARCHAR(255),
     derivation_path         TEXT,
     token_balance           INTEGER NOT NULL DEFAULT 0,
+    total_purchases         INTEGER NOT NULL DEFAULT 0,
+    basket_items            INTEGER NOT NULL DEFAULT 0,
+    bot_status              VARCHAR(50) NOT NULL DEFAULT 'Regular',
     is_verified             BOOLEAN NOT NULL DEFAULT FALSE,
     is_admin                BOOLEAN NOT NULL DEFAULT FALSE,
     is_owner                BOOLEAN NOT NULL DEFAULT FALSE,
@@ -32,6 +35,11 @@ CREATE TABLE IF NOT EXISTS users (
     created_at              TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     last_login              TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
+
+-- Add bot columns if not exists (safe to run multiple times)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS total_purchases INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS basket_items    INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bot_status      VARCHAR(50) NOT NULL DEFAULT 'Regular';
 
 CREATE INDEX IF NOT EXISTS idx_users_telegram_id       ON users(telegram_id);
 CREATE INDEX IF NOT EXISTS idx_users_telegram_username ON users(telegram_username);
