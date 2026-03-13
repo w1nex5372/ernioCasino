@@ -9,7 +9,7 @@ import { Progress } from './components/ui/progress';
 import { Separator } from './components/ui/separator';
 import { toast } from 'sonner';
 import { Toaster } from './components/ui/sonner';
-import { Crown, Coins, Users, Trophy, Zap, Wallet, Play, Timer } from 'lucide-react';
+import { Crown, Coins, Users, Trophy, Zap, Wallet, Play, Timer, ShoppingBag } from 'lucide-react';
 import PaymentModal from './components/PaymentModal';
 import './App.css';
 
@@ -3003,14 +3003,21 @@ function App() {
                           <button
                             key={emoji}
                             onClick={() => {
-                              if (!socket || !lobbyData?.room_id) return;
                               if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-                              socket.emit('send_reaction', {
-                                room_id: lobbyData.room_id,
-                                user_id: user.id,
-                                name: user.first_name || 'Player',
-                                emoji,
-                              });
+                              // Show locally immediately
+                              const id = Date.now() + Math.random();
+                              const x = 15 + Math.random() * 70;
+                              setFloatingReactions(prev => [...prev, { id, emoji, name: user?.first_name || 'You', x }]);
+                              setTimeout(() => setFloatingReactions(prev => prev.filter(r => r.id !== id)), 2500);
+                              // Also broadcast via socket
+                              if (socket && lobbyData?.room_id) {
+                                socket.emit('send_reaction', {
+                                  room_id: lobbyData.room_id,
+                                  user_id: user?.id,
+                                  name: user?.first_name || 'Player',
+                                  emoji,
+                                });
+                              }
                             }}
                             style={{ fontSize: 22, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, width: 44, height: 44, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.2)'; e.currentTarget.style.transform = 'scale(1.15)'; }}
@@ -3573,9 +3580,9 @@ function App() {
                   window.open(`https://t.me/SpinWarPlayBot?start=${startParam}`, '_blank');
                 }
               }}
-              className="flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[72px] text-purple-400 active:bg-purple-400/20"
+              className="flex flex-col items-center p-2 rounded-xl transition-all duration-200 min-w-[72px] text-slate-300 active:bg-slate-700/50"
             >
-              <span className="text-xl mb-1">🛍️</span>
+              <ShoppingBag className="w-6 h-6 mb-1" />
               <span className="text-xs font-semibold">Shop</span>
             </button>
 
@@ -4045,7 +4052,7 @@ function AdminPanel({ API, rooms, isMobile }) {
             ))}
           </div>
         ) : (
-          <div className="text-xs text-slate-500 text-center py-2">{statsLoading ? 'Loading...' : 'Click ↻'}</div>
+          <div className="text-xs text-slate-500 text-center py-2">{statsLoading ? 'Loading...' : 'Failed to load — click ↻'}</div>
         )}
         <button onClick={exportCSV} className="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs py-2 rounded-lg">
           📋 Export Users CSV

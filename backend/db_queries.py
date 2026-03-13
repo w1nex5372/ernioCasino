@@ -520,9 +520,12 @@ async def get_admin_stats() -> Dict:
         total_wagered   = await conn.fetchval(
             "SELECT COALESCE(SUM(prize_pool), 0) FROM completed_games"
         ) or 0
-        banned_count    = await conn.fetchval(
-            "SELECT COUNT(*) FROM users WHERE is_banned = TRUE"
-        ) or 0
+        try:
+            banned_count = await conn.fetchval(
+                "SELECT COUNT(*) FROM users WHERE is_banned = TRUE"
+            ) or 0
+        except Exception:
+            banned_count = 0
         admin_count     = await conn.fetchval(
             "SELECT COUNT(*) FROM users WHERE is_admin = TRUE OR is_owner = TRUE"
         ) or 0

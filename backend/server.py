@@ -2439,11 +2439,12 @@ async def add_fake_player(room_type: str, player_name: str, bet_amount: int, adm
     anon_num = str(hash(bot_seed) % 9000 + 1000)
     fake_player = RoomPlayer(
         user_id=f"bot_{bot_seed}",
-        username=f"anon{anon_num}",
+        username="",
         first_name="Anonymous",
         last_name="",
         photo_url="",
-        bet_amount=bet_amount
+        bet_amount=bet_amount,
+        is_anonymous=True
     )
     target_room.players.append(fake_player)
     target_room.prize_pool += bet_amount
@@ -2756,6 +2757,14 @@ async def startup_event():
     """Initialize the application"""
     # Initialize PostgreSQL connection pool
     await create_pool()
+
+    # Ensure all DB columns/tables exist (safe to run every startup)
+    try:
+        from init_db import init as run_migrations
+        await run_migrations()
+        logger.info("✅ DB migrations applied on startup")
+    except Exception as e:
+        logger.error(f"⚠️ DB migrations warning: {e}")
 
     await initialize_rooms()
 
