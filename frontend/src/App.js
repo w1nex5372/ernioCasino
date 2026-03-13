@@ -1300,10 +1300,10 @@ function App() {
     });
 
     newSocket.on('lobby_message', (data) => {
-      setLobbyMessages(prev => {
-        const next = [...prev, data];
-        return next.slice(-50);
-      });
+      // Skip echo of own messages — already added optimistically on send
+      const currentUserId = userRef.current?.id;
+      if (currentUserId && String(data.user_id) === String(currentUserId)) return;
+      setLobbyMessages(prev => [...prev, data].slice(-50));
     });
 
     newSocket.on('token_balance_updated', (data) => {
@@ -3135,9 +3135,12 @@ function App() {
                         <form onSubmit={e => {
                           e.preventDefault();
                           const text = lobbyChatInput.trim();
-                          if (!text || !socket || !lobbyData?.room_id) return;
-                          socket.emit('lobby_message', { room_id: lobbyData.room_id, user_id: user?.id, name: user?.first_name || 'Player', text, is_anonymous: false });
+                          if (!text || !lobbyData?.room_id) return;
+                          const msg = { user_id: user?.id, name: user?.first_name || 'Player', text, ts: new Date().toISOString() };
+                          // Optimistic: show immediately
+                          setLobbyMessages(prev => [...prev, msg].slice(-50));
                           setLobbyChatInput('');
+                          if (socket) socket.emit('lobby_message', { room_id: lobbyData.room_id, is_anonymous: false, ...msg });
                         }} style={{ display: 'flex', gap: 6 }}>
                           <input
                             value={lobbyChatInput}
