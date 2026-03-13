@@ -281,6 +281,27 @@ async def get_recent_prizes(limit: int = 10) -> List[Dict]:
 # COMPLETED GAMES
 # ─────────────────────────────────────────────────────────────────
 
+def _to_dt(val) -> Optional[datetime]:
+    """Convert ISO string or datetime to datetime object for asyncpg."""
+    if val is None:
+        return None
+    if isinstance(val, datetime):
+        return val
+    try:
+        return datetime.fromisoformat(str(val))
+    except Exception:
+        return datetime.now(timezone.utc)
+
+
+def _to_json(val) -> Optional[str]:
+    """Convert dict/list to JSON string, handle datetime serialization."""
+    if val is None:
+        return None
+    if isinstance(val, str):
+        return val
+    return json.dumps(val, default=str)
+
+
 async def insert_completed_game(game_doc: Dict) -> bool:
     async with get_pool().acquire() as conn:
         try:
@@ -291,22 +312,22 @@ async def insert_completed_game(game_doc: Dict) -> bool:
                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
                 ON CONFLICT (id) DO NOTHING
             """,
-                game_doc.get('id', ''),
-                game_doc.get('room_type', ''),
-                json.dumps(game_doc.get('players', [])),
+                str(game_doc.get('id', '')),
+                str(game_doc.get('room_type', '')),
+                _to_json(game_doc.get('players', [])),
                 game_doc.get('status', 'finished'),
-                game_doc.get('prize_pool', 0),
-                json.dumps(game_doc.get('winner')) if game_doc.get('winner') else None,
+                int(game_doc.get('prize_pool', 0)),
+                _to_json(game_doc.get('winner')),
                 game_doc.get('prize_link'),
                 game_doc.get('match_id'),
-                game_doc.get('round_number', 1),
-                game_doc.get('created_at') or datetime.now(timezone.utc),
-                game_doc.get('started_at'),
-                game_doc.get('finished_at') or datetime.now(timezone.utc),
+                int(game_doc.get('round_number', 1)),
+                _to_dt(game_doc.get('created_at')) or datetime.now(timezone.utc),
+                _to_dt(game_doc.get('started_at')),
+                _to_dt(game_doc.get('finished_at')) or datetime.now(timezone.utc),
             )
             return True
         except Exception as e:
-            logging.error(f"insert_completed_game error: {e}")
+            logging.error(f"insert_completed_game error: {e}", exc_info=True)
             return False
 
 

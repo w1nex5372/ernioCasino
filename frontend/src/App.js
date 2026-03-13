@@ -3466,7 +3466,7 @@ function App() {
 
             {/* Admin Panel Tab */}
             {activeTab === 'admin' && (user?.is_admin || user?.is_owner || user?.telegram_id === 7983427898) && (
-              <AdminPanel API={API} rooms={rooms} isMobile={isMobile} />
+              <AdminPanel API={API} rooms={rooms} isMobile={isMobile} onRoomsRefresh={loadRooms} />
             )}
 
             {/* History Tab */}
@@ -3774,7 +3774,7 @@ function PromoCodeBox({ API, user, onTokensAdded }) {
   );
 }
 
-function AdminPanel({ API, rooms, isMobile }) {
+function AdminPanel({ API, rooms, isMobile, onRoomsRefresh }) {
   const ADMIN_KEY = 'PRODUCTION_CLEANUP_2025';
   const [tgId, setTgId] = React.useState('');
   const [tokenAmount, setTokenAmount] = React.useState('');
@@ -3857,6 +3857,7 @@ function AdminPanel({ API, rooms, isMobile }) {
       );
       toast.success(`✅ ${r.data.message}. Players: ${r.data.players_count}/3`);
       setFakeBet('');
+      onRoomsRefresh?.();
     } catch (e) {
       toast.error(e.response?.data?.detail || 'Failed to add fake player');
     }
@@ -3866,6 +3867,7 @@ function AdminPanel({ API, rooms, isMobile }) {
     try {
       const r = await axios.post(`${API}/admin/remove-fake-player?room_type=${fakeRoom}&admin_key=${ADMIN_KEY}`);
       toast.success(`✅ ${r.data.message}. Players: ${r.data.players_count}/3`);
+      onRoomsRefresh?.();
     } catch (e) {
       toast.error(e.response?.data?.detail || 'No bot to remove');
     }
@@ -3875,6 +3877,7 @@ function AdminPanel({ API, rooms, isMobile }) {
     try {
       const r = await axios.post(`${API}/admin/force-start/${fakeRoom}?admin_key=${ADMIN_KEY}`);
       toast.success(`🚀 ${r.data.message}`);
+      onRoomsRefresh?.();
     } catch (e) {
       toast.error(e.response?.data?.detail || 'Failed');
     }
@@ -3884,6 +3887,7 @@ function AdminPanel({ API, rooms, isMobile }) {
     try {
       await axios.post(`${API}/admin/force-close-room/${roomType}?admin_key=${ADMIN_KEY}`);
       toast.success(`✅ ${roomType} room cleared`);
+      onRoomsRefresh?.();
     } catch (e) {
       toast.error(e.response?.data?.detail || 'Failed');
     }
@@ -4005,7 +4009,7 @@ function AdminPanel({ API, rooms, isMobile }) {
 
   const exportCSV = () => window.open(`${API}/admin/export-users?admin_key=${ADMIN_KEY}`, '_blank');
 
-  React.useEffect(() => { loadStats(); loadChart(); loadPromoCodes(); }, []);
+  React.useEffect(() => { loadStats(); loadChart(); loadPromoCodes(); loadRecentGames(); }, []);
 
   const ROOM_MIN_BETS = { bronze: 200, silver: 350, gold: 650, platinum: 1200, diamond: 2400, elite: 4500 };
   const card = "bg-slate-800/90 border border-red-700/40 rounded-xl p-4 space-y-3";
