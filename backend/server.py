@@ -2368,6 +2368,39 @@ async def adjust_tokens(telegram_id: int, tokens: int, admin_key: str = ""):
         raise HTTPException(status_code=500, detail="Failed to adjust tokens")
 
 
+@api_router.post("/admin/remove-fake-player")
+async def remove_fake_player(room_type: str, admin_key: str = ""):
+    """Remove the last bot player from a waiting room."""
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    target_room = None
+    for room in active_rooms.values():
+        if room.room_type == room_type and room.status == "waiting":
+            target_room = room
+            break
+    if not target_room:
+        raise HTTPException(status_code=404, detail=f"No waiting {room_type} room found")
+    bot_players = [p for p in target_room.players if p.user_id.startswith("bot_")]
+    if not bot_players:
+        raise HTTPException(status_code=404, detail="No bot players in this room")
+    bot = bot_players[-1]
+    target_room.players = [p for p in target_room.players if p.user_id != bot.user_id]
+    target_room.prize_pool = max(0, target_room.prize_pool - bot.bet_amount)
+    serialized_players = []
+    for p in target_room.players:
+        pd = p.dict()
+        if 'joined_at' in pd and isinstance(pd['joined_at'], datetime):
+            pd['joined_at'] = pd['joined_at'].isoformat()
+        serialized_players.append(pd)
+    await socket_rooms.broadcast_to_room(sio, target_room.id, 'player_left', {
+        'room_id': target_room.id,
+        'players': serialized_players,
+        'players_count': len(target_room.players),
+        'prize_pool': target_room.prize_pool,
+    })
+    return {"status": "success", "message": f"Bot removed from {room_type}", "players_count": len(target_room.players)}
+
+
 @api_router.post("/admin/add-fake-player")
 async def add_fake_player(room_type: str, player_name: str, bet_amount: int, admin_key: str = "", background_tasks: BackgroundTasks = None):
     """Add a fake/bot player to a room to fill it up."""
@@ -2397,12 +2430,13 @@ async def add_fake_player(room_type: str, player_name: str, bet_amount: int, adm
         raise HTTPException(status_code=400, detail="Room is already full")
 
     bot_seed = str(uuid.uuid4())[:8]
+    anon_num = str(hash(bot_seed) % 9000 + 1000)
     fake_player = RoomPlayer(
         user_id=f"bot_{bot_seed}",
-        username=f"@{player_name.lower().replace(' ', '_')}",
-        first_name=player_name,
+        username=f"anon{anon_num}",
+        first_name="Anonymous",
         last_name="",
-        photo_url=f"https://pravatar.cc/150?u={bot_seed}",
+        photo_url="",
         bet_amount=bet_amount
     )
     target_room.players.append(fake_player)
@@ -2445,7 +2479,7 @@ async def add_fake_player(room_type: str, player_name: str, bet_amount: int, adm
 
     return {
         "status": "success",
-        "message": f"Fake player '{player_name}' added to {room_type} room",
+        "message": f"Anonymous player added to {room_type} room",
         "room_id": target_room.id,
         "players_count": len(target_room.players),
         "prize_pool": target_room.prize_pool

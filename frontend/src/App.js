@@ -3723,7 +3723,6 @@ function AdminPanel({ API, rooms, isMobile }) {
   const [userInfo, setUserInfo] = React.useState(null);
   const [lookupLoading, setLookupLoading] = React.useState(false);
   const [fakeRoom, setFakeRoom] = React.useState('bronze');
-  const [fakeName, setFakeName] = React.useState('');
   const [fakeBet, setFakeBet] = React.useState('');
   const [userList, setUserList] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -3782,16 +3781,24 @@ function AdminPanel({ API, rooms, isMobile }) {
   };
 
   const addFakePlayer = async () => {
-    if (!fakeName || !fakeBet) return toast.error('Enter name and bet amount');
+    if (!fakeBet) return toast.error('Enter bet amount');
     try {
       const r = await axios.post(
-        `${API}/admin/add-fake-player?room_type=${fakeRoom}&player_name=${encodeURIComponent(fakeName)}&bet_amount=${fakeBet}&admin_key=${ADMIN_KEY}`
+        `${API}/admin/add-fake-player?room_type=${fakeRoom}&player_name=Anonymous&bet_amount=${fakeBet}&admin_key=${ADMIN_KEY}`
       );
       toast.success(`✅ ${r.data.message}. Players: ${r.data.players_count}/3`);
-      setFakeName('');
       setFakeBet('');
     } catch (e) {
       toast.error(e.response?.data?.detail || 'Failed to add fake player');
+    }
+  };
+
+  const removeFakePlayer = async () => {
+    try {
+      const r = await axios.post(`${API}/admin/remove-fake-player?room_type=${fakeRoom}&admin_key=${ADMIN_KEY}`);
+      toast.success(`✅ ${r.data.message}. Players: ${r.data.players_count}/3`);
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'No bot to remove');
     }
   };
 
@@ -3940,7 +3947,7 @@ function AdminPanel({ API, rooms, isMobile }) {
 
       {/* Add Fake Player to Room */}
       <div className={card}>
-        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>🤖</span> Add Fake Player</h3>
+        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>🤖</span> Anonymous Bot Player</h3>
         <select value={fakeRoom}
           onChange={e => { setFakeRoom(e.target.value); setFakeBet(String(ROOM_MIN_BETS[e.target.value])); }}
           className={`w-full ${inp}`}>
@@ -3949,19 +3956,21 @@ function AdminPanel({ API, rooms, isMobile }) {
           ))}
         </select>
         <div className="flex gap-2">
-          <input type="text" value={fakeName} onChange={e => setFakeName(e.target.value)}
-            placeholder="Bot name" className={`flex-1 ${inp} min-w-0`} />
           <input type="number" value={fakeBet} onChange={e => setFakeBet(e.target.value)}
-            placeholder="Bet" className={`w-20 ${inp}`} />
+            placeholder="Bet amount" className={`flex-1 ${inp} min-w-0`} />
         </div>
         <div className="flex gap-2">
           <button onClick={addFakePlayer}
             className="flex-1 bg-purple-700 hover:bg-purple-600 text-white text-sm py-2 rounded-lg font-semibold">
-            Add Bot to Room
+            + Add Anonymous
+          </button>
+          <button onClick={removeFakePlayer}
+            className="flex-1 bg-yellow-900/60 hover:bg-yellow-800 border border-yellow-600/40 text-yellow-300 text-sm py-2 rounded-lg font-semibold">
+            − Remove Bot
           </button>
           <button onClick={() => forceCloseRoom(fakeRoom)}
             className="bg-orange-900/60 hover:bg-orange-800 border border-orange-600/40 text-orange-300 text-xs px-3 py-2 rounded-lg font-semibold whitespace-nowrap">
-            🔄 Clear Room
+            🔄 Clear
           </button>
         </div>
         <div className="grid grid-cols-3 gap-1">
