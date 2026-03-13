@@ -1241,7 +1241,7 @@ async def start_game_round(room: GameRoom):
 # Initialize rooms
 async def initialize_rooms():
     """Create initial rooms for all room types"""
-    room_types = ['bronze', 'silver', 'gold', 'platinum', 'diamond', 'elite']
+    room_types = ['bronze', 'silver', 'gold']
     for room_type in room_types:
         room = GameRoom(room_type=room_type)
         active_rooms[room.id] = room
