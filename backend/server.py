@@ -1080,12 +1080,12 @@ async def start_game_round(room: GameRoom):
         await dbq.insert_winner_prize({
             "user_id": winner.user_id,
             "username": winner.username,
-            "room_type": room.room_type,
+            "room_type": room.room_type.value if hasattr(room.room_type, 'value') else str(room.room_type).split('.')[-1].lower(),
             "prize_link": prize_link,
             "bet_amount": winner.bet_amount,
             "total_pool": room.prize_pool,
             "round_number": room.round_number,
-            "won_at": room.finished_at.isoformat()
+            "won_at": room.finished_at
         })
         logging.info(f"Prize link stored for winner {winner.username}: {prize_link}")
     except Exception as e:
@@ -1154,13 +1154,11 @@ async def start_game_round(room: GameRoom):
     # Save completed game to database
     try:
         game_doc = room.dict()
-        game_doc['created_at'] = game_doc['created_at'].isoformat()
-        game_doc['started_at'] = game_doc['started_at'].isoformat()
-        game_doc['finished_at'] = game_doc['finished_at'].isoformat()
-        for player in game_doc['players']:
-            player['joined_at'] = player['joined_at'].isoformat()
-        if game_doc['winner']:
-            game_doc['winner']['joined_at'] = game_doc['winner']['joined_at'].isoformat()
+        # Normalize enum to plain string value
+        rt = game_doc.get('room_type')
+        game_doc['room_type'] = rt.value if hasattr(rt, 'value') else str(rt).split('.')[-1].lower()
+        # Keep datetimes as objects — insert_completed_game uses _to_dt() helper
+        # (no need to call .isoformat() here; that caused the previous asyncpg bug)
         
         await dbq.insert_completed_game(game_doc)
 
@@ -1172,7 +1170,7 @@ async def start_game_round(room: GameRoom):
                     'match_id': match_id,
                     'winner': game_doc['winner'],
                     'all_players': game_doc['players'],
-                    'room_type': room.room_type,
+                    'room_type': game_doc['room_type'],
                     'prize_pool': room.prize_pool,
                     'prize_link': prize_link,
                     'finished_at': game_doc['finished_at'],

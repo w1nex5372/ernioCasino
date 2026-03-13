@@ -3073,7 +3073,7 @@ function App() {
                     {/* Winners list */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                       {recentWinners.map((game, i) => {
-                        const config = ROOM_CONFIGS[game.room_type];
+                        const config = ROOM_CONFIGS[normalizeRoomType(game.room_type)];
                         const winnerName = game.winner?.first_name || game.winner?.username || 'Unknown';
                         const pool = game.prize_pool || 0;
                         const finishedAt = game.finished_at ? new Date(game.finished_at) : null;
@@ -3515,8 +3515,8 @@ function App() {
                           }`}>
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
-                                <span className="text-lg">{ROOM_CONFIGS[game.room_type]?.icon}</span>
-                                <span className="font-medium text-white capitalize">{game.room_type} Room</span>
+                                <span className="text-lg">{ROOM_CONFIGS[normalizeRoomType(game.room_type)]?.icon}</span>
+                                <span className="font-medium text-white capitalize">{normalizeRoomType(game.room_type)} Room</span>
                               </div>
                               <Badge className={isUserWinner ? 'bg-gradient-to-r from-yellow-400 to-gold-500 text-slate-900 font-bold border border-gold-600' : 'bg-slate-600 text-white border border-slate-500'}>
                                 {isUserWinner ? '🏆 Won' : 'Lost'}
@@ -3751,6 +3751,13 @@ function App() {
 
 const ROOM_LABELS = { bronze: '🥉 Bronze', silver: '🥈 Silver', gold: '🥇 Gold', platinum: '💎 Platinum', diamond: '💠 Diamond', elite: '👑 Elite' };
 
+// Normalize room_type from any format: 'RoomType.BRONZE' | 'BRONZE' | 'bronze' → 'bronze'
+const normalizeRoomType = (rt) => {
+  if (!rt) return '';
+  const s = String(rt);
+  return s.includes('.') ? s.split('.').pop().toLowerCase() : s.toLowerCase();
+};
+
 function ProfileTab({ API, user }) {
   const [stats, setStats] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
@@ -3844,7 +3851,7 @@ function ProfileTab({ API, user }) {
           {stats.favorite_room && (
             <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '12px 16px', marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 12, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Favorite Room</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>{ROOM_LABELS[stats.favorite_room] || stats.favorite_room}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>{ROOM_LABELS[normalizeRoomType(stats.favorite_room)] || normalizeRoomType(stats.favorite_room)}</span>
             </div>
           )}
 
@@ -3856,7 +3863,7 @@ function ProfileTab({ API, user }) {
                 {stats.recent_wins.map((w, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', background: 'rgba(34,197,94,0.07)', borderRadius: 8, border: '1px solid rgba(34,197,94,0.15)' }}>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>{ROOM_LABELS[w.room_type] || w.room_type}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>{ROOM_LABELS[normalizeRoomType(w.room_type)] || normalizeRoomType(w.room_type)}</div>
                       <div style={{ fontSize: 10, color: '#64748b' }}>{w.won_at ? new Date(w.won_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : ''}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
