@@ -560,10 +560,6 @@ function App() {
   }, [user]);
 
   useEffect(() => {
-    lobbyDataRef.current = lobbyData;
-  }, [lobbyData]);
-
-  useEffect(() => {
     isLoadingRef.current = isLoading;
   }, [isLoading]);
 
@@ -599,6 +595,11 @@ function App() {
   const [forceHideLobby, setForceHideLobby] = useState(false); // Force hide lobby after redirect
   const currentGameRoomRef = React.useRef(null); // Track current game room for socket reconnects
   const lobbyDataRef = React.useRef(null); // Ref so socket listeners read current lobbyData without stale closure
+
+  useEffect(() => {
+    lobbyDataRef.current = lobbyData;
+  }, [lobbyData]);
+
   const [activeGameRoomId, setActiveGameRoomId] = useState(() => sessionStorage.getItem('active_game_room') || null);
   
   // UI state
@@ -2222,8 +2223,8 @@ function App() {
 
     // User can join this room (not participating yet in this room type)
 
-    // Freeroll: skip validation, use bet 0
-    const isFreeroll = roomType === 'freeroll';
+    // Freeroll / Free room: skip validation, use bet 0
+    const isFreeroll = roomType === 'freeroll' || roomType === 'free';
     const parsedBetAmount = isFreeroll ? 0 : parseInt(betAmount);
     console.log('💰 Parsed bet amount:', parsedBetAmount);
 
@@ -3320,7 +3321,7 @@ function App() {
                   {['free', 'bronze', 'silver', 'gold', 'freeroll'].map((roomType) => {
                     const room = rooms.find(r => r.room_type === roomType) || { players_count: 0 };
                     const config = ROOM_CONFIGS[roomType];
-                    const isFreeroll = roomType === 'freeroll';
+                    const isFreeroll = roomType === 'freeroll' || roomType === 'free';
                     const maxPlayers = room.max_players || config.maxPlayers || 3;
                     const isRoomLocked = isFreeroll && room.is_locked;
 
@@ -3365,8 +3366,8 @@ function App() {
                             <div className="p-2 space-y-2">
                               {isFreeroll ? (
                                 <div className="text-center py-1">
-                                  <span className="text-emerald-400 font-bold text-sm">🏆 500 tokens</span>
-                                  <span className="text-slate-400 text-xs ml-1">house prize</span>
+                                  <span className="text-emerald-400 font-bold text-sm">🏆 {roomType === 'free' ? '100' : '500'} tokens</span>
+                                  <span className="text-slate-400 text-xs ml-1">{roomType === 'free' ? 'winner prize · free entry' : 'house prize'}</span>
                                 </div>
                               ) : (
                                 <Input
@@ -3463,8 +3464,8 @@ function App() {
                                 <div className="space-y-3">
                                   {isFreeroll ? (
                                     <div className="text-center py-2 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
-                                      <span className="text-emerald-400 font-bold">🏆 500 tokens</span>
-                                      <span className="text-slate-400 text-sm ml-2">house prize — FREE to enter</span>
+                                      <span className="text-emerald-400 font-bold">🏆 {roomType === 'free' ? '100' : '500'} tokens</span>
+                                      <span className="text-slate-400 text-sm ml-2">{roomType === 'free' ? 'winner prize · FREE to enter' : 'house prize — FREE to enter'}</span>
                                     </div>
                                   ) : (
                                     <Input
