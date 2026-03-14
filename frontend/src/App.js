@@ -1325,9 +1325,6 @@ function App() {
     });
 
     newSocket.on('lobby_message', (data) => {
-      // Only show messages for the room we're currently in
-      const currentRoomId = lobbyDataRef.current?.room_id;
-      if (currentRoomId && data.room_id && data.room_id !== currentRoomId) return;
       // Skip echo of own messages — already added optimistically on send
       const currentUserId = userRef.current?.id;
       if (currentUserId && String(data.user_id) === String(currentUserId)) return;
