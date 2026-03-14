@@ -999,7 +999,6 @@ async def lobby_message(sid, data):
         room_chat[room_id] = room_chat[room_id][-50:]
 
     payload = {'room_id': room_id, **msg}
-    # Broadcast globally so all clients receive it regardless of socket room membership
     await sio.emit('lobby_message', payload)
     logging.info(f"💬 Chat [{room_id[:8]}] {name}: {text[:40]}")
 
@@ -2014,7 +2013,7 @@ async def get_active_rooms():
         }
         rooms_data.append(room_data)
 
-    return {"rooms": rooms_data}
+    return {"rooms": rooms_data, "maintenance_mode": maintenance_mode}
 
 @api_router.get("/user-room-status/{user_id}")
 async def get_user_room_status(user_id: str):

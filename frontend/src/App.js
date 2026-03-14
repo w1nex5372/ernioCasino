@@ -560,6 +560,7 @@ function App() {
 
   // Data state
   const [rooms, setRooms] = useState([]);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [activeRoom, setActiveRoom] = useState(null);
   const [roomParticipants, setRoomParticipants] = useState({}); // Track participants per room
   const [gameHistory, setGameHistory] = useState([]);
@@ -1238,6 +1239,7 @@ function App() {
         console.log('✅ Updating room list from socket data');
         if (data && data.rooms) {
           setRooms(data.rooms);
+          if (data.maintenance_mode !== undefined) setMaintenanceMode(data.maintenance_mode);
         }
       } else {
         console.log('⏭️ Skipping rooms reload - GET READY animation in progress');
@@ -1345,6 +1347,9 @@ function App() {
       // Skip echo of own messages — already added optimistically on send
       const currentUserId = userRef.current?.id;
       if (currentUserId && String(data.user_id) === String(currentUserId)) return;
+      // Only show messages for the current room
+      const currentRoomId = lobbyDataRef.current?.room_id;
+      if (currentRoomId && data.room_id && String(data.room_id) !== String(currentRoomId)) return;
       setLobbyMessages(prev => [...prev, data].slice(-50));
     });
 
@@ -1822,6 +1827,7 @@ function App() {
     try {
       const response = await axios.get(`${API}/rooms`);
       setRooms(response.data.rooms);
+      if (response.data.maintenance_mode !== undefined) setMaintenanceMode(response.data.maintenance_mode);
 
       // Load user's active rooms
       loadAllUserRooms();
@@ -3332,7 +3338,8 @@ function App() {
                     const config = ROOM_CONFIGS[roomType];
                     const isFreeroll = roomType === 'freeroll' || roomType === 'free';
                     const maxPlayers = room.max_players || config.maxPlayers || 3;
-                    const isRoomLocked = isFreeroll && room.is_locked;
+                    const isRoomLocked = (isFreeroll && room.is_locked) || maintenanceMode;
+                    const lockReason = maintenanceMode ? 'maintenance' : (isFreeroll && room.is_locked ? 'locked' : null);
 
                     return (
                       <Card key={roomType} className="spinwar-room-card overflow-hidden">
@@ -3354,7 +3361,9 @@ function App() {
                                 </div>
                                 <div className="flex items-center gap-1">
                                   {isRoomLocked ? (
-                                    <Badge className="text-xs px-2 py-0.5 flex-shrink-0 bg-slate-600 text-white">🔒 Locked</Badge>
+                                    <Badge className={`text-xs px-2 py-0.5 flex-shrink-0 animate-pulse ${lockReason === 'maintenance' ? 'bg-orange-700 text-orange-100' : 'bg-red-900 text-red-200'}`}>
+                                      {lockReason === 'maintenance' ? '🔧 Maint.' : '🔒 Locked'}
+                                    </Badge>
                                   ) : (
                                     <Badge className={`text-xs px-2 py-0.5 flex-shrink-0 ${
                                       room.status === 'playing' || room.status === 'finished' ? 'bg-red-500 text-white animate-pulse' :
@@ -3373,7 +3382,17 @@ function App() {
                               </div>
                             </div>
                             <div className="p-2 space-y-2">
-                              {isFreeroll ? (
+                              {isRoomLocked ? (
+                                <div className={`rounded-lg p-3 text-center ${lockReason === 'maintenance' ? 'bg-orange-950/60 border border-orange-700/50' : 'bg-red-950/60 border border-red-800/50'}`}>
+                                  <div className="text-2xl mb-1">{lockReason === 'maintenance' ? '🔧' : '🔒'}</div>
+                                  <p className={`font-bold text-xs ${lockReason === 'maintenance' ? 'text-orange-300' : 'text-red-300'}`}>
+                                    {lockReason === 'maintenance' ? 'Under Maintenance' : 'Room Locked'}
+                                  </p>
+                                  <p className="text-slate-500 text-xs mt-0.5">
+                                    {lockReason === 'maintenance' ? 'Back shortly' : 'Admin locked this room'}
+                                  </p>
+                                </div>
+                              ) : isFreeroll ? (
                                 <div className="text-center py-1">
                                   <span className="text-emerald-400 font-bold text-sm">🏆 {roomType === 'free' ? '100' : '500'} tokens</span>
                                   <span className="text-slate-400 text-xs ml-1">{roomType === 'free' ? 'winner prize · free entry' : 'house prize'}</span>
@@ -3405,15 +3424,17 @@ function App() {
                                 }}
                                 disabled={isRoomLocked || (!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= maxPlayers || (!isFreeroll && (!betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType])))))}
                                 className={`w-full h-9 text-white font-semibold text-sm ${
-                                  isRoomLocked ? 'bg-slate-600 cursor-not-allowed' :
+                                  lockReason === 'maintenance' ? 'bg-orange-900/70 cursor-not-allowed opacity-60' :
+                                  isRoomLocked ? 'bg-red-900/70 cursor-not-allowed opacity-60' :
                                   userActiveRooms[roomType] ? 'bg-blue-600 hover:bg-blue-700' :
                                   (room.status === 'playing' || room.status === 'finished' || room.players_count >= maxPlayers || (!isFreeroll && (!betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))))
                                     ? 'bg-slate-600 cursor-not-allowed'
                                     : isFreeroll ? 'bg-emerald-600 hover:bg-emerald-700' : 'spinwar-btn-primary'
                                 }`}
                               >
-                                <Play className="w-3 h-3 mr-1" />
-                                {isRoomLocked ? '🔒 Locked' :
+                                {lockReason === 'maintenance' ? <span className="mr-1">🔧</span> : <Play className="w-3 h-3 mr-1" />}
+                                {lockReason === 'maintenance' ? 'Maintenance' :
+                                 isRoomLocked ? '🔒 Locked' :
                                  userActiveRooms[roomType] ? '↩️ Return to Room' :
                                  room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
                                  room.players_count >= maxPlayers ? 'Full' :
@@ -3428,8 +3449,16 @@ function App() {
                           // DESKTOP: Full card layout
                           <>
                             <CardHeader className={`bg-gradient-to-br ${config.gradient} text-white relative overflow-hidden`}>
-                              <div className="absolute inset-0 bg-black/10"></div>
-                              <div className="relative z-10">
+                              <div className={`absolute inset-0 ${isRoomLocked ? (lockReason === 'maintenance' ? 'bg-orange-950/70' : 'bg-black/60') : 'bg-black/10'}`}></div>
+                              {isRoomLocked && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+                                  <span className="text-4xl mb-1">{lockReason === 'maintenance' ? '🔧' : '🔒'}</span>
+                                  <span className={`font-black text-base tracking-wide ${lockReason === 'maintenance' ? 'text-orange-300' : 'text-red-300'}`}>
+                                    {lockReason === 'maintenance' ? 'MAINTENANCE' : 'LOCKED'}
+                                  </span>
+                                </div>
+                              )}
+                              <div className={`relative z-10 ${isRoomLocked ? 'opacity-30' : ''}`}>
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
@@ -3460,7 +3489,14 @@ function App() {
                               <div className="space-y-4">
                                 <>
                                   {isRoomLocked ? (
-                                    <p className="text-slate-400 text-sm text-center">🔒 This room is currently locked by admin</p>
+                                    <div className={`rounded-lg p-3 text-center ${lockReason === 'maintenance' ? 'bg-orange-950/60 border border-orange-700/50' : 'bg-red-950/60 border border-red-800/50'}`}>
+                                      <p className={`font-bold text-sm ${lockReason === 'maintenance' ? 'text-orange-300' : 'text-red-300'}`}>
+                                        {lockReason === 'maintenance' ? '🔧 Server maintenance in progress' : '🔒 Room locked by admin'}
+                                      </p>
+                                      <p className="text-slate-500 text-xs mt-1">
+                                        {lockReason === 'maintenance' ? 'Please check back shortly' : 'Join will be available again soon'}
+                                      </p>
+                                    </div>
                                   ) : room.players_count === 0 ? (
                                     <p className="text-slate-400 text-sm text-center">No players yet. Be the first to join!</p>
                                   ) : room.players_count < maxPlayers ? (
@@ -3471,7 +3507,7 @@ function App() {
                                 </>
 
                                 <div className="space-y-3">
-                                  {isFreeroll ? (
+                                  {!isRoomLocked && (isFreeroll ? (
                                     <div className="text-center py-2 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
                                       <span className="text-emerald-400 font-bold">🏆 {roomType === 'free' ? '100' : '500'} tokens</span>
                                       <span className="text-slate-400 text-sm ml-2">{roomType === 'free' ? 'winner prize · FREE to enter' : 'house prize — FREE to enter'}</span>
@@ -3490,7 +3526,7 @@ function App() {
                                       disabled={!!userActiveRooms[roomType]}
                                       className="bg-slate-700 border-slate-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                     />
-                                  )}
+                                  ))}
 
                                   <Button
                                     onClick={async () => {
@@ -3504,15 +3540,17 @@ function App() {
                                     }}
                                     disabled={isRoomLocked || (!userActiveRooms[roomType] && (room.status === 'playing' || room.status === 'finished' || room.players_count >= maxPlayers || (!isFreeroll && (!betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType])))))}
                                     className={`w-full ${
-                                      isRoomLocked ? 'bg-slate-600 cursor-not-allowed' :
+                                      lockReason === 'maintenance' ? 'bg-orange-900/70 cursor-not-allowed opacity-60' :
+                                      isRoomLocked ? 'bg-red-900/70 cursor-not-allowed opacity-60' :
                                       userActiveRooms[roomType] ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600' :
                                       (room.status === 'playing' || room.status === 'finished' || room.players_count >= maxPlayers || (!isFreeroll && (!betAmounts[roomType] || parseInt(betAmounts[roomType]) < config.min || parseInt(betAmounts[roomType]) > config.max || user.token_balance < parseInt(betAmounts[roomType]))))
                                         ? 'bg-slate-600 cursor-not-allowed'
                                         : isFreeroll ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500' : 'spinwar-btn-primary'
                                     } text-white font-bold py-3`}
                                   >
-                                    <Play className="w-4 h-4 mr-2" />
-                                    {isRoomLocked ? '🔒 Locked' :
+                                    {lockReason === 'maintenance' ? <span className="mr-2">🔧</span> : <Play className="w-4 h-4 mr-2" />}
+                                    {lockReason === 'maintenance' ? 'Maintenance — Unavailable' :
+                                     isRoomLocked ? '🔒 Room Locked' :
                                      userActiveRooms[roomType] ? '↩️ Return to Room' :
                                      room.status === 'playing' || room.status === 'finished' ? '🔒 FULL - Game in Progress' :
                                      room.players_count >= maxPlayers ? 'Room Full' :
