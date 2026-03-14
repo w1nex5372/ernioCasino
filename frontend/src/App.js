@@ -3735,16 +3735,28 @@ function App() {
                           isUserWinner
                         });
                         
+                        const userPlayer = game.players && Array.isArray(game.players)
+                          ? game.players.find(p => String(p.user_id) === String(user?.id))
+                          : null;
+                        const userBet = userPlayer?.bet_amount || 0;
+                        const prizePool = game.prize_pool || 0;
+
                         return (
                           <div key={index} className={`p-4 rounded-lg ${
-                            isUserWinner 
-                              ? 'bg-gradient-to-r from-gold-900/30 to-yellow-900/30 border border-gold-500/30' 
+                            isUserWinner
+                              ? 'bg-gradient-to-r from-gold-900/30 to-yellow-900/30 border border-gold-500/30'
                               : 'bg-slate-700/50 border border-slate-600/30'
                           }`}>
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <span className="text-lg">{ROOM_CONFIGS[normalizeRoomType(game.room_type)]?.icon}</span>
-                                <span className="font-medium text-white capitalize">{normalizeRoomType(game.room_type)} Room</span>
+                                <div>
+                                  <span className="font-medium text-white capitalize">{normalizeRoomType(game.room_type)} Room</span>
+                                  {isUserWinner
+                                    ? <span className="ml-2 text-green-400 font-bold text-sm">+{prizePool} tkn</span>
+                                    : userBet > 0 && <span className="ml-2 text-red-400 font-bold text-sm">-{userBet} tkn</span>
+                                  }
+                                </div>
                               </div>
                               <Badge className={isUserWinner ? 'bg-gradient-to-r from-yellow-400 to-gold-500 text-slate-900 font-bold border border-gold-600' : 'bg-slate-600 text-white border border-slate-500'}>
                                 {isUserWinner ? '🏆 Won' : 'Lost'}
