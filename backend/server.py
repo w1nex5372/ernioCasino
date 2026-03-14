@@ -2708,18 +2708,27 @@ async def broadcast_message(message: str, admin_key: str = ""):
         tg_ids = await dbq.get_all_telegram_ids()
         sent, failed = 0, 0
         import httpx as _httpx
+        errors = []
         async with _httpx.AsyncClient(timeout=10) as client:
             for tg_id in tg_ids:
                 try:
-                    await client.post(
+                    resp = await client.post(
                         f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
                         json={"chat_id": tg_id, "text": message, "parse_mode": "HTML"},
                     )
-                    sent += 1
+                    if resp.status_code == 200:
+                        sent += 1
+                    else:
+                        failed += 1
+                        tg_err = resp.json().get("description", f"HTTP {resp.status_code}")
+                        errors.append(f"{tg_id}: {tg_err}")
+                        logging.warning(f"📢 Broadcast to {tg_id} failed: {tg_err}")
                     await asyncio.sleep(0.05)
-                except Exception:
+                except Exception as ex:
                     failed += 1
-        return {"sent": sent, "failed": failed, "total": len(tg_ids)}
+                    errors.append(f"{tg_id}: {ex}")
+        logging.info(f"📢 Broadcast done: sent={sent}, failed={failed}, total={len(tg_ids)}")
+        return {"sent": sent, "failed": failed, "total": len(tg_ids), "errors": errors[:5]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

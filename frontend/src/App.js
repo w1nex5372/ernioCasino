@@ -4486,7 +4486,12 @@ function AdminPanel({ API, rooms, isMobile, onRoomsRefresh }) {
     setBroadcasting(true);
     try {
       const r = await axios.post(`${API}/admin/broadcast?admin_key=${ADMIN_KEY}&message=${encodeURIComponent(broadcastMsg)}`);
-      toast.success(`📢 Sent: ${r.data.sent}, Failed: ${r.data.failed}`);
+      const d = r.data;
+      if (d.failed > 0 && d.errors?.length) {
+        toast.error(`Sent: ${d.sent}, Failed: ${d.failed} — ${d.errors[0]}`);
+      } else {
+        toast.success(`📢 Sent: ${d.sent}/${d.total}, Failed: ${d.failed}`);
+      }
       setBroadcastMsg('');
     } catch (e) {
       toast.error(e.response?.data?.detail || 'Broadcast failed');
