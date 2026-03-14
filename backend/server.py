@@ -183,6 +183,7 @@ api_router = APIRouter(prefix="/api")
 
 # Room types and settings
 class RoomType(str, Enum):
+    FREE = "free"
     BRONZE = "bronze"
     SILVER = "silver"
     GOLD = "gold"
@@ -190,16 +191,18 @@ class RoomType(str, Enum):
 
 # ** EDIT THESE LINES TO ADD YOUR PRIZE LINKS **
 PRIZE_LINKS = {
-    RoomType.BRONZE: "https://your-prize-link-1.com",  # Prize link for Bronze room
-    RoomType.SILVER: "https://your-prize-link-2.com",  # Prize link for Silver room
-    RoomType.GOLD: "https://your-prize-link-3.com",    # Prize link for Gold room
-    RoomType.FREEROLL: "https://your-prize-link-freeroll.com",  # Prize link for Free Roll room
+    RoomType.FREE: "",
+    RoomType.BRONZE: "https://your-prize-link-1.com",
+    RoomType.SILVER: "https://your-prize-link-2.com",
+    RoomType.GOLD: "https://your-prize-link-3.com",
+    RoomType.FREEROLL: "https://your-prize-link-freeroll.com",
 }
 
 # ** EDIT THIS LINE TO ADD YOUR TELEGRAM BOT TOKEN **
 # (Now configured above in environment variables section)
 
 ROOM_SETTINGS = {
+    RoomType.FREE: {"min_bet": 0, "max_bet": 0, "name": "Free Room"},
     RoomType.BRONZE: {"min_bet": 200, "max_bet": 450, "name": "Bronze Room"},
     RoomType.SILVER: {"min_bet": 350, "max_bet": 800, "name": "Silver Room"},
     RoomType.GOLD: {"min_bet": 650, "max_bet": 1200, "name": "Gold Room"},
@@ -1121,7 +1124,13 @@ async def start_game_round(room: GameRoom):
     
     # Credit winner with the full prize pool (losers already had bets deducted on join)
     # For freeroll rooms, credit the fixed house prize instead of prize_pool
-    credit_amount = freeroll_config['prize'] if room.room_type == RoomType.FREEROLL else room.prize_pool
+    FREE_ROOM_PRIZE = 100  # tokens winner gets in the free room
+    if room.room_type == RoomType.FREE:
+        credit_amount = FREE_ROOM_PRIZE
+    elif room.room_type == RoomType.FREEROLL:
+        credit_amount = freeroll_config['prize']
+    else:
+        credit_amount = room.prize_pool
     room.prize_pool = credit_amount  # ensure prize_pool reflects actual credit for DB storage
 
     if not winner.user_id.startswith('bot_'):
@@ -1283,7 +1292,7 @@ async def start_game_round(room: GameRoom):
 # Initialize rooms
 async def initialize_rooms():
     """Create initial rooms for all room types"""
-    room_types = ['bronze', 'silver', 'gold', 'freeroll']
+    room_types = ['free', 'bronze', 'silver', 'gold', 'freeroll']
     for room_type in room_types:
         room = GameRoom(room_type=room_type)
         if room_type == 'freeroll':
@@ -2555,17 +2564,17 @@ async def add_fake_player(room_type: str, player_name: str, bet_amount: int, adm
         'players_count': len(target_room.players),
         'prize_pool': target_room.prize_pool,
         'all_players': serialized_players,
-        'room_status': 'filling' if len(target_room.players) < 3 else 'full',
+        'room_status': 'filling' if len(target_room.players) < target_room.max_players else 'full',
         'timestamp': datetime.now(timezone.utc).isoformat()
     })
     await broadcast_room_updates()
 
-    if len(target_room.players) == 3:
+    if len(target_room.players) >= target_room.max_players:
         await socket_rooms.broadcast_to_room(sio, target_room.id, 'room_full', {
             'room_id': target_room.id,
             'room_type': target_room.room_type,
             'players': serialized_players,
-            'players_count': 3,
+            'players_count': target_room.max_players,
             'message': '🚀 ROOM IS FULL! GET READY FOR THE BATTLE!',
             'timestamp': datetime.now(timezone.utc).isoformat()
         })
