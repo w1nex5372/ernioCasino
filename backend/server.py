@@ -2297,6 +2297,27 @@ async def get_room_chat(room_id: str):
     """Get chat history for a room"""
     return {"messages": room_chat.get(room_id, [])}
 
+@api_router.post("/room-chat/{room_id}")
+async def post_room_chat(room_id: str, user_id: str = "", name: str = "Player", text: str = ""):
+    """Post a chat message to a room (REST fallback when socket unreliable)"""
+    text = text.strip()[:200]
+    if not text or not room_id:
+        raise HTTPException(status_code=400, detail="Missing room_id or text")
+    msg = {
+        'user_id': user_id,
+        'name': name,
+        'text': text,
+        'ts': datetime.now(timezone.utc).isoformat(),
+    }
+    room_chat.setdefault(room_id, [])
+    room_chat[room_id].append(msg)
+    if len(room_chat[room_id]) > 50:
+        room_chat[room_id] = room_chat[room_id][-50:]
+    payload = {'room_id': room_id, **msg}
+    await sio.emit('lobby_message', payload)
+    logging.info(f"💬 REST Chat [{room_id[:8]}] {name}: {text[:40]}")
+    return {"ok": True, "message": msg}
+
 @api_router.get("/room/{room_id}")
 async def get_room_details(room_id: str):
     """Get detailed information about a specific room"""

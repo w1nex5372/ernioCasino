@@ -826,13 +826,12 @@ function App() {
       try {
         const res = await axios.get(`${API}/room-chat/${lobbyData.room_id}`);
         const msgs = res.data.messages || [];
-        if (msgs.length > 0) {
-          setLobbyMessages(msgs.slice(-50));
-        }
+        // Always sync with server state (source of truth)
+        setLobbyMessages(msgs.slice(-50));
       } catch (_) {}
     };
     fetchChat();
-    const interval = setInterval(fetchChat, 3000);
+    const interval = setInterval(fetchChat, 1500);
     return () => clearInterval(interval);
   }, [inLobby, lobbyData?.room_id]); // eslint-disable-line
 
@@ -3223,11 +3222,13 @@ function App() {
                           e.preventDefault();
                           const text = lobbyChatInput.trim();
                           if (!text || !lobbyData?.room_id) return;
-                          const msg = { user_id: user?.id, name: user?.first_name || 'Player', text, ts: new Date().toISOString() };
+                          const msg = { user_id: String(user?.id), name: user?.first_name || 'Player', text, ts: new Date().toISOString() };
                           // Optimistic: show immediately
                           setLobbyMessages(prev => [...prev, msg].slice(-50));
                           setLobbyChatInput('');
-                          if (socket) socket.emit('lobby_message', { room_id: lobbyData.room_id, is_anonymous: false, ...msg });
+                          // REST POST is primary (guaranteed delivery); socket is bonus for instant push
+                          axios.post(`${API}/room-chat/${lobbyData.room_id}?user_id=${encodeURIComponent(String(user?.id))}&name=${encodeURIComponent(user?.first_name || 'Player')}&text=${encodeURIComponent(text)}`).catch(() => {});
+                          if (socket?.connected) socket.emit('lobby_message', { room_id: lobbyData.room_id, is_anonymous: false, ...msg });
                         }} style={{ display: 'flex', gap: 6 }}>
                           <input
                             value={lobbyChatInput}
