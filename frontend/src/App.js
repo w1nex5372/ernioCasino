@@ -3318,7 +3318,7 @@ function App() {
                 )}
 
                 <div className={`grid gap-3 w-full ${isMobile ? 'grid-cols-1 px-1' : 'lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto'}`}>
-                  {['free', 'bronze', 'silver', 'gold', 'freeroll'].map((roomType) => {
+                  {['freeroll', 'bronze', 'silver', 'gold'].map((roomType) => {
                     const room = rooms.find(r => r.room_type === roomType) || { players_count: 0 };
                     const config = ROOM_CONFIGS[roomType];
                     const isFreeroll = roomType === 'freeroll' || roomType === 'free';
@@ -4608,7 +4608,7 @@ function AdminPanel({ API, rooms, isMobile, onRoomsRefresh }) {
       <div className={card}>
         <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>🎮</span> Room Control</h3>
         <select value={fakeRoom} onChange={e => { setFakeRoom(e.target.value); setFakeBet(String(ROOM_MIN_BETS[e.target.value])); }} className={`w-full ${inp}`}>
-          {['free', 'bronze', 'silver', 'gold', 'freeroll'].map(r => (
+          {['freeroll', 'bronze', 'silver', 'gold'].map(r => (
             <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)} (min {ROOM_MIN_BETS[r]})</option>
           ))}
         </select>
