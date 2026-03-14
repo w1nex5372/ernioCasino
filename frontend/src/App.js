@@ -237,8 +237,7 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
   React.useEffect(() => {
     if (winner && targetRotRef.current === null && playerData.length > 0) {
       const idx = playerData.findIndex(p =>
-        String(p.user_id) === String(winner.user_id) ||
-        String(p.telegram_id) === String(winner.telegram_id)
+        String(p.user_id) === String(winner.user_id)
       );
       const i = idx >= 0 ? idx : 0;
       const midDeg = playerData[i].startDeg + playerData[i].angleDeg / 2;
@@ -294,10 +293,8 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
     };
   }, []);
 
-  const isUserWinner = winner && currentUser && (
-    String(currentUser.id) === String(winner.user_id) ||
-    String(currentUser.telegram_id) === String(winner.telegram_id)
-  );
+  const isUserWinner = winner && currentUser &&
+    String(currentUser.id) === String(winner.user_id);
 
   const WHEEL_SIZE = 270;
 
@@ -449,10 +446,10 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
               textShadow: isUserWinner ? '0 0 24px rgba(74,222,128,0.9)' : '0 0 24px rgba(251,191,36,0.9)',
               animation: 'pulse 0.6s ease-in-out infinite alternate',
             }}>
-              {isUserWinner ? '🎉 You Won!' : `🏆 ${winner.first_name} wins!`}
+              {isUserWinner ? '🎉 You Won!' : currentUser ? '😔 You Lost!' : `🏆 ${winner.first_name} wins!`}
             </p>
             <p style={{ color: isUserWinner ? '#86efac' : '#94a3b8', fontSize: 13, marginTop: 6 }}>
-              {isUserWinner ? 'Prize is being processed.' : 'Better luck next spin! 🍀'}
+              {isUserWinner ? 'Prize is being processed.' : currentUser ? `🏆 ${winner.first_name} wins! Better luck next time 🍀` : 'Better luck next spin! 🍀'}
             </p>
           </div>
         ) : (
@@ -473,10 +470,8 @@ function RouletteWheel({ players, winner, onComplete, currentUser }) {
         }}>
           <p style={{ color: '#9333ea', fontSize: 10, textAlign: 'center', marginBottom: 10, fontWeight: 700, letterSpacing: '0.18em' }}>PLAYERS</p>
           {playerData.map((p, i) => {
-            const isWinner = showResult && winner && (
-              String(winner.user_id) === String(p.user_id) ||
-              String(winner.telegram_id) === String(p.telegram_id)
-            );
+            const isWinner = showResult && winner &&
+              String(winner.user_id) === String(p.user_id);
             const isYou = currentUser && String(currentUser.id) === String(p.user_id);
             return (
               <div key={p.user_id || i} style={{
@@ -1125,10 +1120,8 @@ function App() {
       // Determine winner
       const winnerName = data.winner_name || `${data.winner?.first_name || ''} ${data.winner?.last_name || ''}`.trim();
       const gameTime = data.finished_at ? new Date(data.finished_at).toLocaleTimeString() : new Date().toLocaleTimeString();
-      const isWinner = user && (
-        String(user.id) === String(data.winner?.user_id) ||
-        String(user.telegram_id) === String(data.winner?.telegram_id)
-      );
+      const isWinner = user &&
+        String(user.id) === String(data.winner?.user_id);
       
       // Close game/lobby screens
       setGameInProgress(false);
