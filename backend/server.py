@@ -2728,6 +2728,8 @@ async def broadcast_message(message: str, admin_key: str = ""):
                     failed += 1
                     errors.append(f"{tg_id}: {ex}")
         logging.info(f"📢 Broadcast done: sent={sent}, failed={failed}, total={len(tg_ids)}")
+        # Push in-app broadcast to all connected socket clients
+        await sio.emit('admin_broadcast', {'message': message, 'ts': datetime.now(timezone.utc).isoformat()})
         return {"sent": sent, "failed": failed, "total": len(tg_ids), "errors": errors[:5]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

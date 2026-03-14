@@ -584,6 +584,7 @@ function App() {
   const [rouletteConfig, setRouletteConfig] = useState(null);
   const [floatingReactions, setFloatingReactions] = useState([]); // [{id, emoji, name, x}]
   const [lobbyMessages, setLobbyMessages] = useState([]); // [{user_id, name, text, ts}]
+  const [adminBanner, setAdminBanner] = useState(null); // {message, ts}
   const [lobbyChatInput, setLobbyChatInput] = useState('');
   const [shownMatchIds, setShownMatchIds] = useState(new Set()); // Track shown match IDs to prevent duplicates
   const showGetReadyRef = React.useRef(false); // Ref to track roulette state for socket listeners
@@ -1350,6 +1351,14 @@ function App() {
       const currentRoomId = lobbyDataRef.current?.room_id;
       if (currentRoomId && data.room_id && String(data.room_id) !== String(currentRoomId)) return;
       setLobbyMessages(prev => [...prev, data].slice(-50));
+    });
+
+    newSocket.on('admin_broadcast', (data) => {
+      if (data?.message) {
+        setAdminBanner({ message: data.message, ts: data.ts });
+        // Auto-dismiss after 12s
+        setTimeout(() => setAdminBanner(null), 12000);
+      }
     });
 
     newSocket.on('token_balance_updated', (data) => {
@@ -3921,6 +3930,27 @@ function App() {
       )}
 
       <Toaster richColors position={isMobile ? "top-center" : "top-right"} />
+
+      {/* Admin Broadcast Banner */}
+      {adminBanner && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 999999,
+          background: 'linear-gradient(90deg, #7c3aed, #dc2626)',
+          padding: '10px 16px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+          animation: 'slideDown 0.3s ease-out',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+            <span style={{ fontSize: 18, flexShrink: 0 }}>📢</span>
+            <span style={{ color: '#fff', fontSize: 13, fontWeight: 600, wordBreak: 'break-word' }}>{adminBanner.message}</span>
+          </div>
+          <button onClick={() => setAdminBanner(null)} style={{
+            background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 6,
+            color: '#fff', fontSize: 14, fontWeight: 700, padding: '2px 8px', cursor: 'pointer', flexShrink: 0
+          }}>✕</button>
+        </div>
+      )}
 
       {/* Floating Reactions Overlay */}
       {floatingReactions.map(r => (
