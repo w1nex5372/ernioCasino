@@ -46,6 +46,15 @@ const PRIZE_LINKS = {
 
 // Room configurations
 const ROOM_CONFIGS = {
+  free: {
+    name: 'Free Room',
+    icon: '🆓',
+    min: 0,
+    max: 0,
+    maxPlayers: 3,
+    free: true,
+    gradient: 'from-emerald-500 to-teal-700'
+  },
   bronze: {
     name: 'Bronze Room',
     icon: '🥉',
@@ -551,6 +560,10 @@ function App() {
   }, [user]);
 
   useEffect(() => {
+    lobbyDataRef.current = lobbyData;
+  }, [lobbyData]);
+
+  useEffect(() => {
     isLoadingRef.current = isLoading;
   }, [isLoading]);
 
@@ -585,6 +598,7 @@ function App() {
   const blockWinnerScreenRef = React.useRef(false); // Block winner screen after redirect_home
   const [forceHideLobby, setForceHideLobby] = useState(false); // Force hide lobby after redirect
   const currentGameRoomRef = React.useRef(null); // Track current game room for socket reconnects
+  const lobbyDataRef = React.useRef(null); // Ref so socket listeners read current lobbyData without stale closure
   const [activeGameRoomId, setActiveGameRoomId] = useState(() => sessionStorage.getItem('active_game_room') || null);
   
   // UI state
@@ -1315,6 +1329,9 @@ function App() {
     });
 
     newSocket.on('lobby_message', (data) => {
+      // Only show messages for the room we're currently in
+      const currentRoomId = lobbyDataRef.current?.room_id;
+      if (currentRoomId && data.room_id && data.room_id !== currentRoomId) return;
       // Skip echo of own messages — already added optimistically on send
       const currentUserId = userRef.current?.id;
       if (currentUserId && String(data.user_id) === String(currentUserId)) return;
@@ -3300,7 +3317,7 @@ function App() {
                 )}
 
                 <div className={`grid gap-3 w-full ${isMobile ? 'grid-cols-1 px-1' : 'lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto'}`}>
-                  {['bronze', 'silver', 'gold', 'freeroll'].map((roomType) => {
+                  {['free', 'bronze', 'silver', 'gold', 'freeroll'].map((roomType) => {
                     const room = rooms.find(r => r.room_type === roomType) || { players_count: 0 };
                     const config = ROOM_CONFIGS[roomType];
                     const isFreeroll = roomType === 'freeroll';
@@ -4590,7 +4607,7 @@ function AdminPanel({ API, rooms, isMobile, onRoomsRefresh }) {
       <div className={card}>
         <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>🎮</span> Room Control</h3>
         <select value={fakeRoom} onChange={e => { setFakeRoom(e.target.value); setFakeBet(String(ROOM_MIN_BETS[e.target.value])); }} className={`w-full ${inp}`}>
-          {['bronze', 'silver', 'gold', 'freeroll'].map(r => (
+          {['free', 'bronze', 'silver', 'gold', 'freeroll'].map(r => (
             <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)} (min {ROOM_MIN_BETS[r]})</option>
           ))}
         </select>

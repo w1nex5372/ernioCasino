@@ -995,7 +995,7 @@ async def lobby_message(sid, data):
     if len(room_chat[room_id]) > 50:
         room_chat[room_id] = room_chat[room_id][-50:]
 
-    await sio.emit('lobby_message', {'room_id': room_id, **msg}, room=room_id)
+    await sio.emit('lobby_message', {'room_id': room_id, **msg})
     logging.info(f"💬 Chat [{room_id[:8]}] {name}: {text[:40]}")
 
 
