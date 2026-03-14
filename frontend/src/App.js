@@ -818,6 +818,23 @@ function App() {
     }
   }, [roomParticipants, inLobby, lobbyData])
 
+  // Poll lobby chat history when in lobby (fallback for missed socket events)
+  useEffect(() => {
+    if (!inLobby || !lobbyData?.room_id) return;
+    const fetchChat = async () => {
+      try {
+        const res = await axios.get(`${API}/room-chat/${lobbyData.room_id}`);
+        const msgs = res.data.messages || [];
+        if (msgs.length > 0) {
+          setLobbyMessages(msgs.slice(-50));
+        }
+      } catch (_) {}
+    };
+    fetchChat();
+    const interval = setInterval(fetchChat, 3000);
+    return () => clearInterval(interval);
+  }, [inLobby, lobbyData?.room_id]); // eslint-disable-line
+
   // Detect platform
   const detectPlatform = () => {
     const ua = navigator.userAgent.toLowerCase();

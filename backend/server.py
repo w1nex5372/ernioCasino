@@ -999,8 +999,8 @@ async def lobby_message(sid, data):
         room_chat[room_id] = room_chat[room_id][-50:]
 
     payload = {'room_id': room_id, **msg}
-    # Broadcast to all sockets in this game room
-    await socket_rooms.broadcast_to_room(sio, room_id, 'lobby_message', payload)
+    # Broadcast globally so all clients receive it regardless of socket room membership
+    await sio.emit('lobby_message', payload)
     logging.info(f"💬 Chat [{room_id[:8]}] {name}: {text[:40]}")
 
 
@@ -2292,6 +2292,11 @@ async def get_room_participants_by_type(room_type: str):
         "count": len(target_room.players),
         "status": target_room.status
     }
+
+@api_router.get("/room-chat/{room_id}")
+async def get_room_chat(room_id: str):
+    """Get chat history for a room"""
+    return {"messages": room_chat.get(room_id, [])}
 
 @api_router.get("/room/{room_id}")
 async def get_room_details(room_id: str):
