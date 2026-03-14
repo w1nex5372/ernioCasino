@@ -1221,12 +1221,14 @@ function App() {
       loadRooms();
     });
 
-    newSocket.on('rooms_updated', () => {
+    newSocket.on('rooms_updated', (data) => {
       console.log('📥 EVENT: rooms_updated');
       // DON'T reload if GET READY is showing - prevents state reset
       if (!showGetReadyRef.current) {
-        console.log('✅ Reloading room list');
-        loadRooms();
+        console.log('✅ Updating room list from socket data');
+        if (data && data.rooms) {
+          setRooms(data.rooms);
+        }
       } else {
         console.log('⏭️ Skipping rooms reload - GET READY animation in progress');
       }
