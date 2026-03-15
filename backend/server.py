@@ -2261,11 +2261,9 @@ async def leave_room(request: LeaveRoomRequest):
 
 @api_router.get("/pending-result/{user_id}")
 async def get_pending_result(user_id: str):
-    """Return and delete any missed game result for this user"""
-    doc = await dbq.get_and_delete_pending_result(user_id)
-    if not doc:
-        return {"result": None}
-    return {"result": doc}
+    """Return and delete all missed game results for this user"""
+    results = await dbq.get_and_delete_pending_result(user_id)
+    return {"results": results or []}
 
 @api_router.get("/room-participants/{room_type}")
 async def get_room_participants_by_type(room_type: str):

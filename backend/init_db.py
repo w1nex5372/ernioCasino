@@ -160,6 +160,10 @@ async def init():
         )
     try:
         await conn.execute(CREATE_TABLES_SQL)
+        # Migration: allow multiple pending results per user (remove unique constraint if exists)
+        await conn.execute("""
+            ALTER TABLE pending_results DROP CONSTRAINT IF EXISTS pending_results_user_id_key;
+        """)
         print("✅ All tables created successfully.")
     finally:
         await conn.close()

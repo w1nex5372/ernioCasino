@@ -372,14 +372,6 @@ async def upsert_pending_result(user_id: str, result_doc: Dict) -> bool:
                 INSERT INTO pending_results
                     (user_id, match_id, winner, all_players, room_type, prize_pool, prize_link, finished_at)
                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-                ON CONFLICT (user_id) DO UPDATE SET
-                    match_id = EXCLUDED.match_id,
-                    winner = EXCLUDED.winner,
-                    all_players = EXCLUDED.all_players,
-                    room_type = EXCLUDED.room_type,
-                    prize_pool = EXCLUDED.prize_pool,
-                    prize_link = EXCLUDED.prize_link,
-                    finished_at = EXCLUDED.finished_at
             """,
                 user_id,
                 result_doc.get('match_id'),
@@ -397,11 +389,12 @@ async def upsert_pending_result(user_id: str, result_doc: Dict) -> bool:
 
 
 async def get_and_delete_pending_result(user_id: str) -> Optional[Dict]:
+    """Returns all missed game results for user and deletes them."""
     async with get_pool().acquire() as conn:
-        row = await conn.fetchrow(
+        rows = await conn.fetch(
             "DELETE FROM pending_results WHERE user_id = $1 RETURNING *", user_id
         )
-        return _row_to_dict(row)
+        return _rows_to_list(rows)
 
 
 # ─────────────────────────────────────────────────────────────────
