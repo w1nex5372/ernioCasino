@@ -3619,8 +3619,8 @@ function App() {
                     const config = ROOM_CONFIGS[roomType];
                     const isFreeroll = roomType === 'freeroll' || roomType === 'free';
                     const maxPlayers = room.max_players || config.maxPlayers || 3;
-                    const isRoomLocked = (isFreeroll && room.is_locked) || maintenanceMode;
-                    const lockReason = maintenanceMode ? 'maintenance' : (isFreeroll && room.is_locked ? 'locked' : null);
+                    const isRoomLocked = room.is_locked || maintenanceMode;
+                    const lockReason = maintenanceMode ? 'maintenance' : (room.is_locked ? 'locked' : null);
 
                     return (
                       <Card key={roomType} className="spinwar-room-card overflow-hidden">
@@ -4480,6 +4480,12 @@ function ProfileTab({ API, user }) {
             />
             <StatCard label="Biggest Win" value={stats.biggest_win.toLocaleString()} sub="single game" color="#a78bfa" />
             <StatCard label="Biggest Loss" value={stats.biggest_loss ? stats.biggest_loss.toLocaleString() : '0'} sub="single game" color="#ef4444" />
+            <StatCard
+              label="Best Win Streak"
+              value={stats.best_win_streak ?? 0}
+              sub={stats.current_win_streak > 0 ? `🔥 ${stats.current_win_streak} active` : 'in a row'}
+              color="#f59e0b"
+            />
           </div>
 
           {/* Favorite Room */}
@@ -4594,6 +4600,18 @@ function AdminPanel({ API, rooms, isMobile, onRoomsRefresh }) {
   const [freerollPrize, setFreerollPrize] = React.useState('500');
   const [freerollMaxPlayers, setFreerollMaxPlayers] = React.useState('30');
   const [freerollSaving, setFreerollSaving] = React.useState(false);
+  const [roomLocks, setRoomLocks] = React.useState({ bronze: false, silver: false, gold: false });
+
+  const toggleRoomLock = async (roomType) => {
+    const newLocked = !roomLocks[roomType];
+    try {
+      await axios.post(`${API}/admin/lock-room?admin_key=${ADMIN_KEY}&room_type=${roomType}&locked=${newLocked}`);
+      setRoomLocks(prev => ({ ...prev, [roomType]: newLocked }));
+      loadRooms();
+    } catch (e) {
+      toast.error('Failed to update room lock');
+    }
+  };
 
   const loadFreerollConfig = async () => {
     try {
@@ -4994,6 +5012,27 @@ function AdminPanel({ API, rooms, isMobile, onRoomsRefresh }) {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Room Locks */}
+      <div className={card}>
+        <h3 className="text-red-400 font-bold text-sm flex items-center gap-2"><span>🔒</span> Room Locks</h3>
+        {['bronze', 'silver', 'gold'].map(rt => (
+          <div key={rt} className="flex items-center justify-between bg-slate-700/40 rounded-lg px-3 py-2">
+            <div>
+              <div className="text-white text-xs font-semibold capitalize">{rt === 'bronze' ? '🥉' : rt === 'silver' ? '🥈' : '🥇'} {rt.charAt(0).toUpperCase() + rt.slice(1)} Room</div>
+              <div className={`text-xs mt-0.5 ${roomLocks[rt] ? 'text-red-400' : 'text-emerald-400'}`}>
+                {roomLocks[rt] ? '🔒 Locked' : '🔓 Open'}
+              </div>
+            </div>
+            <button
+              onClick={() => toggleRoomLock(rt)}
+              className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition-all ${roomLocks[rt] ? 'bg-emerald-700 hover:bg-emerald-600 text-white' : 'bg-red-800 hover:bg-red-700 text-white'}`}
+            >
+              {roomLocks[rt] ? '🔓 Unlock' : '🔒 Lock'}
+            </button>
+          </div>
+        ))}
       </div>
 
       {/* Free Roll Settings */}

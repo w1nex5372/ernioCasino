@@ -721,6 +721,26 @@ async def get_user_stats(user_id: str) -> Dict:
                 "won_at": r["won_at"].isoformat() if r["won_at"] else None,
             })
 
+        # Win streak — compute from chronological game history
+        game_rows = await conn.fetch("""
+            SELECT (winner->>'user_id') AS winner_id
+            FROM completed_games
+            WHERE players @> $1::jsonb
+            ORDER BY finished_at ASC
+        """, json.dumps([{"user_id": user_id}]))
+
+        best_streak = 0
+        current_streak = 0
+        _cur = 0
+        for row in game_rows:
+            if row["winner_id"] == user_id:
+                _cur += 1
+                if _cur > best_streak:
+                    best_streak = _cur
+            else:
+                _cur = 0
+        current_streak = _cur  # streak at the end of history = current active streak
+
         win_rate = round(games_won / games_played * 100, 1) if games_played > 0 else 0.0
 
         return {
@@ -733,6 +753,8 @@ async def get_user_stats(user_id: str) -> Dict:
             "net_profit": int(total_won - total_wagered),
             "biggest_win": int(biggest_win),
             "biggest_loss": int(biggest_loss),
+            "best_win_streak": best_streak,
+            "current_win_streak": current_streak,
             "favorite_room": favorite_room,
             "recent_wins": recent_wins,
         }
