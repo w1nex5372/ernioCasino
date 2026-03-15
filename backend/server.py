@@ -3002,7 +3002,7 @@ async def wallet_cleanup_scheduler():
     while True:
         try:
             processor = get_processor(None)
-            result = await processor.cleanup_old_wallets_with_grace_period(grace_period_hours=72)
+            result = await processor.cleanup_old_wallets_with_grace_period(grace_period_hours=120)
             
             logging.info(f"🧹 [Cleanup Scheduler] Cleanup complete:")
             logging.info(f"   Cleaned: {result.get('cleaned', 0)} wallets")

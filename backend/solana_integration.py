@@ -486,23 +486,21 @@ class SolanaPaymentProcessor:
                 "status": "payment_received"
             })
             
-            # Check if payment is sufficient (with 0.001 SOL tolerance)
-            tolerance = Decimal("0.001")
-            if received_sol >= (required_sol - tolerance):
-                logger.info(f"✅ [{wallet_address[:8]}...] Payment sufficient! Crediting tokens...")
-                # Credit tokens to user
+            # Accept any payment above dust threshold — credit proportional tokens
+            dust_threshold = Decimal("0.001")  # ignore < 0.001 SOL (network dust)
+            if received_sol >= dust_threshold:
+                if received_sol >= required_sol:
+                    logger.info(f"✅ [{wallet_address[:8]}...] Full/overpayment: {received_sol} SOL (required {required_sol} SOL) — crediting proportionally")
+                else:
+                    logger.warning(f"⚠️  [{wallet_address[:8]}...] Underpayment: {received_sol} SOL < {required_sol} SOL — crediting proportionally, sweeping SOL")
                 await self.credit_tokens_to_user(wallet_doc, received_sol)
-                
+
                 # Wait for account state to settle before sweep
-                logger.info(f"⏳ [{wallet_address[:8]}...] Waiting 3s for account state to settle...")
                 await asyncio.sleep(3)
-                
-                logger.info(f"💸 [{wallet_address[:8]}...] Forwarding SOL to main wallet...")
-                # Forward SOL to main wallet
                 await self.forward_sol_to_main_wallet(wallet_address, wallet_doc["private_key"], received_lamports)
             else:
-                logger.warning(f"❌ [{wallet_address[:8]}...] Insufficient payment: {received_sol} SOL < {required_sol} SOL required (tolerance: {tolerance} SOL)")
-                await dbq.update_temporary_wallet(wallet_address, {"status": "insufficient_payment"})
+                logger.warning(f"❌ [{wallet_address[:8]}...] Dust payment ignored: {received_sol} SOL (threshold: {dust_threshold} SOL)")
+                await dbq.update_temporary_wallet(wallet_address, {"status": "dust_payment"})
                 
         except Exception as e:
             import traceback
@@ -528,8 +526,8 @@ class SolanaPaymentProcessor:
             
             logger.info(f"💎 [Credit] Calculated tokens: {actual_tokens} (at {sol_eur_price} EUR/SOL)")
             
-            # Don't credit more than requested (handle overpayment gracefully)
-            actual_tokens = min(actual_tokens, expected_tokens)
+            # Credit proportional to actual SOL sent (fair for both under- and overpayment)
+            # actual_tokens already calculated from real received_sol amount
             
             logger.info(f"💳 [Credit] Updating user balance: +{actual_tokens} tokens")
             
@@ -950,41 +948,29 @@ class SolanaPaymentProcessor:
                     
                     logger.info(f"💰 [Payment Detected] Wallet: {wallet_address} | Amount: {balance_sol} SOL | User: {user_id} | Time: {datetime.now(timezone.utc).isoformat()}")
                     
-                    # Check if payment amount matches (with tolerance)
-                    tolerance = Decimal("0.001")
-                    if balance_sol >= (expected_sol - tolerance):
+                    # Accept any payment above dust — credit proportional tokens
+                    dust_threshold = Decimal("0.001")
+                    if balance_sol >= dust_threshold:
                         detected_count += 1
-                        logger.info(f"✅ [Rescan] SUFFICIENT PAYMENT! Processing credit...")
-                        
-                        # Use atomic update to prevent duplicate processing
+                        if balance_sol >= expected_sol:
+                            logger.info(f"✅ [Rescan] Full/overpayment: {balance_sol} SOL (expected {expected_sol}) — crediting proportionally")
+                        else:
+                            logger.info(f"⚠️  [Rescan] Underpayment: {balance_sol} SOL < {expected_sol} SOL — crediting proportionally, sweeping SOL")
+
                         update_result = await dbq.update_temporary_wallet(wallet_address, {
                             "payment_detected": True,
                             "status": "detected_by_rescan",
                             "detected_at": datetime.now(timezone.utc)
                         })
 
-                        # If we successfully marked it as detected, process the payment
                         if update_result:
-                            logger.info(f"🎁 [Credited] Starting token credit for user {user_id}...")
-                            
-                            # Credit tokens to user
                             await self.credit_tokens_to_user(wallet_doc, balance_sol)
-                            
-                            logger.info(f"✅ [Credited] Tokens added to user {user_id} balance")
-                            
-                            # IMMEDIATELY Forward SOL to main wallet (don't wait)
-                            logger.info(f"💸 [Sweep] Initiating SOL forward: {balance_lamports} lamports ({balance_sol} SOL)")
-                            await self.forward_sol_to_main_wallet(
-                                wallet_address,
-                                wallet_doc["private_key"],
-                                balance_lamports
-                            )
-                            
+                            await self.forward_sol_to_main_wallet(wallet_address, wallet_doc["private_key"], balance_lamports)
                             logger.info(f"✅ [Rescan] Payment processing complete for wallet {wallet_address[:8]}...")
                         else:
                             logger.info(f"⏭️  [Rescan] Wallet {wallet_address[:8]}... already being processed by another task")
                     else:
-                        logger.info(f"⚠️  [Rescan] Insufficient payment: {balance_sol} SOL < {expected_sol} SOL (tolerance: {tolerance})")
+                        logger.info(f"❌ [Rescan] Dust ignored: {balance_sol} SOL (threshold: {dust_threshold} SOL)")
                         
                 except Exception as wallet_error:
                     logger.error(f"❌ [Rescan] Error checking wallet {wallet_doc.get('wallet_address', 'unknown')}: {wallet_error}")
