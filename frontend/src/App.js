@@ -1659,6 +1659,16 @@ function App() {
     };
   }, []); // Empty dependency array - only run once on mount
 
+  // Rooms polling fallback — ensures player count updates even if socket event is missed
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!showGetReadyRef.current) {
+        loadRooms();
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []); // eslint-disable-line
+
   // Authentication and data loading
   useEffect(() => {
     // Initialize Telegram Web App early
