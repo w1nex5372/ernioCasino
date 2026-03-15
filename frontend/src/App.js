@@ -1367,6 +1367,11 @@ function App() {
         return;
       }
 
+      // User was online for this game — clear any pending result so it won't show on next open
+      if (userRef.current?.id) {
+        axios.get(`${API}/pending-result/${userRef.current.id}`).catch(() => {});
+      }
+
       // FIRST CHECK - Before any logging or processing
       if (blockWinnerScreenRef.current) {
         console.log('🚫 BLOCKED by ref');
