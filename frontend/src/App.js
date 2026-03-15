@@ -1118,7 +1118,7 @@ function App() {
     
     const newSocket = io(socketUrl, {
       path: '/api/socket.io',  // Match engineio_path in backend
-      transports: ['polling'],
+      transports: ['websocket', 'polling'],
       timeout: 60000,
       reconnection: true,
       reconnectionDelay: 1000,
@@ -1659,16 +1659,6 @@ function App() {
     };
   }, []); // Empty dependency array - only run once on mount
 
-  // Rooms polling fallback — ensures player count updates even if socket event is missed
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!showGetReadyRef.current) {
-        loadRooms();
-      }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []); // eslint-disable-line
-
   // Authentication and data loading
   useEffect(() => {
     // Initialize Telegram Web App early
@@ -1728,33 +1718,7 @@ function App() {
               saveUserSession(response.data);
               toast.success(`Welcome back, ${response.data.first_name}!`);
 
-              // Check for missed game results (user was offline when game(s) ended)
-              try {
-                const pendingRes = await axios.get(`${API}/pending-result/${response.data.id}`);
-                const pendingList = pendingRes.data?.results || [];
-                if (pendingList.length > 0) {
-                  const queue = pendingList.map(pending => {
-                    const winnerName = `${pending.winner.first_name} ${pending.winner.last_name || ''}`.trim();
-                    return {
-                      winner: pending.winner,
-                      winner_name: winnerName,
-                      winner_username: pending.winner.username,
-                      winner_photo: pending.winner.photo_url,
-                      room_type: pending.room_type,
-                      prize_pool: pending.prize_pool,
-                      prize_link: pending.prize_link,
-                      game_id: pending.match_id,
-                      finished_at: pending.finished_at,
-                      all_players: pending.all_players || [],
-                      is_winner: String(pending.winner.user_id) === String(response.data.id),
-                      missed: true,
-                    };
-                  });
-                  setMissedResults(queue);
-                }
-              } catch (e) {
-                console.error('Failed to fetch pending results:', e);
-              }
+              await fetchMissedResults(response.data.id);
             }
           } catch (refreshError) {
             console.error('❌ Session validation failed:', refreshError);
@@ -1883,33 +1847,7 @@ function App() {
             loadDerivedWallet();
           }, 500);
 
-          // Check for missed game results
-          try {
-            const pendingRes = await axios.get(`${API}/pending-result/${response.data.id}`);
-            const pendingList = pendingRes.data?.results || [];
-            if (pendingList.length > 0) {
-              const queue = pendingList.map(pending => {
-                const winnerName = `${pending.winner.first_name} ${pending.winner.last_name || ''}`.trim();
-                return {
-                  winner: pending.winner,
-                  winner_name: winnerName,
-                  winner_username: pending.winner.username,
-                  winner_photo: pending.winner.photo_url,
-                  room_type: pending.room_type,
-                  prize_pool: pending.prize_pool,
-                  prize_link: pending.prize_link,
-                  game_id: pending.match_id,
-                  finished_at: pending.finished_at,
-                  all_players: pending.all_players || [],
-                  is_winner: String(pending.winner.user_id) === String(response.data.id),
-                  missed: true,
-                };
-              });
-              setMissedResults(queue);
-            }
-          } catch (e) {
-            console.error('Failed to fetch pending results:', e);
-          }
+          await fetchMissedResults(response.data.id);
 
           // Configure WebApp
           webApp.enableClosingConfirmation();
@@ -2403,6 +2341,30 @@ function App() {
     }
   };
 
+
+  const fetchMissedResults = async (userId) => {
+    try {
+      const res = await axios.get(`${API}/pending-result/${userId}`);
+      const list = res.data?.results || [];
+      if (list.length > 0) {
+        setMissedResults(list.map(pending => ({
+          winner: pending.winner,
+          winner_name: `${pending.winner.first_name} ${pending.winner.last_name || ''}`.trim(),
+          winner_username: pending.winner.username,
+          winner_photo: pending.winner.photo_url,
+          room_type: pending.room_type,
+          prize_pool: pending.prize_pool,
+          prize_link: pending.prize_link,
+          game_id: pending.match_id,
+          finished_at: pending.finished_at,
+          all_players: pending.all_players || [],
+          is_winner: String(pending.winner.user_id) === String(userId),
+        })));
+      }
+    } catch (e) {
+      console.error('Failed to fetch pending results:', e);
+    }
+  };
 
   // Game functions
   const checkUserRoomStatus = async (specificRoomType = null) => {
