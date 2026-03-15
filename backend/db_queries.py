@@ -479,11 +479,13 @@ async def update_temporary_wallet(wallet_address: str, fields: Dict) -> bool:
         return False
     async with get_pool().acquire() as conn:
         sets = ', '.join(f"{k} = ${i+2}" for i, k in enumerate(filtered))
-        await conn.execute(
-            f"UPDATE temporary_wallets SET {sets} WHERE wallet_address = $1",
+        # Only update if tokens not already credited — prevents double credit race condition
+        result = await conn.execute(
+            f"UPDATE temporary_wallets SET {sets} WHERE wallet_address = $1 AND tokens_credited = FALSE",
             wallet_address, *filtered.values()
         )
-        return True
+        rows_affected = int(result.split()[-1])
+        return rows_affected > 0
 
 
 async def count_pending_wallets() -> int:

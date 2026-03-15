@@ -525,9 +525,12 @@ class SolanaPaymentProcessor:
             actual_tokens = self.price_fetcher.calculate_tokens_from_sol(float(received_sol), sol_eur_price)
             
             logger.info(f"💎 [Credit] Calculated tokens: {actual_tokens} (at {sol_eur_price} EUR/SOL)")
-            
-            # Credit proportional to actual SOL sent (fair for both under- and overpayment)
-            # actual_tokens already calculated from real received_sol amount
+
+            # Guard: if SOL amount too tiny to produce even 1 token, don't credit or sweep
+            if actual_tokens < 1:
+                logger.warning(f"⚠️  [Credit] Calculated 0 tokens for {received_sol} SOL — skipping credit and sweep")
+                await dbq.update_temporary_wallet(wallet_doc["wallet_address"], {"status": "dust_payment"})
+                return
             
             logger.info(f"💳 [Credit] Updating user balance: +{actual_tokens} tokens")
             
