@@ -293,6 +293,9 @@ maintenance_mode: bool = False
 # Free Roll room global config
 freeroll_config: dict = {"max_players": 30, "prize": 500, "is_locked": False}
 
+# Per-room-type lock state (persists until server restart)
+locked_rooms: set = set()  # e.g. {"bronze", "silver", "gold", "freeroll"}
+
 # Telegram authentication functions
 def verify_telegram_auth(auth_data: dict, bot_token: str) -> bool:
     """Verify Telegram authentication data - PRODUCTION VERSION"""
@@ -1067,6 +1070,7 @@ async def broadcast_room_updates():
         
         await sio.emit('rooms_updated', {
             'rooms': room_data,
+            'maintenance_mode': maintenance_mode,
             'timestamp': datetime.now(timezone.utc).isoformat()
         })
         
@@ -1515,7 +1519,25 @@ async def cleanup_database_for_production(admin_key: str):
         logging.error(f"Error cleaning database: {e}")
         raise HTTPException(status_code=500, detail="Failed to clean database")
 
-@api_router.post("/admin/reset-game-history")
+@api_router.post("/admin/lock-room")
+async def lock_room(room_type: str, locked: bool, admin_key: str):
+    """Lock or unlock a specific room type"""
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    if room_type not in ("bronze", "silver", "gold", "freeroll"):
+        raise HTTPException(status_code=400, detail="Invalid room type")
+    if locked:
+        locked_rooms.add(room_type)
+        if room_type == "freeroll":
+            freeroll_config['is_locked'] = True
+    else:
+        locked_rooms.discard(room_type)
+        if room_type == "freeroll":
+            freeroll_config['is_locked'] = False
+    logging.info(f"🔒 Room '{room_type}' {'LOCKED' if locked else 'UNLOCKED'} by admin")
+    return {"room_type": room_type, "locked": locked, "all_locked": list(locked_rooms)}
+
+@api_router.get("/admin/reset-game-history")
 async def reset_game_history(admin_key: str):
     """ADMIN ONLY: Clear all game history and stats, keep user accounts"""
     if admin_key != "PRODUCTION_CLEANUP_2025":
@@ -2031,7 +2053,7 @@ async def get_active_rooms():
             "prize_pool": room.prize_pool,
             "round_number": room.round_number,
             "settings": ROOM_SETTINGS.get(room.room_type, ROOM_SETTINGS["bronze"]),
-            "is_locked": (room.room_type == RoomType.FREEROLL and freeroll_config.get('is_locked', False))
+            "is_locked": (room.room_type in locked_rooms) or (room.room_type == RoomType.FREEROLL and freeroll_config.get('is_locked', False))
         }
         rooms_data.append(room_data)
 
@@ -2100,9 +2122,9 @@ async def join_room(request: JoinRoomRequest, background_tasks: BackgroundTasks)
         logging.error(f"No available room of type {request.room_type}")
         raise HTTPException(status_code=404, detail="No available room of this type")
 
-    # Freeroll lock check
-    if target_room.room_type == RoomType.FREEROLL and freeroll_config.get('is_locked'):
-        raise HTTPException(status_code=423, detail="Free Roll room is currently locked.")
+    # Room lock check (per-type lock or freeroll-specific lock)
+    if target_room.room_type in locked_rooms or (target_room.room_type == RoomType.FREEROLL and freeroll_config.get('is_locked')):
+        raise HTTPException(status_code=423, detail="This room is currently locked.")
 
     # Validate bet amount (skip range check for freeroll)
     settings = ROOM_SETTINGS[request.room_type]
@@ -2726,9 +2748,10 @@ async def broadcast_message(message: str, admin_key: str = ""):
         raise HTTPException(status_code=400, detail="TELEGRAM_BOT_TOKEN not configured")
     try:
         tg_ids = await dbq.get_all_telegram_ids()
-        sent, failed = 0, 0
+        sent, failed, skipped = 0, 0, 0
         import httpx as _httpx
         errors = []
+        SKIP_ERRORS = ("not found", "chat not found", "user not found", "bot was blocked by the user", "forbidden")
         async with _httpx.AsyncClient(timeout=10) as client:
             for tg_id in tg_ids:
                 try:
@@ -2739,18 +2762,22 @@ async def broadcast_message(message: str, admin_key: str = ""):
                     if resp.status_code == 200:
                         sent += 1
                     else:
-                        failed += 1
                         tg_err = resp.json().get("description", f"HTTP {resp.status_code}")
-                        errors.append(f"{tg_id}: {tg_err}")
-                        logging.warning(f"📢 Broadcast to {tg_id} failed: {tg_err}")
+                        if any(s in tg_err.lower() for s in SKIP_ERRORS):
+                            skipped += 1
+                            logging.info(f"📢 Broadcast skipped {tg_id} (unreachable): {tg_err}")
+                        else:
+                            failed += 1
+                            errors.append(f"{tg_id}: {tg_err}")
+                            logging.warning(f"📢 Broadcast to {tg_id} failed: {tg_err}")
                     await asyncio.sleep(0.05)
                 except Exception as ex:
                     failed += 1
                     errors.append(f"{tg_id}: {ex}")
-        logging.info(f"📢 Broadcast done: sent={sent}, failed={failed}, total={len(tg_ids)}")
+        logging.info(f"📢 Broadcast done: sent={sent}, skipped={skipped}, failed={failed}, total={len(tg_ids)}")
         # Push in-app broadcast to all connected socket clients
         await sio.emit('admin_broadcast', {'message': message, 'ts': datetime.now(timezone.utc).isoformat()})
-        return {"sent": sent, "failed": failed, "total": len(tg_ids), "errors": errors[:5]}
+        return {"sent": sent, "failed": failed, "skipped": skipped, "total": len(tg_ids), "errors": errors[:5]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -2796,6 +2823,8 @@ async def toggle_maintenance(admin_key: str = ""):
         raise HTTPException(status_code=403, detail="Unauthorized")
     maintenance_mode = not maintenance_mode
     logging.info(f"🔧 Maintenance mode {'ON' if maintenance_mode else 'OFF'}")
+    # Notify all connected clients immediately
+    await broadcast_room_updates()
     return {"maintenance_mode": maintenance_mode}
 
 

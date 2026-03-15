@@ -4810,7 +4810,8 @@ function AdminPanel({ API, rooms, isMobile, onRoomsRefresh }) {
       if (d.failed > 0 && d.errors?.length) {
         toast.error(`Sent: ${d.sent}, Failed: ${d.failed} — ${d.errors[0]}`);
       } else {
-        toast.success(`📢 Sent: ${d.sent}/${d.total}, Failed: ${d.failed}`);
+        const skippedStr = d.skipped > 0 ? `, Skipped: ${d.skipped}` : '';
+        toast.success(`📢 Sent: ${d.sent}/${d.total}${skippedStr}`);
       }
       setBroadcastMsg('');
     } catch (e) {
