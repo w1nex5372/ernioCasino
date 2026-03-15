@@ -1238,25 +1238,20 @@ async def start_game_round(room: GameRoom):
         
         await dbq.insert_completed_game(game_doc)
 
-        # Save pending result only for offline participants (not connected via socket)
+        # Save pending result for all participants — cleared client-side on redirect_home if they were online
         for participant in room.players:
             if not participant.user_id.startswith('bot_'):
-                is_connected = participant.user_id in user_to_socket
-                if not is_connected:
-                    pending_doc = {
-                        'user_id': participant.user_id,
-                        'match_id': match_id,
-                        'winner': game_doc['winner'],
-                        'all_players': game_doc['players'],
-                        'room_type': game_doc['room_type'],
-                        'prize_pool': room.prize_pool,
-                        'prize_link': prize_link,
-                        'finished_at': game_doc['finished_at'],
-                    }
-                    await dbq.upsert_pending_result(participant.user_id, pending_doc)
-                    logging.info(f"📵 Saved pending result for offline user {participant.user_id}")
-                else:
-                    logging.info(f"✅ User {participant.user_id} was online, skipping pending result")
+                pending_doc = {
+                    'user_id': participant.user_id,
+                    'match_id': match_id,
+                    'winner': game_doc['winner'],
+                    'all_players': game_doc['players'],
+                    'room_type': game_doc['room_type'],
+                    'prize_pool': room.prize_pool,
+                    'prize_link': prize_link,
+                    'finished_at': game_doc['finished_at'],
+                }
+                await dbq.upsert_pending_result(participant.user_id, pending_doc)
 
         # Cleanup old game history (keep only 5 most recent)
         await cleanup_old_game_history()

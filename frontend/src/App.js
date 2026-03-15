@@ -1367,11 +1367,6 @@ function App() {
         return;
       }
 
-      // User was online for this game — clear any pending result so it won't show on next open
-      if (userRef.current?.id) {
-        axios.get(`${API}/pending-result/${userRef.current.id}`).catch(() => {});
-      }
-
       // FIRST CHECK - Before any logging or processing
       if (blockWinnerScreenRef.current) {
         console.log('🚫 BLOCKED by ref');
@@ -1515,6 +1510,11 @@ function App() {
       if (!isParticipatingRedirect) {
         console.log('⏭️ redirect_home: not a participant, ignoring');
         return;
+      }
+
+      // User was online and saw the result — clear pending result from DB
+      if (userRef.current?.id) {
+        axios.get(`${API}/pending-result/${userRef.current.id}`).catch(() => {});
       }
 
       // CRITICAL: Block any future winner screens from this game
