@@ -4479,6 +4479,7 @@ function ProfileTab({ API, user }) {
               color={isProfit ? '#22c55e' : '#ef4444'}
             />
             <StatCard label="Biggest Win" value={stats.biggest_win.toLocaleString()} sub="single game" color="#a78bfa" />
+            <StatCard label="Biggest Loss" value={stats.biggest_loss ? stats.biggest_loss.toLocaleString() : '0'} sub="single game" color="#ef4444" />
           </div>
 
           {/* Favorite Room */}

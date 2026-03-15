@@ -689,6 +689,14 @@ async def get_user_stats(user_id: str) -> Dict:
             "SELECT COALESCE(MAX(total_pool), 0) FROM winner_prizes WHERE user_id = $1", user_id
         ) or 0
 
+        # Biggest single loss (biggest bet in a game where user lost)
+        biggest_loss = await conn.fetchval("""
+            SELECT COALESCE(MAX((p->>'bet_amount')::bigint), 0)
+            FROM completed_games, jsonb_array_elements(players) p
+            WHERE p->>'user_id' = $1
+            AND (winner->>'user_id') != $1
+        """, user_id) or 0
+
         # Favorite room (most played)
         fav_row = await conn.fetchrow("""
             SELECT room_type, COUNT(*) AS cnt
@@ -724,6 +732,7 @@ async def get_user_stats(user_id: str) -> Dict:
             "total_won": int(total_won),
             "net_profit": int(total_won - total_wagered),
             "biggest_win": int(biggest_win),
+            "biggest_loss": int(biggest_loss),
             "favorite_room": favorite_room,
             "recent_wins": recent_wins,
         }
