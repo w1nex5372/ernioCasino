@@ -1073,14 +1073,26 @@ class SolanaPaymentProcessor:
                     logger.error(f"❌ [Scheduled Cleanup] Error processing {wallet_address[:8]}...: {wallet_error}")
                     continue
             
-            # Also find wallets flagged for manual review (older than 7 days)
+            # Delete abandoned wallets: pending/expired, older than 24h, never received payment
+            abandoned_cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+            async with _get_pool().acquire() as _conn:
+                abandoned_result = await _conn.execute(
+                    """DELETE FROM temporary_wallets
+                       WHERE payment_detected = FALSE
+                         AND tokens_credited = FALSE
+                         AND created_at < $1""",
+                    abandoned_cutoff
+                )
+            abandoned_deleted = int(abandoned_result.split()[-1]) if abandoned_result else 0
+            logger.info(f"🗑️ [Scheduled Cleanup] Deleted {abandoned_deleted} abandoned wallets (no payment, >24h old)")
+
             flagged_count = await dbq.count_pending_wallets()
-            
-            logger.info(f"🧹 [Scheduled Cleanup] Complete: cleaned {cleaned_count}, blocked {blocked_count}, flagged for review: {flagged_count}")
-            
+            logger.info(f"🧹 [Scheduled Cleanup] Complete: cleaned={cleaned_count}, blocked={blocked_count}, abandoned_deleted={abandoned_deleted}")
+
             return {
                 "cleaned": cleaned_count,
                 "blocked": blocked_count,
+                "abandoned_deleted": abandoned_deleted,
                 "flagged_for_review": flagged_count
             }
             
