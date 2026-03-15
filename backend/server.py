@@ -1515,6 +1515,28 @@ async def cleanup_database_for_production(admin_key: str):
         logging.error(f"Error cleaning database: {e}")
         raise HTTPException(status_code=500, detail="Failed to clean database")
 
+@api_router.post("/admin/reset-game-history")
+async def reset_game_history(admin_key: str):
+    """ADMIN ONLY: Clear all game history and stats, keep user accounts"""
+    if admin_key != "PRODUCTION_CLEANUP_2025":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    try:
+        async with dbq.get_pool().acquire() as conn:
+            r_games   = await conn.execute("DELETE FROM completed_games")
+            r_prizes  = await conn.execute("DELETE FROM winner_prizes")
+            r_pending = await conn.execute("DELETE FROM pending_results")
+        return {
+            "status": "success",
+            "deleted": {
+                "completed_games": int(r_games.split()[-1]),
+                "winner_prizes":   int(r_prizes.split()[-1]),
+                "pending_results": int(r_pending.split()[-1]),
+            }
+        }
+    except Exception as e:
+        logging.error(f"Error resetting game history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.post("/auth/telegram", response_model=User)
 async def telegram_auth(user_data: UserCreate):
     """Authenticate user with Telegram data"""
