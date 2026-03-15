@@ -1872,7 +1872,35 @@ function App() {
             loadUserPrizes();
             loadDerivedWallet();
           }, 500);
-          
+
+          // Check for missed game results
+          try {
+            const pendingRes = await axios.get(`${API}/pending-result/${response.data.id}`);
+            const pendingList = pendingRes.data?.results || [];
+            if (pendingList.length > 0) {
+              const queue = pendingList.map(pending => {
+                const winnerName = `${pending.winner.first_name} ${pending.winner.last_name || ''}`.trim();
+                return {
+                  winner: pending.winner,
+                  winner_name: winnerName,
+                  winner_username: pending.winner.username,
+                  winner_photo: pending.winner.photo_url,
+                  room_type: pending.room_type,
+                  prize_pool: pending.prize_pool,
+                  prize_link: pending.prize_link,
+                  game_id: pending.match_id,
+                  finished_at: pending.finished_at,
+                  all_players: pending.all_players || [],
+                  is_winner: String(pending.winner.user_id) === String(response.data.id),
+                  missed: true,
+                };
+              });
+              setMissedResults(queue);
+            }
+          } catch (e) {
+            console.error('Failed to fetch pending results:', e);
+          }
+
           // Configure WebApp
           webApp.enableClosingConfirmation();
           if (webApp.setHeaderColor) webApp.setHeaderColor('#1e293b');
